@@ -1,0 +1,9 @@
+*#
+.#*
+
+*.exe
+/.idea
+
+
+/vendor
+/.build
