@@ -1,0 +1,15 @@
+app: cloud-monitor-manager
+port: 8080
+debug: true
+db:
+  url: hawkeye:hawkeye@Cecloud202!@(10.255.198.16:6033)/hawkeye?charset=utf8mb4&parseTime=True&loc=Local
+  dialect: mysql
+  max_idle_connes: 10
+  max_open_connes: 100
+logger:
+  data_log_prefix: ../logs/
+  group: cloud-manager
+  max_size:
+  max_backups:
+  max_age:
+  compress:

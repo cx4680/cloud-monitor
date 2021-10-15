@@ -1,0 +1,51 @@
+basePath: /
+definitions:
+  models.MonitorProduct:
+    properties:
+      create_time:
+        description: 创建时间
+        type: string
+      create_user:
+        description: 创建人
+        type: string
+      description:
+        description: 描述
+        type: string
+      id:
+        description: ID
+        type: string
+      name:
+        description: 监控产品名称
+        type: string
+      status:
+        description: 状态 0:停用 1:启用
+        type: integer
+    type: object
+info:
+  contact: {}
+  description: This is a sample server Petstore server.
+  title: Swagger Example API
+  version: 0.0.1
+paths:
+  /hawkeye/monitorProduct/getById:
+    get:
+      consumes:
+      - application/json
+      description: GetById
+      parameters:
+      - description: id
+        in: query
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.MonitorProduct'
+      summary: GetById
+      tags:
+      - MonitorProductCtl
+swagger: "2.0"
