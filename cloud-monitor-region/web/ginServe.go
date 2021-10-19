@@ -60,5 +60,6 @@ func loadPlugin(cfg *config.Config) {
 	router.Use(logger.GinLogger())
 	router.Use(logger.GinRecovery(true))
 	router.Use(middleware.Cors())
+	router.Use(middleware.Auth())
 
 }

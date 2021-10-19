@@ -9,6 +9,7 @@ import (
 	"os"
 	"runtime/debug"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/natefinch/lumberjack"
@@ -17,13 +18,19 @@ import (
 )
 
 var (
-	Logger *zap.SugaredLogger
-
+	logger               *zap.SugaredLogger
+	once                 sync.Once
 	defaultApp           = "ucmp"
 	defaultGroup         = "cec"
 	defaultDataLogPrefix = "/data/logs/"
 )
 
+func Logger() *zap.SugaredLogger {
+	once.Do(func() {
+		InitLogger(&config.GetConfig().Logger)
+	})
+	return logger
+}
 func InitLogger(cfg *config.LogConfig) {
 	infoLevel := zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
 		return lvl >= zapcore.InfoLevel
@@ -58,7 +65,7 @@ func InitLogger(cfg *config.LogConfig) {
 	}
 
 	sugarLogger := zap.New(core, zap.AddCaller())
-	Logger = sugarLogger.Sugar()
+	logger = sugarLogger.Sugar()
 	zap.ReplaceGlobals(sugarLogger) // 替换zap包中全局的logger实例，后续在其他包中只需使用zap.L()调用即可
 }
 
@@ -119,62 +126,6 @@ func getLogWriter(level string, cfg *config.LogConfig) zapcore.WriteSyncer {
 	return zapcore.AddSync(os.Stdout)
 }
 
-func Debug(args ...interface{}) {
-	Logger.Debug(args...)
-}
-
-func Debugf(template string, args ...interface{}) {
-	Logger.Debugf(template, args...)
-}
-
-func Info(args ...interface{}) {
-	Logger.Info(args...)
-}
-
-func Infof(template string, args ...interface{}) {
-	Logger.Infof(template, args...)
-}
-
-func Warn(args ...interface{}) {
-	Logger.Warn(args...)
-}
-
-func Warnf(template string, args ...interface{}) {
-	Logger.Warnf(template, args...)
-}
-
-func Error(args ...interface{}) {
-	Logger.Error(args...)
-}
-
-func Errorf(template string, args ...interface{}) {
-	Logger.Errorf(template, args...)
-}
-
-func DPanic(args ...interface{}) {
-	Logger.DPanic(args...)
-}
-
-func DPanicf(template string, args ...interface{}) {
-	Logger.DPanicf(template, args...)
-}
-
-func Panic(args ...interface{}) {
-	Logger.Panic(args...)
-}
-
-func Panicf(template string, args ...interface{}) {
-	Logger.Panicf(template, args...)
-}
-
-func Fatal(args ...interface{}) {
-	Logger.Fatal(args...)
-}
-
-func Fatalf(template string, args ...interface{}) {
-	Logger.Fatalf(template, args...)
-}
-
 // GinLogger 接收gin框架默认的日志
 func GinLogger() gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -184,7 +135,7 @@ func GinLogger() gin.HandlerFunc {
 		c.Next()
 
 		cost := time.Since(start)
-		Logger.Info(path,
+		Logger().Info(path,
 			zap.Int("status", c.Writer.Status()),
 			zap.String("method", c.Request.Method),
 			zap.String("path", path),
@@ -215,7 +166,7 @@ func GinRecovery(stack bool) gin.HandlerFunc {
 
 				httpRequest, _ := httputil.DumpRequest(c.Request, false)
 				if brokenPipe {
-					Logger.Error(c.Request.URL.Path,
+					Logger().Error(c.Request.URL.Path,
 						zap.Any("error", err),
 						zap.String("request", string(httpRequest)),
 					)
@@ -226,13 +177,13 @@ func GinRecovery(stack bool) gin.HandlerFunc {
 				}
 
 				if stack {
-					Logger.Error("[Recovery from panic]",
+					Logger().Error("[Recovery from panic]",
 						zap.Any("error", err),
 						zap.String("request", string(httpRequest)),
 						zap.String("stack", string(debug.Stack())),
 					)
 				} else {
-					Logger.Error("[Recovery from panic]",
+					Logger().Error("[Recovery from panic]",
 						zap.Any("error", err),
 						zap.String("request", string(httpRequest)),
 					)

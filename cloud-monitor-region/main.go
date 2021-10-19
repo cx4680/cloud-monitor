@@ -8,7 +8,6 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/web"
 	"flag"
 	"fmt"
-	"go.uber.org/zap"
 	"log"
 	"os"
 )
@@ -35,14 +34,11 @@ func main() {
 	//初始化数据里连接
 	database.InitDb(&cfg.DB)
 	logger.InitLogger(&config.GetConfig().Logger)
-	defer logger.Logger.Sync()
-	logger.Logger.Infof("xxxxx123", 123)
-
-	zap.L().Error("ssss123")
+	defer logger.Logger().Sync()
 
 	defer database.GetDb().Close()
 	//启动Web容器
 	if err := web.Start(cfg); err != nil {
-		logger.Logger.Info("startup service failed, err:%v\n", err)
+		logger.Logger().Infof("startup service failed, err:%v\n", err)
 	}
 }

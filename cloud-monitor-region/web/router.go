@@ -12,6 +12,9 @@ import (
 func loadRouters() {
 	monitorProductRouters()
 	swagger()
+	instance()
+	eip()
+	slb()
 }
 
 func monitorProductRouters() {
@@ -26,4 +29,29 @@ func monitorProductRouters() {
 func swagger() {
 	docs.SwaggerInfo.BasePath = ""
 	router.GET("/swagger/*any", gs.WrapHandler(swaggerFiles.Handler))
+}
+
+func instance() {
+	instanceCtl := controllers.NewInstanceCtl(dao.NewInstanceDao(database.GetDb()))
+	group := router.Group("/hawkeye/instance/")
+	{
+		group.GET("/page", instanceCtl.Page)
+		group.GET("/getInstanceNum", instanceCtl.GetInstanceNumByRegion)
+	}
+}
+
+func eip() {
+	ctl := controllers.NewEipCtl()
+	group := router.Group("/hawkeye/eip/")
+	{
+		group.GET("/page", ctl.Page)
+	}
+}
+
+func slb() {
+	ctl := controllers.NewSlbCtl()
+	group := router.Group("/hawkeye/slb/")
+	{
+		group.GET("/page", ctl.Page)
+	}
 }

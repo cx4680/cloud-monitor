@@ -8,10 +8,12 @@ import (
 )
 
 type Config struct {
-	App    string    `yaml:"app"`
-	Serve  Serve     `yaml:"serve"`
-	DB     DB        `yaml:"db"`
-	Logger LogConfig `yaml:"logger"`
+	App        string     `yaml:"app"`
+	Serve      Serve      `yaml:"serve"`
+	DB         DB         `yaml:"db"`
+	Logger     LogConfig  `yaml:"logger"`
+	HttpConfig HttpConfig `yaml:"http"`
+	Nk         string     `yaml:"nk"`
 }
 
 type Serve struct {
@@ -41,7 +43,26 @@ type LogConfig struct {
 	Stdout        bool   `yaml:"stdout"`
 }
 
-var config Config
+type HttpConfig struct {
+	ConnectionTimeOut int `yaml:"connection_time_out"`
+	ReadTimeOut       int `yaml:"read_time_out"`
+	WriteTimeOut      int `yaml:"write_time_out"`
+}
+
+var config Config = defaultAuthSdkConfig()
+
+func defaultAuthSdkConfig() Config {
+	return Config{
+		HttpConfig: HttpConfig{
+			ConnectionTimeOut: 3,
+			ReadTimeOut:       3,
+			WriteTimeOut:      3,
+		},
+		Logger: LogConfig{
+			DataLogPrefix: "../logs/",
+			Group:         "cloud-monitor-region",
+		}}
+}
 
 func InitConfig(path string) error {
 	data, err := ioutil.ReadFile(path)

@@ -18,3 +18,8 @@ logger:
   max_age:
   compress:
 
+nk: http://aopesb.wh002.test.cecloud.com/cestc
+http:
+  connection_time_out: 3
+  read_time_out: 3
+  write_time_out: 3
