@@ -1,7 +1,7 @@
 package database
 
 import (
-	"code.cestc.cn/ccos-ops/cloud-monitor/common/pkg/config"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
 	"github.com/jinzhu/gorm"
 	_ "gorm.io/driver/mysql"
 )

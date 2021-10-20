@@ -1,4 +1,5 @@
 code.cestc.cn/ccos-ops/cloud-monitor v0.0.0-20211020034033-5175aa9ef3d4 h1:O4cDX+Lqh9V8ClWyWZ5iI7CrM+P//EIUhdGqYJFHdsQ=
+code.cestc.cn/ccos-ops/cloud-monitor v0.0.0-20211020101236-270d47d03500 h1:SbDjKXBVDxtHUDgW0C67RjGq6TVKFlZ3mzvnsSg7ois=
 code.cestc.cn/ccos-ops/cloud-monitor-manager v0.0.0-20211012014744-4449d0bbb26d h1:SoAh6d0PqXUXCa8g919vNVMzFj6OZRsekeToFWHfAps=
 code.cestc.cn/ccos-ops/cloud-monitor-manager v0.0.0-20211012014744-4449d0bbb26d/go.mod h1:3qV7rUqFLp0h07FFspT1iuQVlr16jqj/9BhnLrpTpn0=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=

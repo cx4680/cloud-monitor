@@ -3,7 +3,7 @@ module code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region
 go 1.15
 
 require (
-    code.cestc.cn/ccos-ops/cloud-monitor/common v0.0.0-20211020034033-5175aa9ef3d4
+	code.cestc.cn/ccos-ops/cloud-monitor/common v0.0.0-20211020101236-270d47d03500
 	github.com/gin-gonic/gin v1.7.4
 	github.com/go-openapi/jsonreference v0.19.6 // indirect
 	github.com/go-openapi/swag v0.19.15 // indirect
@@ -26,6 +26,5 @@ require (
 	golang.org/x/tools v0.1.6 // indirect
 	google.golang.org/protobuf v1.27.1 // indirect
 )
-replace (
-	code.cestc.cn/ccos-ops/cloud-monitor/common => ../common
-)
+
+replace code.cestc.cn/ccos-ops/cloud-monitor/common => ../common

@@ -2,8 +2,7 @@ package web
 
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/web/middleware"
-	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
-	"code.cestc.cn/ccos-ops/cloud-monitor/common/pkg/config"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
@@ -57,8 +56,6 @@ func loadPlugin(cfg *config.Config) {
 		//router.Use(middleware.GinLogger())
 	}
 	//自定义组件
-	router.Use(logger.GinLogger())
-	router.Use(logger.GinRecovery(true))
 	router.Use(middleware.Cors())
 	router.Use(middleware.Auth())
 
