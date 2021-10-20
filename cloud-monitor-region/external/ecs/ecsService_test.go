@@ -1,7 +1,7 @@
 package ecs
 
 import (
-	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/logger"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
 	"encoding/json"
 	"fmt"
 	"testing"

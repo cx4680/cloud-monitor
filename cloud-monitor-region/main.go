@@ -1,11 +1,11 @@
 package main
 
 import (
-	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/config"
-	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/database"
-	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/logger"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/validator/translate"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/web"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/pkg/config"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/pkg/database"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/pkg/logger"
 	"flag"
 	"fmt"
 	"log"

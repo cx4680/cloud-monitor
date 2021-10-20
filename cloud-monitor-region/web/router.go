@@ -3,8 +3,8 @@ package web
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/controllers"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/dao"
-	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/database"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/docs"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/pkg/database"
 	gs "github.com/swaggo/gin-swagger"
 	"github.com/swaggo/gin-swagger/swaggerFiles"
 )

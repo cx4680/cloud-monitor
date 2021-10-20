@@ -1,9 +1,9 @@
 package web
 
 import (
-	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/config"
-	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/logger"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/web/middleware"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/pkg/config"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"

@@ -1,8 +1,8 @@
 package dao
 
 import (
-	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/config"
-	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/database"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/pkg/config"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/pkg/database"
 	"log"
 	"os"
 	"testing"

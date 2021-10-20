@@ -1,10 +1,9 @@
 package config
 
 import (
+	"gopkg.in/yaml.v3"
 	"io/ioutil"
 	"time"
-
-	"gopkg.in/yaml.v2"
 )
 
 type Config struct {
