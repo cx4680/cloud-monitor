@@ -63,12 +63,12 @@ func (ic *EipCtl) Page(c *gin.Context) {
 }
 
 type EipPageParam struct {
-	InstanceId string `form:"instanceId"`
-	Ip         string `form:"ip"`
-	Status     string `form:"status"`
-	StatusList []int  `form:"statusList"`
-	Current    int    `form:"current,default=1"`
-	PageSize   int    `form:"pageSize,default=10"`
+	InstanceId string `form:"instanceId,omitempty"`
+	Ip         string `form:"ip,omitempty"`
+	Status     string `form:"status,omitempty"`
+	StatusList []int  `form:"statusList,omitempty"`
+	Current    int    `form:"current,default=1,omitempty"`
+	PageSize   int    `form:"pageSize,default=10,omitempty"`
 }
 type EipInfoVo struct {
 	EipAddress     string `json:"eipAddress,omitempty"`

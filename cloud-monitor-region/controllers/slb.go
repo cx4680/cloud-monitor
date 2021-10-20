@@ -81,10 +81,10 @@ func (ic *SlbCtl) Page(c *gin.Context) {
 }
 
 type SlbPageParam struct {
-	InstanceId   string   `json:"instanceId"`
-	InstanceName string   `json:"instanceName"`
-	PrivateIp    string   `json:"privateIp"`
-	StatusList   []string `json:"statusList"`
+	InstanceId   string   `form:"instanceId,omitempty"`
+	InstanceName string   `form:"instanceName,omitempty"`
+	PrivateIp    string   `form:"privateIp,omitempty"`
+	StatusList   []string `form:"statusList,omitempty"`
 	Current      int      `form:"current,default=1"`
 	PageSize     int      `form:"pageSize,default=10"`
 }
