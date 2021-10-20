@@ -3,7 +3,6 @@ module code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region
 go 1.15
 
 require (
-	code.cestc.cn/ccos-ops/cloud-monitor-manager v0.0.0-20211012014744-4449d0bbb26d
 	github.com/gin-gonic/gin v1.7.4
 	github.com/go-openapi/jsonreference v0.19.6 // indirect
 	github.com/go-openapi/swag v0.19.15 // indirect
@@ -17,6 +16,7 @@ require (
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect
 	github.com/natefinch/lumberjack v2.0.0+incompatible
+	github.com/pkg/errors v0.8.1
 	github.com/swaggo/gin-swagger v1.3.1
 	github.com/swaggo/swag v1.7.3
 	github.com/ugorji/go v1.2.6 // indirect
