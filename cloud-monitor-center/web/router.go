@@ -3,7 +3,7 @@ package web
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor-center/controllers"
 	"code.cestc.cn/ccos-ops/cloud-monitor-center/dao"
-	"code.cestc.cn/ccos-ops/cloud-monitor-center/database"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/database"
 )
 
 func loadRouters() {
@@ -42,5 +42,29 @@ func alertContactGroupRouters() {
 		group.POST("/setAlertContactGroup", alertContactGroupCtl.InsertAlertContactGroup)
 		group.POST("/updateAlertContactGroup", alertContactGroupCtl.UpdateAlertContactGroup)
 		group.POST("/deleteAlertContactGroup", alertContactGroupCtl.DeleteAlertContactGroup)
+	}
+}
+
+func alarmRule() {
+	ruleCtl := controllers.NewAlarmRuleCtl(dao.NewAlarmRuleDao(database.GetDb()))
+	group := router.Group("/hawkeye/rule/")
+	{
+		group.POST("/page", ruleCtl.SelectRulePageList)
+		group.POST("/detail", ruleCtl.GetDetail)
+		group.POST("/create", ruleCtl.CreateRule)
+		group.POST("/update", ruleCtl.UpdateRule)
+		group.POST("/delete", ruleCtl.DeleteRule)
+		group.POST("/changeStatus", ruleCtl.ChangeRuleStatus)
+	}
+}
+
+func instance() {
+	ctl := controllers.NewInstanceCtl(dao.NewInstanceDao(database.GetDb()))
+	group := router.Group("/hawkeye/instance/")
+	{
+		group.POST("/rulePage", ctl.Page)
+		group.POST("/unbind", ctl.Unbind)
+		group.POST("/bind", ctl.Bind)
+		group.POST("/ruleList", ctl.GetRuleList)
 	}
 }

@@ -1,0 +1,75 @@
+package controllers
+
+import (
+	"code.cestc.cn/ccos-ops/cloud-monitor-center/config"
+	"code.cestc.cn/ccos-ops/cloud-monitor-center/dao"
+	"code.cestc.cn/ccos-ops/cloud-monitor-center/enums"
+	"code.cestc.cn/ccos-ops/cloud-monitor-center/forms"
+	"code.cestc.cn/ccos-ops/cloud-monitor-center/global"
+	"code.cestc.cn/ccos-ops/cloud-monitor-center/rocketmq/producer"
+	"code.cestc.cn/ccos-ops/cloud-monitor-center/validator/translate"
+	"github.com/gin-gonic/gin"
+	"net/http"
+)
+
+type AlarmRuleCtl struct {
+	dao *dao.AlarmRuleDao
+}
+
+func NewAlarmRuleCtl(dao *dao.AlarmRuleDao) *AlarmRuleCtl {
+	return &AlarmRuleCtl{dao: dao}
+}
+
+func (ctl *AlarmRuleCtl) SelectRulePageList(c *gin.Context) {
+	var param forms.AlarmPageReqParam
+	if err := c.ShouldBindJSON(&param); err != nil {
+		c.JSON(http.StatusBadRequest, translate.GetErrorMsg(err))
+		return
+	}
+	tenantId, _ := c.Get(global.TenantId)
+	param.TenantId = tenantId.(string)
+	c.JSON(http.StatusOK, global.NewSuccess("查询成功", ctl.dao.SelectRulePageList(&param)))
+}
+
+func (ctl *AlarmRuleCtl) GetDetail(c *gin.Context) {
+	id := c.PostForm("id")
+	tenantId, _ := c.Get(global.TenantId)
+	c.JSON(http.StatusOK, global.NewSuccess("查询成功", ctl.dao.GetDetail(id, tenantId.(string))))
+
+}
+
+func (ctl *AlarmRuleCtl) CreateRule(c *gin.Context) {
+	var param forms.AlarmRuleAddReqDTO
+	if err := c.ShouldBindJSON(&param); err != nil {
+		c.JSON(http.StatusBadRequest, translate.GetErrorMsg(err))
+		return
+	}
+	tenantId, _ := c.Get(global.TenantId)
+	param.TenantId = tenantId.(string)
+	userId, _ := c.Get(global.UserId)
+	param.UserId = userId.(string)
+	addMetricName(&param, ctl)
+	id := ctl.dao.SaveRule(&param)
+	param.Id = id
+	producer.SendMsg(config.GetConfig().Rocketmq.RuleTopic, enums.CreateRule, param)
+	c.JSON(http.StatusOK, global.NewSuccess("查询成功", true))
+}
+
+func (ctl *AlarmRuleCtl) UpdateRule(c *gin.Context) {
+
+}
+
+func (ctl *AlarmRuleCtl) DeleteRule(c *gin.Context) {
+
+}
+
+func (ctl *AlarmRuleCtl) ChangeRuleStatus(c *gin.Context) {
+
+}
+
+func addMetricName(param *forms.AlarmRuleAddReqDTO, ctl *AlarmRuleCtl) {
+	item := ctl.dao.GetMonitorItem(param.RuleCondition.MetricName)
+	param.RuleCondition.Labels = item.Labels
+	param.RuleCondition.Unit = item.Unit
+	param.RuleCondition.MonitorItemName = item.Name
+}

@@ -18,7 +18,7 @@ import (
 // @BasePath /
 func main() {
 	//解析命令参数
-	var cf = flag.String("config", "cloud-monitor-center/config.local.yml", "config path")
+	var cf = flag.String("config", "config.local.yml", "config path")
 	flag.Parse()
 
 	//加载配置文件
@@ -29,7 +29,7 @@ func main() {
 	}
 
 	cfg := config.GetConfig()
-
+	database.InitDb(&cfg.DB)
 	if err := translate.InitTrans("zh"); err != nil {
 		fmt.Printf("init trans failed, err:%v\n", err)
 		return

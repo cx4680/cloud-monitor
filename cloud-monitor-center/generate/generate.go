@@ -22,19 +22,19 @@ func generate() {
 	// 开始迁移转换
 	err := t2t.
 		// 指定某个表,如果不指定,则默认全部表都迁移
-		Table("monitor_product").
+		Table("t_alarm_notice").
 		// 表前缀
 		//Prefix("t_").
 		// 是否添加json tag
 		EnableJsonTag(true).
 		// 生成struct的包名(默认为空的话, 则取名为: package models)
-		//PackageName("models").
+		PackageName("models").
 		// tag字段的key值,默认是orm
 		TagKey("orm").
 		// 是否添加结构体方法获取表名
 		RealNameMethod("TableName").
 		// 生成的结构体保存路径
-		SavePath("../models/monitorProduct.go").
+		SavePath("../models/alarmNotice.go").
 		// 数据库dsn,这里可以使用 t2t.DB() 代替,参数为 *sql.DB 对象
 		Dsn("hawkeye:hawkeye@Cecloud202!@(10.255.198.16:6033)/hawkeye?charset=utf8mb4&parseTime=True&loc=Local").
 		// 执行
