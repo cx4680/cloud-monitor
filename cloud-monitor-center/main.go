@@ -1,11 +1,11 @@
 package main
 
 import (
-	"code.cestc.cn/ccos-ops/cloud-monitor-center/config"
-	"code.cestc.cn/ccos-ops/cloud-monitor-center/database"
-	"code.cestc.cn/ccos-ops/cloud-monitor-center/logger"
 	"code.cestc.cn/ccos-ops/cloud-monitor-center/validator/translate"
 	"code.cestc.cn/ccos-ops/cloud-monitor-center/web"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/database"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
 	"flag"
 	"fmt"
 	"log"
@@ -18,7 +18,7 @@ import (
 // @BasePath /
 func main() {
 	//解析命令参数
-	var cf = flag.String("config", "config.local.yml", "config path")
+	var cf = flag.String("config", "cloud-monitor-center/config.local.yml", "config path")
 	flag.Parse()
 
 	//加载配置文件
@@ -38,11 +38,11 @@ func main() {
 	//初始化数据里连接
 	database.InitDb(&cfg.DB)
 	logger.InitLogger(&config.GetConfig().Logger)
-	defer logger.Logger.Sync()
+	defer logger.Logger().Sync()
 
 	defer database.GetDb().Close()
 	//启动Web容器
 	if err := web.Start(cfg); err != nil {
-		logger.Logger.Info("startup service failed, err:%v\n", err)
+		logger.Logger().Infof("startup service failed, err:%v\n", err)
 	}
 }

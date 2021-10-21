@@ -45,11 +45,9 @@ type LogConfig struct {
 }
 
 type Rocketmq struct {
-	NameServer             string `yaml:"name-server"`
-	AlertContactTopic      string `yaml:"alertContactTopic"`
-	AlertContactGroupTopic string `yaml:"alertContactGroupTopic"`
-	AlertContactGroup      string `yaml:"alertContactGroup"`
-	AlertContactGroupGroup string `yaml:"alertContactGroupGroup"`
+	NameServer        string `yaml:"name-server"`
+	AlertContactTopic string `yaml:"alertContactTopic"`
+	AlertContactGroup string `yaml:"alertContactGroup"`
 }
 
 var config Config

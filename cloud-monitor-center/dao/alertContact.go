@@ -86,7 +86,7 @@ func (mpd *AlertContactDao) UpdateAlertContact(param forms.AlertContactParam) {
 		Description: param.Description,
 		UpdateTime:  currentTime,
 	}
-	mpd.db.Model(alertContact).Updates(*alertContact)
+	mpd.db.Model(alertContact).Updates(alertContact)
 	//同步region
 	producer.SendMsg(cfg.Rocketmq.AlertContactTopic, enums.UpdateAlertContact, alertContact)
 
@@ -106,11 +106,7 @@ func (mpd *AlertContactDao) DeleteAlertContact(param forms.AlertContactParam) {
 	//删除联系方式
 	mpd.deleteAlertContactInformation(param.ContactId)
 	//删除联系人组关联
-
-	mpd.db.Where("contact_id = ?", param.ContactId).Delete(models.AlertContactInformation{})
-	mpd.db.Where("contact_id = ?", param.ContactId).Delete(models.AlertContactGroupRel{})
-	producer.SendMsg(cfg.Rocketmq.AlertContactTopic, enums.DeleteAlertContactInformation, param.ContactId)
-	producer.SendMsg(cfg.Rocketmq.AlertContactTopic, enums.DeleteAlertContactGroupRel, param.ContactId)
+	mpd.deleteAlertContactGroupRel(param.ContactId)
 }
 
 func (mpd *AlertContactDao) CertifyAlertContact(activeCode string) string {
@@ -202,7 +198,7 @@ func (mpd *AlertContactDao) deleteAlertContactInformation(contactId string) {
 func (mpd *AlertContactDao) deleteAlertContactGroupRel(contactId string) {
 	mpd.db.Where("contact_id = ?", contactId).Delete(models.AlertContactGroupRel{})
 	//同步region
-	producer.SendMsg(cfg.Rocketmq.AlertContactTopic, enums.DeleteAlertContactGroupRel, contactId)
+	producer.SendMsg(cfg.Rocketmq.AlertContactTopic, enums.DeleteAlertContactGroupRelByContactId, contactId)
 }
 
 //获取租户名字

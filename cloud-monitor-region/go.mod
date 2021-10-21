@@ -4,6 +4,7 @@ go 1.15
 
 require (
 	code.cestc.cn/ccos-ops/cloud-monitor/common v0.0.0-20211020101236-270d47d03500
+	github.com/apache/rocketmq-client-go/v2 v2.1.0
 	github.com/gin-gonic/gin v1.7.4
 	github.com/go-openapi/jsonreference v0.19.6 // indirect
 	github.com/go-openapi/swag v0.19.15 // indirect
@@ -25,6 +26,9 @@ require (
 	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/tools v0.1.6 // indirect
 	google.golang.org/protobuf v1.27.1 // indirect
+	gopkg.in/natefinch/lumberjack.v2 v2.0.0 // indirect
+	gopkg.in/yaml.v2 v2.4.0
+	gorm.io/driver/mysql v1.1.2
 )
 
 replace code.cestc.cn/ccos-ops/cloud-monitor/common => ../common

@@ -46,7 +46,7 @@ func (mpd *AlertContactGroupDao) InsertAlertContactGroup(param forms.AlertContac
 	}
 	mpd.db.Create(alertContactGroup)
 	//同步region
-	producer.SendMsg(cfg.Rocketmq.AlertContactGroupTopic, enums.InsertAlertContactGroup, alertContactGroup)
+	producer.SendMsg(cfg.Rocketmq.AlertContactTopic, enums.InsertAlertContactGroup, alertContactGroup)
 
 	// 添加联系人组关联
 	mpd.insertAlertContactGroupRel(param, groupId, currentTime)
@@ -63,7 +63,7 @@ func (mpd *AlertContactGroupDao) UpdateAlertContactGroup(param forms.AlertContac
 	}
 	mpd.db.Model(alertContactGroup).Updates(alertContactGroup)
 	//同步region
-	producer.SendMsg(cfg.Rocketmq.AlertContactGroupTopic, enums.UpdateAlertContactGroup, alertContactGroup)
+	producer.SendMsg(cfg.Rocketmq.AlertContactTopic, enums.UpdateAlertContactGroup, alertContactGroup)
 
 	//更新联系人关联
 	mpd.updateAlertContactGroupRel(param, currentTime)
@@ -73,7 +73,7 @@ func (mpd *AlertContactGroupDao) DeleteAlertContactGroup(param forms.AlertContac
 	var model models.AlertContactGroup
 	mpd.db.Delete(&model, param.GroupId)
 	//同步region
-	producer.SendMsg(cfg.Rocketmq.AlertContactGroupTopic, enums.DeleteAlertContactGroup, param.GroupId)
+	producer.SendMsg(cfg.Rocketmq.AlertContactTopic, enums.DeleteAlertContactGroup, param.GroupId)
 	//删除联系人关联
 	mpd.deleteAlertContactGroupRel(param.GroupId)
 }
@@ -92,7 +92,7 @@ func (mpd *AlertContactGroupDao) insertAlertContactGroupRel(param forms.AlertCon
 		}
 		mpd.db.Create(alertContactGroupRel)
 		//同步region
-		producer.SendMsg(cfg.Rocketmq.AlertContactGroupTopic, enums.InsertAlertContactGroupRel, alertContactGroupRel)
+		producer.SendMsg(cfg.Rocketmq.AlertContactTopic, enums.InsertAlertContactGroupRel, alertContactGroupRel)
 	}
 }
 
@@ -108,5 +108,5 @@ func (mpd *AlertContactGroupDao) updateAlertContactGroupRel(param forms.AlertCon
 func (mpd *AlertContactGroupDao) deleteAlertContactGroupRel(groupId string) {
 	mpd.db.Where("group_id = ?", groupId).Delete(models.AlertContactGroupRel{})
 	//同步region
-	producer.SendMsg(cfg.Rocketmq.AlertContactGroupTopic, enums.DeleteAlertContactGroupRel, groupId)
+	producer.SendMsg(cfg.Rocketmq.AlertContactTopic, enums.DeleteAlertContactGroupRelByGroupId, groupId)
 }
