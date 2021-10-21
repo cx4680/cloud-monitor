@@ -13,6 +13,7 @@ type Config struct {
 	Logger     LogConfig  `yaml:"logger"`
 	HttpConfig HttpConfig `yaml:"http"`
 	Nk         string     `yaml:"nk"`
+	Rocketmq   Rocketmq   `yaml:"rocketmq"`
 }
 
 type Serve struct {
@@ -46,6 +47,12 @@ type HttpConfig struct {
 	ConnectionTimeOut int `yaml:"connection_time_out"`
 	ReadTimeOut       int `yaml:"read_time_out"`
 	WriteTimeOut      int `yaml:"write_time_out"`
+}
+
+type Rocketmq struct {
+	NameServer        string `yaml:"name-server"`
+	AlertContactTopic string `yaml:"alertContactTopic"`
+	AlertContactGroup string `yaml:"alertContactGroup"`
 }
 
 var config Config = defaultAuthSdkConfig()

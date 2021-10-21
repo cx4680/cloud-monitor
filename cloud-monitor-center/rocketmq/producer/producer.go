@@ -23,7 +23,6 @@ func SendMsg(topic string, eventEum enums.EventEum, module interface{}) {
 		fmt.Printf("start producer error: %s", err.Error())
 		return
 	}
-	//topic := cfg.Rocketmq.AlertContactTopic
 
 	var alertContactMqMsg = forms.AlertContactMqMsg{
 		EventEum: eventEum,
