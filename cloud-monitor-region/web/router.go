@@ -4,6 +4,7 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/controllers"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/dao"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/docs"
+	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/service"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/database"
 	gs "github.com/swaggo/gin-swagger"
 	"github.com/swaggo/gin-swagger/swaggerFiles"
@@ -15,6 +16,15 @@ func loadRouters() {
 	instance()
 	eip()
 	slb()
+	MonitorReportForm()
+}
+
+func MonitorReportForm() {
+	monitorReportFormCtl := controllers.NewMonitorReportFormController(service.NewMonitorReportFormService())
+	group := router.Group("/hawkeye/MonitorReportForm/")
+	{
+		group.GET("/getData", monitorReportFormCtl.GetData)
+	}
 }
 
 func monitorProductRouters() {

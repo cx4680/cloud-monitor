@@ -22,7 +22,7 @@ func Start(cfg *config.Config) error {
 	loadPlugin(cfg)
 	//加载路由
 	loadRouters()
-	//
+	//加载mq
 	rocketmq.SubScribe()
 	//启动服务
 	return doStart(cfg)
@@ -34,7 +34,7 @@ func doStart(cfg *config.Config) error {
 		c.HTML(http.StatusNotFound, "path not found", nil)
 	})
 
-	port := "8080"
+	port := "8081"
 	if cfg.Serve.Port > 0 {
 		port = strconv.Itoa(cfg.Serve.Port)
 	}

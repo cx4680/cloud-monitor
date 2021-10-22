@@ -1,6 +1,6 @@
 app: cloud-monitor-manager
 serve:
-  port: 8080
+  port: 8081
   debug: true
 #  read_timeout:
 #  write_timeout:
@@ -28,3 +28,8 @@ rocketmq:
   name-server: 127.0.0.1:9876
   alertContactTopic: alertContact
   alertContactGroup: alertContact
+
+prometheus:
+  url: http://10.255.238.187:32494/api/v1
+  query: /query?query=
+  queryRange: /query_range?query=

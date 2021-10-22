@@ -1,5 +1,5 @@
 app: cloud-monitor-manager
-port: 8080
+port: 8081
 debug: true
 db:
   url: hawkeye:hawkeye@Cecloud202!@(10.255.198.16:6033)/hawkeye?charset=utf8mb4&parseTime=True&loc=Local

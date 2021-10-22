@@ -14,6 +14,7 @@ type Config struct {
 	HttpConfig HttpConfig `yaml:"http"`
 	Nk         string     `yaml:"nk"`
 	Rocketmq   Rocketmq   `yaml:"rocketmq"`
+	Prometheus Prometheus `yaml:"prometheus"`
 }
 
 type Serve struct {
@@ -53,6 +54,12 @@ type Rocketmq struct {
 	NameServer        string `yaml:"name-server"`
 	AlertContactTopic string `yaml:"alertContactTopic"`
 	AlertContactGroup string `yaml:"alertContactGroup"`
+}
+
+type Prometheus struct {
+	Url        string `yaml:"url"`
+	Query      string `yaml:"query"`
+	QueryRange string `yaml:"queryRange"`
 }
 
 var config Config = defaultAuthSdkConfig()

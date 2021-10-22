@@ -38,7 +38,8 @@ func main() {
 
 	defer database.GetDb().Close()
 	//启动Web容器
-	if err := web.Start(cfg); err != nil {
+	err = web.Start(cfg)
+	if err != nil {
 		logger.Logger().Infof("startup service failed, err:%v\n", err)
 	}
 }
