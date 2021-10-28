@@ -29,6 +29,7 @@ require (
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0
 	gorm.io/driver/mysql v1.1.2
+	k8s.io/client-go v1.5.2 // indirect
 )
 
 replace code.cestc.cn/ccos-ops/cloud-monitor/common => ../common

@@ -3,7 +3,6 @@ package dao
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor-center/database"
 	"code.cestc.cn/ccos-ops/cloud-monitor-center/forms"
-	"code.cestc.cn/ccos-ops/cloud-monitor-center/global"
 	"code.cestc.cn/ccos-ops/cloud-monitor-center/models"
 	"code.cestc.cn/ccos-ops/cloud-monitor-center/utils/snowflake"
 	"code.cestc.cn/ccos-ops/cloud-monitor-center/vo"
@@ -27,56 +26,28 @@ func (dao *AlarmRuleDao) SaveRule(ruleReqDTO *forms.AlarmRuleAddReqDTO) string {
 	rule.MonitorType = ruleReqDTO.MonitorType
 	rule.ProductType = ruleReqDTO.ProductType
 	dao.db.Create(rule)
+	dao.saveRuleOthers(ruleReqDTO, rule.Id)
 	return rule.Id
 }
-
-func buildAlarmRule(ruleReqDTO *forms.AlarmRuleAddReqDTO) *models.AlarmRule {
-	return &models.AlarmRule{TenantId: ruleReqDTO.TenantId,
-		ProductType:   ruleReqDTO.ProductType,
-		Dimensions:    global.GetResourceScopeInt(ruleReqDTO.Scope),
-		Name:          ruleReqDTO.RuleName,
-		MetricName:    ruleReqDTO.RuleCondition.MetricName,
-		RuleCondition: ruleReqDTO.RuleCondition,
-		SilencesTime:  ruleReqDTO.SilencesTime,
-		Level:         ruleReqDTO.AlarmLevel,
-		NotifyChannel: getNotifyChannel(ruleReqDTO.NoticeChannel),
-		CreateUser:    ruleReqDTO.UserId,
-	}
-}
-
-func (dao *AlarmRuleDao) saveRuleOthers(ruleReqDTO *forms.AlarmRuleAddReqDTO, ruleId string) {
-	dao.saveAlarmNotice(ruleReqDTO, ruleId)
-	dao.saveAlarmInstances(ruleReqDTO, ruleId)
-}
-
-func (dao *AlarmRuleDao) saveAlarmNotice(ruleReqDTO *forms.AlarmRuleAddReqDTO, ruleId string) {
-	list := make([]*models.AlarmNotice, len(ruleReqDTO.InstanceList))
-	for index, group := range ruleReqDTO.GroupList {
-		list[index] = &models.AlarmNotice{
-			AlarmRuleId:     ruleId,
-			ContractGroupId: group,
-		}
-	}
-	// todo 批量插入 dao.db
-}
-
-func (dao *AlarmRuleDao) saveAlarmInstances(ruleReqDTO *forms.AlarmRuleAddReqDTO, ruleId string) {
-	list := make([]*models.AlarmInstance, len(ruleReqDTO.InstanceList))
-	for index, info := range ruleReqDTO.InstanceList {
-		instance := &models.AlarmInstance{
-			AlarmRuleId: ruleId,
-			Ip:          info.Ip,
-		}
-		list[index] = instance
-	}
-}
-
 func (dao *AlarmRuleDao) UpdateRule(ruleReqDTO *forms.AlarmRuleAddReqDTO) {
-
+	dao.deleteOthers(ruleReqDTO.Id)
+	rule := buildAlarmRule(ruleReqDTO)
+	dao.db.Update(rule)
+	dao.saveRuleOthers(ruleReqDTO, rule.Id)
 }
 
-func (dao *AlarmRuleDao) DeleteRule(ruleReqDTO *forms.AlarmRuleAddReqDTO) {
+func (dao *AlarmRuleDao) DeleteRule(ruleReqDTO *forms.RuleReqDTO) {
+	rule := models.AlarmRule{
+		TenantId: ruleReqDTO.TenantId,
+		Id:       ruleReqDTO.Id,
+	}
+	dao.db.Delete(&rule)
+	dao.deleteOthers(ruleReqDTO.Id)
+}
 
+func (dao *AlarmRuleDao) UpdateRuleState(ruleReqDTO *forms.RuleReqDTO) {
+	rule := models.AlarmRule{Id: ruleReqDTO.Id, Enabled: GetAlarmStatusTextInt(ruleReqDTO.Status), TenantId: ruleReqDTO.TenantId}
+	dao.db.Update(&rule)
 }
 
 func (dao *AlarmRuleDao) SelectRulePageList(param *forms.AlarmPageReqParam) interface{} {
@@ -133,7 +104,93 @@ func (dao *AlarmRuleDao) GetMonitorItem(metricName string) *models.MonitorItem {
 	return model
 }
 
+func buildAlarmRule(ruleReqDTO *forms.AlarmRuleAddReqDTO) *models.AlarmRule {
+	return &models.AlarmRule{TenantId: ruleReqDTO.TenantId,
+		ProductType:   ruleReqDTO.ProductType,
+		Dimensions:    GetResourceScopeInt(ruleReqDTO.Scope),
+		Name:          ruleReqDTO.RuleName,
+		MetricName:    ruleReqDTO.RuleCondition.MetricName,
+		RuleCondition: ruleReqDTO.RuleCondition,
+		SilencesTime:  ruleReqDTO.SilencesTime,
+		Level:         ruleReqDTO.AlarmLevel,
+		NotifyChannel: getNotifyChannel(ruleReqDTO.NoticeChannel),
+		CreateUser:    ruleReqDTO.UserId,
+	}
+}
+
+func (dao *AlarmRuleDao) saveRuleOthers(ruleReqDTO *forms.AlarmRuleAddReqDTO, ruleId string) {
+	dao.saveAlarmNotice(ruleReqDTO, ruleId)
+	dao.saveAlarmInstances(ruleReqDTO, ruleId)
+}
+
+func (dao *AlarmRuleDao) saveAlarmNotice(ruleReqDTO *forms.AlarmRuleAddReqDTO, ruleId string) {
+	list := make([]*models.AlarmNotice, len(ruleReqDTO.InstanceList))
+	for index, group := range ruleReqDTO.GroupList {
+		list[index] = &models.AlarmNotice{
+			AlarmRuleId:     ruleId,
+			ContractGroupId: group,
+		}
+	}
+	dao.db.Create(list)
+}
+
+func (dao *AlarmRuleDao) saveAlarmInstances(ruleReqDTO *forms.AlarmRuleAddReqDTO, ruleId string) {
+	list := make([]*models.AlarmInstance, len(ruleReqDTO.InstanceList))
+	for index, info := range ruleReqDTO.InstanceList {
+		instance := &models.AlarmInstance{
+			AlarmRuleId:  ruleId,
+			Ip:           info.Ip,
+			InstanceId:   info.InstanceId,
+			RegionCode:   info.RegionCode,
+			ZoneCode:     info.ZoneCode,
+			ZoneName:     info.ZoneName,
+			RegionName:   info.RegionName,
+			InstanceName: info.InstanceName,
+			TenantId:     ruleReqDTO.TenantId,
+		}
+		list[index] = instance
+	}
+	dao.db.Create(list)
+}
+
+func (dao *AlarmRuleDao) deleteOthers(ruleId string) {
+	notice := models.AlarmNotice{
+		AlarmRuleId: ruleId,
+	}
+	dao.db.Delete(&notice)
+	instance := models.AlarmInstance{AlarmRuleId: ruleId}
+	dao.db.Delete(&instance)
+}
+
 ////todo 查询通知方式
 func getNotifyChannel(notifyChannel string) int {
 	return 1
+}
+
+const (
+	ALL      = "ALL"
+	INSTANCE = "INSTANCE"
+)
+
+var ResourceScopeText = map[string]int{
+	ALL:      1,
+	INSTANCE: 2,
+}
+
+func GetResourceScopeInt(code string) int {
+	return ResourceScopeText[code]
+}
+
+const (
+	ENABLE  = "enabled"
+	DISABLE = "disabled"
+)
+
+var AlarmStatusText = map[string]int{
+	ENABLE:  1,
+	DISABLE: 0,
+}
+
+func GetAlarmStatusTextInt(code string) int {
+	return AlarmStatusText[code]
 }

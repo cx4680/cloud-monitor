@@ -16,14 +16,14 @@ type InstanceRuleDTO struct {
 }
 
 type InstanceInfo struct {
-	InstanceId   string      `json:"instanceId"`
-	ZoneCode     interface{} `json:"zoneCode"`
-	RegionCode   string      `json:"regionCode"`
-	RegionName   string      `json:"regionName"`
-	ZoneName     interface{} `json:"zoneName"`
-	Ip           string      `json:"ip"`
-	Status       interface{} `json:"status"`
-	InstanceName string      `json:"instanceName"`
+	InstanceId   string `json:"instanceId"`
+	ZoneCode     string `json:"zoneCode"`
+	RegionCode   string `json:"regionCode"`
+	RegionName   string `json:"regionName"`
+	ZoneName     string `json:"zoneName"`
+	Ip           string `json:"ip"`
+	Status       string `json:"status"`
+	InstanceName string `json:"instanceName"`
 }
 
 type InstanceBindRuleDTO struct {

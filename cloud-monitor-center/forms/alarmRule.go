@@ -20,30 +20,29 @@ type AlarmRulePageDTO struct {
 }
 
 type AlarmRuleDetailDTO struct {
-	MonitorType      string         `json:"monitorType"`
-	ProductType      string         `json:"productType"`
-	Scope            string         `json:"scope"`
-	InstanceList     []InstanceInfo `json:"instanceList"`
-	RuleName         string         `json:"ruleName"`
-	TriggerCondition interface{}    `json:"triggerCondition"`
-	SilencesTime     string         `json:"silencesTime"`
-	EffectiveStart   interface{}    `json:"effectiveStart"`
-	EffectiveEnd     interface{}    `json:"effectiveEnd"`
-	AlarmLevel       int            `json:"alarmLevel"`
-	NoticeChannel    string         `json:"noticeChannel"`
-	GroupList        interface{}    `json:"groupList"`
-	TenantId         interface{}    `json:"tenantId"`
-	UserId           interface{}    `json:"userId"`
-	Id               string         `json:"id"`
-	RuleCondition    RuleCondition  `json:"ruleCondition"`
-	Status           string         `json:"status"`
-	NoticeGroups     []struct {
+	MonitorType    string          `json:"monitorType"`
+	ProductType    string          `json:"productType"`
+	Scope          string          `json:"scope"`
+	InstanceList   []*InstanceInfo `json:"instanceList"`
+	RuleName       string          `json:"ruleName"`
+	SilencesTime   string          `json:"silencesTime"`
+	EffectiveStart string          `json:"effectiveStart"`
+	EffectiveEnd   string          `json:"effectiveEnd"`
+	AlarmLevel     int             `json:"alarmLevel"`
+	NoticeChannel  string          `json:"noticeChannel"`
+	GroupList      interface{}     `json:"groupList"`
+	TenantId       string          `json:"tenantId"`
+	UserId         string          `json:"userId"`
+	Id             string          `json:"id"`
+	RuleCondition  *RuleCondition  `json:"ruleCondition"`
+	Status         string          `json:"status"`
+	NoticeGroups   []*struct {
 		Id       string `json:"id"`
 		Name     string `json:"name"`
-		UserList []struct {
-			Phone    interface{} `json:"phone"`
-			Email    string      `json:"email"`
-			UserName string      `json:"userName"`
+		UserList []*struct {
+			Phone    string `json:"phone"`
+			Email    string `json:"email"`
+			UserName string `json:"userName"`
 		} `json:"userList"`
 	} `json:"noticeGroups"`
 	NoticeChannelDesc string `json:"noticeChannelDesc"`
@@ -51,19 +50,19 @@ type AlarmRuleDetailDTO struct {
 }
 
 type AlarmRuleAddReqDTO struct {
-	MonitorType   string         `json:"monitorType"`
-	ProductType   string         `json:"productType"`
-	Scope         string         `json:"scope"`
-	TenantId      string         `json:"tenantId"`
-	UserId        string         `json:"userId"`
-	InstanceList  []InstanceInfo `json:"instanceList"`
-	RuleName      string         `json:"ruleName"`
-	RuleCondition RuleCondition  `json:"triggerCondition"`
-	SilencesTime  string         `json:"silencesTime"`
-	AlarmLevel    int            `json:"alarmLevel"`
-	NoticeChannel string         `json:"noticeChannel"`
-	GroupList     []string       `json:"groupList"`
-	Id            string         `json:"id"`
+	MonitorType   string          `json:"monitorType"`
+	ProductType   string          `json:"productType"`
+	Scope         string          `json:"scope"`
+	TenantId      string          `json:"tenantId"`
+	UserId        string          `json:"userId"`
+	InstanceList  []*InstanceInfo `json:"instanceList"`
+	RuleName      string          `json:"ruleName"`
+	RuleCondition *RuleCondition  `json:"triggerCondition"`
+	SilencesTime  string          `json:"silencesTime"`
+	AlarmLevel    int             `json:"alarmLevel"`
+	NoticeChannel string          `json:"noticeChannel"`
+	GroupList     []string        `json:"groupList"`
+	Id            string          `json:"id"`
 }
 
 type RuleCondition struct {
@@ -78,6 +77,7 @@ type RuleCondition struct {
 	MonitorItemName    string `json:"monitorItemName"`
 }
 type RuleReqDTO struct {
-	Id     string `json:"id"`
-	Status string `json:"status"`
+	Id       string `json:"id"`
+	Status   string `json:"status"`
+	TenantId string `json:"tenantId"`
 }

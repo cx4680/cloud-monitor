@@ -45,14 +45,14 @@ func InitLogger(cfg *config.LogConfig) {
 		debugWriter := getLogWriter("debug", cfg)
 
 		core = zapcore.NewTee(
-			zapcore.NewCore(encoder, zapcore.AddSync(debugWriter), debugLevel),
-			zapcore.NewCore(encoder, zapcore.AddSync(infoWriter), infoLevel),
-			zapcore.NewCore(encoder, zapcore.AddSync(errorWriter), errorLevel),
+			zapcore.NewCore(encoder, zapcore.NewMultiWriteSyncer(zapcore.AddSync(os.Stdout), zapcore.AddSync(debugWriter)), debugLevel),
+			zapcore.NewCore(encoder, zapcore.NewMultiWriteSyncer(zapcore.AddSync(os.Stdout), zapcore.AddSync(infoWriter)), infoLevel),
+			zapcore.NewCore(encoder, zapcore.NewMultiWriteSyncer(zapcore.AddSync(os.Stdout), zapcore.AddSync(errorWriter)), errorLevel),
 		)
 	} else {
 		core = zapcore.NewTee(
-			zapcore.NewCore(encoder, zapcore.AddSync(infoWriter), infoLevel),
-			zapcore.NewCore(encoder, zapcore.AddSync(errorWriter), errorLevel),
+			zapcore.NewCore(encoder, zapcore.NewMultiWriteSyncer(zapcore.AddSync(os.Stdout), zapcore.AddSync(infoWriter)), infoLevel),
+			zapcore.NewCore(encoder, zapcore.NewMultiWriteSyncer(zapcore.AddSync(os.Stdout), zapcore.AddSync(errorWriter)), errorLevel),
 		)
 	}
 
