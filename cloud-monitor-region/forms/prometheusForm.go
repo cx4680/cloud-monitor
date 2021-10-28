@@ -1,7 +1,5 @@
 package forms
 
-import "container/list"
-
 type PrometheusRequest struct {
 	/**
 	 * 租户Id（位于request head中）
@@ -22,9 +20,9 @@ type PrometheusRequest struct {
 	/**
 	 * 区间数据查询参数 时间戳
 	 */
-	Start int64 `form:"start"`
-	End   int64 `form:"end"`
-	Step  int64 `form:"step"`
+	Start int `form:"start"`
+	End   int `form:"end"`
+	Step  int `form:"step"`
 	/**
 	 * 统计方式
 	 * 聚合函数 sum(求和)  min(最小值)  max (最大值)  avg (平均值)  stddev (标准差)  stdvar (标准差异)  count (计数)
@@ -54,6 +52,11 @@ type PrometheusValue struct {
 }
 
 type PrometheusAxis struct {
-	XAxis list.List
+	XAxis []string
 	YAxis map[string][]string
+}
+
+type PrometheusInstance struct {
+	Instance string
+	Value    string
 }

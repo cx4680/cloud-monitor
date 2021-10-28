@@ -2,11 +2,11 @@ package consumer
 
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/dao"
-	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/enums"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/forms"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/models"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/database"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/enums"
 	"context"
 	"encoding/json"
 	"fmt"

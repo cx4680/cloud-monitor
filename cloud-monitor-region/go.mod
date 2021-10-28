@@ -20,16 +20,9 @@ require (
 	github.com/pkg/errors v0.8.1
 	github.com/swaggo/gin-swagger v1.3.1
 	github.com/swaggo/swag v1.7.3
-	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519 // indirect
 	golang.org/x/net v0.0.0-20210928044308-7d9f5e0b762b // indirect
-	golang.org/x/sys v0.0.0-20210925032602-92d5a993a665 // indirect
 	golang.org/x/text v0.3.7 // indirect
-	golang.org/x/tools v0.1.6 // indirect
 	google.golang.org/protobuf v1.27.1 // indirect
-	gopkg.in/natefinch/lumberjack.v2 v2.0.0 // indirect
-	gopkg.in/yaml.v2 v2.4.0
-	gorm.io/driver/mysql v1.1.2
-	k8s.io/client-go v1.5.2 // indirect
 )
 
 replace code.cestc.cn/ccos-ops/cloud-monitor/common => ../common

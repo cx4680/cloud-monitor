@@ -19,7 +19,8 @@ func Query(pql string, time string, tenantId string) forms.PrometheusResponse {
 }
 
 func QueryRange(pql string, start string, end string, step string, tenantId string) forms.PrometheusResponse {
-	url := cfg.Prometheus.Url + cfg.Prometheus.QueryRange + "&start=" + start + "&end=" + end + "&step=" + step
+	url := cfg.Prometheus.Url + cfg.Prometheus.QueryRange
+	pql += "&start=" + start + "&end=" + end + "&step=" + step
 	return sendRequest(url, pql, tenantId)
 }
 

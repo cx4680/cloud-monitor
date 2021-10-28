@@ -1,7 +1,7 @@
 package web
 
 import (
-	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/rocketmq"
+	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/mq"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/web/middleware"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
 	"github.com/gin-gonic/gin"
@@ -23,7 +23,7 @@ func Start(cfg *config.Config) error {
 	//加载路由
 	loadRouters()
 	//加载mq
-	rocketmq.SubScribe()
+	mq.SubScribe()
 	//启动服务
 	return doStart(cfg)
 }

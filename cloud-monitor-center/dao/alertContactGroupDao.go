@@ -2,11 +2,11 @@ package dao
 
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor-center/database"
-	"code.cestc.cn/ccos-ops/cloud-monitor-center/enums"
 	"code.cestc.cn/ccos-ops/cloud-monitor-center/forms"
 	"code.cestc.cn/ccos-ops/cloud-monitor-center/models"
-	"code.cestc.cn/ccos-ops/cloud-monitor-center/rocketmq/producer"
-	"code.cestc.cn/ccos-ops/cloud-monitor/common/utils/snowflake"
+	"code.cestc.cn/ccos-ops/cloud-monitor-center/mq"
+	"code.cestc.cn/ccos-ops/cloud-monitor-center/utils/snowflake"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/enums"
 	"github.com/jinzhu/gorm"
 	"strconv"
 )
@@ -46,7 +46,7 @@ func (mpd *AlertContactGroupDao) InsertAlertContactGroup(param forms.AlertContac
 	}
 	mpd.db.Create(alertContactGroup)
 	//同步region
-	producer.SendMsg(cfg.Rocketmq.AlertContactTopic, enums.InsertAlertContactGroup, alertContactGroup)
+	mq.SendMsg(cfg.Rocketmq.AlertContactTopic, enums.InsertAlertContactGroup, alertContactGroup)
 
 	// 添加联系人组关联
 	mpd.insertAlertContactGroupRel(param, groupId, currentTime)
@@ -63,7 +63,7 @@ func (mpd *AlertContactGroupDao) UpdateAlertContactGroup(param forms.AlertContac
 	}
 	mpd.db.Model(alertContactGroup).Updates(alertContactGroup)
 	//同步region
-	producer.SendMsg(cfg.Rocketmq.AlertContactTopic, enums.UpdateAlertContactGroup, alertContactGroup)
+	mq.SendMsg(cfg.Rocketmq.AlertContactTopic, enums.UpdateAlertContactGroup, alertContactGroup)
 
 	//更新联系人关联
 	mpd.updateAlertContactGroupRel(param, currentTime)
@@ -73,7 +73,7 @@ func (mpd *AlertContactGroupDao) DeleteAlertContactGroup(param forms.AlertContac
 	var model models.AlertContactGroup
 	mpd.db.Delete(&model, param.GroupId)
 	//同步region
-	producer.SendMsg(cfg.Rocketmq.AlertContactTopic, enums.DeleteAlertContactGroup, param.GroupId)
+	mq.SendMsg(cfg.Rocketmq.AlertContactTopic, enums.DeleteAlertContactGroup, param.GroupId)
 	//删除联系人关联
 	mpd.deleteAlertContactGroupRel(param.GroupId)
 }
@@ -92,7 +92,7 @@ func (mpd *AlertContactGroupDao) insertAlertContactGroupRel(param forms.AlertCon
 		}
 		mpd.db.Create(alertContactGroupRel)
 		//同步region
-		producer.SendMsg(cfg.Rocketmq.AlertContactTopic, enums.InsertAlertContactGroupRel, alertContactGroupRel)
+		mq.SendMsg(cfg.Rocketmq.AlertContactTopic, enums.InsertAlertContactGroupRel, alertContactGroupRel)
 	}
 }
 
@@ -108,5 +108,5 @@ func (mpd *AlertContactGroupDao) updateAlertContactGroupRel(param forms.AlertCon
 func (mpd *AlertContactGroupDao) deleteAlertContactGroupRel(groupId string) {
 	mpd.db.Where("group_id = ?", groupId).Delete(models.AlertContactGroupRel{})
 	//同步region
-	producer.SendMsg(cfg.Rocketmq.AlertContactTopic, enums.DeleteAlertContactGroupRelByGroupId, groupId)
+	mq.SendMsg(cfg.Rocketmq.AlertContactTopic, enums.DeleteAlertContactGroupRelByGroupId, groupId)
 }

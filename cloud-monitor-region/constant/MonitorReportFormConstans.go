@@ -1,7 +1,8 @@
 package constant
 
-var INSTANCE = "instance"
-
-var FILTER = "device!='tmpfs'"
-
-var STATISTICS = "_over_time"
+const (
+	INSTANCE   = "instance"
+	FILTER     = "device!='tmpfs'"
+	STATISTICS = "_over_time"
+	TOP_NUM    = "5"
+)

@@ -1,6 +1,6 @@
 package forms
 
-import "code.cestc.cn/ccos-ops/cloud-monitor-center/enums"
+import "code.cestc.cn/ccos-ops/cloud-monitor/common/enums"
 
 type AlertContactForm struct {
 	ContactId     string `orm:"contact_id" json:"contactId"`

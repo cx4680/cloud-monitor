@@ -1,13 +1,13 @@
 package dao
 
 import (
+	"code.cestc.cn/ccos-ops/cloud-monitor-center/config"
 	"code.cestc.cn/ccos-ops/cloud-monitor-center/database"
-	"code.cestc.cn/ccos-ops/cloud-monitor-center/enums"
 	"code.cestc.cn/ccos-ops/cloud-monitor-center/forms"
 	"code.cestc.cn/ccos-ops/cloud-monitor-center/models"
-	"code.cestc.cn/ccos-ops/cloud-monitor-center/rocketmq/producer"
-	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
-	"code.cestc.cn/ccos-ops/cloud-monitor/common/utils/snowflake"
+	"code.cestc.cn/ccos-ops/cloud-monitor-center/mq"
+	"code.cestc.cn/ccos-ops/cloud-monitor-center/utils/snowflake"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/enums"
 	"encoding/json"
 	"github.com/jinzhu/gorm"
 	"github.com/satori/go.uuid"
@@ -66,7 +66,7 @@ func (mpd *AlertContactDao) InsertAlertContact(param forms.AlertContactParam) {
 	}
 	mpd.db.Create(alertContact)
 	//同步region
-	producer.SendMsg(cfg.Rocketmq.AlertContactTopic, enums.InsertAlertContact, alertContact)
+	mq.SendMsg(cfg.Rocketmq.AlertContactTopic, enums.InsertAlertContact, alertContact)
 
 	//添加联系方式
 	mpd.insertAlertContactInformation(param, param.Phone, 1, currentTime)
@@ -88,7 +88,7 @@ func (mpd *AlertContactDao) UpdateAlertContact(param forms.AlertContactParam) {
 	}
 	mpd.db.Model(alertContact).Updates(alertContact)
 	//同步region
-	producer.SendMsg(cfg.Rocketmq.AlertContactTopic, enums.UpdateAlertContact, alertContact)
+	mq.SendMsg(cfg.Rocketmq.AlertContactTopic, enums.UpdateAlertContact, alertContact)
 
 	//更新联系方式
 	mpd.updateAlertContactInformation(param, currentTime)
@@ -101,7 +101,7 @@ func (mpd *AlertContactDao) DeleteAlertContact(param forms.AlertContactParam) {
 	var model models.AlertContact
 	mpd.db.Delete(&model, param.ContactId)
 	//同步region
-	producer.SendMsg(cfg.Rocketmq.AlertContactTopic, enums.DeleteAlertContact, param.ContactId)
+	mq.SendMsg(cfg.Rocketmq.AlertContactTopic, enums.DeleteAlertContact, param.ContactId)
 
 	//删除联系方式
 	mpd.deleteAlertContactInformation(param.ContactId)
@@ -113,7 +113,7 @@ func (mpd *AlertContactDao) CertifyAlertContact(activeCode string) string {
 	var model = &models.AlertContactInformation{}
 	mpd.db.Model(model).Where("active_code = ?", activeCode).Update("is_certify", 1)
 	//同步region
-	producer.SendMsg(cfg.Rocketmq.AlertContactTopic, enums.CertifyAlertContact, activeCode)
+	mq.SendMsg(cfg.Rocketmq.AlertContactTopic, enums.CertifyAlertContact, activeCode)
 	return getTenantName(model.TenantId)
 }
 
@@ -148,7 +148,7 @@ func (mpd *AlertContactDao) insertAlertContactInformation(param forms.AlertConta
 	}
 	mpd.db.Create(alertContactInformation)
 	// 同步region
-	producer.SendMsg(cfg.Rocketmq.AlertContactTopic, enums.InsertAlertContactInformation, alertContactInformation)
+	mq.SendMsg(cfg.Rocketmq.AlertContactTopic, enums.InsertAlertContactInformation, alertContactInformation)
 	// TODO 发送验证消息
 }
 
@@ -166,7 +166,7 @@ func (mpd *AlertContactDao) insertAlertContactGroupRel(param forms.AlertContactP
 		}
 		mpd.db.Create(alertContactGroupRel)
 		// 同步region
-		producer.SendMsg(cfg.Rocketmq.AlertContactTopic, enums.InsertAlertContactGroupRel, alertContactGroupRel)
+		mq.SendMsg(cfg.Rocketmq.AlertContactTopic, enums.InsertAlertContactGroupRel, alertContactGroupRel)
 	}
 }
 
@@ -191,14 +191,14 @@ func (mpd *AlertContactDao) updateAlertContactGroupRel(param forms.AlertContactP
 func (mpd *AlertContactDao) deleteAlertContactInformation(contactId string) {
 	mpd.db.Where("contact_id = ?", contactId).Delete(models.AlertContactInformation{})
 	//同步region
-	producer.SendMsg(cfg.Rocketmq.AlertContactTopic, enums.DeleteAlertContactInformation, contactId)
+	mq.SendMsg(cfg.Rocketmq.AlertContactTopic, enums.DeleteAlertContactInformation, contactId)
 }
 
 //删除联系人组关联
 func (mpd *AlertContactDao) deleteAlertContactGroupRel(contactId string) {
 	mpd.db.Where("contact_id = ?", contactId).Delete(models.AlertContactGroupRel{})
 	//同步region
-	producer.SendMsg(cfg.Rocketmq.AlertContactTopic, enums.DeleteAlertContactGroupRelByContactId, contactId)
+	mq.SendMsg(cfg.Rocketmq.AlertContactTopic, enums.DeleteAlertContactGroupRelByContactId, contactId)
 }
 
 //获取租户名字

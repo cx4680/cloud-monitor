@@ -4,9 +4,9 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/constant"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/forms"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/prometheus"
-	"container/list"
 	"fmt"
 	"strconv"
+	"strings"
 )
 
 type MonitorReportFormService struct {
@@ -31,35 +31,74 @@ func (mpd *MonitorReportFormService) GetData(request forms.PrometheusRequest) []
 	return []forms.PrometheusValue{prometheusValue}
 }
 
-//func (mpd *MonitorReportFormService) getAxisData(request forms.PrometheusRequest) forms.PrometheusAxis {
-//	pql := getPql(request)
-//	prometheusResponse := prometheus.Query(pql, request.Time, request.TenantId)
-//	result := prometheusResponse.Data.Result
-//
-//	labels := strings.Split(request.Labels, ",")
-//	var lable string
-//	for i := range labels{
-//		if labels[i] != "instance" {
-//			lable = labels[i]
-//		}
-//	}
-//
-//	var timeList list.List
-//	start := request.Start
-//	end := request.End
-//	step := request.Step
-//	if len(result) == 0 {
-//		timeList = getTimeList(start, end, step, start)
-//	}else {
-//		timeList = getTimeList(start, end, step, result[0].Values[0][0].(int64))
-//	}
-//
-//	prometheusAxis := forms.PrometheusAxis{
-//		XAxis: timeList,
-//		YAxis: lable,
-//	}
-//	return prometheusAxis
-//}
+func (mpd *MonitorReportFormService) GetTop(request forms.PrometheusRequest) []forms.PrometheusInstance {
+	pql := fmt.Sprintf("topk(%s,%s{%s})", constant.TOP_NUM, request.Name, constant.INSTANCE+"=~'"+request.Instance+"'")
+	prometheusResponse := prometheus.Query(pql, request.Time, request.TenantId)
+	result := prometheusResponse.Data.Result
+	var instanceList []forms.PrometheusInstance
+	for i := range result {
+		instanceDTO := forms.PrometheusInstance{
+			Instance: result[i].Metric[constant.INSTANCE],
+			Value:    result[i].Value[1].(string),
+		}
+		instanceList = append(instanceList, instanceDTO)
+	}
+	return instanceList
+}
+
+func (mpd *MonitorReportFormService) GetAxisData(request forms.PrometheusRequest) forms.PrometheusAxis {
+	pql := getPql(request)
+	prometheusResponse := prometheus.QueryRange(pql, strconv.Itoa(request.Start), strconv.Itoa(request.End), strconv.Itoa(request.Step), request.TenantId)
+	result := prometheusResponse.Data.Result
+
+	labels := strings.Split(request.Labels, ",")
+	var label string
+	for i := range labels {
+		if labels[i] != "instance" {
+			label = labels[i]
+		}
+	}
+
+	start := request.Start
+	end := request.End
+	step := request.Step
+	var timeList []string
+	if len(result) == 0 {
+		timeList = getTimeList(start, end, step, start)
+	} else {
+		timeList = getTimeList(start, end, step, int(result[0].Values[0][0].(float64)))
+	}
+
+	prometheusAxis := forms.PrometheusAxis{
+		XAxis: timeList,
+		YAxis: yAxisFillEmptyData(result, timeList, label),
+	}
+	return prometheusAxis
+}
+
+func yAxisFillEmptyData(Result []forms.PrometheusResult, timeList []string, label string) map[string][]string {
+	resultMap := make(map[string][]string)
+	for i := range Result {
+		timeMap := map[string]string{}
+		for j := range Result[i].Values {
+			key := strconv.Itoa(int(Result[i].Values[j][0].(float64)))
+			timeMap[key] = Result[i].Values[j][1].(string)
+		}
+		var key string
+		var arr []string
+		for k := range timeList {
+			arr = append(arr, changeDecimal(timeMap[timeList[k]]))
+		}
+		if Result[i].Metric[label] == "" {
+			key = Result[i].Metric["__name__"]
+
+		} else {
+			key = Result[i].Metric[label]
+		}
+		resultMap[key] = arr
+	}
+	return resultMap
+}
 
 func getPql(request forms.PrometheusRequest) string {
 	metricLabels := constant.INSTANCE + "='" + request.Instance + "'," + constant.FILTER
@@ -72,8 +111,8 @@ func getPql(request forms.PrometheusRequest) string {
 	return fmt.Sprintf("%s(%s{%s}%s)", statistics, request.Name, metricLabels, scope)
 }
 
-func getTimeList(start int64, end int64, step int64, firstTime int64) list.List {
-	var timeList list.List
+func getTimeList(start int, end int, step int, firstTime int) []string {
+	var timeList []string
 	if start > end {
 		return timeList
 	}
@@ -81,8 +120,13 @@ func getTimeList(start int64, end int64, step int64, firstTime int64) list.List 
 		firstTime -= step
 	}
 	for firstTime <= end {
-		timeList.PushBack(firstTime)
+		timeList = append(timeList, strconv.Itoa(firstTime))
 		firstTime += step
 	}
 	return timeList
+}
+
+func changeDecimal(value string) string {
+	v, _ := strconv.ParseFloat(value, 64)
+	return fmt.Sprintf("%.2f", v)
 }

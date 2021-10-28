@@ -1,9 +1,9 @@
-package producer
+package mq
 
 import (
-	"code.cestc.cn/ccos-ops/cloud-monitor-center/enums"
+	"code.cestc.cn/ccos-ops/cloud-monitor-center/config"
 	"code.cestc.cn/ccos-ops/cloud-monitor-center/forms"
-	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/enums"
 	"context"
 	"encoding/json"
 	"fmt"

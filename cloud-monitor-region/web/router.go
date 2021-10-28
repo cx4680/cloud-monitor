@@ -24,6 +24,8 @@ func MonitorReportForm() {
 	group := router.Group("/hawkeye/MonitorReportForm/")
 	{
 		group.GET("/getData", monitorReportFormCtl.GetData)
+		group.GET("/getAxisData", monitorReportFormCtl.GetAxisData)
+		group.GET("/getTop", monitorReportFormCtl.GetTop)
 	}
 }
 
