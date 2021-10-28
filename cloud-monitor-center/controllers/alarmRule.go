@@ -2,12 +2,12 @@ package controllers
 
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor-center/config"
-	"code.cestc.cn/ccos-ops/cloud-monitor-center/dao"
 	"code.cestc.cn/ccos-ops/cloud-monitor-center/enums"
-	"code.cestc.cn/ccos-ops/cloud-monitor-center/forms"
 	"code.cestc.cn/ccos-ops/cloud-monitor-center/global"
 	"code.cestc.cn/ccos-ops/cloud-monitor-center/rocketmq/producer"
 	"code.cestc.cn/ccos-ops/cloud-monitor-center/validator/translate"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/dao"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/forms"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strings"
