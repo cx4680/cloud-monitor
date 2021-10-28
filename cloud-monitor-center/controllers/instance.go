@@ -1,13 +1,13 @@
 package controllers
 
 import (
-	"code.cestc.cn/ccos-ops/cloud-monitor-center/enums"
 	"code.cestc.cn/ccos-ops/cloud-monitor-center/global"
-	"code.cestc.cn/ccos-ops/cloud-monitor-center/rocketmq/producer"
+	"code.cestc.cn/ccos-ops/cloud-monitor-center/mq"
 	"code.cestc.cn/ccos-ops/cloud-monitor-center/validator/translate"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/dao"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/forms"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/enums"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
@@ -36,7 +36,7 @@ func (ctl *InstanceCtl) Unbind(c *gin.Context) {
 		return
 	}
 	ctl.dao.UnbindInstance(&param)
-	producer.SendMsg(config.GetConfig().Rocketmq.RuleTopic, enums.UnbindRule, param)
+	mq.SendMsg(config.GetConfig().Rocketmq.RuleTopic, enums.UnbindRule, param)
 	c.JSON(http.StatusOK, global.NewSuccess("成功", nil))
 }
 
@@ -49,7 +49,7 @@ func (ctl *InstanceCtl) Bind(c *gin.Context) {
 	tenantId, _ := c.Get(global.TenantId)
 	param.TenantId = tenantId.(string)
 	ctl.dao.BindInstance(&param)
-	producer.SendMsg(config.GetConfig().Rocketmq.RuleTopic, enums.BindRule, param)
+	mq.SendMsg(config.GetConfig().Rocketmq.RuleTopic, enums.BindRule, param)
 	c.JSON(http.StatusOK, global.NewSuccess("成功", nil))
 }
 

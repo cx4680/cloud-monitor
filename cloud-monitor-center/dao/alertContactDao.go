@@ -1,13 +1,13 @@
 package dao
 
 import (
-	"code.cestc.cn/ccos-ops/cloud-monitor-center/config"
 	"code.cestc.cn/ccos-ops/cloud-monitor-center/database"
 	"code.cestc.cn/ccos-ops/cloud-monitor-center/forms"
 	"code.cestc.cn/ccos-ops/cloud-monitor-center/models"
 	"code.cestc.cn/ccos-ops/cloud-monitor-center/mq"
-	"code.cestc.cn/ccos-ops/cloud-monitor-center/utils/snowflake"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/enums"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/utils/snowflake"
 	"encoding/json"
 	"github.com/jinzhu/gorm"
 	"github.com/satori/go.uuid"

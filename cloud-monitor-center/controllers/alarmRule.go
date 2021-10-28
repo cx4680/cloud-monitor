@@ -1,13 +1,13 @@
 package controllers
 
 import (
-	"code.cestc.cn/ccos-ops/cloud-monitor-center/enums"
 	"code.cestc.cn/ccos-ops/cloud-monitor-center/global"
-	"code.cestc.cn/ccos-ops/cloud-monitor-center/rocketmq/producer"
+	"code.cestc.cn/ccos-ops/cloud-monitor-center/mq"
 	"code.cestc.cn/ccos-ops/cloud-monitor-center/validator/translate"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/dao"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/forms"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/enums"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strings"
@@ -52,7 +52,7 @@ func (ctl *AlarmRuleCtl) CreateRule(c *gin.Context) {
 	addMetricName(&param, ctl)
 	id := ctl.dao.SaveRule(&param)
 	param.Id = id
-	producer.SendMsg(config.GetConfig().Rocketmq.RuleTopic, enums.CreateRule, param)
+	mq.SendMsg(config.GetConfig().Rocketmq.RuleTopic, enums.CreateRule, param)
 	c.JSON(http.StatusOK, global.NewSuccess("创建成功", true))
 }
 
@@ -68,7 +68,7 @@ func (ctl *AlarmRuleCtl) UpdateRule(c *gin.Context) {
 	param.UserId = userId.(string)
 	addMetricName(&param, ctl)
 	ctl.dao.UpdateRule(&param)
-	producer.SendMsg(config.GetConfig().Rocketmq.RuleTopic, enums.UpdateRule, param)
+	mq.SendMsg(config.GetConfig().Rocketmq.RuleTopic, enums.UpdateRule, param)
 	c.JSON(http.StatusOK, global.NewSuccess("更新成功", true))
 }
 
@@ -83,7 +83,7 @@ func (ctl *AlarmRuleCtl) DeleteRule(c *gin.Context) {
 	userId, _ := c.Get(global.UserId)
 	param.TenantId = userId.(string)
 	ctl.dao.DeleteRule(&param)
-	producer.SendMsg(config.GetConfig().Rocketmq.RuleTopic, enums.DeleteRule, param)
+	mq.SendMsg(config.GetConfig().Rocketmq.RuleTopic, enums.DeleteRule, param)
 	c.JSON(http.StatusOK, global.NewSuccess("更新成功", true))
 }
 
@@ -102,7 +102,7 @@ func (ctl *AlarmRuleCtl) ChangeRuleStatus(c *gin.Context) {
 	if strings.EqualFold(param.Status, dao.ENABLE) {
 		enum = enums.EnableRule
 	}
-	producer.SendMsg(config.GetConfig().Rocketmq.RuleTopic, enum, param)
+	mq.SendMsg(config.GetConfig().Rocketmq.RuleTopic, enum, param)
 	c.JSON(http.StatusOK, global.NewSuccess("更新成功", true))
 }
 

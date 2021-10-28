@@ -18,7 +18,7 @@ import (
 // @BasePath /
 func main() {
 	//解析命令参数
-	var cf = flag.String("config", "D:\\dev-go\\cloud-monitor\\cloud-monitor-center\\config.local.yml", "config path")
+	var cf = flag.String("config", "cloud-monitor-center/config.local.yml", "config path")
 	flag.Parse()
 
 	//加载配置文件
