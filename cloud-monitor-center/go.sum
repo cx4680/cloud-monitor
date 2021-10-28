@@ -1,3 +1,4 @@
+code.cestc.cn/ccos-ops/cloud-monitor v0.0.0-20211028043000-72c88c0d3fe8 h1:AK5lSIwmanNEU6rXIhWvvjne0UkF70BOGyUSn51pH/8=
 github.com/BurntSushi/toml v0.3.1 h1:WXkYYl6Yr3qBf1K79EBnL4mak0OimBfB0XUf9Vl28OQ=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/PuerkitoBio/goquery v1.5.1/go.mod h1:GsLWisAFVj4WgDibEWF4pvYnkVQBpKBKeU+7zCJoLcc=

@@ -1,9 +1,9 @@
 package forms
 
 type InstanceRulePageReqParam struct {
-	InstanceId string `json:"instanceId"`
-	PageSize   int    `json:"pageSize"`
-	Current    int    `json:"current"`
+	InstanceId string `json:"instanceId" binding:"required"`
+	PageSize   int    `json:"pageSize,default=10"`
+	Current    int    `json:"current,default=1"`
 }
 
 type InstanceRuleDTO struct {
@@ -33,21 +33,18 @@ type InstanceBindRuleDTO struct {
 }
 
 type ProductRuleParam struct {
-	MonitorType string `json:"monitorType"`
-	ProductType string `json:"productType"`
-	InstanceId  string `json:"instanceId"`
+	MonitorType string `json:"monitorType" binding:"required"`
+	ProductType string `json:"productType" binding:"required"`
+	InstanceId  string `json:"instanceId" binding:"required"`
+	TenantId    string
 }
 
 type ProductRuleListDTO struct {
-	BindRuleList   []BindRuleInfo `json:"bindRuleList"`
-	UnbindRuleList []BindRuleInfo `json:"unbindRuleList"`
+	BindRuleList   []InstanceRuleDTO `json:"bindRuleList"`
+	UnbindRuleList []InstanceRuleDTO `json:"unbindRuleList"`
 }
 
-type BindRuleInfo struct {
-	Id          string `json:"id"`
-	Name        string `json:"name"`
-	ProductType string `json:"productType"`
-	MonitorType string `json:"monitorType"`
-	MonitorItem string `json:"monitorItem"`
-	Condition   string `json:"condition"`
+type UnBindRuleParam struct {
+	InstanceId string `json:"instanceId" binding:"required"`
+	RulId      string `json:"rulId" binding:"required"`
 }

@@ -1,6 +1,6 @@
 package models
 
-import "code.cestc.cn/ccos-ops/cloud-monitor-center/forms"
+import "code.cestc.cn/ccos-ops/cloud-monitor/business-common/forms"
 
 type AlarmRule struct {
 	Id             string               `orm:"id" json:"id"`

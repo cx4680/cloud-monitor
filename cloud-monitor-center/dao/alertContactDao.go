@@ -7,7 +7,7 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor-center/forms"
 	"code.cestc.cn/ccos-ops/cloud-monitor-center/models"
 	"code.cestc.cn/ccos-ops/cloud-monitor-center/rocketmq/producer"
-	"code.cestc.cn/ccos-ops/cloud-monitor-center/utils/snowflake"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/utils/snowflake"
 	"encoding/json"
 	"github.com/jinzhu/gorm"
 	"github.com/satori/go.uuid"

@@ -1,6 +1,7 @@
 package web
 
 import (
+	dao2 "business-common/dao"
 	"code.cestc.cn/ccos-ops/cloud-monitor-center/controllers"
 	"code.cestc.cn/ccos-ops/cloud-monitor-center/dao"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/database"
@@ -46,7 +47,7 @@ func alertContactGroupRouters() {
 }
 
 func alarmRule() {
-	ruleCtl := controllers.NewAlarmRuleCtl(dao.NewAlarmRuleDao(database.GetDb()))
+	ruleCtl := controllers.NewAlarmRuleCtl(dao2.NewAlarmRuleDao(database.GetDb()))
 	group := router.Group("/hawkeye/rule/")
 	{
 		group.POST("/page", ruleCtl.SelectRulePageList)
@@ -59,7 +60,7 @@ func alarmRule() {
 }
 
 func instance() {
-	ctl := controllers.NewInstanceCtl(dao.NewInstanceDao(database.GetDb()))
+	ctl := controllers.NewInstanceCtl(dao2.NewInstanceDao(database.GetDb()))
 	group := router.Group("/hawkeye/instance/")
 	{
 		group.POST("/rulePage", ctl.Page)
