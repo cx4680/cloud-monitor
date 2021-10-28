@@ -29,8 +29,7 @@ var SelectAlterContact = "SELECT " +
 	"WHERE " +
 	"ac.status = 1 " +
 	"AND ac.tenant_id = ? " +
-	"AND ac.name LIKE CONCAT('%',?,'%') " +
-	"AND acg.group_name LIKE CONCAT('%',?,'%') "
+	"AND ac.name LIKE CONCAT('%',?,'%') "
 
 var SelectAlterContactGroup = "SELECT " +
 	"id AS group_id, " +
