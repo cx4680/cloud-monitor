@@ -1,9 +1,9 @@
 package producer
 
 import (
-	"code.cestc.cn/ccos-ops/cloud-monitor-center/config"
 	"code.cestc.cn/ccos-ops/cloud-monitor-center/enums"
 	"code.cestc.cn/ccos-ops/cloud-monitor-center/forms"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
 	"context"
 	"encoding/json"
 	"fmt"

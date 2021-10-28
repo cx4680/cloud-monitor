@@ -1,9 +1,9 @@
 package web
 
 import (
-	dao2 "business-common/dao"
 	"code.cestc.cn/ccos-ops/cloud-monitor-center/controllers"
 	"code.cestc.cn/ccos-ops/cloud-monitor-center/dao"
+	dao2 "code.cestc.cn/ccos-ops/cloud-monitor/business-common/dao"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/database"
 )
 
@@ -11,6 +11,8 @@ func loadRouters() {
 	monitorProductRouters()
 	alertContactRouters()
 	alertContactGroupRouters()
+	alarmRule()
+	instance()
 }
 
 func monitorProductRouters() {

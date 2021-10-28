@@ -108,14 +108,14 @@ func (dao *AlarmRuleDao) saveRuleOthers(ruleReqDTO *forms.AlarmRuleAddReqDTO, ru
 }
 
 func (dao *AlarmRuleDao) saveAlarmNotice(ruleReqDTO *forms.AlarmRuleAddReqDTO, ruleId string) {
-	list := make([]*models.AlarmNotice, len(ruleReqDTO.InstanceList))
+	list := make([]*models.AlarmNotice, len(ruleReqDTO.GroupList))
 	for index, group := range ruleReqDTO.GroupList {
 		list[index] = &models.AlarmNotice{
 			AlarmRuleId:     ruleId,
 			ContractGroupId: group,
 		}
 	}
-	dao.db.Create(list)
+	dao.db.Create(&list)
 }
 
 func (dao *AlarmRuleDao) saveAlarmInstances(ruleReqDTO *forms.AlarmRuleAddReqDTO, ruleId string) {

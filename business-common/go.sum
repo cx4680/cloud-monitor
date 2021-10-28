@@ -1,6 +1,6 @@
-code.cestc.cn/ccos-ops/cloud-monitor v0.0.0-20211028043000-72c88c0d3fe8 h1:AK5lSIwmanNEU6rXIhWvvjne0UkF70BOGyUSn51pH/8=
-code.cestc.cn/ccos-ops/cloud-monitor/common v0.0.0-20211028043000-72c88c0d3fe8 h1:O3n6sFCZa+ob2CJ6wqYCiEvGZGfzuCCcXlz9pP6kHqM=
-code.cestc.cn/ccos-ops/cloud-monitor/common v0.0.0-20211028043000-72c88c0d3fe8/go.mod h1:Ve8+xTqdA2CuHAPd0nnLtVaErtsAA+1DJhh9lrDNEc8=
+code.cestc.cn/ccos-ops/cloud-monitor v0.0.0-20211028062752-e559c17fe0f2 h1:FgT7KkmhDViGwL9UKSQi/BfKbrJbx537NG578AXFtng=
+code.cestc.cn/ccos-ops/cloud-monitor/common v0.0.0-20211028062752-e559c17fe0f2 h1:CGkudICMyl1x85qmA9JmnKlFoCgwd2bWhrTvAlCsnXY=
+code.cestc.cn/ccos-ops/cloud-monitor/common v0.0.0-20211028062752-e559c17fe0f2/go.mod h1:Ve8+xTqdA2CuHAPd0nnLtVaErtsAA+1DJhh9lrDNEc8=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/PuerkitoBio/goquery v1.5.1/go.mod h1:GsLWisAFVj4WgDibEWF4pvYnkVQBpKBKeU+7zCJoLcc=
 github.com/andybalholm/cascadia v1.1.0/go.mod h1:GsXiBklL0woXo1j/WYWtSYYC4ouU9PqHO0sqidkEA4Y=

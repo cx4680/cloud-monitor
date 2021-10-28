@@ -7,14 +7,16 @@ import (
 )
 
 type Config struct {
-	App        string     `yaml:"app"`
-	Serve      Serve      `yaml:"serve"`
-	DB         DB         `yaml:"db"`
-	Logger     LogConfig  `yaml:"logger"`
-	HttpConfig HttpConfig `yaml:"http"`
-	Nk         string     `yaml:"nk"`
-	Rocketmq   Rocketmq   `yaml:"rocketmq"`
-	Prometheus Prometheus `yaml:"prometheus"`
+	App            string     `yaml:"app"`
+	Serve          Serve      `yaml:"serve"`
+	DB             DB         `yaml:"db"`
+	Logger         LogConfig  `yaml:"logger"`
+	HttpConfig     HttpConfig `yaml:"http"`
+	Nk             string     `yaml:"nk"`
+	Rocketmq       Rocketmq   `yaml:"rocketmq"`
+	Prometheus     Prometheus `yaml:"prometheus"`
+	TenantUrl      string     `yaml:"tenantUrl"`
+	HasNoticeModel bool       `yaml:"hasNoticeModel"`
 }
 
 type Serve struct {
@@ -54,6 +56,7 @@ type Rocketmq struct {
 	NameServer        string `yaml:"name-server"`
 	AlertContactTopic string `yaml:"alertContactTopic"`
 	AlertContactGroup string `yaml:"alertContactGroup"`
+	RuleTopic         string `yaml:"ruleTopic"`
 }
 
 type Prometheus struct {
