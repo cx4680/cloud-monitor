@@ -18,7 +18,7 @@ import (
 // @BasePath /
 func main() {
 	//解析命令参数
-	var cf = flag.String("config", "cloud-monitor-center/config.local.yml", "config path")
+	var cf = flag.String("config", "D:\\dev-go\\cloud-monitor\\cloud-monitor-center\\config.local.yml", "config path")
 	flag.Parse()
 
 	//加载配置文件
@@ -40,7 +40,6 @@ func main() {
 	logger.InitLogger(&config.GetConfig().Logger)
 	defer logger.Logger().Sync()
 
-	defer database.GetDb().Close()
 	//启动Web容器
 	if err := web.Start(cfg); err != nil {
 		logger.Logger().Infof("startup service failed, err:%v\n", err)

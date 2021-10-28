@@ -4,7 +4,7 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/forms"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/models"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/vo"
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 )
 
 type InstanceDao struct {

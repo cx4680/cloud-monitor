@@ -2,7 +2,7 @@ package dao
 
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/models"
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 )
 
 type MonitorProductDao struct {

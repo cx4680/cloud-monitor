@@ -7,7 +7,7 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor-center/mq"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/enums"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/utils/snowflake"
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 	"strconv"
 )
 
