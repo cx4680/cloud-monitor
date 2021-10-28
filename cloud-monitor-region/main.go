@@ -36,7 +36,6 @@ func main() {
 	logger.InitLogger(&config.GetConfig().Logger)
 	defer logger.Logger().Sync()
 
-	defer database.GetDb().Close()
 	//启动Web容器
 	err = web.Start(cfg)
 	if err != nil {

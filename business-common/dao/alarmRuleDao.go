@@ -5,7 +5,7 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/models"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/vo"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/utils/snowflake"
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 	"strconv"
 )
 
@@ -31,7 +31,7 @@ func (dao *AlarmRuleDao) SaveRule(ruleReqDTO *forms.AlarmRuleAddReqDTO) string {
 func (dao *AlarmRuleDao) UpdateRule(ruleReqDTO *forms.AlarmRuleAddReqDTO) {
 	dao.deleteOthers(ruleReqDTO.Id)
 	rule := buildAlarmRule(ruleReqDTO)
-	dao.db.Update(rule)
+	//.db.Update(rule)
 	dao.saveRuleOthers(ruleReqDTO, rule.Id)
 }
 
@@ -45,8 +45,8 @@ func (dao *AlarmRuleDao) DeleteRule(ruleReqDTO *forms.RuleReqDTO) {
 }
 
 func (dao *AlarmRuleDao) UpdateRuleState(ruleReqDTO *forms.RuleReqDTO) {
-	rule := models.AlarmRule{Id: ruleReqDTO.Id, Enabled: GetAlarmStatusTextInt(ruleReqDTO.Status), TenantId: ruleReqDTO.TenantId}
-	dao.db.Update(&rule)
+	//rule := models.AlarmRule{Id: ruleReqDTO.Id, Enabled: GetAlarmStatusTextInt(ruleReqDTO.Status), TenantId: ruleReqDTO.TenantId}
+	//dao.db.Update(&rule)
 }
 
 func (dao *AlarmRuleDao) SelectRulePageList(param *forms.AlarmPageReqParam) interface{} {
@@ -84,7 +84,7 @@ func (dao *AlarmRuleDao) GetRuleCondition(id string, tenantId string) {
 
 func (dao *AlarmRuleDao) GetMonitorItem(metricName string) *models.MonitorItem {
 	model := &models.MonitorItem{}
-	dao.db.Raw("SELECT metrics_linux,metrics_windows,metric_name,unit,name  ,labels FROM monitor_item ").Where("where metric_name=?", metricName).Scan(model)
+	dao.db.Raw("SELECT metrics_linux,metrics_windows,metric_name,unit,name  ,labels FROM monitor_item  where metric_name=? ", metricName).Scan(model)
 	return model
 }
 
@@ -108,9 +108,9 @@ func (dao *AlarmRuleDao) saveRuleOthers(ruleReqDTO *forms.AlarmRuleAddReqDTO, ru
 }
 
 func (dao *AlarmRuleDao) saveAlarmNotice(ruleReqDTO *forms.AlarmRuleAddReqDTO, ruleId string) {
-	list := make([]*models.AlarmNotice, len(ruleReqDTO.GroupList))
+	list := make([]models.AlarmNotice, len(ruleReqDTO.GroupList))
 	for index, group := range ruleReqDTO.GroupList {
-		list[index] = &models.AlarmNotice{
+		list[index] = models.AlarmNotice{
 			AlarmRuleId:     ruleId,
 			ContractGroupId: group,
 		}
