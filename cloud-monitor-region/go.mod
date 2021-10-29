@@ -3,7 +3,8 @@ module code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region
 go 1.15
 
 require (
-	code.cestc.cn/ccos-ops/cloud-monitor/common v0.0.0-20211020101236-270d47d03500
+	code.cestc.cn/ccos-ops/cloud-monitor/business-common v0.0.0-20211028091743-0cdf484dfcab
+	code.cestc.cn/ccos-ops/cloud-monitor/common v0.0.0-20211028062752-e559c17fe0f2
 	github.com/apache/rocketmq-client-go/v2 v2.1.0
 	github.com/gin-gonic/gin v1.7.4
 	github.com/go-openapi/jsonreference v0.19.6 // indirect
@@ -22,7 +23,9 @@ require (
 	golang.org/x/net v0.0.0-20210928044308-7d9f5e0b762b // indirect
 	golang.org/x/text v0.3.7 // indirect
 	google.golang.org/protobuf v1.27.1 // indirect
+	gorm.io/driver/mysql v1.1.2
 	gorm.io/gorm v1.22.1
 )
 
 replace code.cestc.cn/ccos-ops/cloud-monitor/common => ../common
+replace code.cestc.cn/ccos-ops/cloud-monitor/business-common => ../business-common
