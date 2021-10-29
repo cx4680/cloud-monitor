@@ -4,6 +4,7 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/forms"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/models"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/vo"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/utils"
 	"gorm.io/gorm"
 )
 
@@ -18,39 +19,37 @@ func NewInstanceDao(db *gorm.DB) *InstanceDao {
 func (dao *InstanceDao) SelectInstanceRulePage(param *forms.InstanceRulePageReqParam) interface{} {
 	var model []forms.InstanceRuleDTO
 	db := dao.db
-	db.Raw(" select t2.id,t2.`name`,t2.trigger_condition  as ruleCondition,product_type,monitor_type ,t1.create_time from t_alarm_instance  t1        JOIN t_alarm_rule t2  on t2.id=t1.alarm_rule_id       where t1.instance_id=? and t2.deleted=0  ORDER BY create_time desc  , name ASC", param.InstanceId)
-	db.Find(&model)
-	total := len(model)
-	db.Limit(param.PageSize).Offset((param.Current - 1) * param.PageSize).Find(model)
+	var total int64
+	db.Offset((param.Current-1)*param.PageSize).Limit(param.PageSize).Raw("select t2.id,t2.name,t2.metric_name as monitorItem,t2.trigger_condition  as ruleCondition,product_type,monitor_type ,t1.create_time from t_alarm_instance  t1        JOIN t_alarm_rule t2  on t2.id=t1.alarm_rule_id       where t1.instance_id=? and t2.deleted=0  ORDER BY create_time desc  , name ASC", param.InstanceId).Scan(&model).Count(&total)
 	var page = &vo.PageVO{
 		Records: model,
 		Current: param.Current,
 		Size:    param.PageSize,
-		Total:   total,
+		Total:   utils.Int64ToInt(total),
 	}
 	return page
 }
 
 func (dao *InstanceDao) UnbindInstance(param *forms.UnBindRuleParam) {
-	model := &models.AlarmInstance{InstanceId: param.InstanceId, AlarmRuleId: param.RulId}
+	model := &models.AlarmInstance{InstanceID: param.InstanceId, AlarmRuleID: param.RulId}
 	dao.db.Delete(model)
 }
 func (dao *InstanceDao) BindInstance(param *forms.InstanceBindRuleDTO) {
-	model := &models.AlarmInstance{InstanceId: param.InstanceId}
+	model := &models.AlarmInstance{InstanceID: param.InstanceId}
 	dao.db.Delete(model)
 	if len(param.RuleIdList) != 0 {
 		list := make([]*models.AlarmInstance, len(param.RuleIdList))
 		for index, ruleId := range param.RuleIdList {
 			list[index] = &models.AlarmInstance{
-				AlarmRuleId:  ruleId,
-				Ip:           param.Ip,
+				AlarmRuleID:  ruleId,
+				IP:           param.Ip,
 				RegionCode:   param.RegionCode,
 				RegionName:   param.RegionName,
 				ZoneCode:     param.ZoneCode,
 				ZoneName:     param.ZoneName,
 				InstanceName: param.InstanceName,
-				InstanceId:   param.InstanceId,
-				TenantId:     param.TenantId,
+				InstanceID:   param.InstanceId,
+				TenantID:     param.TenantId,
 			}
 		}
 		dao.db.Create(&list)

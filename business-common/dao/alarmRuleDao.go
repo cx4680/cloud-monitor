@@ -4,9 +4,11 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/forms"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/models"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/vo"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/utils"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/utils/snowflake"
 	"gorm.io/gorm"
 	"strconv"
+	"strings"
 )
 
 type AlarmRuleDao struct {
@@ -21,53 +23,56 @@ func NewAlarmRuleDao(db *gorm.DB) *AlarmRuleDao {
 
 func (dao *AlarmRuleDao) SaveRule(ruleReqDTO *forms.AlarmRuleAddReqDTO) string {
 	rule := buildAlarmRule(ruleReqDTO)
-	rule.Id = strconv.FormatInt(snowflake.GetWorker().NextId(), 10)
+	rule.ID = strconv.FormatInt(snowflake.GetWorker().NextId(), 10)
 	rule.MonitorType = ruleReqDTO.MonitorType
 	rule.ProductType = ruleReqDTO.ProductType
 	dao.db.Create(rule)
-	dao.saveRuleOthers(ruleReqDTO, rule.Id)
-	return rule.Id
+	dao.saveRuleOthers(ruleReqDTO, rule.ID)
+	return rule.ID
 }
 func (dao *AlarmRuleDao) UpdateRule(ruleReqDTO *forms.AlarmRuleAddReqDTO) {
 	dao.deleteOthers(ruleReqDTO.Id)
 	rule := buildAlarmRule(ruleReqDTO)
 	//.db.Update(rule)
-	dao.saveRuleOthers(ruleReqDTO, rule.Id)
+	dao.saveRuleOthers(ruleReqDTO, rule.ID)
 }
 
 func (dao *AlarmRuleDao) DeleteRule(ruleReqDTO *forms.RuleReqDTO) {
 	rule := models.AlarmRule{
-		TenantId: ruleReqDTO.TenantId,
-		Id:       ruleReqDTO.Id,
+		TenantID: ruleReqDTO.TenantId,
+		ID:       ruleReqDTO.Id,
 	}
 	dao.db.Delete(&rule)
 	dao.deleteOthers(ruleReqDTO.Id)
 }
 
 func (dao *AlarmRuleDao) UpdateRuleState(ruleReqDTO *forms.RuleReqDTO) {
-	//rule := models.AlarmRule{Id: ruleReqDTO.Id, Enabled: GetAlarmStatusTextInt(ruleReqDTO.Status), TenantId: ruleReqDTO.TenantId}
-	//dao.db.Update(&rule)
+	rule := models.AlarmRule{ID: ruleReqDTO.Id, Enabled: GetAlarmStatusTextInt(ruleReqDTO.Status), TenantID: ruleReqDTO.TenantId}
+	dao.db.Model(&rule).Updates(&rule)
 }
 
 func (dao *AlarmRuleDao) SelectRulePageList(param *forms.AlarmPageReqParam) interface{} {
 	var model []forms.AlarmRulePageDTO
 	db := dao.db
-	db.Raw(" SELECT NAME,monitor_type, product_type, trigger_condition as ruleCondition,  status,  metric_name,  ruleId,  count(instance) as instanceNum, update_time       FROM (  SELECT NAME,   monitor_type,   product_type,  metric_name,  trigger_condition,    enabled AS 'status',      id     AS ruleId,    t2.instance_id AS instance,   t1.update_time   FROM t_alarm_rule t1    LEFT JOIN t_alarm_instance t2 ON t2.alarm_rule_id = t1.id  WHERE t1.tenant_id = ?    AND t1.deleted = 0", param.TenantId)
-	if param.Status != "" {
-		db.Where("t1.enabled = ?", param.Status)
+	selectList := &strings.Builder{}
+	var sqlParam = []interface{}{param.TenantId}
+	selectList.WriteString("SELECT name as name,monitor_type, product_type, trigger_condition,  status,  metric_name,  ruleId,  count(instance) as instanceNum, update_time       FROM (  SELECT NAME,   monitor_type,   product_type,  metric_name,  trigger_condition,    enabled AS 'status',      id     AS ruleId,    t2.instance_id AS instance,   t1.update_time   FROM t_alarm_rule t1    LEFT JOIN t_alarm_instance t2 ON t2.alarm_rule_id = t1.id  WHERE t1.tenant_id = ?    AND t1.deleted = 0")
+	if len(param.Status) != 0 {
+		selectList.WriteString("t1.enabled = ?")
+		sqlParam = append(sqlParam, param.Status)
 	}
-	if param.RuleName != "" {
-		db.Where("t1.name like concat('%',?,'%')", param.RuleName)
+	if len(param.RuleName) != 0 {
+		selectList.WriteString("t1.name like concat('%',?,'%')")
+		sqlParam = append(sqlParam, param.RuleName)
 	}
-	db.Group(" t.ruleId ").Order(" t.update_time  desc ")
-	db.Find(&model)
-	total := len(model)
-	db.Limit(param.PageSize).Offset((param.Current - 1) * param.PageSize).Find(model)
+	selectList.WriteString(") t group by t.ruleId order by t.update_time  desc ")
+	var total int64
+	db.Offset((param.Current-1)*param.PageSize).Limit(param.PageSize).Raw(selectList.String(), sqlParam).Scan(&model).Count(&total)
 	var page = &vo.PageVO{
 		Records: model,
 		Current: param.Current,
 		Size:    param.PageSize,
-		Total:   total,
+		Total:   utils.Int64ToInt(total),
 	}
 	return page
 }
@@ -89,7 +94,7 @@ func (dao *AlarmRuleDao) GetMonitorItem(metricName string) *models.MonitorItem {
 }
 
 func buildAlarmRule(ruleReqDTO *forms.AlarmRuleAddReqDTO) *models.AlarmRule {
-	return &models.AlarmRule{TenantId: ruleReqDTO.TenantId,
+	return &models.AlarmRule{TenantID: ruleReqDTO.TenantId,
 		ProductType:   ruleReqDTO.ProductType,
 		Dimensions:    GetResourceScopeInt(ruleReqDTO.Scope),
 		Name:          ruleReqDTO.RuleName,
@@ -111,38 +116,40 @@ func (dao *AlarmRuleDao) saveAlarmNotice(ruleReqDTO *forms.AlarmRuleAddReqDTO, r
 	list := make([]models.AlarmNotice, len(ruleReqDTO.GroupList))
 	for index, group := range ruleReqDTO.GroupList {
 		list[index] = models.AlarmNotice{
-			AlarmRuleId:     ruleId,
-			ContractGroupId: group,
+			AlarmRuleID:     ruleId,
+			ContractGroupID: group,
 		}
 	}
 	dao.db.Create(&list)
 }
 
 func (dao *AlarmRuleDao) saveAlarmInstances(ruleReqDTO *forms.AlarmRuleAddReqDTO, ruleId string) {
-	list := make([]*models.AlarmInstance, len(ruleReqDTO.InstanceList))
+	if len(ruleReqDTO.InstanceList) == 0 {
+		return
+	}
+	list := make([]models.AlarmInstance, len(ruleReqDTO.InstanceList))
 	for index, info := range ruleReqDTO.InstanceList {
-		instance := &models.AlarmInstance{
-			AlarmRuleId:  ruleId,
-			Ip:           info.Ip,
-			InstanceId:   info.InstanceId,
+		list[index] = models.AlarmInstance{
+			AlarmRuleID:  ruleId,
+			IP:           info.Ip,
+			InstanceID:   info.InstanceId,
 			RegionCode:   info.RegionCode,
 			ZoneCode:     info.ZoneCode,
 			ZoneName:     info.ZoneName,
 			RegionName:   info.RegionName,
 			InstanceName: info.InstanceName,
-			TenantId:     ruleReqDTO.TenantId,
+			TenantID:     ruleReqDTO.TenantId,
 		}
-		list[index] = instance
 	}
-	dao.db.Create(list)
+	dao.db.Create(&list)
 }
 
 func (dao *AlarmRuleDao) deleteOthers(ruleId string) {
 	notice := models.AlarmNotice{
-		AlarmRuleId: ruleId,
+		AlarmRuleID: ruleId,
 	}
 	dao.db.Delete(&notice)
-	instance := models.AlarmInstance{AlarmRuleId: ruleId}
+	instance := models.AlarmInstance{AlarmRuleID: ruleId}
 	dao.db.Delete(&instance)
 }
 

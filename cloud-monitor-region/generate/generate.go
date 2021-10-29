@@ -35,7 +35,7 @@ func generate() {
 		RealNameMethod("TableName").
 		// 生成的结构体保存路径
 		SavePath("../models/monitorProduct.go").
-		// 数据库dsn,这里可以使用 t2t.DB() 代替,参数为 *sql.DB 对象
+		// 数据库dsn,这里可以使用 t2t.DB() 代替,参数为 *sql_script.DB 对象
 		Dsn("hawkeye:hawkeye@Cecloud202!@(10.255.198.16:6033)/hawkeye?charset=utf8mb4&parseTime=True&loc=Local").
 		// 执行
 		Run()

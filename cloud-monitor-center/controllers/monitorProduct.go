@@ -41,7 +41,7 @@ func (mpc *MonitorProductCtl) UpdateById(c *gin.Context) {
 	}
 
 	var p = &models.MonitorProduct{
-		Id:         f.Id,
+		ID:         f.Id,
 		Name:       f.Name,
 		CreateUser: f.CreateUser,
 	}

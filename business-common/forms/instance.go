@@ -11,8 +11,8 @@ type InstanceRuleDTO struct {
 	Name        string `json:"name"`
 	ProductType string `json:"productType"`
 	MonitorType string `json:"monitorType"`
-	MonitorItem string `json:"monitorItem"`
-	Condition   string `json:"condition"`
+	MonitorItem string `json:"monitorItem" gorm:"column:monitorItem"`
+	Condition   string `json:"condition" gorm:"column:ruleCondition"`
 }
 
 type InstanceInfo struct {

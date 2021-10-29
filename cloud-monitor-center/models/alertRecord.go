@@ -1,28 +1,31 @@
 package models
 
+import "time"
+
+// 告警记录
 type AlertRecord struct {
-	Id           string `orm:"id" json:"id"`
-	Status       string `orm:"status" json:"status"` // 告警状态 firing resolved
-	TenantId     string `orm:"tenant_id" json:"tenant_id"`
-	RuleId       string `orm:"rule_id" json:"rule_id"` // 规则id
-	RuleName     string `orm:"rule_name" json:"rule_name"`
-	MonitorType  string `orm:"monitor_type" json:"monitor_type"` // 监控类型
-	SourceType   string `orm:"source_type" json:"source_type"`   // 资源类型
-	SourceId     string `orm:"source_id" json:"source_id"`       // 资源id
-	Summary      string `orm:"summary" json:"summary"`
-	CurrentValue string `orm:"current_value" json:"current_value"` // 当前值
-	StartTime    string `orm:"start_time" json:"start_time"`       // 告警开始时间
-	EndTime      string `orm:"end_time" json:"end_time"`           // 告警结束时间
-	TargetValue  string `orm:"target_value" json:"target_value"`   // 规则定义阈值
-	Expression   string `orm:"expression" json:"expression"`       // 计算公式
-	Duration     string `orm:"duration" json:"duration"`           // 持续时间
-	Level        int    `orm:"level" json:"level"`                 // 告警级别 紧急 重要 次要 提醒
-	NoticeStatus string `orm:"notice_status" json:"notice_status"` // 消息发送状态, error 发送失败 success 成功
-	AlarmKey     string `orm:"alarm_key" json:"alarm_key"`         // 告警项
-	ContactInfo  string `orm:"contact_info" json:"contact_info"`   // 联系方式
-	Region       string `orm:"region" json:"region"`
-	CreateTime   string `orm:"create_time" json:"create_time"`
-	UpdateTime   string `orm:"update_time" json:"update_time"`
+	ID           string    `gorm:"column:id;primary_key"`
+	Status       string    `gorm:"column:status;NOT NULL"` // 告警状态 firing resolved
+	TenantID     string    `gorm:"column:tenant_id"`
+	RuleID       string    `gorm:"column:rule_id;NOT NULL"` // 规则id
+	RuleName     string    `gorm:"column:rule_name;NOT NULL"`
+	MonitorType  string    `gorm:"column:monitor_type"`         // 监控类型
+	SourceType   string    `gorm:"column:source_type;NOT NULL"` // 资源类型
+	SourceID     string    `gorm:"column:source_id;NOT NULL"`   // 资源id
+	Summary      string    `gorm:"column:summary"`
+	CurrentValue string    `gorm:"column:current_value;NOT NULL"` // 当前值
+	StartTime    time.Time `gorm:"column:start_time;NOT NULL"`    // 告警开始时间
+	EndTime      time.Time `gorm:"column:end_time"`               // 告警结束时间
+	TargetValue  string    `gorm:"column:target_value;NOT NULL"`  // 规则定义阈值
+	Expression   string    `gorm:"column:expression;NOT NULL"`    // 计算公式
+	Duration     string    `gorm:"column:duration;NOT NULL"`      // 持续时间
+	Level        int       `gorm:"column:level;NOT NULL"`         // 告警级别 紧急 重要 次要 提醒
+	NoticeStatus string    `gorm:"column:notice_status;NOT NULL"` // 消息发送状态, error 发送失败 success 成功
+	AlarmKey     string    `gorm:"column:alarm_key;NOT NULL"`     // 告警项
+	ContactInfo  string    `gorm:"column:contact_info"`           // 联系方式
+	Region       string    `gorm:"column:region"`
+	CreateTime   time.Time `gorm:"column:create_time;autoCreateTime;default:time.now()"`
+	UpdateTime   time.Time `gorm:"column:update_time;autoCreateTime;default:time.now()"`
 }
 
 func (*AlertRecord) TableName() string {

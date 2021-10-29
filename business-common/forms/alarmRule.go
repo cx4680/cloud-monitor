@@ -1,22 +1,30 @@
 package forms
 
+import (
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
+	"database/sql/driver"
+	"encoding/json"
+	"github.com/pkg/errors"
+)
+
 type AlarmPageReqParam struct {
-	RuleName string `json:"omitempty"`
-	Status   string `json:"omitempty"` //AlarmRuleStatusEnum  enabled(1),disabled(0);
-	TenantId string `json:",omitempty"`
-	PageSize int    `json:",omitempty,default=10"`
-	Current  int    `json:",omitempty,default=1"`
+	RuleName string `json:"ruleName,omitempty"`
+	Status   string `json:"status,omitempty"` //AlarmRuleStatusEnum  enabled(1),disabled(0);
+	TenantId string `json:"tenantId,omitempty"`
+	PageSize int    `json:"pageSize,default=10"`
+	Current  int    `json:"current,default=1"`
 }
 
 type AlarmRulePageDTO struct {
-	Name        string `json:"name"`
-	MonitorType string `json:"monitorType" orm:"monitor_type" `
-	ProductType string `json:"productType" orm:"product_type" `
-	MetricName  string `json:"metricName" orm:"metric_name" `
-	Express     string `json:"express"`
-	InstanceNum int    `json:"instanceNum"`
-	Status      string `json:"status"`
-	RuleId      string `json:"ruleId"`
+	Name          string         `json:"name" `
+	MonitorType   string         `json:"monitorType" gorm:"monitor_type" `
+	ProductType   string         `json:"productType" gorm:"product_type" `
+	MetricName    string         `json:"metricName" gorm:"metric_name" `
+	Express       string         `json:"express" gorm:"express"`
+	InstanceNum   int            `json:"instanceNum" gorm:"column:instanceNum"`
+	Status        string         `json:"status" gorm:"column:status"`
+	RuleId        string         `json:"ruleId" gorm:"column:ruleId"`
+	RuleCondition *RuleCondition `json:"ruleCondition" gorm:"column:trigger_condition"`
 }
 
 type AlarmRuleDetailDTO struct {
@@ -80,4 +88,23 @@ type RuleReqDTO struct {
 	Id       string `json:"id"`
 	Status   string `json:"status"`
 	TenantId string `json:"tenantId"`
+}
+
+func (p *RuleCondition) Value() (driver.Value, error) {
+	bs, err := json.Marshal(p)
+	return string(bs), errors.WithStack(err)
+}
+func (s *RuleCondition) Scan(v interface{}) error {
+	var err error
+	logger.Logger().Infof("%s", string(v.([]byte)))
+
+	switch vt := v.(type) {
+	case string:
+		err = json.Unmarshal([]byte(vt), &s)
+	case []byte:
+		err = json.Unmarshal(vt, &s)
+	default:
+		return errors.New("rule condition 转换错误")
+	}
+	return err
 }
