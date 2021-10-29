@@ -32,7 +32,6 @@ var cfg = config.GetConfig()
 
 func (mpd *AlertContactDao) GetAlertContact(param forms.AlertContactParam) *forms.AlertContactFormPage {
 	var model = &[]forms.AlertContactForm{}
-	//db := mpd.db
 	var sql string
 	if param.ContactName != "" {
 		sql = fmt.Sprintf(database.SelectAlterContact, param.TenantId, "AND ac.name LIKE CONCAT('%',"+param.ContactName+",'%')")
