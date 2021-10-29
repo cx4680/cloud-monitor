@@ -10,6 +10,7 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/enums"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/utils/snowflake"
 	"encoding/json"
+	"fmt"
 	"github.com/satori/go.uuid"
 	"gorm.io/gorm"
 	"io/ioutil"
@@ -31,17 +32,22 @@ var cfg = config.GetConfig()
 
 func (mpd *AlertContactDao) GetAlertContact(param forms.AlertContactParam) *forms.AlertContactFormPage {
 	var model = &[]forms.AlertContactForm{}
-	db := mpd.db
-	if param.Phone != "" {
-		db = mpd.db.Raw(database.SelectAlterContact+"AND ac.id = ANY(SELECT contact_id FROM alert_contact_information WHERE type = 1 AND no LIKE CONCAT('%',?,'%')) ", param.TenantId, param.ContactName, param.Phone).Group("ac.id")
-	} else if param.Email != "" {
-		db = mpd.db.Raw(database.SelectAlterContact+"AND ac.id = ANY(SELECT contact_id FROM alert_contact_information WHERE type = 2 AND no LIKE CONCAT('%',?,'%')) ", param.TenantId, param.ContactName, param.Email).Group("ac.id")
-	} else {
-		db = mpd.db.Raw(database.SelectAlterContact, param.TenantId, param.ContactName).Group("ac.id")
+	//db := mpd.db
+	var sql string
+	if param.ContactName != "" {
+		sql = fmt.Sprintf(database.SelectAlterContact, param.TenantId, "AND ac.name LIKE CONCAT('%',"+param.ContactName+",'%')")
 	}
-	db.Find(model)
+	if param.Phone != "" {
+		sql = fmt.Sprintf(database.SelectAlterContact, param.TenantId, "AND ac.id = ANY(SELECT contact_id FROM alert_contact_information WHERE type = 1 AND no LIKE CONCAT('%',"+param.Phone+",'%')) ")
+	} else if param.Email != "" {
+		sql = fmt.Sprintf(database.SelectAlterContact, param.TenantId, "AND ac.id = ANY(SELECT contact_id FROM alert_contact_information WHERE type = 1 AND no LIKE CONCAT('%',"+param.Email+",'%')) ")
+	} else {
+		sql = fmt.Sprintf(database.SelectAlterContact, param.TenantId, "")
+	}
+	mpd.db.Raw(sql).Find(model)
 	total := len(*model)
-	db.Limit(param.PageSize).Offset((param.PageCurrent - 1) * param.PageSize).Find(model)
+	sql += "LIMIT " + strconv.Itoa((param.PageCurrent-1)*param.PageSize) + "," + strconv.Itoa(param.PageSize) + ""
+	mpd.db.Raw(sql).Find(model)
 	var alertContactFormPage = &forms.AlertContactFormPage{
 		Records: model,
 		Current: param.PageCurrent,
@@ -53,7 +59,7 @@ func (mpd *AlertContactDao) GetAlertContact(param forms.AlertContactParam) *form
 
 func (mpd *AlertContactDao) InsertAlertContact(param forms.AlertContactParam) error {
 	if param.ContactName == "" {
-		return errors.NewError("联系人名字为空")
+		return errors.NewError("联系人名字不能为空")
 	}
 	currentTime := getCurrentTime()
 	contactId := strconv.FormatInt(snowflake.GetWorker().NextId(), 10)
@@ -77,11 +83,17 @@ func (mpd *AlertContactDao) InsertAlertContact(param forms.AlertContactParam) er
 	mpd.insertAlertContactInformation(param, param.Email, 2, currentTime)
 
 	//将联系人添加到组
-	mpd.insertAlertContactGroupRel(param, contactId, currentTime)
+	err := mpd.insertAlertContactGroupRel(param, contactId, currentTime)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
-func (mpd *AlertContactDao) UpdateAlertContact(param forms.AlertContactParam) {
+func (mpd *AlertContactDao) UpdateAlertContact(param forms.AlertContactParam) error {
+	if param.ContactName == "" {
+		return errors.NewError("联系人名字不能为空")
+	}
 	currentTime := getCurrentTime()
 	var alertContact = &models.AlertContact{
 		Id:          param.ContactId,
@@ -99,7 +111,11 @@ func (mpd *AlertContactDao) UpdateAlertContact(param forms.AlertContactParam) {
 	mpd.updateAlertContactInformation(param, currentTime)
 
 	//更新联系人组关联
-	mpd.updateAlertContactGroupRel(param, currentTime)
+	err := mpd.updateAlertContactGroupRel(param, currentTime)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (mpd *AlertContactDao) DeleteAlertContact(param forms.AlertContactParam) {
@@ -155,16 +171,22 @@ func (mpd *AlertContactDao) insertAlertContactInformation(param forms.AlertConta
 	// 同步region
 	mq.SendMsg(cfg.Rocketmq.AlertContactTopic, enums.InsertAlertContactInformation, alertContactInformation)
 	// TODO 发送验证消息
+	sendMsg(param.TenantId, param.ContactId, no, noType, activeCode)
 }
 
 //创建联系人组关联
-func (mpd *AlertContactDao) insertAlertContactGroupRel(param forms.AlertContactParam, contactId string, currentTime string) {
-	for i := range param.GroupIdList {
+func (mpd *AlertContactDao) insertAlertContactGroupRel(param forms.AlertContactParam, contactId string, currentTime string) error {
+	var count int64
+	for _, v := range param.GroupIdList {
+		mpd.db.Model(&models.AlertContactGroupRel{}).Where("tenant_id = ?", param.TenantId).Where("group_id = ?", v).Count(&count)
+		if count >= 100 {
+			return errors.NewError("每组联系人限制创建100个")
+		}
 		var alertContactGroupRel = &models.AlertContactGroupRel{
 			Id:         strconv.FormatInt(snowflake.GetWorker().NextId(), 10),
 			TenantId:   param.TenantId,
 			ContactId:  contactId,
-			GroupId:    param.GroupIdList[i],
+			GroupId:    v,
 			CreateUser: param.CreateUser,
 			CreateTime: currentTime,
 			UpdateTime: currentTime,
@@ -173,6 +195,7 @@ func (mpd *AlertContactDao) insertAlertContactGroupRel(param forms.AlertContactP
 		// 同步region
 		mq.SendMsg(cfg.Rocketmq.AlertContactTopic, enums.InsertAlertContactGroupRel, alertContactGroupRel)
 	}
+	return nil
 }
 
 //更新联系方式
@@ -185,11 +208,15 @@ func (mpd *AlertContactDao) updateAlertContactInformation(param forms.AlertConta
 }
 
 //更新联系人组关联
-func (mpd *AlertContactDao) updateAlertContactGroupRel(param forms.AlertContactParam, currentTime string) {
+func (mpd *AlertContactDao) updateAlertContactGroupRel(param forms.AlertContactParam, currentTime string) error {
 	//清除联系人组的关联
 	mpd.deleteAlertContactGroupRel(param.ContactId)
 	//再新增新的关联
-	mpd.insertAlertContactGroupRel(param, param.ContactId, currentTime)
+	err := mpd.insertAlertContactGroupRel(param, param.ContactId, currentTime)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 //删除联系方式
@@ -216,5 +243,20 @@ func getTenantName(tenantId string) string {
 	data, err := ioutil.ReadAll(response.Body)
 	var result map[string]map[string]map[string]string
 	err = json.Unmarshal(data, &result)
-	return result["module"]["login"]["loginCode"]
+	if result["module"] != nil {
+		return result["module"]["login"]["loginCode"]
+	} else {
+		return result["result"]["login"]["loginCode"]
+	}
+}
+
+func sendMsg(tenantId string, contactId string, no string, noType int, activeCode string) {
+	if no == "" {
+		return
+	}
+	params := make(map[string]string)
+	params["userName"] = getTenantName(tenantId)
+	params["verifyBtn"] = "/#/alarm/activation?code=" + activeCode
+	params["activationlink"] = "code=" + activeCode
+
 }
