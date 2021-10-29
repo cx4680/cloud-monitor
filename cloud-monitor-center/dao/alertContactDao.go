@@ -2,6 +2,7 @@ package dao
 
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor-center/database"
+	"code.cestc.cn/ccos-ops/cloud-monitor-center/errors"
 	"code.cestc.cn/ccos-ops/cloud-monitor-center/forms"
 	"code.cestc.cn/ccos-ops/cloud-monitor-center/models"
 	"code.cestc.cn/ccos-ops/cloud-monitor-center/mq"
@@ -32,11 +33,11 @@ func (mpd *AlertContactDao) GetAlertContact(param forms.AlertContactParam) *form
 	var model = &[]forms.AlertContactForm{}
 	db := mpd.db
 	if param.Phone != "" {
-		db = mpd.db.Raw(database.SelectAlterContact+"AND ac.id = ANY(SELECT contact_id FROM alert_contact_information WHERE type = 1 AND no LIKE CONCAT('%',?,'%')) ", param.TenantId, param.ContactName, param.GroupName, param.Phone).Group("ac.id")
+		db = mpd.db.Raw(database.SelectAlterContact+"AND ac.id = ANY(SELECT contact_id FROM alert_contact_information WHERE type = 1 AND no LIKE CONCAT('%',?,'%')) ", param.TenantId, param.ContactName, param.Phone).Group("ac.id")
 	} else if param.Email != "" {
-		db = mpd.db.Raw(database.SelectAlterContact+"AND ac.id = ANY(SELECT contact_id FROM alert_contact_information WHERE type = 2 AND no LIKE CONCAT('%',?,'%')) ", param.TenantId, param.ContactName, param.GroupName, param.Email).Group("ac.id")
+		db = mpd.db.Raw(database.SelectAlterContact+"AND ac.id = ANY(SELECT contact_id FROM alert_contact_information WHERE type = 2 AND no LIKE CONCAT('%',?,'%')) ", param.TenantId, param.ContactName, param.Email).Group("ac.id")
 	} else {
-		db = mpd.db.Raw(database.SelectAlterContact, param.TenantId, param.ContactName, param.GroupName).Group("ac.id")
+		db = mpd.db.Raw(database.SelectAlterContact, param.TenantId, param.ContactName).Group("ac.id")
 	}
 	db.Find(model)
 	total := len(*model)
@@ -50,7 +51,10 @@ func (mpd *AlertContactDao) GetAlertContact(param forms.AlertContactParam) *form
 	return alertContactFormPage
 }
 
-func (mpd *AlertContactDao) InsertAlertContact(param forms.AlertContactParam) {
+func (mpd *AlertContactDao) InsertAlertContact(param forms.AlertContactParam) error {
+	if param.ContactName == "" {
+		return errors.NewError("联系人名字为空")
+	}
 	currentTime := getCurrentTime()
 	contactId := strconv.FormatInt(snowflake.GetWorker().NextId(), 10)
 	param.ContactId = contactId
@@ -74,6 +78,7 @@ func (mpd *AlertContactDao) InsertAlertContact(param forms.AlertContactParam) {
 
 	//将联系人添加到组
 	mpd.insertAlertContactGroupRel(param, contactId, currentTime)
+	return nil
 }
 
 func (mpd *AlertContactDao) UpdateAlertContact(param forms.AlertContactParam) {
