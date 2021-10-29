@@ -42,7 +42,7 @@ func (dao *InstanceDao) BindInstance(param *forms.InstanceBindRuleDTO) {
 		for index, ruleId := range param.RuleIdList {
 			list[index] = &models.AlarmInstance{
 				AlarmRuleID:  ruleId,
-				IP:           param.Ip,
+				Ip:           param.Ip,
 				RegionCode:   param.RegionCode,
 				RegionName:   param.RegionName,
 				ZoneCode:     param.ZoneCode,
