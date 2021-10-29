@@ -43,9 +43,10 @@ func (mpd *AlertContactDao) GetAlertContact(param forms.AlertContactParam) *form
 	} else {
 		sql = fmt.Sprintf(database.SelectAlterContact, param.TenantId, "")
 	}
-	mpd.db.Raw(sql).Find(model)
-	total := len(*model)
-	sql += "LIMIT " + strconv.Itoa((param.PageCurrent-1)*param.PageSize) + "," + strconv.Itoa(param.PageSize) + ""
+	var count int64
+	mpd.db.Model(&models.AlertContact{}).Where("tenant_id = ?", param.TenantId).Count(&count)
+	total := count
+	sql += "LIMIT " + strconv.Itoa((param.PageCurrent-1)*param.PageSize) + "," + strconv.Itoa(param.PageSize)
 	mpd.db.Raw(sql).Find(model)
 	var alertContactFormPage = &forms.AlertContactFormPage{
 		Records: model,

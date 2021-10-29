@@ -20,7 +20,7 @@ type AlertContactFormPage struct {
 	Records *[]AlertContactForm `json:"records"`
 	Current int                 `json:"current"`
 	Size    int                 `json:"size"`
-	Total   int                 `json:"total"`
+	Total   int64               `json:"total"`
 }
 
 type AlertContactParam struct {
