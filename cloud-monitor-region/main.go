@@ -1,6 +1,7 @@
 package main
 
 import (
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/redis"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/validator/translate"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/web"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
@@ -33,6 +34,13 @@ func main() {
 
 	//初始化数据里连接
 	database.InitDb(&cfg.DB)
+
+	redisConfig := redis.RedisConfig{
+		Addr:     "localhost:6379",
+		Password: "",
+	}
+	redis.InitClient(redisConfig)
+
 	logger.InitLogger(&config.GetConfig().Logger)
 	defer logger.Logger().Sync()
 

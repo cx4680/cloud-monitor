@@ -8,7 +8,7 @@ type AlarmInstance struct {
 	CreateTime   time.Time `gorm:"column:create_time;autoCreateTime;default:time.now()"` // 创建时间
 	RegionCode   string    `gorm:"column:region_code"`
 	ZoneCode     string    `gorm:"column:zone_code"`
-	IP           string    `gorm:"column:ip"`
+	Ip           string    `gorm:"column:ip"`
 	RegionName   string    `gorm:"column:region_name"`
 	ZoneName     string    `gorm:"column:zone_name"`
 	InstanceName string    `gorm:"column:instance_name"`

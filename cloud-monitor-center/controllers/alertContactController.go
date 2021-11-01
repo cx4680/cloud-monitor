@@ -35,7 +35,7 @@ func (mpc *AlertContactCtl) InsertAlertContact(c *gin.Context) {
 		return
 	}
 	err = mpc.dao.InsertAlertContact(param)
-	if err.Error() != "" {
+	if err != nil {
 		c.JSON(http.StatusOK, global.NewError(err.Error()))
 	} else {
 		c.JSON(http.StatusOK, global.NewSuccess("创建成功", true))
@@ -49,8 +49,12 @@ func (mpc *AlertContactCtl) UpdateAlertContact(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, translate.GetErrorMsg(err))
 		return
 	}
-	mpc.dao.UpdateAlertContact(param)
-	c.JSON(http.StatusOK, global.NewSuccess("修改成功", true))
+	err = mpc.dao.UpdateAlertContact(param)
+	if err != nil {
+		c.JSON(http.StatusOK, global.NewError(err.Error()))
+	} else {
+		c.JSON(http.StatusOK, global.NewSuccess("修改成功", true))
+	}
 }
 
 func (mpc *AlertContactCtl) DeleteAlertContact(c *gin.Context) {

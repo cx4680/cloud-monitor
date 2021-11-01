@@ -33,6 +33,10 @@ func (mpc *MonitorProductCtl) GetById(c *gin.Context) {
 	c.JSON(http.StatusOK, global.NewSuccess("查询成功", mpc.dao.GetById(id)))
 }
 
+func (mpc *MonitorProductCtl) GetAllMonitorProducts(c *gin.Context) {
+	c.JSON(http.StatusOK, global.NewSuccess("查询成功", mpc.dao.SelectMonitorProductList()))
+}
+
 func (mpc *MonitorProductCtl) UpdateById(c *gin.Context) {
 	var f forms.MonitorProductUpdateForm
 	if err := c.ShouldBindJSON(&f); err != nil {
@@ -57,9 +61,4 @@ type Proxy struct {
 type ActionInfo struct {
 	Action  string
 	Product string
-}
-
-func (mpc *MonitorProductCtl) GetById11(c *Proxy) {
-	id := c.Query("id")
-	c.JSON(http.StatusOK, global.NewSuccess("查询成功", mpc.dao.GetById(id)))
 }

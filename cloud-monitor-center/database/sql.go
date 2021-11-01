@@ -28,8 +28,12 @@ var SelectAlterContact = "SELECT " +
 	"AS acg ON acg.contact_id = ac.id " +
 	"WHERE " +
 	"ac.status = 1 " +
-	"AND ac.tenant_id = ? " +
-	"AND ac.name LIKE CONCAT('%',?,'%') "
+	"AND ac.tenant_id = %s " +
+	"%s" +
+	"GROUP BY " +
+	"ac.id " +
+	"ORDER BY " +
+	"ac.create_time DESC  "
 
 var SelectAlterContactGroup = "SELECT " +
 	"id AS group_id, " +
@@ -41,7 +45,9 @@ var SelectAlterContactGroup = "SELECT " +
 	"alert_contact_group " +
 	"WHERE " +
 	"tenant_id = ? " +
-	"AND name LIKE CONCAT('%',?,'%')"
+	"AND name LIKE CONCAT('%',?,'%')" +
+	"ORDER BY " +
+	"create_time DESC "
 
 var SelectAlterGroupContact = "SELECT " +
 	"ac.id AS contact_id, " +
@@ -74,4 +80,6 @@ var SelectAlterGroupContact = "SELECT " +
 	"AND ac.tenant_id = ? " +
 	"AND acg.group_id = ? " +
 	"GROUP BY " +
-	"ac.id "
+	"ac.id " +
+	"ORDER BY " +
+	"ac.create_time DESC "

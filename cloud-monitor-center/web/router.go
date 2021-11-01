@@ -9,6 +9,7 @@ import (
 
 func loadRouters() {
 	monitorProductRouters()
+	monitorItemRouters()
 	alertContactRouters()
 	alertContactGroupRouters()
 	alarmRule()
@@ -19,8 +20,17 @@ func monitorProductRouters() {
 	monitorProductCtl := controllers.NewMonitorProductCtl(dao.NewMonitorProductDao(database.GetDb()))
 	group := router.Group("/hawkeye/monitorProduct/")
 	{
+		group.GET("/getAllMonitorProducts", monitorProductCtl.GetAllMonitorProducts)
 		group.GET("/getById", monitorProductCtl.GetById)
 		group.PUT("/updateById", monitorProductCtl.UpdateById)
+	}
+}
+
+func monitorItemRouters() {
+	monitorItemCtl := controllers.NewMonitorItemCtl(dao.NewMonitorItemDao(database.GetDb()))
+	group := router.Group("/hawkeye/monitorItem/")
+	{
+		group.GET("/getMonitorItemsById", monitorItemCtl.GetMonitorItemsById)
 	}
 }
 

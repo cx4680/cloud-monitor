@@ -13,6 +13,12 @@ func NewMonitorProductDao(db *gorm.DB) *MonitorProductDao {
 	return &MonitorProductDao{db: db}
 }
 
+func (mpd *MonitorProductDao) SelectMonitorProductList() *[]models.MonitorProduct {
+	var product = &[]models.MonitorProduct{}
+	mpd.db.Where("status = ?", "1").Find(product)
+	return product
+}
+
 func (mpd *MonitorProductDao) Create(product *models.MonitorProduct) {
 	mpd.db.Create(product)
 }

@@ -123,7 +123,7 @@ func (dao *AlarmRuleDao) saveAlarmInstances(ruleReqDTO *forms.AlarmRuleAddReqDTO
 	for index, info := range ruleReqDTO.InstanceList {
 		list[index] = models.AlarmInstance{
 			AlarmRuleID:  ruleId,
-			IP:           info.Ip,
+			Ip:           info.Ip,
 			InstanceID:   info.InstanceId,
 			RegionCode:   info.RegionCode,
 			ZoneCode:     info.ZoneCode,
