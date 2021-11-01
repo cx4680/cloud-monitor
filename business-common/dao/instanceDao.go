@@ -3,8 +3,7 @@ package dao
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/forms"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/models"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/vo"
-	"code.cestc.cn/ccos-ops/cloud-monitor/common/utils"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/pageUtils"
 	"gorm.io/gorm"
 )
 
@@ -19,15 +18,8 @@ func NewInstanceDao(db *gorm.DB) *InstanceDao {
 func (dao *InstanceDao) SelectInstanceRulePage(param *forms.InstanceRulePageReqParam) interface{} {
 	var model []forms.InstanceRuleDTO
 	db := dao.db
-	var total int64
-	db.Offset((param.Current-1)*param.PageSize).Limit(param.PageSize).Raw("select t2.id,t2.name,t2.metric_name as monitorItem,t2.trigger_condition  as ruleCondition,product_type,monitor_type ,t1.create_time from t_alarm_instance  t1        JOIN t_alarm_rule t2  on t2.id=t1.alarm_rule_id       where t1.instance_id=? and t2.deleted=0  ORDER BY create_time desc  , name ASC", param.InstanceId).Scan(&model).Count(&total)
-	var page = &vo.PageVO{
-		Records: model,
-		Current: param.Current,
-		Size:    param.PageSize,
-		Total:   utils.Int64ToInt(total),
-	}
-	return page
+	var sqlParam = []interface{}{param.InstanceId}
+	return pageUtils.Paginate(param.PageSize, param.Current, "select t2.id,t2.name,t2.metric_name as monitorItem,t2.trigger_condition  as ruleCondition,product_type,monitor_type ,t1.create_time from t_alarm_instance  t1        JOIN t_alarm_rule t2  on t2.id=t1.alarm_rule_id       where t1.instance_id=? and t2.deleted=0  ORDER BY create_time desc  , name ASC", sqlParam, &model, db)
 }
 
 func (dao *InstanceDao) UnbindInstance(param *forms.UnBindRuleParam) {
@@ -58,7 +50,7 @@ func (dao *InstanceDao) BindInstance(param *forms.InstanceBindRuleDTO) {
 
 func (dao *InstanceDao) GetRuleListByProductType(param *forms.ProductRuleParam) *forms.ProductRuleListDTO {
 	var unbindList []forms.InstanceRuleDTO
-	dao.db.Raw("SELECT\n\tid,\n\t`name`,\n\ttrigger_condition AS ruleCondition,\n\tproduct_type,\n\tmonitor_type\nFROM\n\t`t_alarm_rule`\nWHERE\n\tproduct_type =?\nAND monitor_type =?\nAND tenant_id =?\nAND deleted = 0\nAND id NOT IN (\n\tSELECT\n\t\tt2.id\n\tFROM\n\t\tt_alarm_instance t1\n\tJOIN t_alarm_rule t2 ON t2.id = t1.alarm_rule_id\n\tWHERE\n\t\tt1.instance_id =?\n\tAND t2.deleted = 0\n)", param.ProductType, param.MonitorType, param.TenantId, param.InstanceId)
+	dao.db.Raw("SELECT id,`name`,trigger_condition AS ruleCondition,product_type,monitor_type FROM`t_alarm_rule` WHERE product_type =? AND monitor_type =? AND tenant_id =? AND deleted = 0 AND id NOT IN ( SELECT  t2.id FROM  t_alarm_instance t1 JOIN t_alarm_rule t2 ON t2.id = t1.alarm_rule_id WHERE  t1.instance_id =? AND t2.deleted = 0 )", param.ProductType, param.MonitorType, param.TenantId, param.InstanceId)
 	dao.db.Find(&unbindList)
 
 	var instanceRuleList []forms.InstanceRuleDTO

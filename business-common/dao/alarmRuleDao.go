@@ -3,8 +3,7 @@ package dao
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/forms"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/models"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/vo"
-	"code.cestc.cn/ccos-ops/cloud-monitor/common/utils"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/pageUtils"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/utils/snowflake"
 	"gorm.io/gorm"
 	"strconv"
@@ -66,15 +65,8 @@ func (dao *AlarmRuleDao) SelectRulePageList(param *forms.AlarmPageReqParam) inte
 		sqlParam = append(sqlParam, param.RuleName)
 	}
 	selectList.WriteString(") t group by t.ruleId order by t.update_time  desc ")
-	var total int64
-	db.Offset((param.Current-1)*param.PageSize).Limit(param.PageSize).Raw(selectList.String(), sqlParam).Scan(&model).Count(&total)
-	var page = &vo.PageVO{
-		Records: model,
-		Current: param.Current,
-		Size:    param.PageSize,
-		Total:   utils.Int64ToInt(total),
-	}
-	return page
+	return pageUtils.Paginate(param.PageSize, param.Current, selectList.String(), sqlParam, &model, db)
+
 }
 
 func (dao *AlarmRuleDao) GetDetail(id string, tenantId string) *forms.AlarmRuleDetailDTO {

@@ -14,3 +14,7 @@ func (e BusinessError) Error() string {
 func NewBussinessError(code int, msg string) error {
 	return &BusinessError{Code: code, Message: msg}
 }
+
+type PrometheusException struct {
+	BusinessError
+}

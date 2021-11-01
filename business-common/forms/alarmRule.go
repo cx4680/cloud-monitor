@@ -11,8 +11,8 @@ type AlarmPageReqParam struct {
 	RuleName string `json:"ruleName,omitempty"`
 	Status   string `json:"status,omitempty"` //AlarmRuleStatusEnum  enabled(1),disabled(0);
 	TenantId string `json:"tenantId,omitempty"`
-	PageSize int    `json:"pageSize,default=10"`
-	Current  int    `json:"current,default=1"`
+	PageSize int    `json:"pageSize" binding:"min=1,max=500"`
+	Current  int    `json:"current" binding:"min=1"`
 }
 
 type AlarmRulePageDTO struct {

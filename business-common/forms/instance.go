@@ -2,8 +2,8 @@ package forms
 
 type InstanceRulePageReqParam struct {
 	InstanceId string `json:"instanceId" binding:"required"`
-	PageSize   int    `json:"pageSize,default=10"`
-	Current    int    `json:"current,default=1"`
+	PageSize   int    `json:"pageSize" binding:"min=1,max=500"`
+	Current    int    `json:"current" binding:"min=1"`
 }
 
 type InstanceRuleDTO struct {
