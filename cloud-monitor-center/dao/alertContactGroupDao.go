@@ -1,7 +1,9 @@
 package dao
 
 import (
+	"code.cestc.cn/ccos-ops/cloud-monitor-center/constant"
 	"code.cestc.cn/ccos-ops/cloud-monitor-center/database"
+	"code.cestc.cn/ccos-ops/cloud-monitor-center/errors"
 	"code.cestc.cn/ccos-ops/cloud-monitor-center/forms"
 	"code.cestc.cn/ccos-ops/cloud-monitor-center/models"
 	"code.cestc.cn/ccos-ops/cloud-monitor-center/mq"
@@ -31,7 +33,17 @@ func (mpd *AlertContactGroupDao) GetAlertGroupContact(tenantId string, groupId s
 	return model
 }
 
-func (mpd *AlertContactGroupDao) InsertAlertContactGroup(param forms.AlertContactGroupParam) {
+func (mpd *AlertContactGroupDao) InsertAlertContactGroup(param forms.AlertContactGroupParam) error {
+	var count int64
+	mpd.db.Model(&models.AlertContactGroup{}).Where("tenant_id = ?", param.TenantId).Count(&count)
+	if count >= constant.MAX_GROUP_NUM {
+		return errors.NewError("联系人组限制创建" + strconv.Itoa(constant.MAX_GROUP_NUM) + "个")
+	}
+	var model = &models.AlertContactGroup{}
+	mpd.db.Where("tenant_id = ?", param.TenantId).Where("name = ?", param.GroupName).First(model)
+	if model.Name == param.GroupName {
+		return errors.NewError("联系组名重复")
+	}
 	currentTime := getCurrentTime()
 	groupId := strconv.FormatInt(snowflake.GetWorker().NextId(), 10)
 	param.GroupId = groupId
@@ -50,9 +62,15 @@ func (mpd *AlertContactGroupDao) InsertAlertContactGroup(param forms.AlertContac
 
 	// 添加联系人组关联
 	mpd.insertAlertContactGroupRel(param, groupId, currentTime)
+	return nil
 }
 
-func (mpd *AlertContactGroupDao) UpdateAlertContactGroup(param forms.AlertContactGroupParam) {
+func (mpd *AlertContactGroupDao) UpdateAlertContactGroup(param forms.AlertContactGroupParam) error {
+	var model = &models.AlertContactGroup{}
+	mpd.db.Where("tenant_id = ?", param.TenantId).Where("id != ?", param.GroupId).Where("name = ?", param.GroupName).First(model)
+	if model.Name == param.GroupName {
+		return errors.NewError("联系组名重复")
+	}
 	currentTime := getCurrentTime()
 	var alertContactGroup = &models.AlertContactGroup{
 		Id:          param.GroupId,
@@ -67,6 +85,7 @@ func (mpd *AlertContactGroupDao) UpdateAlertContactGroup(param forms.AlertContac
 
 	//更新联系人关联
 	mpd.updateAlertContactGroupRel(param, currentTime)
+	return nil
 }
 
 func (mpd *AlertContactGroupDao) DeleteAlertContactGroup(param forms.AlertContactGroupParam) {

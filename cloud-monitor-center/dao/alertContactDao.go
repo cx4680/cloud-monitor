@@ -1,6 +1,7 @@
 package dao
 
 import (
+	"code.cestc.cn/ccos-ops/cloud-monitor-center/constant"
 	"code.cestc.cn/ccos-ops/cloud-monitor-center/database"
 	"code.cestc.cn/ccos-ops/cloud-monitor-center/errors"
 	"code.cestc.cn/ccos-ops/cloud-monitor-center/forms"
@@ -179,7 +180,7 @@ func (mpd *AlertContactDao) insertAlertContactGroupRel(param forms.AlertContactP
 	var count int64
 	for _, v := range param.GroupIdList {
 		mpd.db.Model(&models.AlertContactGroupRel{}).Where("tenant_id = ?", param.TenantId).Where("group_id = ?", v).Count(&count)
-		if count >= 100 {
+		if count >= constant.MAX_CONTACT_NUM {
 			return errors.NewError("每组联系人限制创建100个")
 		}
 		var alertContactGroupRel = &models.AlertContactGroupRel{

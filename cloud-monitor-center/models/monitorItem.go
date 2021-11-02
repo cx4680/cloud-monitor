@@ -2,7 +2,7 @@ package models
 
 type MonitorItem struct {
 	ID             string `gorm:"column:id;primary_key" json:"id"`              // ID
-	ProductId      int    `gorm:"column:product_id" json:"productId"`           // 监控产品ID
+	ProductId      string `gorm:"column:product_id" json:"productId"`           // 监控产品ID
 	Name           string `gorm:"column:name" json:"name"`                      // 监控项名称
 	MetricName     string `gorm:"column:metric_name" json:"metricName"`         // 指标名
 	Labels         string `gorm:"column:labels" json:"create_user"`             // 标签名
@@ -11,9 +11,9 @@ type MonitorItem struct {
 	Statistics     string `gorm:"column:statistics" json:"statistics"`          // 统计方式
 	Unit           string `gorm:"column:unit" json:"unit"`                      // 单位
 	Frequency      string `gorm:"column:frequency" json:"frequency"`            // 频率
-	Type           string `gorm:"column:type" json:"type"`                      // 类型 1:基础监控 2:操作系统监控
-	IsDisplay      string `gorm:"column:is_display" json:"isDisplay"`           // 是否显示 0:不显示 1:显示
-	Status         string `gorm:"column:status" json:"status"`                  // 是否显示 0:不显示 1:显示
+	Type           int    `gorm:"column:type" json:"type"`                      // 类型 1:基础监控 2:操作系统监控
+	IsDisplay      int    `gorm:"column:is_display" json:"isDisplay"`           // 是否显示 0:不显示 1:显示
+	Status         int    `gorm:"column:status" json:"status"`                  // 是否显示 0:不显示 1:显示
 	Description    string `gorm:"column:description" json:"description"`        // 描述
 	CreateUser     string `gorm:"column:create_user" json:"createUser"`         // 创建人
 	CreateTime     string `gorm:"column:create_time" json:"createTime"`         // 创建时间
