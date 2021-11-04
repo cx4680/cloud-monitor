@@ -61,7 +61,10 @@ func (mpd *AlertContactGroupDao) InsertAlertContactGroup(param forms.AlertContac
 	mq.SendMsg(cfg.Rocketmq.AlertContactTopic, enums.InsertAlertContactGroup, alertContactGroup)
 
 	// 添加联系人组关联
-	mpd.insertAlertContactGroupRel(param, groupId, currentTime)
+	err := mpd.insertAlertContactGroupRel(param, currentTime)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -84,7 +87,10 @@ func (mpd *AlertContactGroupDao) UpdateAlertContactGroup(param forms.AlertContac
 	mq.SendMsg(cfg.Rocketmq.AlertContactTopic, enums.UpdateAlertContactGroup, alertContactGroup)
 
 	//更新联系人关联
-	mpd.updateAlertContactGroupRel(param, currentTime)
+	err := mpd.updateAlertContactGroupRel(param, currentTime)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -98,13 +104,18 @@ func (mpd *AlertContactGroupDao) DeleteAlertContactGroup(param forms.AlertContac
 }
 
 //新增联系人关联
-func (mpd *AlertContactGroupDao) insertAlertContactGroupRel(param forms.AlertContactGroupParam, groupId string, currentTime string) {
+func (mpd *AlertContactGroupDao) insertAlertContactGroupRel(param forms.AlertContactGroupParam, currentTime string) error {
+	var count int64
+	mpd.db.Model(&models.AlertContactGroupRel{}).Where("tenant_id = ?", param.TenantId).Where("group_id", param.GroupId).Count(&count)
+	if count >= constant.MAX_CONTACT_NUM {
+		return errors.NewError("每组联系人限制创建" + strconv.Itoa(constant.MAX_CONTACT_NUM) + "个")
+	}
 	for i := range param.ContactIdList {
 		var alertContactGroupRel = &models.AlertContactGroupRel{
 			Id:         strconv.FormatInt(snowflake.GetWorker().NextId(), 10),
 			TenantId:   param.TenantId,
 			ContactId:  param.ContactIdList[i],
-			GroupId:    groupId,
+			GroupId:    param.GroupId,
 			CreateUser: param.CreateUser,
 			CreateTime: currentTime,
 			UpdateTime: currentTime,
@@ -113,14 +124,19 @@ func (mpd *AlertContactGroupDao) insertAlertContactGroupRel(param forms.AlertCon
 		//同步region
 		mq.SendMsg(cfg.Rocketmq.AlertContactTopic, enums.InsertAlertContactGroupRel, alertContactGroupRel)
 	}
+	return nil
 }
 
 //更新联系人关联
-func (mpd *AlertContactGroupDao) updateAlertContactGroupRel(param forms.AlertContactGroupParam, currentTime string) {
+func (mpd *AlertContactGroupDao) updateAlertContactGroupRel(param forms.AlertContactGroupParam, currentTime string) error {
 	//清除旧联系人组关联
 	mpd.deleteAlertContactGroupRel(param.GroupId)
 	//添加新联系人组关联
-	mpd.insertAlertContactGroupRel(param, param.GroupId, currentTime)
+	err := mpd.insertAlertContactGroupRel(param, currentTime)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 //删除联系人关联

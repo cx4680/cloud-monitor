@@ -181,7 +181,7 @@ func (mpd *AlertContactDao) insertAlertContactGroupRel(param forms.AlertContactP
 	for _, v := range param.GroupIdList {
 		mpd.db.Model(&models.AlertContactGroupRel{}).Where("tenant_id = ?", param.TenantId).Where("group_id = ?", v).Count(&count)
 		if count >= constant.MAX_CONTACT_NUM {
-			return errors.NewError("每组联系人限制创建100个")
+			return errors.NewError("每组联系人限制创建" + strconv.Itoa(constant.MAX_CONTACT_NUM) + "个")
 		}
 		var alertContactGroupRel = &models.AlertContactGroupRel{
 			Id:         strconv.FormatInt(snowflake.GetWorker().NextId(), 10),
