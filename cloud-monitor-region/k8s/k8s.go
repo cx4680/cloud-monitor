@@ -59,7 +59,7 @@ func InitK8s() {
 func CreateAlertRule(alertRuleDTO *forms.AlertRuleDTO) (*forms.AlertRuleDTO, error) {
 	requestObj := alertRuleToObject(alertRuleDTO)
 	rules := &unstructured.Unstructured{
-		Object: requestObj,
+		Object: *requestObj,
 	}
 	create, err := client.Resource(*resource).Namespace(namespace).Create(context.TODO(), rules, metav1.CreateOptions{})
 	if err != nil {
@@ -95,7 +95,7 @@ func DeleteAlertRule(alertRuleId string) error {
 	return nil
 }
 
-func alertRuleToObject(alertRuleDTO *forms.AlertRuleDTO) map[string]interface{} {
+func alertRuleToObject(alertRuleDTO *forms.AlertRuleDTO) *map[string]interface{} {
 	result := map[string]interface{}{}
 	result["apiVersion"] = "monitoring.coreos.com/v1"
 	result["kind"] = "PrometheusRule"
@@ -104,16 +104,16 @@ func alertRuleToObject(alertRuleDTO *forms.AlertRuleDTO) map[string]interface{} 
 	labels["role"] = "alert-rules"
 	labels["namespace"] = namespace
 	metadata := map[string]interface{}{}
-	metadata["labels"] = labels
+	metadata["labels"] = &labels
 	metadata["name"] = alertRuleDTO.TenantId
 	metadata["namespace"] = namespace
-	result["metadata"] = metadata
+	result["metadata"] = &metadata
 	spec := map[string]interface{}{}
-	var array = make([]map[string]interface{}, len(alertRuleDTO.SpecGroupsList))
+	var array = make([]*map[string]interface{}, len(alertRuleDTO.SpecGroupsList))
 	for index, specGroup := range alertRuleDTO.SpecGroupsList {
 		group := map[string]interface{}{}
 		group["name"] = specGroup.Name
-		var ruleList = make([]map[string]interface{}, len(specGroup.AlertList))
+		var ruleList = make([]*map[string]interface{}, len(specGroup.AlertList))
 		for index, alert := range specGroup.AlertList {
 			rule := map[string]interface{}{}
 			rule["alert"] = alert.Alert
@@ -123,13 +123,13 @@ func alertRuleToObject(alertRuleDTO *forms.AlertRuleDTO) map[string]interface{} 
 			annotations := map[string]interface{}{}
 			annotations["summary"] = alert.Summary
 			annotations["description"] = alert.Description
-			rule["annotations"] = annotations
-			ruleList[index] = rule
+			rule["annotations"] = &annotations
+			ruleList[index] = &rule
 		}
-		group["rules"] = ruleList
-		array[index] = group
+		group["rules"] = &ruleList
+		array[index] = &group
 	}
-	spec["groups"] = array
-	result["spec"] = spec
-	return result
+	spec["groups"] = &array
+	result["spec"] = &spec
+	return &result
 }
