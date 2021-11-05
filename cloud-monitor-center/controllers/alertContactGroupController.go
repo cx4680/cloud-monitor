@@ -36,8 +36,12 @@ func (mpc *AlertContactGroupCtl) InsertAlertContactGroup(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, translate.GetErrorMsg(err))
 		return
 	}
-	mpc.dao.InsertAlertContactGroup(param)
-	c.JSON(http.StatusOK, global.NewSuccess("创建成功", true))
+	err = mpc.dao.InsertAlertContactGroup(param)
+	if err != nil {
+		c.JSON(http.StatusOK, global.NewError(err.Error()))
+	} else {
+		c.JSON(http.StatusOK, global.NewSuccess("创建成功", true))
+	}
 }
 
 func (mpc *AlertContactGroupCtl) UpdateAlertContactGroup(c *gin.Context) {
@@ -47,8 +51,12 @@ func (mpc *AlertContactGroupCtl) UpdateAlertContactGroup(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, translate.GetErrorMsg(err))
 		return
 	}
-	mpc.dao.UpdateAlertContactGroup(param)
-	c.JSON(http.StatusOK, global.NewSuccess("创建成功", true))
+	err = mpc.dao.UpdateAlertContactGroup(param)
+	if err != nil {
+		c.JSON(http.StatusOK, global.NewError(err.Error()))
+	} else {
+		c.JSON(http.StatusOK, global.NewSuccess("修改成功", true))
+	}
 }
 
 func (mpc *AlertContactGroupCtl) DeleteAlertContactGroup(c *gin.Context) {
@@ -59,5 +67,5 @@ func (mpc *AlertContactGroupCtl) DeleteAlertContactGroup(c *gin.Context) {
 		return
 	}
 	mpc.dao.DeleteAlertContactGroup(param)
-	c.JSON(http.StatusOK, global.NewSuccess("创建成功", true))
+	c.JSON(http.StatusOK, global.NewSuccess("删除成功", true))
 }
