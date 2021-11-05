@@ -4,12 +4,14 @@ import (
 	"context"
 	"github.com/go-redis/redis/v8"
 	"log"
+	"sync"
 	"time"
 )
 
 var (
-	ctx = context.Background()
-	rdb *redis.Client
+	ctx   = context.Background()
+	rdb   *redis.Client
+	mutex sync.Mutex
 )
 
 type RedisConfig struct {
@@ -48,6 +50,16 @@ func SetByTimeOut(key, value string, timeout time.Duration) error {
 func Get(key string) (string, error) {
 	cmd := rdb.Get(ctx, key)
 	return cmd.Result()
+}
+
+func Lock(key string) error {
+	mutex.Lock()
+	defer mutex.Unlock()
+	return rdb.SetNX(ctx, key, 1, 10*time.Second).Err()
+}
+
+func UnLock(key string) error {
+	return rdb.Del(ctx, key).Err()
 }
 
 func GetClient() *redis.Client {

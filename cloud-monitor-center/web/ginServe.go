@@ -2,6 +2,7 @@ package web
 
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor-center/web/middleware"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/task"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -21,6 +22,8 @@ func Start(cfg *config.Config) error {
 	loadPlugin(cfg)
 	//加载路由
 	loadRouters()
+	//加载定时任务
+	cronFunc()
 	//启动服务
 	return doStart(cfg)
 }
@@ -58,4 +61,9 @@ func loadPlugin(cfg *config.Config) {
 	//自定义组件
 	router.Use(middleware.Cors())
 	router.Use(middleware.Auth())
+}
+
+func cronFunc() {
+	task.CronClear()
+	task.CronInstanceJob()
 }
