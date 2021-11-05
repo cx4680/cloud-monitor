@@ -28,33 +28,34 @@ type AlarmRulePageDTO struct {
 }
 
 type AlarmRuleDetailDTO struct {
-	MonitorType    string          `json:"monitorType"`
-	ProductType    string          `json:"productType"`
-	Scope          string          `json:"scope"`
-	InstanceList   []*InstanceInfo `json:"instanceList"`
-	RuleName       string          `json:"ruleName"`
-	SilencesTime   string          `json:"silencesTime"`
-	EffectiveStart string          `json:"effectiveStart"`
-	EffectiveEnd   string          `json:"effectiveEnd"`
-	AlarmLevel     int             `json:"alarmLevel"`
-	NoticeChannel  string          `json:"noticeChannel"`
-	GroupList      interface{}     `json:"groupList"`
-	TenantId       string          `json:"tenantId"`
-	UserId         string          `json:"userId"`
-	Id             string          `json:"id"`
-	RuleCondition  *RuleCondition  `json:"ruleCondition"`
-	Status         string          `json:"status"`
-	NoticeGroups   []*struct {
-		Id       string `json:"id"`
-		Name     string `json:"name"`
-		UserList []*struct {
-			Phone    string `json:"phone"`
-			Email    string `json:"email"`
-			UserName string `json:"userName"`
-		} `json:"userList"`
-	} `json:"noticeGroups"`
-	NoticeChannelDesc string `json:"noticeChannelDesc"`
-	Describe          string `json:"describe"`
+	MonitorType       string          `json:"monitorType"`
+	ProductType       string          `json:"productType"`
+	Scope             string          `json:"scope"`
+	InstanceList      []*InstanceInfo `json:"instanceList"`
+	RuleName          string          `json:"ruleName"`
+	SilencesTime      string          `json:"silencesTime"`
+	EffectiveStart    string          `json:"effectiveStart"`
+	EffectiveEnd      string          `json:"effectiveEnd"`
+	AlarmLevel        int             `json:"alarmLevel"`
+	NoticeChannel     string          `json:"noticeChannel"`
+	TenantId          string          `json:"tenantId"`
+	UserId            string          `json:"userId"`
+	Id                string          `json:"id"`
+	RuleCondition     *RuleCondition  `json:"ruleCondition"`
+	Status            string          `json:"status"`
+	NoticeGroups      []*NoticeGroup  `json:"noticeGroups"`
+	NoticeChannelDesc string          `json:"noticeChannelDesc"`
+	Describe          string          `json:"describe"`
+}
+type NoticeGroup struct {
+	Id       string      `json:"id"`
+	Name     string      `json:"name"`
+	UserList []*UserInfo `json:"userList"`
+}
+type UserInfo struct {
+	Phone    string `json:"phone"`
+	Email    string `json:"email"`
+	UserName string `json:"userName"`
 }
 
 type AlarmRuleAddReqDTO struct {

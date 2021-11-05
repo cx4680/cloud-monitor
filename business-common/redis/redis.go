@@ -49,3 +49,7 @@ func Get(key string) (string, error) {
 	cmd := rdb.Get(ctx, key)
 	return cmd.Result()
 }
+
+func GetClient() *redis.Client {
+	return rdb
+}

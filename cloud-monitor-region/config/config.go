@@ -16,7 +16,7 @@ var k8sConfig = &K8sConfig{
 }
 
 func initK8s() {
-	/*config, err := rest.InClusterConfig()
+	/*config.yml, err := rest.InClusterConfig()
 	if err != nil {
 		panic(err)
 	}*/

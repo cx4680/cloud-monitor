@@ -18,13 +18,13 @@ import (
 // @BasePath /
 func main() {
 	//解析命令参数
-	var cf = flag.String("config", "D:\\dev-go\\cloud-monitor\\cloud-monitor-center\\config.local.yml", "config path")
+	var cf = flag.String("config.yml", "D:\\dev-go\\cloud-monitor\\cloud-monitor-center\\config.yml.local.yml", "config.yml path")
 	flag.Parse()
 
 	//加载配置文件
 	err := config.InitConfig(*cf)
 	if err != nil {
-		log.Printf("init config error: %v\n", err)
+		log.Printf("init config.yml error: %v\n", err)
 		os.Exit(1)
 	}
 

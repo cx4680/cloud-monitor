@@ -10,9 +10,9 @@ import (
 
 func TestGenerate(t *testing.T) {
 
-	err := config.InitConfig("../config.dev.yml")
+	err := config.InitConfig("../config.yml.dev.yml")
 	if err != nil {
-		log.Printf("init config error: %v\n", err)
+		log.Printf("init config.yml error: %v\n", err)
 		os.Exit(1)
 	}
 

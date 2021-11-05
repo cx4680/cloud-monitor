@@ -2,6 +2,7 @@ package main
 
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/redis"
+	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/k8s"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/validator/translate"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/web"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
@@ -15,13 +16,13 @@ import (
 
 func main() {
 	//解析命令参数
-	var cf = flag.String("config", "config.local.yml", "config path")
+	var cf = flag.String("config.yml", "config.local.yml", "config.yml path")
 	flag.Parse()
 
 	//加载配置文件
 	err := config.InitConfig(*cf)
 	if err != nil {
-		log.Printf("init config error: %v\n", err)
+		log.Printf("init config.yml error: %v\n", err)
 		os.Exit(1)
 	}
 
@@ -40,7 +41,7 @@ func main() {
 		Password: "",
 	}
 	redis.InitClient(redisConfig)
-
+	k8s.InitK8s()
 	logger.InitLogger(&config.GetConfig().Logger)
 	defer logger.Logger().Sync()
 
