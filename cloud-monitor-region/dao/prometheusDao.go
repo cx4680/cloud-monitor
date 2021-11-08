@@ -24,7 +24,7 @@ type PrometheusRuleDao struct {
 }
 
 func NewPrometheusRuleDao(db *gorm.DB) *PrometheusRuleDao {
-	return &PrometheusRuleDao{db: db}
+	return &PrometheusRuleDao{db: db, AlarmRuleDao: dao.AlarmRuleDao{DB: db}}
 }
 
 func (dao *PrometheusRuleDao) GenerateUserPrometheusRule(region string, zone string, tenantId string) {
