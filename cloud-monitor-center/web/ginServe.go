@@ -23,7 +23,7 @@ func Start(cfg *config.Config) error {
 	//加载路由
 	loadRouters()
 	//加载定时任务
-	cronFunc()
+	go cronFunc()
 	//启动服务
 	return doStart(cfg)
 }

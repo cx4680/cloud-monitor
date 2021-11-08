@@ -3,15 +3,15 @@ package dtos
 import "code.cestc.cn/ccos-ops/cloud-monitor/business-common/forms"
 
 type RuleExpress struct {
-	RuleId        string
-	RuleName      string
+	RuleId        string `gorm:"column:ruleId"`
+	RuleName      string `gorm:"column:ruleName"`
 	ProductType   string
 	MonitorType   string
-	Level         int
-	NoticeChannel int
-	RuleCondition *forms.RuleCondition
-	GroupIds      []*forms.NoticeGroup
-	InstanceList  []*forms.InstanceInfo
+	Level         int                   `gorm:"column:level"`
+	NoticeChannel int                   `gorm:"column:noticeChannel"`
+	RuleCondition *forms.RuleCondition  `gorm:"column:ruleCondition"`
+	GroupIds      []*forms.NoticeGroup  `gorm:"-"`
+	InstanceList  []*forms.InstanceInfo `gorm:"-"`
 }
 
 type RuleDescDTO struct {

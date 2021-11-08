@@ -31,31 +31,32 @@ type AlarmRuleDetailDTO struct {
 	MonitorType       string          `json:"monitorType"`
 	ProductType       string          `json:"productType"`
 	Scope             string          `json:"scope"`
-	InstanceList      []*InstanceInfo `json:"instanceList"`
-	RuleName          string          `json:"ruleName"`
+	InstanceList      []*InstanceInfo `json:"instanceList" gorm:"-"`
+	RuleName          string          `json:"ruleName" gorm:"column:ruleName"`
 	SilencesTime      string          `json:"silencesTime"`
-	EffectiveStart    string          `json:"effectiveStart"`
-	EffectiveEnd      string          `json:"effectiveEnd"`
-	AlarmLevel        int             `json:"alarmLevel"`
-	NoticeChannel     string          `json:"noticeChannel"`
-	TenantId          string          `json:"tenantId"`
+	EffectiveStart    string          `json:"effectiveStart"  gorm:"column:effectiveStart"`
+	EffectiveEnd      string          `json:"effectiveEnd"  gorm:"column:effectiveEnd"`
+	AlarmLevel        int             `json:"alarmLevel" gorm:"column:alarmLevel"`
+	NoticeChannel     string          `json:"noticeChannel" gorm:"column:noticeChannel"`
+	TenantId          string          `json:"tenantId" gorm:"column:tenantId"`
 	UserId            string          `json:"userId"`
 	Id                string          `json:"id"`
-	RuleCondition     *RuleCondition  `json:"ruleCondition"`
+	RuleCondition     *RuleCondition  `json:"ruleCondition" gorm:"column:ruleCondition"`
 	Status            string          `json:"status"`
-	NoticeGroups      []*NoticeGroup  `json:"noticeGroups"`
-	NoticeChannelDesc string          `json:"noticeChannelDesc"`
-	Describe          string          `json:"describe"`
+	NoticeGroups      []*NoticeGroup  `json:"noticeGroups" gorm:"-"`
+	NoticeChannelDesc string          `json:"noticeChannelDesc" gorm:"column:noticeChannelDesc"`
+	Describe          string          `json:"describe" gorm:"column:describe"`
 }
 type NoticeGroup struct {
-	Id       string      `json:"id"`
-	Name     string      `json:"name"`
-	UserList []*UserInfo `json:"userList"`
+	Id       string      `json:"id" gorm:"column:id"`
+	Name     string      `json:"name" gorm:"column:name"`
+	UserList []*UserInfo `json:"userList" gorm:"-"`
 }
 type UserInfo struct {
-	Phone    string `json:"phone"`
-	Email    string `json:"email"`
-	UserName string `json:"userName"`
+	Id       string `json:"id" gorm:"column:id"`
+	Phone    string `json:"phone" gorm:"column:phone"`
+	Email    string `json:"email" gorm:"column:email"`
+	UserName string `json:"userName" gorm:"column:userName"`
 }
 
 type AlarmRuleAddReqDTO struct {

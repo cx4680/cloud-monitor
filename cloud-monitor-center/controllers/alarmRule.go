@@ -34,6 +34,10 @@ func (ctl *AlarmRuleCtl) SelectRulePageList(c *gin.Context) {
 
 func (ctl *AlarmRuleCtl) GetDetail(c *gin.Context) {
 	id := c.PostForm("id")
+	if len(id) == 0 {
+		c.JSON(http.StatusBadRequest, "缺少id")
+		return
+	}
 	tenantId, _ := c.Get(global.TenantId)
 	c.JSON(http.StatusOK, global.NewSuccess("查询成功", ctl.dao.GetDetail(id, tenantId.(string))))
 

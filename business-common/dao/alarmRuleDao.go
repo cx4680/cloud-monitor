@@ -32,8 +32,8 @@ func (dao *AlarmRuleDao) SaveRule(ruleReqDTO *forms.AlarmRuleAddReqDTO) string {
 func (dao *AlarmRuleDao) UpdateRule(ruleReqDTO *forms.AlarmRuleAddReqDTO) {
 	dao.deleteOthers(ruleReqDTO.Id)
 	rule := buildAlarmRule(ruleReqDTO)
-	//dao.db.Update(rule)
-	dao.saveRuleOthers(ruleReqDTO, rule.ID)
+	dao.db.Model(&rule).Updates(rule)
+	dao.saveRuleOthers(ruleReqDTO, ruleReqDTO.Id)
 }
 
 func (dao *AlarmRuleDao) DeleteRule(ruleReqDTO *forms.RuleReqDTO) {
@@ -85,7 +85,7 @@ func (dao *AlarmRuleDao) GetInstanceList(ruleId string) []*forms.InstanceInfo {
 
 func (dao *AlarmRuleDao) GetNoticeGroupList(ruleId string) []*forms.NoticeGroup {
 	var model []*forms.NoticeGroup
-	dao.db.Raw("SELECT t1.contract_group_id as id, t2.`name` FROM t_alarm_notice t1,  alert_contact_group t2   WHERE t1.alarm_rule_id = ?   and t1.contract_group_id = t2.id  ORDER BY name", ruleId).Scan(&model)
+	dao.db.Raw("SELECT t1.contract_group_id as id, t2.`name` as name  FROM t_alarm_notice t1,  alert_contact_group t2   WHERE t1.alarm_rule_id = ?   and t1.contract_group_id = t2.id  ORDER BY name", ruleId).Scan(&model)
 	for _, group := range model {
 		group.UserList = dao.GetUserList(group.Id)
 	}
@@ -94,12 +94,8 @@ func (dao *AlarmRuleDao) GetNoticeGroupList(ruleId string) []*forms.NoticeGroup 
 
 func (dao *AlarmRuleDao) GetUserList(groupId string) []*forms.UserInfo {
 	var model []*forms.UserInfo
-	dao.db.Raw("select t2.`name` as userName  ,t2.id, GROUP_CONCAT(CASE t3.type WHEN 1 THEN t3.no  END) as phone, GROUP_CONCAT(CASE t3.type WHEN 2 THEN t3.no  END) as email from alert_contact_group_rel  t   LEFT JOIN alert_contact t2 on t2.id = t.contact_id   LEFT JOIN alert_contact_information t3 on (t3.contact_id = t2.id and t3.is_certify=1)  where t.group_id in (?)  and t2.`status`=1  GROUP BY id  order by userName", groupId).Scan(model)
+	dao.db.Raw("select t2.`name` as userName  ,t2.id as id, GROUP_CONCAT(CASE t3.type WHEN 1 THEN t3.no  END) as phone, GROUP_CONCAT(CASE t3.type WHEN 2 THEN t3.no  END) as email from alert_contact_group_rel  t   LEFT JOIN alert_contact t2 on t2.id = t.contact_id   LEFT JOIN alert_contact_information t3 on (t3.contact_id = t2.id and t3.is_certify=1)  where t.group_id=?  and t2.`status`=1  GROUP BY id  order by userName", groupId).Scan(&model)
 	return model
-}
-
-func (dao *AlarmRuleDao) GetRuleCondition(id string, tenantId string) {
-
 }
 
 func (dao *AlarmRuleDao) GetMonitorItem(metricName string) *models.MonitorItem {
@@ -110,6 +106,7 @@ func (dao *AlarmRuleDao) GetMonitorItem(metricName string) *models.MonitorItem {
 
 func buildAlarmRule(ruleReqDTO *forms.AlarmRuleAddReqDTO) *models.AlarmRule {
 	return &models.AlarmRule{TenantID: ruleReqDTO.TenantId,
+		ID:            ruleReqDTO.Id,
 		ProductType:   ruleReqDTO.ProductType,
 		Dimensions:    GetResourceScopeInt(ruleReqDTO.Scope),
 		Name:          ruleReqDTO.RuleName,
@@ -163,9 +160,9 @@ func (dao *AlarmRuleDao) deleteOthers(ruleId string) {
 	notice := models.AlarmNotice{
 		AlarmRuleID: ruleId,
 	}
-	dao.db.Delete(&notice)
+	dao.db.Where("alarm_rule_id=?", ruleId).Delete(&notice)
 	instance := models.AlarmInstance{AlarmRuleID: ruleId}
-	dao.db.Delete(&instance)
+	dao.db.Where("alarm_rule_id=?", ruleId).Delete(&instance)
 }
 
 ////todo 查询通知方式

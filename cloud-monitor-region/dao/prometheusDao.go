@@ -136,6 +136,6 @@ func (dao *PrometheusRuleDao) getUserPrometheusId(tenantId string) string {
 	prometheus := &models.UserPrometheusID{
 		TenantID: tenantId,
 	}
-	dao.db.Find(&prometheus)
+	dao.db.Find(prometheus)
 	return prometheus.PrometheusRuleID
 }

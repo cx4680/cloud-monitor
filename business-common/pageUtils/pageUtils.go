@@ -17,7 +17,7 @@ func Paginate(pageSize int, current int, sql string, sqlParam []interface{}, lis
 	if total%pageSize != 0 {
 		pages += 1
 	}
-	if current < 1 {
+	if current < 1 || pages == 0 {
 		current = 1
 	} else if current > pages {
 		current = pages

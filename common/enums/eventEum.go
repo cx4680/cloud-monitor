@@ -17,11 +17,11 @@ const (
 	DeleteAlertContactGroup             EventEum = "deleteAlertContactGroup"
 	DeleteAlertContactGroupRelByGroupId EventEum = "DeleteAlertContactGroupRelByGroupId"
 
-	CreateRule  EventEum = "createRule"
-	UpdateRule  EventEum = "updateRule"
-	DisableRule EventEum = "disableRule"
-	EnableRule  EventEum = "enableRule"
-	DeleteRule  EventEum = "deleteRule"
-	BindRule    EventEum = "bindRule"
-	UnbindRule  EventEum = "unbindRule"
+	CreateRule  EventEum = "create"
+	UpdateRule  EventEum = "update"
+	DisableRule EventEum = "disable"
+	EnableRule  EventEum = "enable"
+	DeleteRule  EventEum = "delete"
+	BindRule    EventEum = "bind"
+	UnbindRule  EventEum = "unbind"
 )

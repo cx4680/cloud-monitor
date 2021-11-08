@@ -28,7 +28,7 @@ func AlarmRuleConsumer() {
 	prometheusDao := dao2.NewPrometheusRuleDao(database.GetDb())
 	var MqMsg forms.MqMsg
 
-	err := c.Subscribe(cfg.Rocketmq.AlertContactTopic, consumer.MessageSelector{}, func(ctx context.Context,
+	err := c.Subscribe(cfg.Rocketmq.RuleTopic, consumer.MessageSelector{}, func(ctx context.Context,
 		msgs ...*primitive.MessageExt) (consumer.ConsumeResult, error) {
 		for i := range msgs {
 			fmt.Printf("subscribe callback: %v \n", msgs[i])
@@ -84,8 +84,8 @@ func AlarmRuleConsumer() {
 		return
 	}
 	//time.Sleep(time.Hour)
-	err = c.Shutdown()
+	/*err = c.Shutdown()
 	if err != nil {
 		fmt.Printf("shutdown Consumer error: %s", err.Error())
-	}
+	}*/
 }
