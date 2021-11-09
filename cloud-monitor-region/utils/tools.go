@@ -4,6 +4,7 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"encoding/json"
+	"strconv"
 	"strings"
 )
 
@@ -31,16 +32,16 @@ func SecToTime(seconds int) string {
 	second := seconds - hour*3600 - minute*60
 	sb := strings.Builder{}
 	if days > 0 {
-		sb.WriteString(string(days) + "d")
+		sb.WriteString(strconv.Itoa(days) + "d")
 	}
 	if hour > 0 {
-		sb.WriteString(string(hour) + "h")
+		sb.WriteString(strconv.Itoa(hour) + "h")
 	}
 	if minute > 0 {
-		sb.WriteString(string(minute) + "m")
+		sb.WriteString(strconv.Itoa(minute) + "m")
 	}
 	if second > 0 {
-		sb.WriteString(string(second) + "s")
+		sb.WriteString(strconv.Itoa(second) + "s")
 	}
 	return sb.String()
 }

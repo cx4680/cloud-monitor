@@ -99,8 +99,6 @@ func (ctl *AlarmRuleCtl) ChangeRuleStatus(c *gin.Context) {
 	}
 	tenantId, _ := c.Get(global.TenantId)
 	param.TenantId = tenantId.(string)
-	userId, _ := c.Get(global.UserId)
-	param.TenantId = userId.(string)
 	ctl.dao.UpdateRuleState(&param)
 	enum := enums.DisableRule
 	if strings.EqualFold(param.Status, dao.ENABLE) {

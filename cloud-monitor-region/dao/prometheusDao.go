@@ -1,7 +1,7 @@
 package dao
 
 import (
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/dao"
+	dao2 "code.cestc.cn/ccos-ops/cloud-monitor/business-common/dao"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/redis"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/dtos"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/errors"
@@ -20,11 +20,11 @@ import (
 
 type PrometheusRuleDao struct {
 	db *gorm.DB
-	dao.AlarmRuleDao
+	dao2.AlarmRuleDao
 }
 
 func NewPrometheusRuleDao(db *gorm.DB) *PrometheusRuleDao {
-	return &PrometheusRuleDao{db: db, AlarmRuleDao: dao.AlarmRuleDao{DB: db}}
+	return &PrometheusRuleDao{db: db, AlarmRuleDao: dao2.AlarmRuleDao{DB: db}}
 }
 
 func (dao *PrometheusRuleDao) GenerateUserPrometheusRule(region string, zone string, tenantId string) {
@@ -83,12 +83,12 @@ func (dao *PrometheusRuleDao) buildPrometheusRule(region string, zone string, te
 				continue
 			}
 			alert.Alert = fmt.Sprintf("%s#%s#%s", ruleExpress.RuleId, instance.InstanceId, conditionId)
-			alert.Expr = fmt.Sprintf("%s_over_time(%s{%s}[%s])%s%v", ruleExpress.RuleCondition.Statistics, ruleExpress.RuleCondition.MetricName, dao.getLabels(instance.InstanceId, ruleExpress.RuleCondition.Labels), utils.SecToTime(ruleExpress.RuleCondition.Period), ruleExpress.RuleCondition.ComparisonOperator, ruleExpress.RuleCondition.Threshold)
+			alert.Expr = fmt.Sprintf("%s_over_time(%s{%s}[%s])%s%v", dao2.GetConfigItem(ruleExpress.RuleCondition.Statistics, "3", "").Data, ruleExpress.RuleCondition.MetricName, dao.getLabels(instance.InstanceId, ruleExpress.RuleCondition.Labels), utils.SecToTime(ruleExpress.RuleCondition.Period), dao2.GetConfigItem(ruleExpress.RuleCondition.ComparisonOperator, "4", "").Data, ruleExpress.RuleCondition.Threshold)
 			alert.RuleType = "alert"
 			alert.ForTime = utils.SecToTime(ruleExpress.RuleCondition.Times * ruleExpress.RuleCondition.Period)
 			alert.Summary = dao.getTemplateLabels(ruleExpress.RuleCondition.Labels)
 			labelMaps := map[string]interface{}{}
-			labelMaps["severity"] = ruleExpress.Level
+			labelMaps["severity"] = dao2.GetConfigItem(ruleExpress.Level, "28", "").Name
 			labelMaps["app"] = "hawkeye"
 			labelMaps["namespace"] = "product-cec-hawkeye"
 			alert.Labels = labelMaps
@@ -113,9 +113,7 @@ func (dao *PrometheusRuleDao) getLabels(instanceId string, labelStr string) stri
 	for _, label := range labels {
 		if strings.EqualFold(label, "instance") {
 			builder.WriteString(label)
-			builder.WriteString("='")
-			builder.WriteString(instanceId)
-			builder.WriteString("='")
+			builder.WriteString(fmt.Sprintf("='%s'", instanceId))
 		}
 	}
 	return builder.String()

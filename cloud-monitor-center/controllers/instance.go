@@ -31,7 +31,7 @@ func (ctl *InstanceCtl) Page(c *gin.Context) {
 
 func (ctl *InstanceCtl) Unbind(c *gin.Context) {
 	var param forms.UnBindRuleParam
-	if err := c.ShouldBindQuery(&param); err != nil {
+	if err := c.ShouldBind(&param); err != nil {
 		c.JSON(http.StatusBadRequest, translate.GetErrorMsg(err))
 		return
 	}

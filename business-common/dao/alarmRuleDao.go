@@ -46,8 +46,8 @@ func (dao *AlarmRuleDao) DeleteRule(ruleReqDTO *forms.RuleReqDTO) {
 }
 
 func (dao *AlarmRuleDao) UpdateRuleState(ruleReqDTO *forms.RuleReqDTO) {
-	rule := models.AlarmRule{ID: ruleReqDTO.Id, Enabled: GetAlarmStatusTextInt(ruleReqDTO.Status), TenantID: ruleReqDTO.TenantId}
-	dao.DB.Model(&rule).Updates(&rule)
+	rule := models.AlarmRule{ID: ruleReqDTO.Id}
+	dao.DB.Model(&rule).Update("enabled", GetAlarmStatusTextInt(ruleReqDTO.Status))
 }
 
 func (dao *AlarmRuleDao) SelectRulePageList(param *forms.AlarmPageReqParam) interface{} {
@@ -165,9 +165,9 @@ func (dao *AlarmRuleDao) deleteOthers(ruleId string) {
 	dao.DB.Where("alarm_rule_id=?", ruleId).Delete(&instance)
 }
 
-////todo 查询通知方式
 func getNotifyChannel(notifyChannel string) int {
-	return 1
+	notify, _ := strconv.Atoi(GetConfigItem(nil, "33", notifyChannel).Code)
+	return notify
 }
 
 const (
