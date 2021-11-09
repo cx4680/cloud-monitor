@@ -63,8 +63,8 @@ func CreateAlertRule(alertRuleDTO *forms.AlertRuleDTO) (*forms.AlertRuleDTO, err
 	}
 	create, err := client.Resource(*resource).Namespace(namespace).Create(context.TODO(), rules, metav1.CreateOptions{})
 	if err != nil {
-		logger.Logger().Errorf("调用api创建规格失败 %+v", err)
-		return nil, errors.NewBussinessError(2, "调用api创建规格失败")
+		sprintf := fmt.Sprintf("调用api创建规格失败 %+v", err)
+		return nil, errors.NewBussinessError(2, sprintf)
 	}
 	alertRuleDTO.AlertRuleId = alertRuleDTO.TenantId
 	fmt.Sprintf("%v", create)

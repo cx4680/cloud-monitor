@@ -33,9 +33,9 @@ func (dao *PrometheusRuleDao) GenerateUserPrometheusRule(region string, zone str
 		logger.Logger().Infof(err.Error())
 		return
 	}
-	var ctx context.Context
 	key := "hawkeye-rule-" + tenantId
 	result := true
+	ctx := context.Background()
 	for result {
 		success, err := redis.GetClient().SetNX(ctx, key, 1, time.Minute).Result()
 		if err != nil {
@@ -51,7 +51,10 @@ func (dao *PrometheusRuleDao) GenerateUserPrometheusRule(region string, zone str
 		alertRuleDTO.AlertRuleId = id
 		k8s.UpdateAlertRule(alertRuleDTO)
 	} else {
-		k8s.CreateAlertRule(alertRuleDTO)
+		_, err := k8s.CreateAlertRule(alertRuleDTO)
+		if err != nil {
+			logger.Logger().Errorf("规则创建失败%+v", err)
+		}
 		dao.createUserPrometheus(alertRuleDTO, tenantId)
 	}
 	redis.GetClient().Del(ctx, key)
@@ -72,6 +75,7 @@ func (dao *PrometheusRuleDao) buildPrometheusRule(region string, zone string, te
 	var alertList []*forms.AlertDTO
 	for _, ruleExpress := range list {
 		ruleExpress.GroupIds = dao.GetNoticeGroupList(ruleExpress.RuleId)
+		ruleExpress.InstanceList = dao.GetInstanceList(ruleExpress.RuleId)
 		for _, instance := range ruleExpress.InstanceList {
 			alert := &forms.AlertDTO{}
 			conditionId, err := utils.MD5(ruleExpress.RuleCondition)

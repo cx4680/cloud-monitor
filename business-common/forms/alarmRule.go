@@ -1,7 +1,6 @@
 package forms
 
 import (
-	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
 	"database/sql/driver"
 	"encoding/json"
 	"github.com/pkg/errors"
@@ -98,8 +97,6 @@ func (p *RuleCondition) Value() (driver.Value, error) {
 }
 func (s *RuleCondition) Scan(v interface{}) error {
 	var err error
-	logger.Logger().Infof("%s", string(v.([]byte)))
-
 	switch vt := v.(type) {
 	case string:
 		err = json.Unmarshal([]byte(vt), &s)

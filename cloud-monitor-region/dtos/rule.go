@@ -7,7 +7,7 @@ type RuleExpress struct {
 	RuleName      string `gorm:"column:ruleName"`
 	ProductType   string
 	MonitorType   string
-	Level         int                   `gorm:"column:level"`
+	Level         string                `gorm:"column:level"`
 	NoticeChannel int                   `gorm:"column:noticeChannel"`
 	RuleCondition *forms.RuleCondition  `gorm:"column:ruleCondition"`
 	GroupIds      []*forms.NoticeGroup  `gorm:"-"`
