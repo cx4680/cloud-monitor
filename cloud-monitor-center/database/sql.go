@@ -36,18 +36,22 @@ var SelectAlterContact = "SELECT " +
 	"ac.create_time DESC  "
 
 var SelectAlterContactGroup = "SELECT " +
-	"id AS group_id, " +
-	"name AS group_name, " +
-	"description AS description, " +
-	"create_time AS create_time, " +
-	"update_time AS update_time " +
+	"acg.id AS group_id, " +
+	"acg.name AS group_name, " +
+	"acg.description AS description, " +
+	"acg.create_time AS create_time, " +
+	"acg.update_time AS update_time, " +
+	"COUNT( acgr.group_id ) AS contact_count " +
 	"FROM " +
-	"alert_contact_group " +
+	"alert_contact_group AS acg " +
+	"LEFT JOIN alert_contact_group_rel AS acgr ON acg.id = acgr.group_id " +
 	"WHERE " +
-	"tenant_id = ? " +
-	"AND name LIKE CONCAT('%',?,'%')" +
+	"acg.tenant_id = ? " +
+	"AND acg.name LIKE CONCAT('%',?,'%') " +
+	"GROUP BY " +
+	"acg.id " +
 	"ORDER BY " +
-	"create_time DESC "
+	"acg.create_time DESC "
 
 var SelectAlterGroupContact = "SELECT " +
 	"ac.id AS contact_id, " +

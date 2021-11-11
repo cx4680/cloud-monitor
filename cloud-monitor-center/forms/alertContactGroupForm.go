@@ -1,11 +1,12 @@
 package forms
 
 type AlertContactGroupForm struct {
-	GroupId     string `orm:"group_id" json:"groupId"`
-	GroupName   string `orm:"group_name" json:"groupName"`
-	Description string `orm:"description" json:"description"`
-	CreateTime  string `orm:"create_time" json:"createTime"`
-	UpdateTime  string `orm:"update_time" json:"updateTime"`
+	GroupId      string `orm:"group_id" json:"groupId"`
+	GroupName    string `orm:"group_name" json:"groupName"`
+	Description  string `orm:"description" json:"description"`
+	CreateTime   string `orm:"create_time" json:"createTime"`
+	UpdateTime   string `orm:"update_time" json:"updateTime"`
+	ContactCount string `orm:"contactCount" json:"contactCount"`
 }
 
 type AlertContactGroupParam struct {

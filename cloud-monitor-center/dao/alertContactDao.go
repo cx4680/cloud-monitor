@@ -12,7 +12,7 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/utils/snowflake"
 	"encoding/json"
 	"fmt"
-	"github.com/satori/go.uuid"
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 	"io/ioutil"
 	"net/http"
@@ -62,6 +62,17 @@ func (mpd *AlertContactDao) InsertAlertContact(param forms.AlertContactParam) er
 	if param.ContactName == "" {
 		return errors.NewError("联系人名字不能为空")
 	}
+	//每个账号限制创建100个联系人
+	var count int64
+	mpd.db.Model(&models.AlertContact{}).Where("tenant_id = ?", param.TenantId).Count(&count)
+	if count >= constant.MAX_CONTACT_NUM {
+		return errors.NewError("联系人限制创建" + strconv.Itoa(constant.MAX_CONTACT_NUM) + "个")
+	}
+	//每个联系人最多加入5个联系组
+	if len(param.GroupIdList) >= constant.MAX_CONTACT_GROUP {
+		return errors.NewError("每个联系人最多加入" + strconv.Itoa(constant.MAX_CONTACT_GROUP) + "个联系组")
+	}
+
 	currentTime := getCurrentTime()
 	contactId := strconv.FormatInt(snowflake.GetWorker().NextId(), 10)
 	param.ContactId = contactId
@@ -76,8 +87,6 @@ func (mpd *AlertContactDao) InsertAlertContact(param forms.AlertContactParam) er
 		UpdateTime:  currentTime,
 	}
 	mpd.db.Create(alertContact)
-	//同步region
-	mq.SendMsg(cfg.Rocketmq.AlertContactTopic, enums.InsertAlertContact, alertContact)
 
 	//添加联系方式
 	mpd.insertAlertContactInformation(param, param.Phone, 1, currentTime)
@@ -88,12 +97,18 @@ func (mpd *AlertContactDao) InsertAlertContact(param forms.AlertContactParam) er
 	if err != nil {
 		return err
 	}
+	//同步region
+	mq.SendMsg(cfg.Rocketmq.AlertContactTopic, enums.InsertAlertContact, alertContact)
 	return nil
 }
 
 func (mpd *AlertContactDao) UpdateAlertContact(param forms.AlertContactParam) error {
 	if param.ContactName == "" {
 		return errors.NewError("联系人名字不能为空")
+	}
+	//每个联系人最多加入5个联系组
+	if len(param.GroupIdList) >= constant.MAX_CONTACT_GROUP {
+		return errors.NewError("每个联系人最多加入" + strconv.Itoa(constant.MAX_CONTACT_GROUP) + "个联系组")
 	}
 	currentTime := getCurrentTime()
 	var alertContact = &models.AlertContact{
@@ -105,8 +120,6 @@ func (mpd *AlertContactDao) UpdateAlertContact(param forms.AlertContactParam) er
 		UpdateTime:  currentTime,
 	}
 	mpd.db.Model(alertContact).Updates(alertContact)
-	//同步region
-	mq.SendMsg(cfg.Rocketmq.AlertContactTopic, enums.UpdateAlertContact, alertContact)
 
 	//更新联系方式
 	mpd.updateAlertContactInformation(param, currentTime)
@@ -116,19 +129,20 @@ func (mpd *AlertContactDao) UpdateAlertContact(param forms.AlertContactParam) er
 	if err != nil {
 		return err
 	}
+	//同步region
+	mq.SendMsg(cfg.Rocketmq.AlertContactTopic, enums.UpdateAlertContact, alertContact)
 	return nil
 }
 
 func (mpd *AlertContactDao) DeleteAlertContact(param forms.AlertContactParam) {
 	var model models.AlertContact
 	mpd.db.Delete(&model, param.ContactId)
-	//同步region
-	mq.SendMsg(cfg.Rocketmq.AlertContactTopic, enums.DeleteAlertContact, param.ContactId)
-
 	//删除联系方式
 	mpd.deleteAlertContactInformation(param.ContactId)
 	//删除联系人组关联
 	mpd.deleteAlertContactGroupRel(param.ContactId)
+	//同步region
+	mq.SendMsg(cfg.Rocketmq.AlertContactTopic, enums.DeleteAlertContact, param.ContactId)
 }
 
 func (mpd *AlertContactDao) CertifyAlertContact(activeCode string) string {
@@ -149,7 +163,7 @@ func (mpd *AlertContactDao) insertAlertContactInformation(param forms.AlertConta
 	if no == "" {
 		return
 	}
-	activeCode := uuid.NewV4().String()
+	activeCode := strings.ReplaceAll(uuid.New().String(), "-", "")
 	var isCertify int
 	if config.GetConfig().HasNoticeModel {
 		isCertify = 0
@@ -169,10 +183,10 @@ func (mpd *AlertContactDao) insertAlertContactInformation(param forms.AlertConta
 		UpdateTime: currentTime,
 	}
 	mpd.db.Create(alertContactInformation)
-	// 同步region
-	mq.SendMsg(cfg.Rocketmq.AlertContactTopic, enums.InsertAlertContactInformation, alertContactInformation)
 	// TODO 发送验证消息
 	sendMsg(param.TenantId, param.ContactId, no, noType, activeCode)
+	// 同步region
+	mq.SendMsg(cfg.Rocketmq.AlertContactTopic, enums.InsertAlertContactInformation, alertContactInformation)
 }
 
 //创建联系人组关联
