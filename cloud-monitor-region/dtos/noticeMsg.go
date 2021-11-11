@@ -22,14 +22,31 @@ type MsgEvent struct {
 }
 
 type RecvObjectBean struct {
-	RecvObjectType int
+	RecvObjectType ReceiveType
 	RecvObject     string
 	NoticeContent  string
 }
 
-type NoticeMsg struct {
+type NoticeMsgDTO struct {
 	SourceId      string
 	TenantId      string
 	MsgEvent      MsgEvent
 	RevObjectBean RecvObjectBean
+}
+
+type MsgSourceDTO struct {
+	Type     MsgSource
+	SourceId string
+}
+
+type SmsMessageReqDTO struct {
+	BusinessId string
+	InModeCode string
+	Messages   []MessagesBean
+	ReferTime  string
+}
+
+type MessagesBean struct {
+	MsgEventCode   string
+	RecvObjectList []RecvObjectBean
 }

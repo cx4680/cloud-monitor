@@ -1,9 +1,14 @@
 package tests
 
 import (
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/dao"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/models"
+	"fmt"
+	"github.com/google/uuid"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
+	"log"
+	"strings"
 	"testing"
 )
 
@@ -32,4 +37,24 @@ func TestMonitorProductDaoTest(t *testing.T) {
 	}
 
 	db.Create(&list)
+}
+
+func TestNotificationRecordDao(t *testing.T) {
+	db, err := gorm.Open(mysql.Open("root:123456@(127.0.0.1:3306)/hawkeye?charset=utf8mb4&parseTime=True&loc=Local"), &gorm.Config{})
+	if err != nil {
+		panic("failed to connect database")
+	}
+	dao := dao.NewNotificationRecordDao(db)
+	num := dao.GetTenantPhoneCurrentMonthRecordNum("abc123")
+	fmt.Println(num)
+
+}
+
+func TestLogPrint(t *testing.T) {
+	log.Printf("user %s success!", "jim")
+}
+
+func TestUUID(t *testing.T) {
+
+	fmt.Println(strings.ReplaceAll(uuid.New().String(), "-", ""))
 }

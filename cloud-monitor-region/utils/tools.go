@@ -8,11 +8,58 @@ import (
 	"strings"
 )
 
+import (
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/tools"
+	"strings"
+)
+
 func If(isTrue bool, a, b interface{}) interface{} {
 	if isTrue {
 		return a
 	}
 	return b
+}
+
+func GetDateDiff(diff int) string {
+	nd := 1000 * 24 * 60 * 60
+	nh := 1000 * 60 * 60
+	nm := 1000 * 60
+	ns := 1000
+	// 计算差多少天
+	day := diff / nd
+	// 计算差多少小时
+	hour := diff % nd / nh
+	// 计算差多少分钟
+	min := diff % nd % nh / nm
+	// 计算差多少秒//输出结果
+	sec := diff % nd % nh % nm / ns
+
+	builder := strings.Builder{}
+
+	if day > 0 {
+		builder.WriteString(string(day))
+		builder.WriteString("天")
+	}
+
+	if hour > 0 {
+		builder.WriteString(string(hour))
+		builder.WriteString("小时")
+	}
+
+	if min > 0 {
+		builder.WriteString(string(min))
+		builder.WriteString("分钟")
+	}
+
+	if sec > 0 {
+		builder.WriteString(string(sec))
+		builder.WriteString("秒")
+	}
+	str := builder.String()
+	if tools.IsNotBlank(str) {
+		return str
+	}
+	return "0分钟"
 }
 
 func MD5(v interface{}) (string, error) {

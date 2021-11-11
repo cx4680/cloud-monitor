@@ -7,6 +7,9 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/tools"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/dtos"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/forms"
+	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/mq"
+	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/utils"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -16,45 +19,58 @@ import (
 	"time"
 )
 
-// TODO 环境变量注入
-var regionName string
-
 type AlertRecordService struct {
-	dao           *commonDao.AlertRecordDao
-	tenantService *TenantService
+	AlertRecordDao *commonDao.AlertRecordDao
+	TenantService  *TenantService
+	MessageService *MessageService
 }
 
-func NewAlertRecordService(alertRecordDao *commonDao.AlertRecordDao, service *TenantService) *AlertRecordService {
-	return &AlertRecordService{dao: alertRecordDao, tenantService: service}
+func NewAlertRecordService(alertRecordDao *commonDao.AlertRecordDao, tenantService *TenantService, messageService *MessageService) *AlertRecordService {
+	return &AlertRecordService{AlertRecordDao: alertRecordDao, TenantService: tenantService, MessageService: messageService}
 }
 
-func (s *AlertRecordService) AddAlertRecord(f *forms.InnerAlertRecordAddForm) error {
+func (s *AlertRecordService) RecordAlertAndSendMessage(f *forms.InnerAlertRecordAddForm) error {
+	ruleList := f.Alerts
 
-	if f.Alerts == nil || len(f.Alerts) <= 0 {
+	if ruleList == nil || len(ruleList) <= 0 {
 		log.Println("alerts 信息为空")
 		return nil
 	}
+	var list []*commonModels.AlertRecord
+	var msgDTOList []*dtos.NoticeMsgDTO
 
-	var records []*commonModels.AlertRecord
-
-	for _, alert := range f.Alerts {
+	for _, alert := range ruleList {
 		ruleDesc := &commonDtos.RuleDesc{}
-		if err := json.Unmarshal([]byte(alert.Annotations.Description), ruleDesc); err != nil {
+
+		tools.ToObject(alert.Annotations.Description, ruleDesc)
+		if ruleDesc == nil {
 			return errors.New("序列化告警数据失败")
 		}
 		//	判断该条告警对应的规则是否删除、禁用、解绑
-		if num := s.dao.FindAlertRuleBindNum(ruleDesc.InstanceId, ruleDesc.RuleId); num <= 0 {
+		if num := s.AlertRecordDao.FindAlertRuleBindNum(ruleDesc.InstanceId, ruleDesc.RuleId); num <= 0 {
 			log.Println("此告警规则已删除/禁用/解绑")
 			continue
 		}
 		// 构建告警记录列表、通知列表
 		alertRecord := buildAlertRecord(alert, ruleDesc)
-		records = append(records, alertRecord)
 
+		noticeMsgDTOS := s.buildMsg(alert, ruleDesc, alertRecord)
+		if noticeMsgDTOS != nil && len(noticeMsgDTOS) > 0 {
+			msgDTOList = append(msgDTOList, noticeMsgDTOS...)
+		}
+		if noticeMsgDTOS != nil && len(noticeMsgDTOS) > 0 {
+			alertRecord.NoticeStatus = "success"
+		} else {
+			alertRecord.NoticeStatus = "fail"
+		}
+		list = append(list, alertRecord)
 	}
-
-	//todo
-
+	s.AlertRecordDao.InsertBatch(list)
+	if config.GetConfig().HasNoticeModel {
+		notificationRecords := s.MessageService.SendMsg(msgDTOList, false)
+		mq.SendNotificationRecordMsg(notificationRecords)
+	}
+	mq.SendAlertRecordMsg(list)
 	return nil
 }
 
@@ -96,29 +112,29 @@ func (s *AlertRecordService) buildInstanceInfo(instance *commonModels.AlarmInsta
 	return builder.String()
 }
 
-func (s *AlertRecordService) buildMsg(alert *forms.AlertRecordAlertsBean, ruleDesc *commonDtos.RuleDesc, alertRecord *commonModels.AlertRecord) *[]*dtos.NoticeMsg {
+func (s *AlertRecordService) buildMsg(alert *forms.AlertRecordAlertsBean, ruleDesc *commonDtos.RuleDesc, alertRecord *commonModels.AlertRecord) []*dtos.NoticeMsgDTO {
 	if ruleDesc.GroupList == nil || len(ruleDesc.GroupList) <= 0 {
 		log.Println("告警组为空")
 		return nil
 	}
-	contactGroups := s.dao.FindContactInfoByGroupIds(ruleDesc.GroupList)
-	var newContactGroups []commonDtos.ContactGroupInfo
-	for _, group := range *contactGroups {
+	contactGroups := s.AlertRecordDao.FindContactInfoByGroupIds(ruleDesc.GroupList)
+	var newContactGroups []*commonDtos.ContactGroupInfo
+	for _, group := range contactGroups {
 		if group.Contacts != nil && len(group.Contacts) > 0 {
-			newContactGroups = append(newContactGroups, group)
+			newContactGroups = append(newContactGroups, &group)
 		}
 	}
 	//返回联系人json信息注入到告警记录中
 	alertRecord.ContactInfo = tools.ToString(contactGroups)
 
-	instance := s.dao.FindFirstInstanceInfo(ruleDesc.InstanceId)
+	instance := s.AlertRecordDao.FindFirstInstanceInfo(ruleDesc.InstanceId)
 	if instance == nil {
 		log.Println("未查询到实例信息")
 		return nil
 	}
 	instanceInfo := s.buildInstanceInfo(instance, alert.Annotations.Summary)
 
-	newRegionName := regionName
+	newRegionName := config.GetConfig().RegionName
 	if tools.IsNotBlank(instance.RegionName) {
 		newRegionName = instance.RegionName
 	}
@@ -130,23 +146,98 @@ func (s *AlertRecordService) buildMsg(alert *forms.AlertRecordAlertsBean, ruleDe
 	params["regionName"] = newRegionName
 	params["metricName"] = ruleDesc.MonitorItem
 	params["Name"] = ruleDesc.RuleName
-	params["userName"] = s.tenantService.GetTenantInfo(ruleDesc.TenantId).Name
+	params["userName"] = s.TenantService.GetTenantInfo(ruleDesc.TenantId).Name
 
 	cv := fmt.Sprintf("%.2f", alertRecord.CurrentValue)
 	unit := ruleDesc.Unit
 	params["currentValue"] = cv + unit
 
-	//channel := ruleDesc.NotifyChannel
-	//TODO
-	//String notifyChannel = descDTO.getNotifyChannel();
-	//            List<NoticeMsgDTO> noticeMsgDTOS = buildSendMsg(alertRecord, contactInfoList, params, notifyChannel,descDTO);
-	//            return noticeMsgDTOS;
-	return nil
+	channel := ruleDesc.NotifyChannel
+	return buildSendMsg(alertRecord, newContactGroups, params, channel, ruleDesc)
 }
 
-//func buildSendMsg(alertRecord models.AlertRecord, contactInfoList *[]*RecordContactInfo) *[]*dtos.NoticeMsg {
-//
-//}
+func buildSendMsg(alertRecord *commonModels.AlertRecord, contactInfoList []*commonDtos.ContactGroupInfo, params map[string]string, notifyChannel string, ruleDesc *commonDtos.RuleDesc) []*dtos.NoticeMsgDTO {
+	msgSource := dtos.MsgSourceDTO{
+		Type:     dtos.ALERT_OPEN,
+		SourceId: alertRecord.Id,
+	}
+	if "resolved" == alertRecord.Status {
+		msgSource.Type = dtos.ALERT_CANCEL
+		params["recoveryTime"] = alertRecord.EndTime
+	} else {
+		params["alertTime"] = alertRecord.StartTime
+	}
+	var list []*dtos.NoticeMsgDTO
+	for _, recordContactInfo := range contactInfoList {
+		for _, userContactInfo := range recordContactInfo.Contacts {
+
+			if (notifyChannel == "email" || notifyChannel == "all") && tools.IsNotBlank(userContactInfo.Mail) {
+				for _, email := range strings.Split(userContactInfo.Mail, ",") {
+					list = append(list, buildMsgDTO(&msgSource, alertRecord, params, dtos.Email, email, ruleDesc))
+				}
+			}
+
+			if (notifyChannel == "phone" || notifyChannel == "all") && tools.IsNotBlank(userContactInfo.Phone) {
+				for _, phone := range strings.Split(userContactInfo.Mail, ",") {
+					list = append(list, buildMsgDTO(&msgSource, alertRecord, params, dtos.Phone, phone, ruleDesc))
+				}
+
+			}
+
+		}
+	}
+	return list
+
+}
+
+func getTime(time int) string {
+	return "持续" + string(rune(time)) + "个周期"
+}
+
+func buildMsgDTO(msgSource *dtos.MsgSourceDTO, alertRecord *commonModels.AlertRecord, params map[string]string, receiverType dtos.ReceiveType, no string, descDTO *commonDtos.RuleDesc) *dtos.NoticeMsgDTO {
+
+	objMap := make(map[string]string)
+	if dtos.Email == receiverType {
+		objMap["instanceAmount"] = "1"
+		objMap["period"] = utils.GetDateDiff(descDTO.Time)
+		objMap["times"] = getTime(descDTO.Time)
+		objMap["time"] = utils.GetDateDiff(descDTO.Period * 1000)
+		objMap["calType"] = descDTO.Statistic
+		objMap["expression"] = string(descDTO.ComparisonOperator)
+		if receiverType == dtos.Email && msgSource.Type == dtos.ALERT_CANCEL {
+			targetValue := ""
+			if tools.IsNotBlank(descDTO.Unit) {
+				targetValue = descDTO.Unit
+			}
+			targetValue = string(rune(descDTO.TargetValue)) + targetValue
+			objMap["targetValue"] = targetValue
+		} else if receiverType == dtos.Email && msgSource.Type == dtos.ALERT_OPEN {
+			objMap["targetValue"] = string(rune(descDTO.TargetValue))
+		}
+
+		objMap["evaluationCount"] = getTime(descDTO.Time)
+		objMap["InstanceID"] = descDTO.InstanceId
+		if tools.IsBlank(descDTO.Unit) {
+			objMap["unit"] = ""
+		} else {
+			objMap["unit"] = descDTO.Unit
+		}
+	}
+
+	return &dtos.NoticeMsgDTO{
+		SourceId: msgSource.SourceId,
+		TenantId: alertRecord.TenantId,
+		MsgEvent: dtos.MsgEvent{
+			Type:   receiverType,
+			Source: msgSource.Type,
+		},
+		RevObjectBean: dtos.RecvObjectBean{
+			RecvObjectType: receiverType,
+			RecvObject:     no,
+			NoticeContent:  tools.ToString(objMap),
+		},
+	}
+}
 
 func buildAlertRecord(alert *forms.AlertRecordAlertsBean, ruleDesc *commonDtos.RuleDesc) *commonModels.AlertRecord {
 	summary, err := json.Marshal(alert.Annotations)
@@ -178,7 +269,7 @@ func buildAlertRecord(alert *forms.AlertRecordAlertsBean, ruleDesc *commonDtos.R
 		Duration:     strconv.Itoa(duration),
 		Level:        ruleDesc.Level,
 		AlarmKey:     ruleDesc.MetricName,
-		Region:       "",
+		Region:       config.GetConfig().RegionName,
 		NoticeStatus: "",
 		ContactInfo:  "",
 		CreateTime:   now.Format("2006-01-02 15:04:05"),

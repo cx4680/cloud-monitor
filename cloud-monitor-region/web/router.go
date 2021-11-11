@@ -1,9 +1,11 @@
 package web
 
 import (
+	commonDao "code.cestc.cn/ccos-ops/cloud-monitor/business-common/dao"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/controllers"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/dao"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/docs"
+	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/inner"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/service"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/database"
 	gs "github.com/swaggo/gin-swagger"
@@ -17,6 +19,7 @@ func loadRouters() {
 	eip()
 	slb()
 	MonitorReportForm()
+	innerCtl()
 }
 
 func MonitorReportForm() {
@@ -65,5 +68,14 @@ func slb() {
 	group := router.Group("/hawkeye/slb/")
 	{
 		group.GET("/page", ctl.Page)
+	}
+}
+
+func innerCtl() {
+	alertRecordService := service.NewAlertRecordService(commonDao.NewAlertRecordDao(database.GetDb()), service.NewTenantService(), service.NewMessageService(commonDao.NewNotificationRecordDao(database.GetDb())))
+	ctl := inner.NewAlertRecordCtl(alertRecordService)
+	group := router.Group("/hawkeye/inner/")
+	{
+		group.POST("/alertRecord/insert", ctl.AddAlertRecord)
 	}
 }

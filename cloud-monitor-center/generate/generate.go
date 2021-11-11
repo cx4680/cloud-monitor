@@ -22,9 +22,9 @@ func generate() {
 	// 开始迁移转换
 	err := t2t.
 		// 指定某个表,如果不指定,则默认全部表都迁移
-		Table("notification_record").
+		Table("t_alarm_instance").
 		// 表前缀
-		//Prefix("t_").
+		Prefix("t_").
 		// 是否添加json tag
 		EnableJsonTag(true).
 		// 生成struct的包名(默认为空的话, 则取名为: package models)
@@ -34,7 +34,7 @@ func generate() {
 		// 是否添加结构体方法获取表名
 		RealNameMethod("TableName").
 		// 生成的结构体保存路径
-		SavePath("../models/notificationRecord.go").
+		SavePath("../models/alarmInstance.go").
 		// 数据库dsn,这里可以使用 t2t.DB() 代替,参数为 *sql_script.DB 对象
 		Dsn("root:123456@(127.0.0.1:3306)/hawkeye?charset=utf8mb4&parseTime=True&loc=Local").
 		// 执行
