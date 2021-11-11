@@ -30,6 +30,9 @@ rocketmq:
   alertContactGroup: alertContact
   ruleTopic: rule
 prometheus:
-  url: http://10.255.238.187:32494/api/v1
+  url: http://10.255.67.70:30090/api/v1
   query: /query?query=
   queryRange: /query_range?query=
+
+ecs:
+  inner-gateway: http://ecs-gateway.inner.center.intranet.cecloudcs.com

@@ -65,5 +65,4 @@ func loadPlugin(cfg *config.Config) {
 
 func cronFunc() {
 	task.CronClear()
-	task.CronInstanceJob()
 }

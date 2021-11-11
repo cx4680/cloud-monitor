@@ -20,6 +20,7 @@ type Config struct {
 	HawkeyeCenterPath string     `yaml:"hawkeyeCenterPath"`
 	HasNoticeModel    bool       `yaml:"hasNoticeModel"`
 	RegionName        string     `yaml:"regionName"`
+	Ecs               Ecs        `yaml:"ecs"`
 }
 
 type Serve struct {
@@ -67,6 +68,10 @@ type Prometheus struct {
 	Url        string `yaml:"url"`
 	Query      string `yaml:"query"`
 	QueryRange string `yaml:"queryRange"`
+}
+
+type Ecs struct {
+	InnerGateway string `yaml:"inner-gateway"`
 }
 
 var config Config = defaultAuthSdkConfig()

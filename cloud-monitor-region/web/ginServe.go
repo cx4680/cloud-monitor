@@ -2,6 +2,7 @@ package web
 
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/mq"
+	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/task"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/web/middleware"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
 	"github.com/gin-gonic/gin"
@@ -24,6 +25,8 @@ func Start(cfg *config.Config) error {
 	loadRouters()
 	//加载mq
 	mq.SubScribe()
+	//加载定时任务
+	cronFunc()
 	//启动服务
 	return doStart(cfg)
 }
@@ -61,4 +64,8 @@ func loadPlugin(cfg *config.Config) {
 	//自定义组件
 	router.Use(middleware.Cors())
 	router.Use(middleware.Auth())
+}
+
+func cronFunc() {
+	task.CronInstanceJob()
 }

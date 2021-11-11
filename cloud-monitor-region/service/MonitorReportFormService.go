@@ -3,7 +3,6 @@ package service
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/constant"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/forms"
-	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/prometheus"
 	"fmt"
 	"strconv"
 	"strings"
@@ -18,7 +17,7 @@ func NewMonitorReportFormService() *MonitorReportFormService {
 
 func (mpd *MonitorReportFormService) GetData(request forms.PrometheusRequest) []forms.PrometheusValue {
 	pql := getPql(request)
-	prometheusResponse := prometheus.Query(pql, request.Time, request.TenantId)
+	prometheusResponse := Query(pql, request.Time, request.TenantId)
 	var Values []forms.PrometheusValue
 	if len(prometheusResponse.Data.Result) == 0 {
 		return Values
@@ -33,7 +32,7 @@ func (mpd *MonitorReportFormService) GetData(request forms.PrometheusRequest) []
 
 func (mpd *MonitorReportFormService) GetTop(request forms.PrometheusRequest) []forms.PrometheusInstance {
 	pql := fmt.Sprintf("topk(%s,%s{%s})", constant.TOP_NUM, request.Name, constant.INSTANCE+"=~'"+request.Instance+"'")
-	prometheusResponse := prometheus.Query(pql, request.Time, request.TenantId)
+	prometheusResponse := Query(pql, request.Time, request.TenantId)
 	result := prometheusResponse.Data.Result
 	var instanceList []forms.PrometheusInstance
 	for i := range result {
@@ -48,7 +47,7 @@ func (mpd *MonitorReportFormService) GetTop(request forms.PrometheusRequest) []f
 
 func (mpd *MonitorReportFormService) GetAxisData(request forms.PrometheusRequest) forms.PrometheusAxis {
 	pql := getPql(request)
-	prometheusResponse := prometheus.QueryRange(pql, strconv.Itoa(request.Start), strconv.Itoa(request.End), strconv.Itoa(request.Step), request.TenantId)
+	prometheusResponse := QueryRange(pql, strconv.Itoa(request.Start), strconv.Itoa(request.End), strconv.Itoa(request.Step), request.TenantId)
 	result := prometheusResponse.Data.Result
 
 	labels := strings.Split(request.Labels, ",")
