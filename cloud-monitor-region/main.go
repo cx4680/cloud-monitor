@@ -3,6 +3,8 @@ package main
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/redis"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/k8s"
+	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/mq"
+	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/task"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/validator/translate"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/web"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
@@ -42,6 +44,11 @@ func main() {
 	}
 	redis.InitClient(redisConfig)
 	k8s.InitK8s()
+	//加载mq
+	mq.SubScribe()
+	//加载定时任务
+	task.CronInstanceJob()
+
 	logger.InitLogger(&config.GetConfig().Logger)
 	defer logger.Logger().Sync()
 
