@@ -13,9 +13,9 @@ import (
 )
 
 func SendMsg(topic string, eventEum enums.EventEum, module interface{}) {
-	cfg := config.GetConfig()
+	cfg := config.GetRocketmqConfig()
 	p, _ := rocketmq.NewProducer(
-		producer.WithNsResolver(primitive.NewPassthroughResolver([]string{cfg.Rocketmq.NameServer})),
+		producer.WithNsResolver(primitive.NewPassthroughResolver([]string{cfg.NameServer})),
 		producer.WithRetry(2),
 	)
 	err := p.Start()

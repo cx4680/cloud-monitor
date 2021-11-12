@@ -22,7 +22,7 @@ type QueryParam struct {
 
 func GetSlbInstancePage(form *QueryParam, pageIndex int, pageSize int, userCode string) (*QueryPageResult, error) {
 	request := &external.QueryPageRequest{Data: form, PageIndex: pageIndex, PageSize: pageSize}
-	resp, err := external.PageList(userCode, request, config.GetConfig().Nk+"?appId=600006&format=json&method=CESTC_UNHQ_queryLVSMachineList")
+	resp, err := external.PageList(userCode, request, config.GetCommonConfig().Nk+"?appId=600006&format=json&method=CESTC_UNHQ_queryLVSMachineList")
 	if err != nil {
 		return nil, err
 	}

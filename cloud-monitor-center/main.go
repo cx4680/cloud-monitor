@@ -28,20 +28,16 @@ func main() {
 		os.Exit(1)
 	}
 
-	cfg := config.GetConfig()
-	database.InitDb(&cfg.DB)
+	database.InitDb(config.GetDbConfig())
 	if err := translate.InitTrans("zh"); err != nil {
 		fmt.Printf("init trans failed, err:%v\n", err)
 		return
 	}
-
-	//初始化数据里连接
-	database.InitDb(&cfg.DB)
-	logger.InitLogger(&config.GetConfig().Logger)
+	logger.InitLogger(config.GetLogConfig())
 	defer logger.Logger().Sync()
 
 	//启动Web容器
-	if err := web.Start(cfg); err != nil {
+	if err := web.Start(config.GetServeConfig()); err != nil {
 		logger.Logger().Infof("startup service failed, err:%v\n", err)
 	}
 }

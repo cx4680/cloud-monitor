@@ -9,7 +9,7 @@ import (
 
 var db *gorm.DB
 
-func InitDb(dbConfig *config.DB) {
+func InitDb(dbConfig config.DB) {
 	d, err := gorm.Open(mysql.New(mysql.Config{
 		DSN:                       dbConfig.Url, // DSN data source name
 		DefaultStringSize:         256,          // string 类型字段的默认长度

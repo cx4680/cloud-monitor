@@ -16,14 +16,14 @@ import (
 )
 
 func AlertContactConsumer() {
-	cfg := config.GetConfig()
+	cfg := config.GetRocketmqConfig()
 	c, _ := rocketmq.NewPushConsumer(
-		consumer.WithGroupName(cfg.Rocketmq.AlertContactGroup),
-		consumer.WithNsResolver(primitive.NewPassthroughResolver([]string{cfg.Rocketmq.NameServer})),
+		consumer.WithGroupName(cfg.AlertContactGroup),
+		consumer.WithNsResolver(primitive.NewPassthroughResolver([]string{cfg.NameServer})),
 	)
 	var MqMsg forms.MqMsg
 
-	err := c.Subscribe(cfg.Rocketmq.AlertContactTopic, consumer.MessageSelector{}, func(ctx context.Context,
+	err := c.Subscribe(cfg.AlertContactTopic, consumer.MessageSelector{}, func(ctx context.Context,
 		msgs ...*primitive.MessageExt) (consumer.ConsumeResult, error) {
 		for i := range msgs {
 			fmt.Printf("subscribe callback: %v \n", msgs[i])

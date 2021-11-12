@@ -16,7 +16,7 @@ func TestGenerate(t *testing.T) {
 		os.Exit(1)
 	}
 
-	database.InitDb(&config.GetConfig().DB)
+	database.InitDb(config.GetDbConfig())
 
 	monitorProductDao := NewMonitorProductDao(database.GetDb())
 	product := monitorProductDao.GetById("1")

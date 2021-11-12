@@ -19,11 +19,11 @@ var (
 
 func Logger() *zap.SugaredLogger {
 	once.Do(func() {
-		InitLogger(&config.GetConfig().Logger)
+		InitLogger(config.GetLogConfig())
 	})
 	return logger
 }
-func InitLogger(cfg *config.LogConfig) {
+func InitLogger(cfg config.LogConfig) {
 	infoLevel := zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
 		return lvl >= zapcore.InfoLevel
 	})
@@ -68,7 +68,7 @@ func getEncoder() zapcore.Encoder {
 	return zapcore.NewConsoleEncoder(encoderConfig)
 }
 
-func getLogWriter(level string, cfg *config.LogConfig) zapcore.WriteSyncer {
+func getLogWriter(level string, cfg config.LogConfig) zapcore.WriteSyncer {
 	if !cfg.Stdout {
 		lumberJackLogger := &lumberjack.Logger{
 			MaxSize:    100,          // 每个日志文件保存的最大尺寸 单位：M

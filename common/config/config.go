@@ -7,20 +7,24 @@ import (
 )
 
 type Config struct {
-	App               string     `yaml:"app"`
-	Serve             Serve      `yaml:"serve"`
-	DB                DB         `yaml:"db"`
-	Logger            LogConfig  `yaml:"logger"`
-	HttpConfig        HttpConfig `yaml:"http"`
-	Nk                string     `yaml:"nk"`
-	Rocketmq          Rocketmq   `yaml:"rocketmq"`
-	Prometheus        Prometheus `yaml:"prometheus"`
-	TenantUrl         string     `yaml:"tenantUrl"`
-	SmsCenterPath     string     `yaml:"smsCenterPath"`
-	HawkeyeCenterPath string     `yaml:"hawkeyeCenterPath"`
-	HasNoticeModel    bool       `yaml:"hasNoticeModel"`
-	RegionName        string     `yaml:"regionName"`
-	Ecs               Ecs        `yaml:"ecs"`
+	App        string       `yaml:"app"`
+	Serve      Serve        `yaml:"serve"`
+	DB         DB           `yaml:"db"`
+	Logger     LogConfig    `yaml:"logger"`
+	HttpConfig HttpConfig   `yaml:"http"`
+	Rocketmq   Rocketmq     `yaml:"rocketmq"`
+	Prometheus Prometheus   `yaml:"prometheus"`
+	Ecs        Ecs          `yaml:"ecs"`
+	Common     CommonConfig `yaml:"common"`
+}
+
+type CommonConfig struct {
+	Nk                string `yaml:"nk"`
+	TenantUrl         string `yaml:"tenantUrl"`
+	SmsCenterPath     string `yaml:"smsCenterPath"`
+	HawkeyeCenterPath string `yaml:"hawkeyeCenterPath"`
+	HasNoticeModel    bool   `yaml:"hasNoticeModel"`
+	RegionName        string `yaml:"regionName"`
 }
 
 type Serve struct {
@@ -89,8 +93,8 @@ func defaultAuthSdkConfig() Config {
 		}}
 }
 
-func InitConfig(path string) error {
-	data, err := ioutil.ReadFile(path)
+func InitConfig(file string) error {
+	data, err := ioutil.ReadFile(file)
 	if err != nil {
 		return err
 	}
@@ -102,6 +106,32 @@ func InitConfig(path string) error {
 	return nil
 }
 
-func GetConfig() *Config {
-	return &config
+func GetCommonConfig() CommonConfig {
+	return config.Common
+}
+func GetServeConfig() Serve {
+	return config.Serve
+}
+func GetDbConfig() DB {
+	return config.DB
+}
+func GetLogConfig() LogConfig {
+	return config.Logger
+}
+
+//TODO 写在tools中
+func GetHttpConfig() HttpConfig {
+	return config.HttpConfig
+}
+
+func GetRocketmqConfig() Rocketmq {
+	return config.Rocketmq
+}
+
+func GetPrometheusConfig() Prometheus {
+	return config.Prometheus
+}
+
+func GetEcsConfig() Ecs {
+	return config.Ecs
 }

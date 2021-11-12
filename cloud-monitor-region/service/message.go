@@ -26,7 +26,7 @@ func NewMessageService(notificationRecordDao *commonDao.NotificationRecordDao) *
 }
 
 func (s *MessageService) SendMsg(msgDTOList []*dtos.NoticeMsgDTO, centerService bool) []commonModels.NotificationRecord {
-	if !config.GetConfig().HasNoticeModel {
+	if !config.GetCommonConfig().HasNoticeModel {
 		log.Println("There is no message center for this project")
 		return nil
 	}
@@ -170,7 +170,7 @@ func buildSmsMessageReqDTO(noticeMsgDTOS []*dtos.NoticeMsgDTO) *dtos.SmsMessageR
 
 func (s *MessageService) doSendToMsgCenter(smsMessageReqDTO *dtos.SmsMessageReqDTO) {
 
-	resp, err := tools.HttpPostJson(config.GetConfig().SmsCenterPath, *smsMessageReqDTO)
+	resp, err := tools.HttpPostJson(config.GetCommonConfig().SmsCenterPath, *smsMessageReqDTO)
 	if err != nil {
 		log.Fatal("send message to msgCenter fail", err)
 	}
@@ -187,7 +187,7 @@ type ResultDTO struct {
 }
 
 func (s *MessageService) getUserCurrentMonthSmsUsedNum(tenantId string) int {
-	resp, err := tools.HttpGet(config.GetConfig().HawkeyeCenterPath + "/inner/getUsage?tenantId=" + tenantId)
+	resp, err := tools.HttpGet(config.GetCommonConfig().HawkeyeCenterPath + "/inner/getUsage?tenantId=" + tenantId)
 	if err != nil {
 		log.Fatal("获取用户短信月使用量出错, tenantId=" + tenantId)
 		return 0

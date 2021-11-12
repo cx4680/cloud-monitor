@@ -18,17 +18,17 @@ import (
 )
 
 func AlarmRuleConsumer() {
-	cfg := config.GetConfig()
+	cfg := config.GetRocketmqConfig()
 	c, _ := rocketmq.NewPushConsumer(
-		consumer.WithGroupName(cfg.Rocketmq.RuleTopic),
-		consumer.WithNsResolver(primitive.NewPassthroughResolver([]string{cfg.Rocketmq.NameServer})),
+		consumer.WithGroupName(cfg.RuleTopic),
+		consumer.WithNsResolver(primitive.NewPassthroughResolver([]string{cfg.NameServer})),
 	)
 	ruleDao := dao.NewAlarmRuleDao(database.GetDb())
 	instanceDao := dao.NewInstanceDao(database.GetDb())
 	prometheusDao := dao2.NewPrometheusRuleDao(database.GetDb())
 	var MqMsg forms.MqMsg
 
-	err := c.Subscribe(cfg.Rocketmq.RuleTopic, consumer.MessageSelector{}, func(ctx context.Context,
+	err := c.Subscribe(cfg.RuleTopic, consumer.MessageSelector{}, func(ctx context.Context,
 		msgs ...*primitive.MessageExt) (consumer.ConsumeResult, error) {
 		for i := range msgs {
 			fmt.Printf("subscribe callback: %v \n", msgs[i])

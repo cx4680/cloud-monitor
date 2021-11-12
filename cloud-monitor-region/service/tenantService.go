@@ -46,7 +46,7 @@ func (s *TenantService) GetTenantInfo(tenantId string) dtos.TenantDTO {
 func getTenant(tenantId string) *dtos.TenantDTO {
 	m := make(map[string]string, 1)
 	m["loginId"] = tenantId
-	resp, err := tools.HttpPostJson(config.GetConfig().TenantUrl, m)
+	resp, err := tools.HttpPostJson(config.GetCommonConfig().TenantUrl, m)
 	if err != nil {
 		log.Fatalln("查询租户信息失败")
 		return nil

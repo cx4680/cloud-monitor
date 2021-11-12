@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-var ecsInnerGateway = config.GetConfig().Ecs.InnerGateway
+var ecsInnerGateway = config.GetEcsConfig().InnerGateway
 
 func EcsPageList(userCode string, form forms.EcsQueryPageForm) vo.EcsPageVO {
 	path := ecsInnerGateway + "/noauth/ecs/PageList"

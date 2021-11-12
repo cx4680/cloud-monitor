@@ -16,6 +16,4 @@ func TestInitConfig(t *testing.T) {
 		fmt.Fprintf(os.Stderr, "init config.yml error: %v", err)
 		os.Exit(1)
 	}
-	cnf := GetConfig()
-	fmt.Println(cnf)
 }

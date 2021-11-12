@@ -12,12 +12,8 @@ import (
 
 var router = gin.New()
 
-func GetRouter() *gin.Engine {
-	return router
-}
-
 // Start /
-func Start(cfg *config.Config) error {
+func Start(cfg config.Serve) error {
 	//加载中间件
 	loadPlugin(cfg)
 	//加载路由
@@ -28,15 +24,15 @@ func Start(cfg *config.Config) error {
 	return doStart(cfg)
 }
 
-func doStart(cfg *config.Config) error {
+func doStart(cfg config.Serve) error {
 
 	router.NoRoute(func(c *gin.Context) {
 		c.HTML(http.StatusNotFound, "path not found", nil)
 	})
 
 	port := "8080"
-	if cfg.Serve.Port > 0 {
-		port = strconv.Itoa(cfg.Serve.Port)
+	if cfg.Port > 0 {
+		port = strconv.Itoa(cfg.Port)
 	}
 
 	s := &http.Server{
@@ -53,9 +49,9 @@ func doStart(cfg *config.Config) error {
 	return nil
 }
 
-func loadPlugin(cfg *config.Config) {
+func loadPlugin(cfg config.Serve) {
 	//加载全局
-	if cfg.Serve.Debug {
+	if cfg.Debug {
 		//router.Use(middleware.GinLogger())
 	}
 	//自定义组件

@@ -19,14 +19,14 @@ func SendNotificationRecordMsg(msg []models.NotificationRecord) {
 }
 
 func SendAlertRecordMsg(msg []*models.AlertRecord) {
-	cfg := config.GetConfig()
-	doMqSendMsg(cfg.Rocketmq.RecordTopic, tools.ToString(msg))
+	cfg := config.GetRocketmqConfig()
+	doMqSendMsg(cfg.RecordTopic, tools.ToString(msg))
 }
 
 func doMqSendMsg(topic, msg string) {
-	cfg := config.GetConfig()
+	cfg := config.GetRocketmqConfig()
 	p, _ := rocketmq.NewProducer(
-		producer.WithNsResolver(primitive.NewPassthroughResolver([]string{cfg.Rocketmq.NameServer})),
+		producer.WithNsResolver(primitive.NewPassthroughResolver([]string{cfg.NameServer})),
 		producer.WithRetry(2),
 	)
 	err := p.Start()

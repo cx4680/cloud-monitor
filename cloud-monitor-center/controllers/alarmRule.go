@@ -56,7 +56,7 @@ func (ctl *AlarmRuleCtl) CreateRule(c *gin.Context) {
 	addMetricName(&param, ctl)
 	id := ctl.dao.SaveRule(&param)
 	param.Id = id
-	mq.SendMsg(config.GetConfig().Rocketmq.RuleTopic, enums.CreateRule, param)
+	mq.SendMsg(config.GetRocketmqConfig().RuleTopic, enums.CreateRule, param)
 	c.JSON(http.StatusOK, global.NewSuccess("创建成功", true))
 }
 
@@ -72,7 +72,7 @@ func (ctl *AlarmRuleCtl) UpdateRule(c *gin.Context) {
 	param.UserId = userId.(string)
 	addMetricName(&param, ctl)
 	ctl.dao.UpdateRule(&param)
-	mq.SendMsg(config.GetConfig().Rocketmq.RuleTopic, enums.UpdateRule, param)
+	mq.SendMsg(config.GetRocketmqConfig().RuleTopic, enums.UpdateRule, param)
 	c.JSON(http.StatusOK, global.NewSuccess("更新成功", true))
 }
 
@@ -87,7 +87,7 @@ func (ctl *AlarmRuleCtl) DeleteRule(c *gin.Context) {
 	userId, _ := c.Get(global.UserId)
 	param.TenantId = userId.(string)
 	ctl.dao.DeleteRule(&param)
-	mq.SendMsg(config.GetConfig().Rocketmq.RuleTopic, enums.DeleteRule, param)
+	mq.SendMsg(config.GetRocketmqConfig().RuleTopic, enums.DeleteRule, param)
 	c.JSON(http.StatusOK, global.NewSuccess("更新成功", true))
 }
 
@@ -104,7 +104,7 @@ func (ctl *AlarmRuleCtl) ChangeRuleStatus(c *gin.Context) {
 	if strings.EqualFold(param.Status, dao.ENABLE) {
 		enum = enums.EnableRule
 	}
-	mq.SendMsg(config.GetConfig().Rocketmq.RuleTopic, enum, param)
+	mq.SendMsg(config.GetRocketmqConfig().RuleTopic, enum, param)
 	c.JSON(http.StatusOK, global.NewSuccess("更新成功", true))
 }
 

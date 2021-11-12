@@ -8,10 +8,10 @@ import (
 	"net/http"
 )
 
-var cfg = config.GetConfig()
+var cfg = config.GetPrometheusConfig()
 
 func Query(pql string, time string, tenantId string) forms.PrometheusResponse {
-	url := cfg.Prometheus.Url + cfg.Prometheus.Query
+	url := cfg.Url + cfg.Query
 	if time != "" {
 		pql += "&time=" + time
 	}
@@ -19,7 +19,7 @@ func Query(pql string, time string, tenantId string) forms.PrometheusResponse {
 }
 
 func QueryRange(pql string, start string, end string, step string, tenantId string) forms.PrometheusResponse {
-	url := cfg.Prometheus.Url + cfg.Prometheus.QueryRange
+	url := cfg.Url + cfg.QueryRange
 	pql += "&start=" + start + "&end=" + end + "&step=" + step
 	return sendRequest(url, pql, tenantId)
 }

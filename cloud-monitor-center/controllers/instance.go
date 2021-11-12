@@ -36,7 +36,7 @@ func (ctl *InstanceCtl) Unbind(c *gin.Context) {
 		return
 	}
 	ctl.dao.UnbindInstance(&param)
-	mq.SendMsg(config.GetConfig().Rocketmq.RuleTopic, enums.UnbindRule, param)
+	mq.SendMsg(config.GetRocketmqConfig().RuleTopic, enums.UnbindRule, param)
 	c.JSON(http.StatusOK, global.NewSuccess("成功", nil))
 }
 
@@ -49,7 +49,7 @@ func (ctl *InstanceCtl) Bind(c *gin.Context) {
 	tenantId, _ := c.Get(global.TenantId)
 	param.TenantId = tenantId.(string)
 	ctl.dao.BindInstance(&param)
-	mq.SendMsg(config.GetConfig().Rocketmq.RuleTopic, enums.BindRule, param)
+	mq.SendMsg(config.GetRocketmqConfig().RuleTopic, enums.BindRule, param)
 	c.JSON(http.StatusOK, global.NewSuccess("成功", nil))
 }
 

@@ -17,7 +17,7 @@ var (
 	httpClient *http.Client
 )
 
-func initHttpClient(config *config.HttpConfig) {
+func initHttpClient(config config.HttpConfig) {
 	connectTimeOut := time.Duration(config.ConnectionTimeOut) * time.Second
 	rwTimeOut := time.Duration(config.ReadTimeOut+config.WriteTimeOut) * time.Second
 	httpClient = &http.Client{Transport: &http.Transport{
@@ -31,7 +31,7 @@ func initHttpClient(config *config.HttpConfig) {
 
 func HttpClient() *http.Client {
 	once.Do(func() {
-		initHttpClient(&config.GetConfig().HttpConfig)
+		initHttpClient(config.GetHttpConfig())
 	})
 	return httpClient
 }

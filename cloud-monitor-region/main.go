@@ -28,15 +28,13 @@ func main() {
 		os.Exit(1)
 	}
 
-	cfg := config.GetConfig()
-
 	if err := translate.InitTrans("zh"); err != nil {
 		fmt.Printf("init trans failed, err:%v\n", err)
 		return
 	}
 
 	//初始化数据里连接
-	database.InitDb(&cfg.DB)
+	database.InitDb(config.GetDbConfig())
 
 	redisConfig := redis.RedisConfig{
 		Addr:     "localhost:6379",
@@ -49,11 +47,11 @@ func main() {
 	//加载定时任务
 	task.CronInstanceJob()
 
-	logger.InitLogger(&config.GetConfig().Logger)
+	logger.InitLogger(config.GetLogConfig())
 	defer logger.Logger().Sync()
 
 	//启动Web容器
-	err = web.Start(cfg)
+	err = web.Start(config.GetServeConfig())
 	if err != nil {
 		logger.Logger().Infof("startup service failed, err:%v\n", err)
 	}

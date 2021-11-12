@@ -66,7 +66,7 @@ func (s *AlertRecordService) RecordAlertAndSendMessage(f *forms.InnerAlertRecord
 		list = append(list, alertRecord)
 	}
 	s.AlertRecordDao.InsertBatch(list)
-	if config.GetConfig().HasNoticeModel {
+	if config.GetCommonConfig().HasNoticeModel {
 		notificationRecords := s.MessageService.SendMsg(msgDTOList, false)
 		mq.SendNotificationRecordMsg(notificationRecords)
 	}
@@ -134,7 +134,7 @@ func (s *AlertRecordService) buildMsg(alert *forms.AlertRecordAlertsBean, ruleDe
 	}
 	instanceInfo := s.buildInstanceInfo(instance, alert.Annotations.Summary)
 
-	newRegionName := config.GetConfig().RegionName
+	newRegionName := config.GetCommonConfig().RegionName
 	if tools.IsNotBlank(instance.RegionName) {
 		newRegionName = instance.RegionName
 	}
@@ -269,7 +269,7 @@ func buildAlertRecord(alert *forms.AlertRecordAlertsBean, ruleDesc *commonDtos.R
 		Duration:     strconv.Itoa(duration),
 		Level:        ruleDesc.Level,
 		AlarmKey:     ruleDesc.MetricName,
-		Region:       config.GetConfig().RegionName,
+		Region:       config.GetCommonConfig().RegionName,
 		NoticeStatus: "",
 		ContactInfo:  "",
 		CreateTime:   now.Format("2006-01-02 15:04:05"),
