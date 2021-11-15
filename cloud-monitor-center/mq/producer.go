@@ -51,9 +51,4 @@ func SendMsg(topic string, eventEum enums.EventEum, module interface{}) {
 	} else {
 		fmt.Printf("send message success: result=%s\n", res.String())
 	}
-
-	err = p.Shutdown()
-	if err != nil {
-		fmt.Printf("shutdown producer error: %s", err.Error())
-	}
 }
