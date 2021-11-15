@@ -62,6 +62,7 @@ type HttpConfig struct {
 
 type Rocketmq struct {
 	NameServer        string `yaml:"name-server"`
+	BrokerAddr        string `yaml:"broker-addr"`
 	AlertContactTopic string `yaml:"alertContactTopic"`
 	AlertContactGroup string `yaml:"alertContactGroup"`
 	RuleTopic         string `yaml:"ruleTopic"`

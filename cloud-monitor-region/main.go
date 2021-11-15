@@ -42,6 +42,7 @@ func main() {
 	}
 	redis.InitClient(redisConfig)
 	k8s.InitK8s()
+	mq.Init()
 	//加载mq
 	mq.SubScribe()
 	//加载定时任务

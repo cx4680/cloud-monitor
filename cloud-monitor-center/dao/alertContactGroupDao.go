@@ -7,6 +7,7 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor-center/forms"
 	"code.cestc.cn/ccos-ops/cloud-monitor-center/models"
 	"code.cestc.cn/ccos-ops/cloud-monitor-center/mq"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/enums"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/utils/snowflake"
 	"gorm.io/gorm"
@@ -63,7 +64,7 @@ func (mpd *AlertContactGroupDao) InsertAlertContactGroup(param forms.AlertContac
 		return err
 	}
 	//同步region
-	mq.SendMsg(cfg.Rocketmq.AlertContactTopic, enums.InsertAlertContactGroup, alertContactGroup)
+	mq.SendMsg(config.GetRocketmqConfig().AlertContactTopic, enums.InsertAlertContactGroup, alertContactGroup)
 	return nil
 }
 
@@ -89,7 +90,7 @@ func (mpd *AlertContactGroupDao) UpdateAlertContactGroup(param forms.AlertContac
 		return err
 	}
 	//同步region
-	mq.SendMsg(cfg.Rocketmq.AlertContactTopic, enums.UpdateAlertContactGroup, alertContactGroup)
+	mq.SendMsg(config.GetRocketmqConfig().AlertContactTopic, enums.UpdateAlertContactGroup, alertContactGroup)
 	return nil
 }
 
@@ -99,7 +100,7 @@ func (mpd *AlertContactGroupDao) DeleteAlertContactGroup(param forms.AlertContac
 	//删除联系人关联
 	mpd.deleteAlertContactGroupRel(param.GroupId)
 	//同步region
-	mq.SendMsg(cfg.Rocketmq.AlertContactTopic, enums.DeleteAlertContactGroup, param.GroupId)
+	mq.SendMsg(config.GetRocketmqConfig().AlertContactTopic, enums.DeleteAlertContactGroup, param.GroupId)
 }
 
 //新增联系人关联
@@ -124,7 +125,7 @@ func (mpd *AlertContactGroupDao) insertAlertContactGroupRel(param forms.AlertCon
 		}
 		mpd.db.Create(alertContactGroupRel)
 		//同步region
-		mq.SendMsg(cfg.Rocketmq.AlertContactTopic, enums.InsertAlertContactGroupRel, alertContactGroupRel)
+		mq.SendMsg(config.GetRocketmqConfig().AlertContactTopic, enums.InsertAlertContactGroupRel, alertContactGroupRel)
 	}
 	return nil
 }
@@ -145,5 +146,5 @@ func (mpd *AlertContactGroupDao) updateAlertContactGroupRel(param forms.AlertCon
 func (mpd *AlertContactGroupDao) deleteAlertContactGroupRel(groupId string) {
 	mpd.db.Where("group_id = ?", groupId).Delete(models.AlertContactGroupRel{})
 	//同步region
-	mq.SendMsg(cfg.Rocketmq.AlertContactTopic, enums.DeleteAlertContactGroupRelByGroupId, groupId)
+	mq.SendMsg(config.GetRocketmqConfig().AlertContactTopic, enums.DeleteAlertContactGroupRelByGroupId, groupId)
 }

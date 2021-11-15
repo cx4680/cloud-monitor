@@ -5,7 +5,7 @@ serve:
 #  read_timeout:
 #  write_timeout:
 db:
-  url: root:123456@(127.0.0.1:3306)/hawkeye_region?charset=utf8mb4&parseTime=True&loc=Local
+  url: root:123456@(127.0.0.1:3306)/hawkeye-region?charset=utf8mb4&parseTime=True&loc=Local
   dialect: mysql
   max_idle_connes: 10
   max_open_connes: 100
@@ -25,6 +25,7 @@ http:
 
 rocketmq:
   name-server: 127.0.0.1:9876
+  broker-addr: 127.0.0.1:10911
   alertContactTopic: alertContact
   alertContactGroup: alertContact
   ruleTopic: rule
@@ -38,8 +39,8 @@ ecs:
 
 common:
   nk: http://aopesb.wh002.test.cecloud.com/cestc
-  tenantUrl: ''
-  smsCenterPath: ''
-  hawkeyeCenterPath: ''
-  hasNoticeModel: ''
-  regionName: ''
+  tenantUrl:
+  smsCenterPath:
+  hawkeyeCenterPath:
+  hasNoticeModel:
+  regionName:

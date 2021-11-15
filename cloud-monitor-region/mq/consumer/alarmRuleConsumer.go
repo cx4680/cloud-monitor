@@ -23,6 +23,7 @@ func AlarmRuleConsumer() {
 		consumer.WithGroupName(cfg.RuleTopic),
 		consumer.WithNsResolver(primitive.NewPassthroughResolver([]string{cfg.NameServer})),
 	)
+
 	ruleDao := dao.NewAlarmRuleDao(database.GetDb())
 	instanceDao := dao.NewInstanceDao(database.GetDb())
 	prometheusDao := dao2.NewPrometheusRuleDao(database.GetDb())
