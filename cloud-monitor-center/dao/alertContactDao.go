@@ -7,7 +7,12 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor-center/forms"
 	"code.cestc.cn/ccos-ops/cloud-monitor-center/models"
 	"code.cestc.cn/ccos-ops/cloud-monitor-center/mq"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/dao"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/dtos"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/service"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/tools"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
+	commonDatabase "code.cestc.cn/ccos-ops/cloud-monitor/common/database"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/enums"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/utils/snowflake"
 	"encoding/json"
@@ -273,5 +278,27 @@ func sendMsg(tenantId string, contactId string, no string, noType int, activeCod
 	params["userName"] = getTenantName(tenantId)
 	params["verifyBtn"] = "/#/alarm/activation?code=" + activeCode
 	params["activationlink"] = "code=" + activeCode
-
+	var noticeMsgDTO = dtos.NoticeMsgDTO{}
+	if noType == 1 {
+		noticeMsgDTO.MsgEvent = dtos.MsgEvent{
+			Type:   1, //TODO 枚举
+			Source: dtos.VERIFY,
+		}
+	} else {
+		noticeMsgDTO.MsgEvent = dtos.MsgEvent{
+			Type:   2, //TODO 枚举
+			Source: dtos.VERIFY,
+		}
+	}
+	noticeMsgDTO.TenantId = tenantId
+	noticeMsgDTO.SourceId = "activation-" + contactId
+	var recvObjectBean = dtos.RecvObjectBean{
+		RecvObject:     no,
+		RecvObjectType: 2,
+		NoticeContent:  tools.ToString(params),
+	}
+	noticeMsgDTO.RevObjectBean = recvObjectBean
+	var noticeMsgDTOList []*dtos.NoticeMsgDTO
+	noticeMsgDTOList = append(noticeMsgDTOList, &noticeMsgDTO)
+	service.NewMessageService(dao.NewNotificationRecordDao(commonDatabase.GetDb())).SendMsg(noticeMsgDTOList, true)
 }

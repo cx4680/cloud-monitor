@@ -1,6 +1,7 @@
 package main
 
 import (
+	"code.cestc.cn/ccos-ops/cloud-monitor-center/mq"
 	"code.cestc.cn/ccos-ops/cloud-monitor-center/validator/translate"
 	"code.cestc.cn/ccos-ops/cloud-monitor-center/web"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
@@ -18,7 +19,7 @@ import (
 // @BasePath /
 func main() {
 	//解析命令参数
-	var cf = flag.String("config.yml", "config.local.yml", "config.yml path")
+	var cf = flag.String("config.yml", "cloud-monitor-center/config.local.yml", "config.yml path")
 	flag.Parse()
 
 	//加载配置文件
@@ -33,6 +34,10 @@ func main() {
 		fmt.Printf("init trans failed, err:%v\n", err)
 		return
 	}
+
+	//创建mq
+	mq.CreateMq()
+
 	logger.InitLogger(config.GetLogConfig())
 	defer logger.Logger().Sync()
 

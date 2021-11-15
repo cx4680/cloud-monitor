@@ -2,7 +2,6 @@ package main
 
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/redis"
-	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/k8s"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/mq"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/task"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/validator/translate"
@@ -41,7 +40,7 @@ func main() {
 		Password: "",
 	}
 	redis.InitClient(redisConfig)
-	k8s.InitK8s()
+	//k8s.InitK8s()
 	mq.Init()
 	//加载mq
 	mq.SubScribe()

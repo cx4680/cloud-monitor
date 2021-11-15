@@ -20,8 +20,9 @@ logger:
 
 rocketmq:
   name-server: 127.0.0.1:9876
-  alertContactTopic: alertContact
-  alertContactGroup: alertContact
+  alertContactTopic: alertContactTopic
+  alertContactGroup: alertContactGroup
   ruleTopic: rule
+
 tenantUrl: http://account-cbc.wh001.dev.cecloud-inc.com/api/outer/userinfo/three/info/code
 hasNoticeModel: true

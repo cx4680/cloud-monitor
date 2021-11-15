@@ -66,7 +66,7 @@ type Rocketmq struct {
 	AlertContactTopic string `yaml:"alertContactTopic"`
 	AlertContactGroup string `yaml:"alertContactGroup"`
 	RuleTopic         string `yaml:"ruleTopic"`
-	RecordTopic       string `yaml:"recordTopic""`
+	RecordTopic       string `yaml:"recordTopic"`
 }
 
 type Prometheus struct {

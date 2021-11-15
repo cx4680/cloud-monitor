@@ -2,6 +2,7 @@ package web
 
 import (
 	commonDao "code.cestc.cn/ccos-ops/cloud-monitor/business-common/dao"
+	commonService "code.cestc.cn/ccos-ops/cloud-monitor/business-common/service"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/controllers"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/dao"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/docs"
@@ -72,7 +73,7 @@ func slb() {
 }
 
 func innerCtl() {
-	alertRecordService := service.NewAlertRecordService(commonDao.NewAlertRecordDao(database.GetDb()), service.NewTenantService(), service.NewMessageService(commonDao.NewNotificationRecordDao(database.GetDb())))
+	alertRecordService := service.NewAlertRecordService(commonDao.NewAlertRecordDao(database.GetDb()), commonService.NewTenantService(), commonService.NewMessageService(commonDao.NewNotificationRecordDao(database.GetDb())))
 	ctl := inner.NewAlertRecordCtl(alertRecordService)
 	group := router.Group("/hawkeye/inner/")
 	{

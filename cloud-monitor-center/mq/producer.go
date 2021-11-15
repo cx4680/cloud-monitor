@@ -12,9 +12,11 @@ import (
 	"github.com/apache/rocketmq-client-go/v2/producer"
 )
 
-func SendMsg(topic string, eventEum enums.EventEum, module interface{}) {
+var p rocketmq.Producer
+
+func CreateMq() {
 	cfg := config.GetRocketmqConfig()
-	p, _ := rocketmq.NewProducer(
+	p, _ = rocketmq.NewProducer(
 		producer.WithNsResolver(primitive.NewPassthroughResolver([]string{cfg.NameServer})),
 		producer.WithRetry(2),
 	)
@@ -23,14 +25,17 @@ func SendMsg(topic string, eventEum enums.EventEum, module interface{}) {
 		fmt.Printf("start producer error: %s", err.Error())
 		return
 	}
+}
 
-	var alertContactMqMsg = forms.AlertContactMqMsg{
+func SendMsg(topic string, eventEum enums.EventEum, module interface{}) {
+
+	var mqMsg = forms.MqMsg{
 		EventEum: eventEum,
 		Data:     module,
 	}
 
 	// msg对象转json ([]byte)
-	jsonBytes, err := json.Marshal(alertContactMqMsg)
+	jsonBytes, err := json.Marshal(mqMsg)
 	if err != nil {
 		fmt.Println(err)
 	}

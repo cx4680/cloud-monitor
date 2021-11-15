@@ -39,7 +39,7 @@ type AlertContactParam struct {
 	GroupIdList []string `form:"groupIdList"`
 }
 
-type AlertContactMqMsg struct {
+type MqMsg struct {
 	EventEum enums.EventEum
 	Data     interface{}
 }
