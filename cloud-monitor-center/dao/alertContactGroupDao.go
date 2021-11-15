@@ -35,14 +35,15 @@ func (mpd *AlertContactGroupDao) GetAlertGroupContact(tenantId string, groupId s
 }
 
 func (mpd *AlertContactGroupDao) InsertAlertContactGroup(param forms.AlertContactGroupParam) error {
+	//TODO 事务
 	var count int64
 	mpd.db.Model(&models.AlertContactGroup{}).Where("tenant_id = ?", param.TenantId).Count(&count)
 	if count >= constant.MAX_GROUP_NUM {
-		return errors.NewError("联系组限制创建" + strconv.Itoa(constant.MAX_GROUP_NUM) + "个")
+		return errors.NewBusinessError("联系组限制创建" + strconv.Itoa(constant.MAX_GROUP_NUM) + "个")
 	}
 	mpd.db.Model(&models.AlertContactGroup{}).Where("tenant_id = ?", param.TenantId).Where("name = ?", param.GroupName).Count(&count)
 	if count >= 1 {
-		return errors.NewError("联系组名重复")
+		return errors.NewBusinessError("联系组名重复")
 	}
 	currentTime := getCurrentTime()
 	groupId := strconv.FormatInt(snowflake.GetWorker().NextId(), 10)
@@ -72,7 +73,7 @@ func (mpd *AlertContactGroupDao) UpdateAlertContactGroup(param forms.AlertContac
 	var count int64
 	mpd.db.Model(&models.AlertContactGroup{}).Where("tenant_id = ?", param.TenantId).Where("name = ?", param.GroupName).Count(&count)
 	if count >= 1 {
-		return errors.NewError("联系组名重复")
+		return errors.NewBusinessError("联系组名重复")
 	}
 	currentTime := getCurrentTime()
 	var alertContactGroup = &models.AlertContactGroup{
@@ -111,7 +112,7 @@ func (mpd *AlertContactGroupDao) insertAlertContactGroupRel(param forms.AlertCon
 	var count int64
 	mpd.db.Model(&models.AlertContactGroupRel{}).Where("tenant_id = ?", param.TenantId).Where("group_id", param.GroupId).Count(&count)
 	if count >= constant.MAX_CONTACT_NUM {
-		return errors.NewError("每组联系人限制" + strconv.Itoa(constant.MAX_CONTACT_NUM) + "个")
+		return errors.NewBusinessError("每组联系人限制" + strconv.Itoa(constant.MAX_CONTACT_NUM) + "个")
 	}
 	for _, contactId := range param.ContactIdList {
 		var alertContactGroupRel = &models.AlertContactGroupRel{

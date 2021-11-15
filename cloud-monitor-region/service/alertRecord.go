@@ -4,8 +4,8 @@ import (
 	commonDao "code.cestc.cn/ccos-ops/cloud-monitor/business-common/dao"
 	commonDtos "code.cestc.cn/ccos-ops/cloud-monitor/business-common/dtos"
 	commonModels "code.cestc.cn/ccos-ops/cloud-monitor/business-common/models"
+	commonService "code.cestc.cn/ccos-ops/cloud-monitor/business-common/service"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/tools"
-	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/dtos"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/forms"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/mq"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/utils"
@@ -21,11 +21,11 @@ import (
 
 type AlertRecordService struct {
 	AlertRecordDao *commonDao.AlertRecordDao
-	TenantService  *TenantService
-	MessageService *MessageService
+	TenantService  *commonService.TenantService
+	MessageService *commonService.MessageService
 }
 
-func NewAlertRecordService(alertRecordDao *commonDao.AlertRecordDao, tenantService *TenantService, messageService *MessageService) *AlertRecordService {
+func NewAlertRecordService(alertRecordDao *commonDao.AlertRecordDao, tenantService *commonService.TenantService, messageService *commonService.MessageService) *AlertRecordService {
 	return &AlertRecordService{AlertRecordDao: alertRecordDao, TenantService: tenantService, MessageService: messageService}
 }
 
@@ -37,7 +37,7 @@ func (s *AlertRecordService) RecordAlertAndSendMessage(f *forms.InnerAlertRecord
 		return nil
 	}
 	var list []*commonModels.AlertRecord
-	var msgDTOList []*dtos.NoticeMsgDTO
+	var msgDTOList []*commonDtos.NoticeMsgDTO
 
 	for _, alert := range ruleList {
 		ruleDesc := &commonDtos.RuleDesc{}
@@ -112,7 +112,7 @@ func (s *AlertRecordService) buildInstanceInfo(instance *commonModels.AlarmInsta
 	return builder.String()
 }
 
-func (s *AlertRecordService) buildMsg(alert *forms.AlertRecordAlertsBean, ruleDesc *commonDtos.RuleDesc, alertRecord *commonModels.AlertRecord) []*dtos.NoticeMsgDTO {
+func (s *AlertRecordService) buildMsg(alert *forms.AlertRecordAlertsBean, ruleDesc *commonDtos.RuleDesc, alertRecord *commonModels.AlertRecord) []*commonDtos.NoticeMsgDTO {
 	if ruleDesc.GroupList == nil || len(ruleDesc.GroupList) <= 0 {
 		log.Println("告警组为空")
 		return nil
@@ -156,30 +156,30 @@ func (s *AlertRecordService) buildMsg(alert *forms.AlertRecordAlertsBean, ruleDe
 	return buildSendMsg(alertRecord, newContactGroups, params, channel, ruleDesc)
 }
 
-func buildSendMsg(alertRecord *commonModels.AlertRecord, contactInfoList []*commonDtos.ContactGroupInfo, params map[string]string, notifyChannel string, ruleDesc *commonDtos.RuleDesc) []*dtos.NoticeMsgDTO {
-	msgSource := dtos.MsgSourceDTO{
-		Type:     dtos.ALERT_OPEN,
+func buildSendMsg(alertRecord *commonModels.AlertRecord, contactInfoList []*commonDtos.ContactGroupInfo, params map[string]string, notifyChannel string, ruleDesc *commonDtos.RuleDesc) []*commonDtos.NoticeMsgDTO {
+	msgSource := commonDtos.MsgSourceDTO{
+		Type:     commonDtos.ALERT_OPEN,
 		SourceId: alertRecord.Id,
 	}
 	if "resolved" == alertRecord.Status {
-		msgSource.Type = dtos.ALERT_CANCEL
+		msgSource.Type = commonDtos.ALERT_CANCEL
 		params["recoveryTime"] = alertRecord.EndTime
 	} else {
 		params["alertTime"] = alertRecord.StartTime
 	}
-	var list []*dtos.NoticeMsgDTO
+	var list []*commonDtos.NoticeMsgDTO
 	for _, recordContactInfo := range contactInfoList {
 		for _, userContactInfo := range recordContactInfo.Contacts {
 
 			if (notifyChannel == "email" || notifyChannel == "all") && tools.IsNotBlank(userContactInfo.Mail) {
 				for _, email := range strings.Split(userContactInfo.Mail, ",") {
-					list = append(list, buildMsgDTO(&msgSource, alertRecord, params, dtos.Email, email, ruleDesc))
+					list = append(list, buildMsgDTO(&msgSource, alertRecord, params, commonDtos.Email, email, ruleDesc))
 				}
 			}
 
 			if (notifyChannel == "phone" || notifyChannel == "all") && tools.IsNotBlank(userContactInfo.Phone) {
 				for _, phone := range strings.Split(userContactInfo.Mail, ",") {
-					list = append(list, buildMsgDTO(&msgSource, alertRecord, params, dtos.Phone, phone, ruleDesc))
+					list = append(list, buildMsgDTO(&msgSource, alertRecord, params, commonDtos.Phone, phone, ruleDesc))
 				}
 
 			}
@@ -194,24 +194,24 @@ func getTime(time int) string {
 	return "持续" + string(rune(time)) + "个周期"
 }
 
-func buildMsgDTO(msgSource *dtos.MsgSourceDTO, alertRecord *commonModels.AlertRecord, params map[string]string, receiverType dtos.ReceiveType, no string, descDTO *commonDtos.RuleDesc) *dtos.NoticeMsgDTO {
+func buildMsgDTO(msgSource *commonDtos.MsgSourceDTO, alertRecord *commonModels.AlertRecord, params map[string]string, receiverType commonDtos.ReceiveType, no string, descDTO *commonDtos.RuleDesc) *commonDtos.NoticeMsgDTO {
 
 	objMap := make(map[string]string)
-	if dtos.Email == receiverType {
+	if commonDtos.Email == receiverType {
 		objMap["instanceAmount"] = "1"
 		objMap["period"] = utils.GetDateDiff(descDTO.Time)
 		objMap["times"] = getTime(descDTO.Time)
 		objMap["time"] = utils.GetDateDiff(descDTO.Period * 1000)
 		objMap["calType"] = descDTO.Statistic
 		objMap["expression"] = string(descDTO.ComparisonOperator)
-		if receiverType == dtos.Email && msgSource.Type == dtos.ALERT_CANCEL {
+		if receiverType == commonDtos.Email && msgSource.Type == commonDtos.ALERT_CANCEL {
 			targetValue := ""
 			if tools.IsNotBlank(descDTO.Unit) {
 				targetValue = descDTO.Unit
 			}
 			targetValue = string(rune(descDTO.TargetValue)) + targetValue
 			objMap["targetValue"] = targetValue
-		} else if receiverType == dtos.Email && msgSource.Type == dtos.ALERT_OPEN {
+		} else if receiverType == commonDtos.Email && msgSource.Type == commonDtos.ALERT_OPEN {
 			objMap["targetValue"] = string(rune(descDTO.TargetValue))
 		}
 
@@ -224,14 +224,14 @@ func buildMsgDTO(msgSource *dtos.MsgSourceDTO, alertRecord *commonModels.AlertRe
 		}
 	}
 
-	return &dtos.NoticeMsgDTO{
+	return &commonDtos.NoticeMsgDTO{
 		SourceId: msgSource.SourceId,
 		TenantId: alertRecord.TenantId,
-		MsgEvent: dtos.MsgEvent{
+		MsgEvent: commonDtos.MsgEvent{
 			Type:   receiverType,
 			Source: msgSource.Type,
 		},
-		RevObjectBean: dtos.RecvObjectBean{
+		RevObjectBean: commonDtos.RecvObjectBean{
 			RecvObjectType: receiverType,
 			RecvObject:     no,
 			NoticeContent:  tools.ToString(objMap),

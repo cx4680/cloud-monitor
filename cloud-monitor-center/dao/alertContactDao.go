@@ -65,17 +65,17 @@ func (mpd *AlertContactDao) GetAlertContact(param forms.AlertContactParam) *form
 
 func (mpd *AlertContactDao) InsertAlertContact(param forms.AlertContactParam) error {
 	if param.ContactName == "" {
-		return errors.NewError("联系人名字不能为空")
+		return errors.NewBusinessError("联系人名字不能为空")
 	}
 	//每个账号限制创建100个联系人
 	var count int64
 	mpd.db.Model(&models.AlertContact{}).Where("tenant_id = ?", param.TenantId).Count(&count)
 	if count >= constant.MAX_CONTACT_NUM {
-		return errors.NewError("联系人限制创建" + strconv.Itoa(constant.MAX_CONTACT_NUM) + "个")
+		return errors.NewBusinessError("联系人限制创建" + strconv.Itoa(constant.MAX_CONTACT_NUM) + "个")
 	}
 	//每个联系人最多加入5个联系组
 	if len(param.GroupIdList) >= constant.MAX_CONTACT_GROUP {
-		return errors.NewError("每个联系人最多加入" + strconv.Itoa(constant.MAX_CONTACT_GROUP) + "个联系组")
+		return errors.NewBusinessError("每个联系人最多加入" + strconv.Itoa(constant.MAX_CONTACT_GROUP) + "个联系组")
 	}
 
 	currentTime := getCurrentTime()
@@ -109,11 +109,11 @@ func (mpd *AlertContactDao) InsertAlertContact(param forms.AlertContactParam) er
 
 func (mpd *AlertContactDao) UpdateAlertContact(param forms.AlertContactParam) error {
 	if param.ContactName == "" {
-		return errors.NewError("联系人名字不能为空")
+		return errors.NewBusinessError("联系人名字不能为空")
 	}
 	//每个联系人最多加入5个联系组
 	if len(param.GroupIdList) >= constant.MAX_CONTACT_GROUP {
-		return errors.NewError("每个联系人最多加入" + strconv.Itoa(constant.MAX_CONTACT_GROUP) + "个联系组")
+		return errors.NewBusinessError("每个联系人最多加入" + strconv.Itoa(constant.MAX_CONTACT_GROUP) + "个联系组")
 	}
 	currentTime := getCurrentTime()
 	var alertContact = &models.AlertContact{
@@ -200,7 +200,7 @@ func (mpd *AlertContactDao) insertAlertContactGroupRel(param forms.AlertContactP
 	for _, v := range param.GroupIdList {
 		mpd.db.Model(&models.AlertContactGroupRel{}).Where("tenant_id = ?", param.TenantId).Where("group_id = ?", v).Count(&count)
 		if count >= constant.MAX_CONTACT_NUM {
-			return errors.NewError("每组联系人限制创建" + strconv.Itoa(constant.MAX_CONTACT_NUM) + "个")
+			return errors.NewBusinessError("每组联系人限制创建" + strconv.Itoa(constant.MAX_CONTACT_NUM) + "个")
 		}
 		var alertContactGroupRel = &models.AlertContactGroupRel{
 			Id:         strconv.FormatInt(snowflake.GetWorker().NextId(), 10),
