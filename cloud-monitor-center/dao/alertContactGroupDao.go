@@ -35,7 +35,8 @@ func (mpd *AlertContactGroupDao) GetAlertGroupContact(tenantId string, groupId s
 }
 
 func (mpd *AlertContactGroupDao) InsertAlertContactGroup(param forms.AlertContactGroupParam) error {
-	//TODO 事务
+	var tx = mpd.db.Begin()
+
 	var count int64
 	mpd.db.Model(&models.AlertContactGroup{}).Where("tenant_id = ?", param.TenantId).Count(&count)
 	if count >= constant.MAX_GROUP_NUM {
@@ -57,21 +58,25 @@ func (mpd *AlertContactGroupDao) InsertAlertContactGroup(param forms.AlertContac
 		CreateTime:  currentTime,
 		UpdateTime:  currentTime,
 	}
-	mpd.db.Create(alertContactGroup)
+	tx = tx.Create(alertContactGroup)
 
 	// 添加联系人组关联
 	err := mpd.insertAlertContactGroupRel(param, currentTime)
 	if err != nil {
-		return err
+		tx.Rollback()
+		return errors.NewBusinessError("添加失败")
 	}
+	tx.Commit()
 	//同步region
 	mq.SendMsg(config.GetRocketmqConfig().AlertContactTopic, enums.InsertAlertContactGroup, alertContactGroup)
 	return nil
 }
 
 func (mpd *AlertContactGroupDao) UpdateAlertContactGroup(param forms.AlertContactGroupParam) error {
+	var tx = mpd.db.Begin()
+
 	var count int64
-	mpd.db.Model(&models.AlertContactGroup{}).Where("tenant_id = ?", param.TenantId).Where("name = ?", param.GroupName).Count(&count)
+	tx.Model(&models.AlertContactGroup{}).Where("tenant_id = ?", param.TenantId).Where("name = ?", param.GroupName).Count(&count)
 	if count >= 1 {
 		return errors.NewBusinessError("联系组名重复")
 	}
@@ -83,29 +88,40 @@ func (mpd *AlertContactGroupDao) UpdateAlertContactGroup(param forms.AlertContac
 		Description: param.Description,
 		UpdateTime:  currentTime,
 	}
-	mpd.db.Model(alertContactGroup).Updates(alertContactGroup)
+	tx.Model(alertContactGroup).Updates(alertContactGroup)
 
 	//更新联系人关联
 	err := mpd.updateAlertContactGroupRel(param, currentTime)
 	if err != nil {
+		tx.Rollback()
 		return err
 	}
+	tx.Commit()
 	//同步region
 	mq.SendMsg(config.GetRocketmqConfig().AlertContactTopic, enums.UpdateAlertContactGroup, alertContactGroup)
 	return nil
 }
 
-func (mpd *AlertContactGroupDao) DeleteAlertContactGroup(param forms.AlertContactGroupParam) {
+func (mpd *AlertContactGroupDao) DeleteAlertContactGroup(param forms.AlertContactGroupParam) error {
+	var tx = mpd.db.Begin()
+
 	var model models.AlertContactGroup
-	mpd.db.Delete(&model, param.GroupId)
+	tx.Delete(&model, param.GroupId)
 	//删除联系人关联
-	mpd.deleteAlertContactGroupRel(param.GroupId)
+	err := mpd.deleteAlertContactGroupRel(param.GroupId)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	tx.Commit()
 	//同步region
 	mq.SendMsg(config.GetRocketmqConfig().AlertContactTopic, enums.DeleteAlertContactGroup, param.GroupId)
+	return nil
 }
 
 //新增联系人关联
 func (mpd *AlertContactGroupDao) insertAlertContactGroupRel(param forms.AlertContactGroupParam, currentTime string) error {
+	//return errors.NewBusinessError("事务test")
 	if len(param.ContactIdList) == 0 {
 		return nil
 	}
@@ -124,7 +140,10 @@ func (mpd *AlertContactGroupDao) insertAlertContactGroupRel(param forms.AlertCon
 			CreateTime: currentTime,
 			UpdateTime: currentTime,
 		}
-		mpd.db.Create(alertContactGroupRel)
+		db := mpd.db.Create(alertContactGroupRel)
+		if db.Error != nil {
+			return db.Error
+		}
 		//同步region
 		mq.SendMsg(config.GetRocketmqConfig().AlertContactTopic, enums.InsertAlertContactGroupRel, alertContactGroupRel)
 	}
@@ -134,18 +153,23 @@ func (mpd *AlertContactGroupDao) insertAlertContactGroupRel(param forms.AlertCon
 //更新联系人关联
 func (mpd *AlertContactGroupDao) updateAlertContactGroupRel(param forms.AlertContactGroupParam, currentTime string) error {
 	//清除旧联系人组关联
-	mpd.deleteAlertContactGroupRel(param.GroupId)
+	deleteErr := mpd.deleteAlertContactGroupRel(param.GroupId)
 	//添加新联系人组关联
-	err := mpd.insertAlertContactGroupRel(param, currentTime)
-	if err != nil {
-		return err
+	insertErr := mpd.insertAlertContactGroupRel(param, currentTime)
+	if deleteErr != nil && insertErr != nil {
+		return errors.NewBusinessError("修改失败")
 	}
 	return nil
 }
 
 //删除联系人关联
-func (mpd *AlertContactGroupDao) deleteAlertContactGroupRel(groupId string) {
-	mpd.db.Where("group_id = ?", groupId).Delete(models.AlertContactGroupRel{})
+func (mpd *AlertContactGroupDao) deleteAlertContactGroupRel(groupId string) error {
+	var tx = mpd.db.Begin()
+	db := tx.Where("group_id = ?", groupId).Delete(models.AlertContactGroupRel{})
+	if db.Error != nil {
+		return errors.NewBusinessError("删除失败")
+	}
 	//同步region
 	mq.SendMsg(config.GetRocketmqConfig().AlertContactTopic, enums.DeleteAlertContactGroupRelByGroupId, groupId)
+	return nil
 }
