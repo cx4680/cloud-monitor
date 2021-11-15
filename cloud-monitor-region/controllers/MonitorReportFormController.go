@@ -1,12 +1,12 @@
 package controllers
 
 import (
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/dao"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/external/ecs"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/forms"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/global"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/service"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/validator/translate"
-	"code.cestc.cn/ccos-ops/cloud-monitor/common/dao"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/database"
 	"github.com/gin-gonic/gin"
 	"net/http"
