@@ -34,8 +34,6 @@ func NewAlertContact(db *gorm.DB) *AlertContactDao {
 	return &AlertContactDao{db: db}
 }
 
-var rocketmqConfig = config.GetRocketmqConfig()
-
 func (mpd *AlertContactDao) GetAlertContact(param forms.AlertContactParam) *forms.AlertContactFormPage {
 	var model = &[]forms.AlertContactForm{}
 	var sql string
@@ -103,7 +101,7 @@ func (mpd *AlertContactDao) InsertAlertContact(param forms.AlertContactParam) er
 		return err
 	}
 	//同步region
-	mq.SendMsg(rocketmqConfig.AlertContactTopic, enums.InsertAlertContact, alertContact)
+	mq.SendMsg(config.GetRocketmqConfig().AlertContactTopic, enums.InsertAlertContact, alertContact)
 	return nil
 }
 
@@ -135,7 +133,7 @@ func (mpd *AlertContactDao) UpdateAlertContact(param forms.AlertContactParam) er
 		return err
 	}
 	//同步region
-	mq.SendMsg(rocketmqConfig.AlertContactTopic, enums.UpdateAlertContact, alertContact)
+	mq.SendMsg(config.GetRocketmqConfig().AlertContactTopic, enums.UpdateAlertContact, alertContact)
 	return nil
 }
 
@@ -147,14 +145,14 @@ func (mpd *AlertContactDao) DeleteAlertContact(param forms.AlertContactParam) {
 	//删除联系人组关联
 	mpd.deleteAlertContactGroupRel(param.ContactId)
 	//同步region
-	mq.SendMsg(rocketmqConfig.AlertContactTopic, enums.DeleteAlertContact, param.ContactId)
+	mq.SendMsg(config.GetRocketmqConfig().AlertContactTopic, enums.DeleteAlertContact, param.ContactId)
 }
 
 func (mpd *AlertContactDao) CertifyAlertContact(activeCode string) string {
 	var model = &models.AlertContactInformation{}
 	mpd.db.Model(model).Where("active_code = ?", activeCode).Update("is_certify", 1)
 	//同步region
-	mq.SendMsg(rocketmqConfig.AlertContactTopic, enums.CertifyAlertContact, activeCode)
+	mq.SendMsg(config.GetRocketmqConfig().AlertContactTopic, enums.CertifyAlertContact, activeCode)
 	return getTenantName(model.TenantId)
 }
 
@@ -189,9 +187,9 @@ func (mpd *AlertContactDao) insertAlertContactInformation(param forms.AlertConta
 	}
 	mpd.db.Create(alertContactInformation)
 	// TODO 发送验证消息
-	sendMsg(param.TenantId, param.ContactId, no, noType, activeCode)
+	//sendMsg(param.TenantId, param.ContactId, no, noType, activeCode)
 	// 同步region
-	mq.SendMsg(rocketmqConfig.AlertContactTopic, enums.InsertAlertContactInformation, alertContactInformation)
+	mq.SendMsg(config.GetRocketmqConfig().AlertContactTopic, enums.InsertAlertContactInformation, alertContactInformation)
 }
 
 //创建联系人组关联
@@ -213,7 +211,7 @@ func (mpd *AlertContactDao) insertAlertContactGroupRel(param forms.AlertContactP
 		}
 		mpd.db.Create(alertContactGroupRel)
 		// 同步region
-		mq.SendMsg(rocketmqConfig.AlertContactTopic, enums.InsertAlertContactGroupRel, alertContactGroupRel)
+		mq.SendMsg(config.GetRocketmqConfig().AlertContactTopic, enums.InsertAlertContactGroupRel, alertContactGroupRel)
 	}
 	return nil
 }
@@ -243,14 +241,14 @@ func (mpd *AlertContactDao) updateAlertContactGroupRel(param forms.AlertContactP
 func (mpd *AlertContactDao) deleteAlertContactInformation(contactId string) {
 	mpd.db.Where("contact_id = ?", contactId).Delete(models.AlertContactInformation{})
 	//同步region
-	mq.SendMsg(rocketmqConfig.AlertContactTopic, enums.DeleteAlertContactInformation, contactId)
+	mq.SendMsg(config.GetRocketmqConfig().AlertContactTopic, enums.DeleteAlertContactInformation, contactId)
 }
 
 //删除联系人组关联
 func (mpd *AlertContactDao) deleteAlertContactGroupRel(contactId string) {
 	mpd.db.Where("contact_id = ?", contactId).Delete(models.AlertContactGroupRel{})
 	//同步region
-	mq.SendMsg(rocketmqConfig.AlertContactTopic, enums.DeleteAlertContactGroupRelByContactId, contactId)
+	mq.SendMsg(config.GetRocketmqConfig().AlertContactTopic, enums.DeleteAlertContactGroupRelByContactId, contactId)
 }
 
 //获取租户名字

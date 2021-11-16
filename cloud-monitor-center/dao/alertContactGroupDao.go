@@ -64,7 +64,7 @@ func (mpd *AlertContactGroupDao) InsertAlertContactGroup(param forms.AlertContac
 	err := mpd.insertAlertContactGroupRel(param, currentTime)
 	if err != nil {
 		tx.Rollback()
-		return errors.NewBusinessError("添加失败")
+		return err
 	}
 	tx.Commit()
 	//同步region
@@ -142,7 +142,7 @@ func (mpd *AlertContactGroupDao) insertAlertContactGroupRel(param forms.AlertCon
 		}
 		db := mpd.db.Create(alertContactGroupRel)
 		if db.Error != nil {
-			return db.Error
+			return errors.NewBusinessError("添加失败")
 		}
 		//同步region
 		mq.SendMsg(config.GetRocketmqConfig().AlertContactTopic, enums.InsertAlertContactGroupRel, alertContactGroupRel)
