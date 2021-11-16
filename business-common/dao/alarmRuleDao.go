@@ -20,34 +20,34 @@ func NewAlarmRuleDao(db *gorm.DB) *AlarmRuleDao {
 	}
 }
 
-func (dao *AlarmRuleDao) SaveRule(ruleReqDTO *forms.AlarmRuleAddReqDTO) string {
+func (dao *AlarmRuleDao) SaveRule(tx *gorm.DB, ruleReqDTO *forms.AlarmRuleAddReqDTO) string {
 	rule := buildAlarmRule(ruleReqDTO)
 	rule.ID = strconv.FormatInt(snowflake.GetWorker().NextId(), 10)
 	rule.MonitorType = ruleReqDTO.MonitorType
 	rule.ProductType = ruleReqDTO.ProductType
-	dao.DB.Create(rule)
-	dao.saveRuleOthers(ruleReqDTO, rule.ID)
+	tx.Create(rule)
+	dao.saveRuleOthers(tx, ruleReqDTO, rule.ID)
 	return rule.ID
 }
-func (dao *AlarmRuleDao) UpdateRule(ruleReqDTO *forms.AlarmRuleAddReqDTO) {
-	dao.deleteOthers(ruleReqDTO.Id)
+func (dao *AlarmRuleDao) UpdateRule(tx *gorm.DB, ruleReqDTO *forms.AlarmRuleAddReqDTO) {
+	dao.deleteOthers(tx, ruleReqDTO.Id)
 	rule := buildAlarmRule(ruleReqDTO)
-	dao.DB.Model(&rule).Updates(rule)
-	dao.saveRuleOthers(ruleReqDTO, ruleReqDTO.Id)
+	tx.Model(&rule).Updates(rule)
+	dao.saveRuleOthers(tx, ruleReqDTO, ruleReqDTO.Id)
 }
 
-func (dao *AlarmRuleDao) DeleteRule(ruleReqDTO *forms.RuleReqDTO) {
+func (dao *AlarmRuleDao) DeleteRule(tx *gorm.DB, ruleReqDTO *forms.RuleReqDTO) {
 	rule := models.AlarmRule{
 		TenantID: ruleReqDTO.TenantId,
 		ID:       ruleReqDTO.Id,
 	}
-	dao.DB.Delete(&rule)
-	dao.deleteOthers(ruleReqDTO.Id)
+	tx.Delete(&rule)
+	dao.deleteOthers(tx, ruleReqDTO.Id)
 }
 
-func (dao *AlarmRuleDao) UpdateRuleState(ruleReqDTO *forms.RuleReqDTO) {
+func (dao *AlarmRuleDao) UpdateRuleState(tx *gorm.DB, ruleReqDTO *forms.RuleReqDTO) {
 	rule := models.AlarmRule{ID: ruleReqDTO.Id}
-	dao.DB.Model(&rule).Update("enabled", GetAlarmStatusTextInt(ruleReqDTO.Status))
+	tx.Model(&rule).Update("enabled", GetAlarmStatusTextInt(ruleReqDTO.Status))
 }
 
 func (dao *AlarmRuleDao) SelectRulePageList(param *forms.AlarmPageReqParam) interface{} {
@@ -119,12 +119,12 @@ func buildAlarmRule(ruleReqDTO *forms.AlarmRuleAddReqDTO) *models.AlarmRule {
 	}
 }
 
-func (dao *AlarmRuleDao) saveRuleOthers(ruleReqDTO *forms.AlarmRuleAddReqDTO, ruleId string) {
-	dao.saveAlarmNotice(ruleReqDTO, ruleId)
-	dao.saveAlarmInstances(ruleReqDTO, ruleId)
+func (dao *AlarmRuleDao) saveRuleOthers(tx *gorm.DB, ruleReqDTO *forms.AlarmRuleAddReqDTO, ruleId string) {
+	dao.saveAlarmNotice(tx, ruleReqDTO, ruleId)
+	dao.saveAlarmInstances(tx, ruleReqDTO, ruleId)
 }
 
-func (dao *AlarmRuleDao) saveAlarmNotice(ruleReqDTO *forms.AlarmRuleAddReqDTO, ruleId string) {
+func (dao *AlarmRuleDao) saveAlarmNotice(tx *gorm.DB, ruleReqDTO *forms.AlarmRuleAddReqDTO, ruleId string) {
 	list := make([]models.AlarmNotice, len(ruleReqDTO.GroupList))
 	for index, group := range ruleReqDTO.GroupList {
 		list[index] = models.AlarmNotice{
@@ -132,10 +132,10 @@ func (dao *AlarmRuleDao) saveAlarmNotice(ruleReqDTO *forms.AlarmRuleAddReqDTO, r
 			ContractGroupID: group,
 		}
 	}
-	dao.DB.Create(&list)
+	tx.Create(&list)
 }
 
-func (dao *AlarmRuleDao) saveAlarmInstances(ruleReqDTO *forms.AlarmRuleAddReqDTO, ruleId string) {
+func (dao *AlarmRuleDao) saveAlarmInstances(tx *gorm.DB, ruleReqDTO *forms.AlarmRuleAddReqDTO, ruleId string) {
 	if len(ruleReqDTO.InstanceList) == 0 {
 		return
 	}
@@ -153,16 +153,16 @@ func (dao *AlarmRuleDao) saveAlarmInstances(ruleReqDTO *forms.AlarmRuleAddReqDTO
 			TenantID:     ruleReqDTO.TenantId,
 		}
 	}
-	dao.DB.Create(&list)
+	tx.Create(&list)
 }
 
-func (dao *AlarmRuleDao) deleteOthers(ruleId string) {
+func (dao *AlarmRuleDao) deleteOthers(tx *gorm.DB, ruleId string) {
 	notice := models.AlarmNotice{
 		AlarmRuleID: ruleId,
 	}
-	dao.DB.Where("alarm_rule_id=?", ruleId).Delete(&notice)
+	tx.Where("alarm_rule_id=?", ruleId).Delete(&notice)
 	instance := models.AlarmInstance{AlarmRuleID: ruleId}
-	dao.DB.Where("alarm_rule_id=?", ruleId).Delete(&instance)
+	tx.Where("alarm_rule_id=?", ruleId).Delete(&instance)
 }
 
 func getNotifyChannel(notifyChannel string) int {

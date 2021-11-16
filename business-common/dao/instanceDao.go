@@ -22,13 +22,13 @@ func (dao *InstanceDao) SelectInstanceRulePage(param *forms.InstanceRulePageReqP
 	return pageUtils.Paginate(param.PageSize, param.Current, "select t2.id,t2.name,t2.metric_name as monitorItem,t2.trigger_condition  as ruleCondition,product_type,monitor_type ,t1.create_time from t_alarm_instance  t1        JOIN t_alarm_rule t2  on t2.id=t1.alarm_rule_id       where t1.instance_id=? and t2.deleted=0  ORDER BY create_time desc  , name ASC", sqlParam, &model, db)
 }
 
-func (dao *InstanceDao) UnbindInstance(param *forms.UnBindRuleParam) {
+func (dao *InstanceDao) UnbindInstance(tx *gorm.DB, param *forms.UnBindRuleParam) {
 	model := &models.AlarmInstance{InstanceID: param.InstanceId, AlarmRuleID: param.RulId}
-	dao.db.Where("instance_id", model.InstanceID).Where("alarm_rule_id", model.AlarmRuleID).Delete(model)
+	tx.Where("instance_id", model.InstanceID).Where("alarm_rule_id", model.AlarmRuleID).Delete(model)
 }
-func (dao *InstanceDao) BindInstance(param *forms.InstanceBindRuleDTO) {
+func (dao *InstanceDao) BindInstance(tx *gorm.DB, param *forms.InstanceBindRuleDTO) {
 	model := &models.AlarmInstance{InstanceID: param.InstanceId}
-	dao.db.Delete(model)
+	tx.Delete(model)
 	if len(param.RuleIdList) != 0 {
 		list := make([]*models.AlarmInstance, len(param.RuleIdList))
 		for index, ruleId := range param.RuleIdList {
@@ -44,7 +44,7 @@ func (dao *InstanceDao) BindInstance(param *forms.InstanceBindRuleDTO) {
 				TenantID:     param.TenantId,
 			}
 		}
-		dao.db.Create(&list)
+		tx.Create(&list)
 	}
 }
 

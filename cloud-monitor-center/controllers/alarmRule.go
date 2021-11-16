@@ -2,15 +2,13 @@ package controllers
 
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor-center/global"
-	"code.cestc.cn/ccos-ops/cloud-monitor-center/mq"
+	"code.cestc.cn/ccos-ops/cloud-monitor-center/service"
 	"code.cestc.cn/ccos-ops/cloud-monitor-center/validator/translate"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/dao"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/dbUtils"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/forms"
-	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
-	"code.cestc.cn/ccos-ops/cloud-monitor/common/enums"
 	"github.com/gin-gonic/gin"
 	"net/http"
-	"strings"
 )
 
 type AlarmRuleCtl struct {
@@ -54,9 +52,11 @@ func (ctl *AlarmRuleCtl) CreateRule(c *gin.Context) {
 	userId, _ := c.Get(global.UserId)
 	param.UserId = userId.(string)
 	addMetricName(&param, ctl)
-	id := ctl.dao.SaveRule(&param)
-	param.Id = id
-	mq.SendMsg(config.GetRocketmqConfig().RuleTopic, enums.CreateRule, param)
+	err := dbUtils.Tx(&param, ctl.dao, service.CreateRule)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, err.Error())
+		return
+	}
 	c.JSON(http.StatusOK, global.NewSuccess("创建成功", true))
 }
 
@@ -71,8 +71,11 @@ func (ctl *AlarmRuleCtl) UpdateRule(c *gin.Context) {
 	userId, _ := c.Get(global.UserId)
 	param.UserId = userId.(string)
 	addMetricName(&param, ctl)
-	ctl.dao.UpdateRule(&param)
-	mq.SendMsg(config.GetRocketmqConfig().RuleTopic, enums.UpdateRule, param)
+	err := dbUtils.Tx(&param, ctl.dao, service.UpdateRule)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, err.Error())
+		return
+	}
 	c.JSON(http.StatusOK, global.NewSuccess("更新成功", true))
 }
 
@@ -86,8 +89,11 @@ func (ctl *AlarmRuleCtl) DeleteRule(c *gin.Context) {
 	param.TenantId = tenantId.(string)
 	userId, _ := c.Get(global.UserId)
 	param.TenantId = userId.(string)
-	ctl.dao.DeleteRule(&param)
-	mq.SendMsg(config.GetRocketmqConfig().RuleTopic, enums.DeleteRule, param)
+	err := dbUtils.Tx(&param, ctl.dao, service.DeleteRule)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, err.Error())
+		return
+	}
 	c.JSON(http.StatusOK, global.NewSuccess("更新成功", true))
 }
 
@@ -99,12 +105,11 @@ func (ctl *AlarmRuleCtl) ChangeRuleStatus(c *gin.Context) {
 	}
 	tenantId, _ := c.Get(global.TenantId)
 	param.TenantId = tenantId.(string)
-	ctl.dao.UpdateRuleState(&param)
-	enum := enums.DisableRule
-	if strings.EqualFold(param.Status, dao.ENABLE) {
-		enum = enums.EnableRule
+	err := dbUtils.Tx(&param, ctl.dao, service.ChangeRuleStatus)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, err.Error())
+		return
 	}
-	mq.SendMsg(config.GetRocketmqConfig().RuleTopic, enum, param)
 	c.JSON(http.StatusOK, global.NewSuccess("更新成功", true))
 }
 

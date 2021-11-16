@@ -2,12 +2,11 @@ package controllers
 
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor-center/global"
-	"code.cestc.cn/ccos-ops/cloud-monitor-center/mq"
+	"code.cestc.cn/ccos-ops/cloud-monitor-center/service"
 	"code.cestc.cn/ccos-ops/cloud-monitor-center/validator/translate"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/dao"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/dbUtils"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/forms"
-	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
-	"code.cestc.cn/ccos-ops/cloud-monitor/common/enums"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
@@ -35,8 +34,11 @@ func (ctl *InstanceCtl) Unbind(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, translate.GetErrorMsg(err))
 		return
 	}
-	ctl.dao.UnbindInstance(&param)
-	mq.SendMsg(config.GetRocketmqConfig().RuleTopic, enums.UnbindRule, param)
+	err := dbUtils.Tx(&param, ctl.dao, service.UnbindInstance)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, err.Error())
+		return
+	}
 	c.JSON(http.StatusOK, global.NewSuccess("成功", nil))
 }
 
@@ -48,8 +50,11 @@ func (ctl *InstanceCtl) Bind(c *gin.Context) {
 	}
 	tenantId, _ := c.Get(global.TenantId)
 	param.TenantId = tenantId.(string)
-	ctl.dao.BindInstance(&param)
-	mq.SendMsg(config.GetRocketmqConfig().RuleTopic, enums.BindRule, param)
+	err := dbUtils.Tx(&param, ctl.dao, service.BindInstance)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, err.Error())
+		return
+	}
 	c.JSON(http.StatusOK, global.NewSuccess("成功", nil))
 }
 

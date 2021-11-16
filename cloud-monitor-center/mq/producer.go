@@ -27,7 +27,7 @@ func CreateMq() {
 	}
 }
 
-func SendMsg(topic string, eventEum enums.EventEum, module interface{}) {
+func SendMsg(topic string, eventEum enums.EventEum, module interface{}) error {
 
 	var mqMsg = forms.MqMsg{
 		EventEum: eventEum,
@@ -47,8 +47,9 @@ func SendMsg(topic string, eventEum enums.EventEum, module interface{}) {
 	res, err := p.SendSync(context.Background(), msg)
 
 	if err != nil {
-		fmt.Printf("send message error: %s\n", err)
+		return err
 	} else {
 		fmt.Printf("send message success: result=%s\n", res.String())
 	}
+	return nil
 }
