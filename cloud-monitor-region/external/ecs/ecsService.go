@@ -34,7 +34,7 @@ type VmParams struct {
 
 func GetUserInstancePage(form *VmParams, pageIndex int, pageSize int, userCode string) (*QueryPageResult, error) {
 	request := &external.QueryPageRequest{Data: form, PageIndex: pageIndex, PageSize: pageSize}
-	resp, err := external.PageList(userCode, request, config.GetCommonConfig().Nk+"?appId=600006&format=json&method=CESTC_UNHQ_pageQueryServerLIst")
+	resp, err := external.PageList(userCode, request, config.GetCommonConfig().EcsInnerGateway+"/noauth/ecs/PageList")
 	if err != nil {
 		return nil, err
 	}

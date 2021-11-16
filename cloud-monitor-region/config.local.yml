@@ -44,3 +44,4 @@ common:
   hawkeyeCenterPath: ''
   hasNoticeModel: false
   regionName: ''
+  ecs-inner-gateway: http://ecs-gateway.inner.center.intranet.cecloudcs.com

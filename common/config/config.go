@@ -25,6 +25,7 @@ type CommonConfig struct {
 	HawkeyeCenterPath string `yaml:"hawkeyeCenterPath"`
 	HasNoticeModel    bool   `yaml:"hasNoticeModel"`
 	RegionName        string `yaml:"regionName"`
+	EcsInnerGateway   string `yaml:"ecs-inner-gateway"`
 }
 
 type Serve struct {
