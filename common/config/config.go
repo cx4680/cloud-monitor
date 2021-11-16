@@ -105,6 +105,8 @@ func InitConfig(file string) error {
 	if err != nil {
 		return err
 	}
+	//TODO Read from envs
+
 	return nil
 }
 
