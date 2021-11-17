@@ -8,10 +8,9 @@ ENV GO111MODULE=on \
 # 移动到工作目录：/build
 WORKDIR /build
 # 将代码复制到容器中
-COPY . .
+COPY ./cloud-monitor-region .
 
 # 将我们的代码编译成二进制可执行文件app
-run ls
 RUN go build -o app .
 
 
