@@ -11,6 +11,7 @@ WORKDIR /build
 COPY . .
 
 # 将我们的代码编译成二进制可执行文件app
+run ls
 RUN go build -o app .
 
 
