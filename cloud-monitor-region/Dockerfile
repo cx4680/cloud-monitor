@@ -8,9 +8,9 @@ ENV GO111MODULE=on \
 # 移动到工作目录：/build
 WORKDIR /build
 # 将代码复制到容器中
-COPY ./cloud-monitor-region .
+COPY . .
 
-RUN go mod vendor &&\
+RUN cd cloud-monitor-region && go mod vendor &&\
     go build -o app .
 
 
