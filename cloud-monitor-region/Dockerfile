@@ -10,8 +10,8 @@ WORKDIR /build
 # 将代码复制到容器中
 COPY ./cloud-monitor-region .
 
-# 将我们的代码编译成二进制可执行文件app
-RUN go build -o app .
+RUN go mod vendor &&\
+    go build -o app .
 
 
 FROM  harbor.ceclouddyn.com/baseos/centos:8.4.2105-0.0.1
