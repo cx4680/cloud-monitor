@@ -8,10 +8,9 @@ ENV GO111MODULE=on \
 # 移动到工作目录：/build
 WORKDIR /build
 # 将代码复制到容器中
-COPY . .
+COPY ./cloud-monitor-region .
 
-RUN cd cloud-monitor-region && go mod vendor &&\
-    go build -o app .
+RUN go build -o app .
 
 
 FROM  harbor.ceclouddyn.com/baseos/centos:8.4.2105-0.0.1
