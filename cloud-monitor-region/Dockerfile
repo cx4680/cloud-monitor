@@ -24,4 +24,4 @@ RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime &&\
 EXPOSE 80
 
 # 启动容器时运行的命令
-CMD ["/dist/app"]
+CMD ["/dist/app -config /data/conf/config.prod.yaml"]
