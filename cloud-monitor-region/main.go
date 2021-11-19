@@ -55,7 +55,7 @@ func main() {
 		os.Exit(5)
 	}
 	//加载定时任务
-	task.CronInstanceJob()
+	go task.CronInstanceJob()
 
 	logger.InitLogger(config.GetLogConfig())
 	defer logger.Logger().Sync()
