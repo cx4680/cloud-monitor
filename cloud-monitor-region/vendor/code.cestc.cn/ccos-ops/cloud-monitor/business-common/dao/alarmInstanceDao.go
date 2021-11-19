@@ -40,11 +40,11 @@ func (mpd *AlarmInstanceDao) UpdateBatchInstanceName(models []models.AlarmInstan
 	mpd.db.Raw(fmt.Sprintf(sql, sql1, sql2)).Find(i)
 }
 
-func (mpd *AlarmInstanceDao) SelectInstanceList(tenantId string, productType string) *[]models.AlarmInstance {
+func (mpd *AlarmInstanceDao) SelectInstanceList(tenantId string, productType string) []models.AlarmInstance {
 	var model = &[]models.AlarmInstance{}
 	sql := "SELECT t1.* FROM t_alarm_instance t1 LEFT JOIN t_alarm_rule t2 ON t1.alarm_rule_id = t2.id where t1.tenant_id = '%s' and t2.product_type = '%s'"
 	mpd.db.Raw(fmt.Sprintf(sql, tenantId, productType)).Find(model)
-	return model
+	return *model
 }
 
 func (mpd *AlarmInstanceDao) DeleteInstanceList(tenantId string, list []models.AlarmInstance) {

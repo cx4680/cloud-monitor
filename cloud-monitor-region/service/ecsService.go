@@ -12,7 +12,7 @@ import (
 
 var ecsInnerGateway = config.GetEcsConfig().InnerGateway
 
-func EcsPageList(userCode string, form forms.EcsQueryPageForm) vo.EcsPageVO {
+func EcsPageList(form forms.EcsQueryPageForm) vo.EcsPageVO {
 	path := ecsInnerGateway + "/noauth/ecs/PageList"
 	jsonStr, _ := json.Marshal(form)
 	resp, err := http.Post(path, "application/json", strings.NewReader(string(jsonStr)))

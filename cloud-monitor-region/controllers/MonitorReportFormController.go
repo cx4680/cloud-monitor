@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/dao"
-	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/external/ecs"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/forms"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/global"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/service"
@@ -51,12 +50,16 @@ func (mpc *MonitorReportFormCtl) GetTop(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, translate.GetErrorMsg(err))
 		return
 	}
-	pageResult, _ := ecs.GetUserInstancePage(nil, 0, 100, param.TenantId)
-	rows := pageResult.Rows
-	var instanceList = []string{"ecs-ce2qxixq28fu0q", "ecs-ce310hziqnk67l", "ecs-ce3293m18eimi7"}
-	for i := range rows {
-		if rows[i].HostId == "" {
-			instanceList = append(instanceList, rows[i].HostId)
+	var form = forms.EcsQueryPageForm{
+		TenantId: param.TenantId,
+		Current:  1,
+		PageSize: 1000,
+	}
+	rows := service.EcsPageList(form)
+	var instanceList []string
+	for _, ecsVO := range rows.Rows {
+		if ecsVO.InstanceId == "" {
+			instanceList = append(instanceList, ecsVO.InstanceId)
 		}
 	}
 	param.Instance = strings.Join(instanceList, "|")

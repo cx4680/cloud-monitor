@@ -10,13 +10,13 @@ import (
 	"log"
 )
 
-var pageSize = 100
+var slbProductType = "负载均衡SLB"
 
-var productType = "云服务器ECS"
-
-func CronInstanceJob() {
+func CronSlbInstanceJob() {
 	c := cron.New()
-	err := c.AddFunc("0 0 0/1 * * ?", instanceJob)
+	err := c.AddFunc("0 0 0/1 * * ?", func() {
+		slbInstanceJob()
+	})
 	if err != nil {
 		log.Println("clearAlertRecordJob error", err)
 	}
@@ -25,22 +25,22 @@ func CronInstanceJob() {
 	select {}
 }
 
-func instanceJob() {
-	log.Println("instanceJob start")
-	syncUpdate()
-	log.Println("instanceJob end")
+func slbInstanceJob() {
+	log.Println("slbInstanceJob start")
+	slbSyncUpdate()
+	log.Println("slbInstanceJob end")
 }
 
-func syncUpdate() {
+func slbSyncUpdate() {
 	var index = 1
 	alarmInstanceDao := dao.NewAlarmInstanceDao(database.GetDb())
 	for {
-		tenantIdList := alarmInstanceDao.SelectTenantIdList(productType, index, pageSize)
+		tenantIdList := alarmInstanceDao.SelectTenantIdList(slbProductType, index, pageSize)
 		if len(tenantIdList) == 0 {
 			break
 		}
 		for _, tenantId := range tenantIdList {
-			dbInstanceList := alarmInstanceDao.SelectInstanceList(tenantId, productType)
+			dbInstanceList := alarmInstanceDao.SelectInstanceList(tenantId, slbProductType)
 			var pageForm = forms.EcsQueryPageForm{
 				TenantId: tenantId,
 				Current:  1,
