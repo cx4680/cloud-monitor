@@ -6,6 +6,7 @@ code.cestc.cn/ccos-ops/cloud-monitor/business-common/dbUtils
 code.cestc.cn/ccos-ops/cloud-monitor/business-common/dtos
 code.cestc.cn/ccos-ops/cloud-monitor/business-common/forms
 code.cestc.cn/ccos-ops/cloud-monitor/business-common/models
+code.cestc.cn/ccos-ops/cloud-monitor/business-common/mq
 code.cestc.cn/ccos-ops/cloud-monitor/business-common/pageUtils
 code.cestc.cn/ccos-ops/cloud-monitor/business-common/redis
 code.cestc.cn/ccos-ops/cloud-monitor/business-common/service
@@ -23,6 +24,7 @@ code.cestc.cn/ccos-ops/cloud-monitor/common/utils/snowflake
 # github.com/apache/rocketmq-client-go/v2 v2.1.0
 ## explicit
 github.com/apache/rocketmq-client-go/v2
+github.com/apache/rocketmq-client-go/v2/admin
 github.com/apache/rocketmq-client-go/v2/consumer
 github.com/apache/rocketmq-client-go/v2/internal
 github.com/apache/rocketmq-client-go/v2/internal/remote

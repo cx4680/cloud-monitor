@@ -7,7 +7,7 @@ import (
 	commonService "code.cestc.cn/ccos-ops/cloud-monitor/business-common/service"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/tools"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/forms"
-	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/mq"
+	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/mq/producer"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/utils"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
 	"encoding/json"
@@ -68,9 +68,9 @@ func (s *AlertRecordService) RecordAlertAndSendMessage(f *forms.InnerAlertRecord
 	s.AlertRecordDao.InsertBatch(list)
 	if config.GetCommonConfig().HasNoticeModel {
 		notificationRecords := s.MessageService.SendMsg(msgDTOList, false)
-		mq.SendNotificationRecordMsg(notificationRecords)
+		producer.SendNotificationRecordMsg(notificationRecords)
 	}
-	mq.SendAlertRecordMsg(list)
+	producer.SendAlertRecordMsg(list)
 	return nil
 }
 

@@ -1,8 +1,10 @@
 package main
 
 import (
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/mq"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/redis"
-	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/mq"
+	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/k8s"
+	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/mq/consumer"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/task"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/validator/translate"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/web"
@@ -40,10 +42,12 @@ func main() {
 		Password: "",
 	}
 	redis.InitClient(redisConfig)
-	//k8s.InitK8s()
-	mq.Init()
+	k8s.InitK8s()
 	//加载mq
-	mq.SubScribe()
+	if err = initRocketMq(); err != nil {
+		log.Printf("init rocketmq error, %v\n", err)
+		os.Exit(5)
+	}
 	//加载定时任务
 	task.CronInstanceJob()
 
@@ -55,4 +59,29 @@ func main() {
 	if err != nil {
 		logger.Logger().Infof("startup service failed, err:%v\n", err)
 	}
+}
+
+func initRocketMq() error {
+	rc := config.GetRocketmqConfig()
+	if err := mq.CreateTopics(rc.RuleTopic, rc.RecordTopic, rc.AlertContactTopic, rc.AlertContactGroup); err != nil {
+		log.Printf("create topics error, %v\n", err)
+		return err
+	}
+	err := mq.InitProducer()
+	if err != nil {
+		log.Printf("create rocketmq producer error, %v\n", err)
+		return err
+	}
+
+	if err = mq.StartConsumersScribe([]mq.Consumer{{
+		Topic:   rc.AlertContactTopic,
+		Handler: consumer.AlertContactHandler,
+	}, {
+		Topic:   rc.RuleTopic,
+		Handler: consumer.AlarmRuleHandler,
+	}}); err != nil {
+		log.Printf("create rocketmq consumer error, %v\n", err)
+		return err
+	}
+	return nil
 }
