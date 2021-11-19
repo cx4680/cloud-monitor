@@ -38,6 +38,7 @@ ecs:
   inner-gateway: http://ecs-gateway.inner.center.intranet.cecloudcs.com
 
 common:
+  env: local
   nk: http://aopesb.wh002.test.cecloud.com/cestc
   tenantUrl: ''
   smsCenterPath: ''
@@ -45,3 +46,6 @@ common:
   hasNoticeModel: false
   regionName: ''
   ecs-inner-gateway: http://ecs-gateway.inner.center.intranet.cecloudcs.com
+redis:
+  addr: 'localhost:6379'
+  password: ''

@@ -28,25 +28,25 @@ const (
 var client dynamic.Interface
 var resource *schema.GroupVersionResource
 
-func InitK8s() {
+func InitK8s() error {
 	var config *rest.Config
 	if strings.EqualFold(os.Getenv("active"), "local") {
 		cfg, err := clientcmd.BuildConfigFromFlags("", "D:\\dev-go\\cloud-monitor\\cloud-monitor-region\\k8s\\config.yml")
 		if err != nil {
-			panic(err.Error())
+			return err
 		}
 		config = cfg
 	} else {
 		cfg, err := rest.InClusterConfig()
 		if err != nil {
-			panic(err.Error())
+			return err
 		}
 		config = cfg
 	}
 
 	clientSet, err := dynamic.NewForConfig(config)
 	if err != nil {
-		panic(err.Error())
+		return err
 	}
 	client = clientSet
 	resource = &schema.GroupVersionResource{
@@ -54,6 +54,7 @@ func InitK8s() {
 		Version:  version,
 		Resource: plural,
 	}
+	return nil
 }
 
 func CreateAlertRule(alertRuleDTO *forms.AlertRuleDTO) (*forms.AlertRuleDTO, error) {

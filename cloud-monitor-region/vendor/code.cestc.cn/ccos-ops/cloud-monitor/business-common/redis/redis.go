@@ -1,6 +1,7 @@
 package redis
 
 import (
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
 	"context"
 	"github.com/go-redis/redis/v8"
 	"log"
@@ -14,12 +15,9 @@ var (
 	mutex sync.Mutex
 )
 
-type RedisConfig struct {
-	Addr     string
-	Password string
-}
 
-func InitClient(config RedisConfig) error {
+
+func InitClient(config config.RedisConfig) error {
 	rdb = redis.NewClient(&redis.Options{
 		Addr:         config.Addr,
 		Password:     config.Password,

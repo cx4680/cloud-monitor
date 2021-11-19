@@ -12,7 +12,6 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/database"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
 	"flag"
-	"fmt"
 	"log"
 	"os"
 )
@@ -23,28 +22,35 @@ func main() {
 	flag.Parse()
 
 	//加载配置文件
-	err := config.InitConfig(*cf)
-	if err != nil {
+	if err := config.InitConfig(*cf); err != nil {
 		log.Printf("init config.yml error: %v\n", err)
 		os.Exit(1)
 	}
 
 	if err := translate.InitTrans("zh"); err != nil {
-		fmt.Printf("init trans failed, err:%v\n", err)
-		return
+		log.Printf("init trans failed, err:%v\n", err)
+		os.Exit(2)
 	}
 
 	//初始化数据里连接
-	database.InitDb(config.GetDbConfig())
-
-	redisConfig := redis.RedisConfig{
-		Addr:     "localhost:6379",
-		Password: "",
+	if err := database.InitDb(config.GetDbConfig()); err != nil {
+		log.Printf("init database error: %v\n", err)
+		os.Exit(3)
 	}
-	redis.InitClient(redisConfig)
-	k8s.InitK8s()
+
+	if err := redis.InitClient(config.GetRedisConfig()); err != nil {
+		log.Printf("init redis error: %v\n", err)
+		os.Exit(4)
+	}
+
+	if config.GetCommonConfig().Env != "local" {
+		if err := k8s.InitK8s(); err != nil {
+			log.Printf("init k8s error: %v\n", err)
+			os.Exit(5)
+		}
+	}
 	//加载mq
-	if err = initRocketMq(); err != nil {
+	if err := initRocketMq(); err != nil {
 		log.Printf("init rocketmq error, %v\n", err)
 		os.Exit(5)
 	}
@@ -55,9 +61,10 @@ func main() {
 	defer logger.Logger().Sync()
 
 	//启动Web容器
-	err = web.Start(config.GetServeConfig())
+	err := web.Start(config.GetServeConfig())
 	if err != nil {
 		logger.Logger().Infof("startup service failed, err:%v\n", err)
+		os.Exit(6)
 	}
 }
 
