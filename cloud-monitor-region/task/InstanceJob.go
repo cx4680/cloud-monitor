@@ -16,9 +16,7 @@ var productType = "云服务器ECS"
 
 func CronInstanceJob() {
 	c := cron.New()
-	err := c.AddFunc("0 0 0/1 * * ?", func() {
-		instanceJob()
-	})
+	err := c.AddFunc("0 0 0/1 * * ?", instanceJob)
 	if err != nil {
 		log.Println("clearAlertRecordJob error", err)
 	}
