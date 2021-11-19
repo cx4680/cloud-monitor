@@ -14,9 +14,7 @@ var slbProductType = "负载均衡SLB"
 
 func CronSlbInstanceJob() {
 	c := cron.New()
-	err := c.AddFunc("0 0 0/1 * * ?", func() {
-		slbInstanceJob()
-	})
+	err := c.AddFunc("0 0 0/1 * * ?", slbInstanceJob)
 	if err != nil {
 		log.Println("clearAlertRecordJob error", err)
 	}
