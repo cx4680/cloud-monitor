@@ -1,9 +1,9 @@
 package service
 
 import (
-	"code.cestc.cn/ccos-ops/cloud-monitor-center/mq"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/dao"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/forms"
+	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/mq"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/enums"
 	"gorm.io/gorm"

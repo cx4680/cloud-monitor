@@ -12,14 +12,11 @@ import (
 )
 
 type AlarmRuleDao struct {
-	db *gorm.DB
 }
 
-func NewAlarmRuleDao() *AlarmRuleDao {
-	return &AlarmRuleDao{
-		db: database.GetDb(),
-	}
-}
+var AlarmRule = new(AlarmRuleDao)
+
+
 
 func (dao *AlarmRuleDao) SaveRule(tx *gorm.DB, ruleReqDTO *forms.AlarmRuleAddReqDTO) string {
 	rule := buildAlarmRule(ruleReqDTO)
@@ -53,7 +50,7 @@ func (dao *AlarmRuleDao) UpdateRuleState(tx *gorm.DB, ruleReqDTO *forms.RuleReqD
 
 func (dao *AlarmRuleDao) SelectRulePageList(param *forms.AlarmPageReqParam) interface{} {
 	var model []forms.AlarmRulePageDTO
-	db := dao.db
+	db := database.GetDb()
 	selectList := &strings.Builder{}
 	var sqlParam = []interface{}{param.TenantId}
 	selectList.WriteString("SELECT name as name,monitor_type, product_type, trigger_condition,  status,  metric_name,  ruleId,  count(instance) as instanceNum, update_time       FROM (  SELECT NAME,   monitor_type,   product_type,  metric_name,  trigger_condition,    enabled AS 'status',      id     AS ruleId,    t2.instance_id AS instance,   t1.update_time   FROM t_alarm_rule t1    LEFT JOIN t_alarm_instance t2 ON t2.alarm_rule_id = t1.id  WHERE t1.tenant_id = ?    AND t1.deleted = 0")
@@ -72,7 +69,7 @@ func (dao *AlarmRuleDao) SelectRulePageList(param *forms.AlarmPageReqParam) inte
 
 func (dao *AlarmRuleDao) GetDetail(id string, tenantId string) *forms.AlarmRuleDetailDTO {
 	model := &forms.AlarmRuleDetailDTO{}
-	dao.db.Raw("SELECT    id ,    NAME  as ruleName,  enabled as status,  product_type,  monitor_type,   level as alarmLevel,  dimensions as scope,  trigger_condition as ruleCondition ,  silences_time,   effective_start,  effective_end,  notify_channel as noticeChannel        FROM t_alarm_rule        WHERE id = ?          AND deleted = 0  and tenant_id=?", id, tenantId).Scan(model)
+	database.GetDb().Raw("SELECT    id ,    NAME  as ruleName,  enabled as status,  product_type,  monitor_type,   level as alarmLevel,  dimensions as scope,  trigger_condition as ruleCondition ,  silences_time,   effective_start,  effective_end,  notify_channel as noticeChannel        FROM t_alarm_rule        WHERE id = ?          AND deleted = 0  and tenant_id=?", id, tenantId).Scan(model)
 	model.NoticeGroups = dao.GetNoticeGroupList(id)
 	model.InstanceList = dao.GetInstanceList(id)
 	return model
@@ -80,13 +77,13 @@ func (dao *AlarmRuleDao) GetDetail(id string, tenantId string) *forms.AlarmRuleD
 
 func (dao *AlarmRuleDao) GetInstanceList(ruleId string) []*forms.InstanceInfo {
 	var model []*forms.InstanceInfo
-	dao.db.Raw("select instance_id, region_code, zone_code, zone_name, region_name, ip,  instance_name  from t_alarm_instance  where alarm_rule_id =?", ruleId).Scan(&model)
+	database.GetDb().Raw("select instance_id, region_code, zone_code, zone_name, region_name, ip,  instance_name  from t_alarm_instance  where alarm_rule_id =?", ruleId).Scan(&model)
 	return model
 }
 
 func (dao *AlarmRuleDao) GetNoticeGroupList(ruleId string) []*forms.NoticeGroup {
 	var model []*forms.NoticeGroup
-	dao.db.Raw("SELECT t1.contract_group_id as id, t2.`name` as name  FROM t_alarm_notice t1,  alert_contact_group t2   WHERE t1.alarm_rule_id = ?   and t1.contract_group_id = t2.id  ORDER BY name", ruleId).Scan(&model)
+	database.GetDb().Raw("SELECT t1.contract_group_id as id, t2.`name` as name  FROM t_alarm_notice t1,  alert_contact_group t2   WHERE t1.alarm_rule_id = ?   and t1.contract_group_id = t2.id  ORDER BY name", ruleId).Scan(&model)
 	for _, group := range model {
 		group.UserList = dao.GetUserList(group.Id)
 	}
@@ -95,13 +92,13 @@ func (dao *AlarmRuleDao) GetNoticeGroupList(ruleId string) []*forms.NoticeGroup 
 
 func (dao *AlarmRuleDao) GetUserList(groupId string) []*forms.UserInfo {
 	var model []*forms.UserInfo
-	dao.db.Raw("select t2.`name` as userName  ,t2.id as id, GROUP_CONCAT(CASE t3.type WHEN 1 THEN t3.no  END) as phone, GROUP_CONCAT(CASE t3.type WHEN 2 THEN t3.no  END) as email from alert_contact_group_rel  t   LEFT JOIN alert_contact t2 on t2.id = t.contact_id   LEFT JOIN alert_contact_information t3 on (t3.contact_id = t2.id and t3.is_certify=1)  where t.group_id=?  and t2.`status`=1  GROUP BY id  order by userName", groupId).Scan(&model)
+	database.GetDb().Raw("select t2.`name` as userName  ,t2.id as id, GROUP_CONCAT(CASE t3.type WHEN 1 THEN t3.no  END) as phone, GROUP_CONCAT(CASE t3.type WHEN 2 THEN t3.no  END) as email from alert_contact_group_rel  t   LEFT JOIN alert_contact t2 on t2.id = t.contact_id   LEFT JOIN alert_contact_information t3 on (t3.contact_id = t2.id and t3.is_certify=1)  where t.group_id=?  and t2.`status`=1  GROUP BY id  order by userName", groupId).Scan(&model)
 	return model
 }
 
 func (dao *AlarmRuleDao) GetMonitorItem(metricName string) *models.MonitorItem {
 	model := &models.MonitorItem{}
-	dao.db.Raw("SELECT metrics_linux,metrics_windows,metric_name,unit,name  ,labels FROM monitor_item  where metric_name=? ", metricName).Scan(model)
+	database.GetDb().Raw("SELECT metrics_linux,metrics_windows,metric_name,unit,name  ,labels FROM monitor_item  where metric_name=? ", metricName).Scan(model)
 	return model
 }
 

@@ -1,8 +1,8 @@
 package mq
 
 import (
-	"code.cestc.cn/ccos-ops/cloud-monitor-center/forms"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/mq"
+	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/forms"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/enums"
 	"encoding/json"
 	"fmt"

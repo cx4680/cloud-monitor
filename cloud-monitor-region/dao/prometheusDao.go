@@ -14,19 +14,15 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"gorm.io/gorm"
 	"strings"
 	"time"
 )
 
 type PrometheusRuleDao struct {
-	db *gorm.DB
 	*dao2.AlarmRuleDao
 }
 
-func NewPrometheusRuleDao() *PrometheusRuleDao {
-	return &PrometheusRuleDao{db: database.GetDb(), AlarmRuleDao: dao2.NewAlarmRuleDao()}
-}
+var PrometheusRule = &PrometheusRuleDao{AlarmRuleDao: dao2.AlarmRule}
 
 func (dao *PrometheusRuleDao) GenerateUserPrometheusRule(region string, zone string, tenantId string) {
 	alertRuleDTO, err := dao.buildPrometheusRule("", "", tenantId)
@@ -66,13 +62,13 @@ func (dao *PrometheusRuleDao) createUserPrometheus(alertRuleDTO *forms.AlertRule
 		PrometheusRuleID: alertRuleDTO.AlertRuleId,
 		TenantID:         tenantId,
 	}
-	dao.db.Create(prometheus)
+	database.GetDb().Create(prometheus)
 }
 
 func (dao *PrometheusRuleDao) buildPrometheusRule(region string, zone string, tenantId string) (*forms.AlertRuleDTO, error) {
 	ruleDto := &forms.AlertRuleDTO{Region: region, Zone: zone, TenantId: tenantId}
 	var list []*dtos.RuleExpress
-	dao.db.Raw("select t1.name as ruleName ,t1.`level`, t1.trigger_condition as ruleCondition, t1.id as ruleId,t1.product_type, t1.notify_channel as noticeChannel,t1.monitor_type        from t_alarm_rule t1        where t1.tenant_id = ?         and t1.enabled = 1         and t1.deleted = 0", tenantId).Scan(&list)
+	database.GetDb().Raw("select t1.name as ruleName ,t1.`level`, t1.trigger_condition as ruleCondition, t1.id as ruleId,t1.product_type, t1.notify_channel as noticeChannel,t1.monitor_type        from t_alarm_rule t1        where t1.tenant_id = ?         and t1.enabled = 1         and t1.deleted = 0", tenantId).Scan(&list)
 	var alertList []*forms.AlertDTO
 	for _, ruleExpress := range list {
 		ruleExpress.GroupIds = dao.GetNoticeGroupList(ruleExpress.RuleId)
@@ -139,6 +135,6 @@ func (dao *PrometheusRuleDao) getUserPrometheusId(tenantId string) string {
 	prometheus := &models.UserPrometheusID{
 		TenantID: tenantId,
 	}
-	dao.db.Find(prometheus)
+	database.GetDb().Find(prometheus)
 	return prometheus.PrometheusRuleID
 }

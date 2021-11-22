@@ -33,7 +33,7 @@ func MonitorReportForm() {
 }
 
 func monitorProductRouters() {
-	monitorProductCtl := controllers.NewMonitorProductCtl(dao.NewMonitorProductDao())
+	monitorProductCtl := controllers.NewMonitorProductCtl(dao.MonitorProduct)
 	group := router.Group("/hawkeye/monitorProduct/")
 	{
 		group.GET("/getById", monitorProductCtl.GetById)
@@ -47,7 +47,7 @@ func swagger() {
 }
 
 func instance() {
-	instanceCtl := controllers.NewInstanceCtl(dao.NewInstanceDao())
+	instanceCtl := controllers.NewInstanceCtl(dao.Instance)
 	group := router.Group("/hawkeye/instance/")
 	{
 		group.GET("/page", instanceCtl.Page)
@@ -72,7 +72,7 @@ func slb() {
 }
 
 func innerCtl() {
-	alertRecordService := service.NewAlertRecordService(commonDao.NewAlertRecordDao(), commonService.NewTenantService(), commonService.NewMessageService(commonDao.NewNotificationRecordDao()))
+	alertRecordService := service.NewAlertRecordService(commonDao.AlertRecord, commonService.NewTenantService(), commonService.NewMessageService(commonDao.NotificationRecord))
 	ctl := inner.NewAlertRecordCtl(alertRecordService)
 	group := router.Group("/hawkeye/inner/")
 	{

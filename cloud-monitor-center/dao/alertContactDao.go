@@ -1,24 +1,22 @@
 package dao
 
 import (
-	"code.cestc.cn/ccos-ops/cloud-monitor-center/constant"
-	"code.cestc.cn/ccos-ops/cloud-monitor-center/database"
-	"code.cestc.cn/ccos-ops/cloud-monitor-center/errors"
-	"code.cestc.cn/ccos-ops/cloud-monitor-center/forms"
-	"code.cestc.cn/ccos-ops/cloud-monitor-center/models"
-	"code.cestc.cn/ccos-ops/cloud-monitor-center/mq"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/dao"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/dtos"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/service"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/tools"
+	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/constant"
+	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/errors"
+	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/forms"
+	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/models"
+	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/mq"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
-	commonDb "code.cestc.cn/ccos-ops/cloud-monitor/common/database"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/database"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/enums"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/utils/snowflake"
 	"encoding/json"
 	"fmt"
 	"github.com/google/uuid"
-	"gorm.io/gorm"
 	"io/ioutil"
 	"net/http"
 	"strconv"
@@ -27,31 +25,116 @@ import (
 )
 
 type AlertContactDao struct {
-	db *gorm.DB
 }
 
-func NewAlertContact() *AlertContactDao {
-	return &AlertContactDao{db: commonDb.GetDb()}
-}
+var AlertContact = new(AlertContactDao)
+
+var SelectAlterContact = "SELECT " +
+	"ac.id AS contact_id, " +
+	"ac.name AS contact_name, " +
+	"acg.group_id AS group_id, " +
+	"acg.group_name AS group_name, " +
+	"GROUP_CONCAT( CASE aci.type WHEN 1 THEN aci.NO END ) AS phone, " +
+	"GROUP_CONCAT( CASE aci.type WHEN 1 THEN aci.is_certify END ) AS phone_certify, " +
+	"GROUP_CONCAT( CASE aci.type WHEN 2 THEN aci.NO END ) AS email, " +
+	"GROUP_CONCAT( CASE aci.type WHEN 2 THEN aci.is_certify END ) AS email_certify, " +
+	"GROUP_CONCAT( CASE aci.type WHEN 3 THEN aci.NO END ) AS lanxin, " +
+	"GROUP_CONCAT( CASE aci.type WHEN 3 THEN aci.is_certify END ) AS lanxin_certify, " +
+	"ac.description AS description " +
+	"FROM " +
+	"alert_contact AS ac " +
+	"LEFT JOIN alert_contact_information AS aci ON ac.id = aci.contact_id " +
+	"LEFT JOIN ( " +
+	"SELECT " +
+	"acgr.contact_id AS contact_id, " +
+	"GROUP_CONCAT( acg.id ) AS group_id, " +
+	"GROUP_CONCAT( acg.name ) AS group_name " +
+	"FROM " +
+	"alert_contact_group AS acg " +
+	"LEFT JOIN alert_contact_group_rel AS acgr ON acg.id = acgr.group_id  " +
+	"GROUP BY " +
+	"acgr.contact_id ) " +
+	"AS acg ON acg.contact_id = ac.id " +
+	"WHERE " +
+	"ac.status = 1 " +
+	"AND ac.tenant_id = %s " +
+	"%s" +
+	"GROUP BY " +
+	"ac.id " +
+	"ORDER BY " +
+	"ac.create_time DESC  "
+
+var SelectAlterContactGroup = "SELECT " +
+	"acg.id AS group_id, " +
+	"acg.name AS group_name, " +
+	"acg.description AS description, " +
+	"acg.create_time AS create_time, " +
+	"acg.update_time AS update_time, " +
+	"COUNT( acgr.group_id ) AS contact_count " +
+	"FROM " +
+	"alert_contact_group AS acg " +
+	"LEFT JOIN alert_contact_group_rel AS acgr ON acg.id = acgr.group_id " +
+	"WHERE " +
+	"acg.tenant_id = ? " +
+	"AND acg.name LIKE CONCAT('%',?,'%') " +
+	"GROUP BY " +
+	"acg.id " +
+	"ORDER BY " +
+	"acg.create_time DESC "
+
+var SelectAlterGroupContact = "SELECT " +
+	"ac.id AS contact_id, " +
+	"ac.name AS contact_name, " +
+	"acg.group_id AS group_id, " +
+	"acg.group_name AS group_name, " +
+	"GROUP_CONCAT( CASE aci.type WHEN 1 THEN aci.NO END ) AS phone, " +
+	"GROUP_CONCAT( CASE aci.type WHEN 1 THEN aci.is_certify END ) AS phone_certify, " +
+	"GROUP_CONCAT( CASE aci.type WHEN 2 THEN aci.NO END ) AS email, " +
+	"GROUP_CONCAT( CASE aci.type WHEN 2 THEN aci.is_certify END ) AS email_certify, " +
+	"GROUP_CONCAT( CASE aci.type WHEN 3 THEN aci.NO END ) AS lanxin, " +
+	"GROUP_CONCAT( CASE aci.type WHEN 3 THEN aci.is_certify END ) AS lanxin_certify, " +
+	"ac.description AS description " +
+	"FROM " +
+	"alert_contact AS ac " +
+	"LEFT JOIN alert_contact_information AS aci ON ac.id = aci.contact_id " +
+	"LEFT JOIN ( " +
+	"SELECT " +
+	"acgr.contact_id AS contact_id, " +
+	"GROUP_CONCAT( acg.id ) AS group_id, " +
+	"GROUP_CONCAT( acg.name ) AS group_name " +
+	"FROM " +
+	"alert_contact_group AS acg " +
+	"LEFT JOIN alert_contact_group_rel AS acgr ON acg.id = acgr.group_id  " +
+	"GROUP BY " +
+	"acgr.contact_id ) " +
+	"AS acg ON acg.contact_id = ac.id " +
+	"WHERE " +
+	"ac.status = 1 " +
+	"AND ac.tenant_id = ? " +
+	"AND acg.group_id = ? " +
+	"GROUP BY " +
+	"ac.id " +
+	"ORDER BY " +
+	"ac.create_time DESC "
 
 func (mpd *AlertContactDao) GetAlertContact(param forms.AlertContactParam) *forms.AlertContactFormPage {
 	var model = &[]forms.AlertContactForm{}
 	var sql string
 	if param.ContactName != "" {
-		sql = fmt.Sprintf(database.SelectAlterContact, param.TenantId, "AND ac.name LIKE CONCAT('%',"+param.ContactName+",'%')")
+		sql = fmt.Sprintf(SelectAlterContact, param.TenantId, "AND ac.name LIKE CONCAT('%',"+param.ContactName+",'%')")
 	}
 	if param.Phone != "" {
-		sql = fmt.Sprintf(database.SelectAlterContact, param.TenantId, "AND ac.id = ANY(SELECT contact_id FROM alert_contact_information WHERE type = 1 AND no LIKE CONCAT('%',"+param.Phone+",'%')) ")
+		sql = fmt.Sprintf(SelectAlterContact, param.TenantId, "AND ac.id = ANY(SELECT contact_id FROM alert_contact_information WHERE type = 1 AND no LIKE CONCAT('%',"+param.Phone+",'%')) ")
 	} else if param.Email != "" {
-		sql = fmt.Sprintf(database.SelectAlterContact, param.TenantId, "AND ac.id = ANY(SELECT contact_id FROM alert_contact_information WHERE type = 1 AND no LIKE CONCAT('%',"+param.Email+",'%')) ")
+		sql = fmt.Sprintf(SelectAlterContact, param.TenantId, "AND ac.id = ANY(SELECT contact_id FROM alert_contact_information WHERE type = 1 AND no LIKE CONCAT('%',"+param.Email+",'%')) ")
 	} else {
-		sql = fmt.Sprintf(database.SelectAlterContact, param.TenantId, "")
+		sql = fmt.Sprintf(SelectAlterContact, param.TenantId, "")
 	}
 	var count int64
-	mpd.db.Model(&models.AlertContact{}).Where("tenant_id = ?", param.TenantId).Count(&count)
+	database.GetDb().Model(&models.AlertContact{}).Where("tenant_id = ?", param.TenantId).Count(&count)
 	total := count
 	sql += "LIMIT " + strconv.Itoa((param.PageCurrent-1)*param.PageSize) + "," + strconv.Itoa(param.PageSize)
-	mpd.db.Raw(sql).Find(model)
+	database.GetDb().Raw(sql).Find(model)
 	var alertContactFormPage = &forms.AlertContactFormPage{
 		Records: model,
 		Current: param.PageCurrent,
@@ -67,7 +150,7 @@ func (mpd *AlertContactDao) InsertAlertContact(param forms.AlertContactParam) er
 	}
 	//每个账号限制创建100个联系人
 	var count int64
-	mpd.db.Model(&models.AlertContact{}).Where("tenant_id = ?", param.TenantId).Count(&count)
+	database.GetDb().Model(&models.AlertContact{}).Where("tenant_id = ?", param.TenantId).Count(&count)
 	if count >= constant.MAX_CONTACT_NUM {
 		return errors.NewBusinessError("联系人限制创建" + strconv.Itoa(constant.MAX_CONTACT_NUM) + "个")
 	}
@@ -89,7 +172,7 @@ func (mpd *AlertContactDao) InsertAlertContact(param forms.AlertContactParam) er
 		CreateTime:  currentTime,
 		UpdateTime:  currentTime,
 	}
-	mpd.db.Create(alertContact)
+	database.GetDb().Create(alertContact)
 
 	//添加联系方式
 	mpd.insertAlertContactInformation(param, param.Phone, 1, currentTime)
@@ -122,7 +205,7 @@ func (mpd *AlertContactDao) UpdateAlertContact(param forms.AlertContactParam) er
 		Description: param.Description,
 		UpdateTime:  currentTime,
 	}
-	mpd.db.Model(alertContact).Updates(alertContact)
+	database.GetDb().Model(alertContact).Updates(alertContact)
 
 	//更新联系方式
 	mpd.updateAlertContactInformation(param, currentTime)
@@ -139,7 +222,7 @@ func (mpd *AlertContactDao) UpdateAlertContact(param forms.AlertContactParam) er
 
 func (mpd *AlertContactDao) DeleteAlertContact(param forms.AlertContactParam) {
 	var model models.AlertContact
-	mpd.db.Delete(&model, param.ContactId)
+	database.GetDb().Delete(&model, param.ContactId)
 	//删除联系方式
 	mpd.deleteAlertContactInformation(param.ContactId)
 	//删除联系人组关联
@@ -150,7 +233,7 @@ func (mpd *AlertContactDao) DeleteAlertContact(param forms.AlertContactParam) {
 
 func (mpd *AlertContactDao) CertifyAlertContact(activeCode string) string {
 	var model = &models.AlertContactInformation{}
-	mpd.db.Model(model).Where("active_code = ?", activeCode).Update("is_certify", 1)
+	database.GetDb().Model(model).Where("active_code = ?", activeCode).Update("is_certify", 1)
 	//同步region
 	mq.SendMsg(config.GetRocketmqConfig().AlertContactTopic, enums.CertifyAlertContact, activeCode)
 	return getTenantName(model.TenantId)
@@ -185,7 +268,7 @@ func (mpd *AlertContactDao) insertAlertContactInformation(param forms.AlertConta
 		CreateTime: currentTime,
 		UpdateTime: currentTime,
 	}
-	mpd.db.Create(alertContactInformation)
+	database.GetDb().Create(alertContactInformation)
 	// TODO 发送验证消息
 	//sendMsg(param.TenantId, param.ContactId, no, noType, activeCode)
 	// 同步region
@@ -196,7 +279,7 @@ func (mpd *AlertContactDao) insertAlertContactInformation(param forms.AlertConta
 func (mpd *AlertContactDao) insertAlertContactGroupRel(param forms.AlertContactParam, contactId string, currentTime string) error {
 	var count int64
 	for _, v := range param.GroupIdList {
-		mpd.db.Model(&models.AlertContactGroupRel{}).Where("tenant_id = ?", param.TenantId).Where("group_id = ?", v).Count(&count)
+		database.GetDb().Model(&models.AlertContactGroupRel{}).Where("tenant_id = ?", param.TenantId).Where("group_id = ?", v).Count(&count)
 		if count >= constant.MAX_CONTACT_NUM {
 			return errors.NewBusinessError("每组联系人限制创建" + strconv.Itoa(constant.MAX_CONTACT_NUM) + "个")
 		}
@@ -209,7 +292,7 @@ func (mpd *AlertContactDao) insertAlertContactGroupRel(param forms.AlertContactP
 			CreateTime: currentTime,
 			UpdateTime: currentTime,
 		}
-		mpd.db.Create(alertContactGroupRel)
+		database.GetDb().Create(alertContactGroupRel)
 		// 同步region
 		mq.SendMsg(config.GetRocketmqConfig().AlertContactTopic, enums.InsertAlertContactGroupRel, alertContactGroupRel)
 	}
@@ -239,14 +322,14 @@ func (mpd *AlertContactDao) updateAlertContactGroupRel(param forms.AlertContactP
 
 //删除联系方式
 func (mpd *AlertContactDao) deleteAlertContactInformation(contactId string) {
-	mpd.db.Where("contact_id = ?", contactId).Delete(models.AlertContactInformation{})
+	database.GetDb().Where("contact_id = ?", contactId).Delete(models.AlertContactInformation{})
 	//同步region
 	mq.SendMsg(config.GetRocketmqConfig().AlertContactTopic, enums.DeleteAlertContactInformation, contactId)
 }
 
 //删除联系人组关联
 func (mpd *AlertContactDao) deleteAlertContactGroupRel(contactId string) {
-	mpd.db.Where("contact_id = ?", contactId).Delete(models.AlertContactGroupRel{})
+	database.GetDb().Where("contact_id = ?", contactId).Delete(models.AlertContactGroupRel{})
 	//同步region
 	mq.SendMsg(config.GetRocketmqConfig().AlertContactTopic, enums.DeleteAlertContactGroupRelByContactId, contactId)
 }
@@ -298,5 +381,5 @@ func sendMsg(tenantId string, contactId string, no string, noType int, activeCod
 	noticeMsgDTO.RevObjectBean = recvObjectBean
 	var noticeMsgDTOList []*dtos.NoticeMsgDTO
 	noticeMsgDTOList = append(noticeMsgDTOList, &noticeMsgDTO)
-	service.NewMessageService(dao.NewNotificationRecordDao()).SendMsg(noticeMsgDTOList, true)
+	service.NewMessageService(dao.NotificationRecord).SendMsg(noticeMsgDTOList, true)
 }
