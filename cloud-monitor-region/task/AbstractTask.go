@@ -4,7 +4,6 @@ import (
 	commonDao "code.cestc.cn/ccos-ops/cloud-monitor/business-common/dao"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/models"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/dao"
-	"code.cestc.cn/ccos-ops/cloud-monitor/common/database"
 )
 
 func DeleteNotExistsInstances(tenantId string, dbInstanceList []models.AlarmInstance, instanceInfoList []models.AlarmInstance) {
@@ -17,7 +16,7 @@ func DeleteNotExistsInstances(tenantId string, dbInstanceList []models.AlarmInst
 		}
 	}
 	if len(dbInstanceList) != 0 {
-		commonDao.NewAlarmInstanceDao(database.GetDb()).DeleteInstanceList(tenantId, dbInstanceList)
-		dao.NewPrometheusRuleDao(database.GetDb()).GenerateUserPrometheusRule("", "", tenantId)
+		commonDao.NewAlarmInstanceDao().DeleteInstanceList(tenantId, dbInstanceList)
+		dao.NewPrometheusRuleDao().GenerateUserPrometheusRule("", "", tenantId)
 	}
 }

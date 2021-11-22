@@ -4,7 +4,6 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor-center/controllers"
 	"code.cestc.cn/ccos-ops/cloud-monitor-center/dao"
 	dao2 "code.cestc.cn/ccos-ops/cloud-monitor/business-common/dao"
-	"code.cestc.cn/ccos-ops/cloud-monitor/common/database"
 )
 
 func loadRouters() {
@@ -17,7 +16,7 @@ func loadRouters() {
 }
 
 func monitorProductRouters() {
-	monitorProductCtl := controllers.NewMonitorProductCtl(dao.NewMonitorProductDao(database.GetDb()))
+	monitorProductCtl := controllers.NewMonitorProductCtl(dao.NewMonitorProductDao())
 	group := router.Group("/hawkeye/monitorProduct/")
 	{
 		group.GET("/getAllMonitorProducts", monitorProductCtl.GetAllMonitorProducts)
@@ -27,7 +26,7 @@ func monitorProductRouters() {
 }
 
 func monitorItemRouters() {
-	monitorItemCtl := controllers.NewMonitorItemCtl(dao.NewMonitorItemDao(database.GetDb()))
+	monitorItemCtl := controllers.NewMonitorItemCtl(dao.NewMonitorItemDao())
 	group := router.Group("/hawkeye/monitorItem/")
 	{
 		group.GET("/getMonitorItemsById", monitorItemCtl.GetMonitorItemsById)
@@ -35,7 +34,7 @@ func monitorItemRouters() {
 }
 
 func alertContactRouters() {
-	alertContactCtl := controllers.NewAlertContactCtl(dao.NewAlertContact(database.GetDb()))
+	alertContactCtl := controllers.NewAlertContactCtl(dao.NewAlertContact())
 	group := router.Group("/hawkeye/alertContact/")
 	{
 		group.GET("/getAlertContact", alertContactCtl.GetAlertContact)
@@ -47,7 +46,7 @@ func alertContactRouters() {
 }
 
 func alertContactGroupRouters() {
-	alertContactGroupCtl := controllers.NewAlertContactGroupCtl(dao.NewAlertContactGroup(database.GetDb()))
+	alertContactGroupCtl := controllers.NewAlertContactGroupCtl(dao.NewAlertContactGroup())
 	group := router.Group("/hawkeye/alertContactGroup/")
 	{
 		group.GET("/getAlertContactGroup", alertContactGroupCtl.GetAlertContactGroup)
@@ -59,7 +58,7 @@ func alertContactGroupRouters() {
 }
 
 func alarmRule() {
-	ruleCtl := controllers.NewAlarmRuleCtl(dao2.NewAlarmRuleDao(database.GetDb()))
+	ruleCtl := controllers.NewAlarmRuleCtl(dao2.NewAlarmRuleDao())
 	group := router.Group("/hawkeye/rule/")
 	{
 		group.POST("/page", ruleCtl.SelectRulePageList)
@@ -72,7 +71,7 @@ func alarmRule() {
 }
 
 func instance() {
-	ctl := controllers.NewInstanceCtl(dao2.NewInstanceDao(database.GetDb()))
+	ctl := controllers.NewInstanceCtl(dao2.NewInstanceDao())
 	group := router.Group("/hawkeye/instance/")
 	{
 		group.POST("/rulePage", ctl.Page)

@@ -5,7 +5,6 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/models"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/forms"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/service"
-	"code.cestc.cn/ccos-ops/cloud-monitor/common/database"
 	"github.com/robfig/cron"
 	"log"
 )
@@ -33,7 +32,7 @@ func instanceJob() {
 
 func syncUpdate() {
 	var index = 1
-	alarmInstanceDao := dao.NewAlarmInstanceDao(database.GetDb())
+	alarmInstanceDao := dao.NewAlarmInstanceDao()
 	for {
 		tenantIdList := alarmInstanceDao.SelectTenantIdList(productType, index, pageSize)
 		if len(tenantIdList) == 0 {

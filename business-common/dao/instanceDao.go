@@ -4,6 +4,7 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/forms"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/models"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/pageUtils"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/database"
 	"gorm.io/gorm"
 )
 
@@ -11,8 +12,8 @@ type InstanceDao struct {
 	db *gorm.DB
 }
 
-func NewInstanceDao(db *gorm.DB) *InstanceDao {
-	return &InstanceDao{db: db}
+func NewInstanceDao() *InstanceDao {
+	return &InstanceDao{db: database.GetDb()}
 }
 
 func (dao *InstanceDao) SelectInstanceRulePage(param *forms.InstanceRulePageReqParam) interface{} {

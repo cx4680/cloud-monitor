@@ -53,6 +53,7 @@ func (ctl *AlarmRuleCtl) CreateRule(c *gin.Context) {
 	param.UserId = userId.(string)
 	addMetricName(&param, ctl)
 	err := dbUtils.Tx(&param, ctl.dao, service.CreateRule)
+
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, err.Error())
 		return

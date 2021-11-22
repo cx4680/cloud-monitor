@@ -15,8 +15,6 @@ var (
 	mutex sync.Mutex
 )
 
-
-
 func InitClient(config config.RedisConfig) error {
 	rdb = redis.NewClient(&redis.Options{
 		Addr:         config.Addr,

@@ -12,7 +12,7 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/service"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/tools"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
-	commonDatabase "code.cestc.cn/ccos-ops/cloud-monitor/common/database"
+	commonDb "code.cestc.cn/ccos-ops/cloud-monitor/common/database"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/enums"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/utils/snowflake"
 	"encoding/json"
@@ -30,8 +30,8 @@ type AlertContactDao struct {
 	db *gorm.DB
 }
 
-func NewAlertContact(db *gorm.DB) *AlertContactDao {
-	return &AlertContactDao{db: db}
+func NewAlertContact() *AlertContactDao {
+	return &AlertContactDao{db: commonDb.GetDb()}
 }
 
 func (mpd *AlertContactDao) GetAlertContact(param forms.AlertContactParam) *forms.AlertContactFormPage {
@@ -298,5 +298,5 @@ func sendMsg(tenantId string, contactId string, no string, noType int, activeCod
 	noticeMsgDTO.RevObjectBean = recvObjectBean
 	var noticeMsgDTOList []*dtos.NoticeMsgDTO
 	noticeMsgDTOList = append(noticeMsgDTOList, &noticeMsgDTO)
-	service.NewMessageService(dao.NewNotificationRecordDao(commonDatabase.GetDb())).SendMsg(noticeMsgDTOList, true)
+	service.NewMessageService(dao.NewNotificationRecordDao()).SendMsg(noticeMsgDTOList, true)
 }

@@ -2,6 +2,7 @@ package dao
 
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/models"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/database"
 	"gorm.io/gorm"
 )
 
@@ -9,8 +10,8 @@ type AlertContactDao struct {
 	db *gorm.DB
 }
 
-func NewAlertContact(db *gorm.DB) *AlertContactDao {
-	return &AlertContactDao{db: db}
+func NewAlertContact() *AlertContactDao {
+	return &AlertContactDao{db: database.GetDb()}
 }
 
 func (mpd *AlertContactDao) InsertAlertContact(model models.AlertContact) {

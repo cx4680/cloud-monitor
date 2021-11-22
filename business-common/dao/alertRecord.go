@@ -3,6 +3,7 @@ package dao
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/dtos"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/models"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/database"
 	"gorm.io/gorm"
 )
 
@@ -10,8 +11,8 @@ type AlertRecordDao struct {
 	db *gorm.DB
 }
 
-func NewAlertRecordDao(db *gorm.DB) *AlertRecordDao {
-	return &AlertRecordDao{db: db}
+func NewAlertRecordDao() *AlertRecordDao {
+	return &AlertRecordDao{db: database.GetDb()}
 }
 
 func (dao *AlertRecordDao) InsertBatch(records []*models.AlertRecord) {

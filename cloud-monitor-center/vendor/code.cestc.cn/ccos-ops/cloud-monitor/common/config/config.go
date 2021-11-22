@@ -16,9 +16,11 @@ type Config struct {
 	Prometheus Prometheus   `yaml:"prometheus"`
 	Ecs        Ecs          `yaml:"ecs"`
 	Common     CommonConfig `yaml:"common"`
+	Redis      RedisConfig  `yaml:"redis"`
 }
 
 type CommonConfig struct {
+	Env               string `yaml:"env"`
 	Nk                string `yaml:"nk"`
 	TenantUrl         string `yaml:"tenantUrl"`
 	SmsCenterPath     string `yaml:"smsCenterPath"`
@@ -80,7 +82,12 @@ type Ecs struct {
 	InnerGateway string `yaml:"inner-gateway"`
 }
 
-var config Config = defaultAuthSdkConfig()
+type RedisConfig struct {
+	Addr     string
+	Password string
+}
+
+var config = defaultAuthSdkConfig()
 
 func defaultAuthSdkConfig() Config {
 	return Config{
@@ -91,7 +98,8 @@ func defaultAuthSdkConfig() Config {
 		},
 		Logger: LogConfig{
 			DataLogPrefix: "../logs/",
-			Group:         "cloud-monitor-region",
+			//TODO group
+			Group: "cloud-monitor-region",
 		}}
 }
 
@@ -121,6 +129,10 @@ func GetDbConfig() DB {
 }
 func GetLogConfig() LogConfig {
 	return config.Logger
+}
+
+func GetRedisConfig() RedisConfig {
+	return config.Redis
 }
 
 //TODO 写在tools中

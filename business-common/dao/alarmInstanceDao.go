@@ -2,6 +2,7 @@ package dao
 
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/models"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/database"
 	"fmt"
 	"gorm.io/gorm"
 	"strconv"
@@ -12,8 +13,8 @@ type AlarmInstanceDao struct {
 	db *gorm.DB
 }
 
-func NewAlarmInstanceDao(db *gorm.DB) *AlarmInstanceDao {
-	return &AlarmInstanceDao{db: db}
+func NewAlarmInstanceDao() *AlarmInstanceDao {
+	return &AlarmInstanceDao{db: database.GetDb()}
 }
 
 func (mpd *AlarmInstanceDao) CountRegionInstanceNum(tenantId string) {

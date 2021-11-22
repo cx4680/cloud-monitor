@@ -1,13 +1,16 @@
 package dao
 
-import "gorm.io/gorm"
+import (
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/database"
+	"gorm.io/gorm"
+)
 
 type InstanceDao struct {
 	db *gorm.DB
 }
 
-func NewInstanceDao(db *gorm.DB) *InstanceDao {
-	return &InstanceDao{db}
+func NewInstanceDao() *InstanceDao {
+	return &InstanceDao{database.GetDb()}
 }
 func (dao *InstanceDao) GetInstanceNum(tenantId string) int {
 	var result int

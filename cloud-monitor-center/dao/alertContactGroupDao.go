@@ -8,6 +8,7 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor-center/models"
 	"code.cestc.cn/ccos-ops/cloud-monitor-center/mq"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
+	commonDb "code.cestc.cn/ccos-ops/cloud-monitor/common/database"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/enums"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/utils/snowflake"
 	"gorm.io/gorm"
@@ -18,8 +19,8 @@ type AlertContactGroupDao struct {
 	db *gorm.DB
 }
 
-func NewAlertContactGroup(db *gorm.DB) *AlertContactGroupDao {
-	return &AlertContactGroupDao{db: db}
+func NewAlertContactGroup() *AlertContactGroupDao {
+	return &AlertContactGroupDao{db: commonDb.GetDb()}
 }
 
 func (mpd *AlertContactGroupDao) GetAlertContactGroup(tenantId string, groupName string) *[]forms.AlertContactGroupForm {

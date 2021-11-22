@@ -8,7 +8,6 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/docs"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/inner"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/service"
-	"code.cestc.cn/ccos-ops/cloud-monitor/common/database"
 	gs "github.com/swaggo/gin-swagger"
 	"github.com/swaggo/gin-swagger/swaggerFiles"
 )
@@ -34,7 +33,7 @@ func MonitorReportForm() {
 }
 
 func monitorProductRouters() {
-	monitorProductCtl := controllers.NewMonitorProductCtl(dao.NewMonitorProductDao(database.GetDb()))
+	monitorProductCtl := controllers.NewMonitorProductCtl(dao.NewMonitorProductDao())
 	group := router.Group("/hawkeye/monitorProduct/")
 	{
 		group.GET("/getById", monitorProductCtl.GetById)
@@ -48,7 +47,7 @@ func swagger() {
 }
 
 func instance() {
-	instanceCtl := controllers.NewInstanceCtl(dao.NewInstanceDao(database.GetDb()))
+	instanceCtl := controllers.NewInstanceCtl(dao.NewInstanceDao())
 	group := router.Group("/hawkeye/instance/")
 	{
 		group.GET("/page", instanceCtl.Page)
@@ -73,7 +72,7 @@ func slb() {
 }
 
 func innerCtl() {
-	alertRecordService := service.NewAlertRecordService(commonDao.NewAlertRecordDao(database.GetDb()), commonService.NewTenantService(), commonService.NewMessageService(commonDao.NewNotificationRecordDao(database.GetDb())))
+	alertRecordService := service.NewAlertRecordService(commonDao.NewAlertRecordDao(), commonService.NewTenantService(), commonService.NewMessageService(commonDao.NewNotificationRecordDao()))
 	ctl := inner.NewAlertRecordCtl(alertRecordService)
 	group := router.Group("/hawkeye/inner/")
 	{

@@ -41,7 +41,7 @@ func CreateTopics(topics ...string) error {
 	return nil
 }
 
-func InitProducer()  error {
+func InitProducer() error {
 	cfg := config.GetRocketmqConfig()
 	p, err := rocketmq.NewProducer(
 		producer.WithNsResolver(primitive.NewPassthroughResolver([]string{cfg.NameServer})),
@@ -49,13 +49,13 @@ func InitProducer()  error {
 	)
 	if err != nil {
 		fmt.Printf("start producer error: %s", err.Error())
-		return  err
+		return err
 	}
 	if err := p.Start(); err != nil {
 		fmt.Printf("start producer error: %s", err.Error())
-		return  err
+		return err
 	}
-	return  nil
+	return nil
 }
 
 func StartConsumersScribe(consumers []Consumer) error {

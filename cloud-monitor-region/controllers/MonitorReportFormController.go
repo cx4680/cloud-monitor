@@ -6,7 +6,6 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/global"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/service"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/validator/translate"
-	"code.cestc.cn/ccos-ops/cloud-monitor/common/database"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strings"
@@ -38,7 +37,7 @@ func (mpc *MonitorReportFormCtl) GetAxisData(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, translate.GetErrorMsg(err))
 		return
 	}
-	monitorItemDao := dao.NewMonitorItemDao(database.GetDb())
+	monitorItemDao := dao.NewMonitorItemDao()
 	param.Labels = monitorItemDao.GetLabelsByName(param.Name)
 	c.JSON(http.StatusOK, global.NewSuccess("查询成功", mpc.service.GetAxisData(param)))
 }

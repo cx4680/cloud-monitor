@@ -4,6 +4,7 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/dtos"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/models"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/tools"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/database"
 	"gorm.io/gorm"
 	"time"
 )
@@ -12,8 +13,8 @@ type NotificationRecordDao struct {
 	db *gorm.DB
 }
 
-func NewNotificationRecordDao(db *gorm.DB) *NotificationRecordDao {
-	return &NotificationRecordDao{db: db}
+func NewNotificationRecordDao() *NotificationRecordDao {
+	return &NotificationRecordDao{db: database.GetDb()}
 }
 
 func (dao *NotificationRecordDao) InsertBatch(recordList []models.NotificationRecord) {

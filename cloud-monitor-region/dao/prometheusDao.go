@@ -9,6 +9,7 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/k8s"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/models"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/utils"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/database"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
 	"context"
 	"encoding/json"
@@ -20,11 +21,11 @@ import (
 
 type PrometheusRuleDao struct {
 	db *gorm.DB
-	dao2.AlarmRuleDao
+	*dao2.AlarmRuleDao
 }
 
-func NewPrometheusRuleDao(db *gorm.DB) *PrometheusRuleDao {
-	return &PrometheusRuleDao{db: db, AlarmRuleDao: dao2.AlarmRuleDao{DB: db}}
+func NewPrometheusRuleDao() *PrometheusRuleDao {
+	return &PrometheusRuleDao{db: database.GetDb(), AlarmRuleDao: dao2.NewAlarmRuleDao()}
 }
 
 func (dao *PrometheusRuleDao) GenerateUserPrometheusRule(region string, zone string, tenantId string) {

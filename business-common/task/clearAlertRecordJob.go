@@ -2,7 +2,6 @@ package task
 
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/dao"
-	"code.cestc.cn/ccos-ops/cloud-monitor/common/database"
 	"github.com/robfig/cron"
 	"log"
 )
@@ -27,6 +26,6 @@ func CronClear() {
 func clear() {
 	log.Println("clearAlertRecordJob start")
 	// TODO 锁
-	dao.NewAlertRecordCommonDao(database.GetDb()).DeleteExpired(clearIntervalDay)
+	dao.NewAlertRecordCommonDao().DeleteExpired(clearIntervalDay)
 	log.Println("clearAlertRecordJob end")
 }

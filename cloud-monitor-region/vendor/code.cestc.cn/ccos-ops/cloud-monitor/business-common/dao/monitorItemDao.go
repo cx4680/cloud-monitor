@@ -1,6 +1,7 @@
 package dao
 
 import (
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/database"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/models"
 	"gorm.io/gorm"
 )
@@ -9,8 +10,8 @@ type MonitorItemDao struct {
 	db *gorm.DB
 }
 
-func NewMonitorItemDao(db *gorm.DB) *MonitorItemDao {
-	return &MonitorItemDao{db: db}
+func NewMonitorItemDao() *MonitorItemDao {
+	return &MonitorItemDao{db: database.GetDb()}
 }
 
 func (mpd *MonitorItemDao) GetLabelsByName(name string) string {

@@ -26,62 +26,62 @@ func AlertContactHandler(msgs []*primitive.MessageExt) {
 			data, _ := json.Marshal(MqMsg.Data)
 			var model models.AlertContact
 			MsgErr = json.Unmarshal(data, &model)
-			dao.NewAlertContact(database.GetDb()).InsertAlertContact(model)
+			dao.NewAlertContact().InsertAlertContact(model)
 		case enums.UpdateAlertContact:
 			data, _ := json.Marshal(MqMsg.Data)
 			var model models.AlertContact
 			MsgErr = json.Unmarshal(data, &model)
-			dao.NewAlertContact(database.GetDb()).UpdateAlertContact(model)
+			dao.NewAlertContact().UpdateAlertContact(model)
 		case enums.DeleteAlertContact:
 			data, _ := json.Marshal(MqMsg.Data)
 			var contactId string
 			MsgErr = json.Unmarshal(data, &contactId)
-			dao.NewAlertContact(database.GetDb()).DeleteAlertContact(contactId)
+			dao.NewAlertContact().DeleteAlertContact(contactId)
 		case enums.InsertAlertContactInformation:
 			data, _ := json.Marshal(MqMsg.Data)
 			var model models.AlertContactInformation
 			MsgErr = json.Unmarshal(data, &model)
-			dao.NewAlertContact(database.GetDb()).InsertAlertContactInformation(model)
+			dao.NewAlertContact().InsertAlertContactInformation(model)
 		case enums.DeleteAlertContactInformation:
 			data, _ := json.Marshal(MqMsg.Data)
 			var contactId string
 			MsgErr = json.Unmarshal(data, &contactId)
-			dao.NewAlertContact(database.GetDb()).DeleteAlertContactInformation(contactId)
+			dao.NewAlertContact().DeleteAlertContactInformation(contactId)
 		case enums.InsertAlertContactGroupRel:
 			data, _ := json.Marshal(MqMsg.Data)
 			var model models.AlertContactGroupRel
 			MsgErr = json.Unmarshal(data, &model)
-			dao.NewAlertContact(database.GetDb()).InsertAlertContactGroupRel(model)
+			dao.NewAlertContact().InsertAlertContactGroupRel(model)
 		case enums.DeleteAlertContactGroupRelByContactId:
 			data, _ := json.Marshal(MqMsg.Data)
 			var contactId string
 			MsgErr = json.Unmarshal(data, &contactId)
-			dao.NewAlertContact(database.GetDb()).DeleteAlertContactGroupRelByContactId(contactId)
+			dao.NewAlertContact().DeleteAlertContactGroupRelByContactId(contactId)
 		case enums.CertifyAlertContact:
 			data, _ := json.Marshal(MqMsg.Data)
 			var activeCode string
 			MsgErr = json.Unmarshal(data, &activeCode)
-			dao.NewAlertContact(database.GetDb()).CertifyAlertContact(activeCode)
+			dao.NewAlertContact().CertifyAlertContact(activeCode)
 		case enums.InsertAlertContactGroup:
 			data, _ := json.Marshal(MqMsg.Data)
 			var model models.AlertContactGroup
 			MsgErr = json.Unmarshal(data, &model)
-			dao.NewAlertContact(database.GetDb()).InsertAlertContactGroup(model)
+			dao.NewAlertContact().InsertAlertContactGroup(model)
 		case enums.UpdateAlertContactGroup:
 			data, _ := json.Marshal(MqMsg.Data)
 			var model models.AlertContactGroup
 			MsgErr = json.Unmarshal(data, &model)
-			dao.NewAlertContact(database.GetDb()).UpdateAlertContactGroup(model)
+			dao.NewAlertContact().UpdateAlertContactGroup(model)
 		case enums.DeleteAlertContactGroup:
 			data, _ := json.Marshal(MqMsg.Data)
 			var groupId string
 			MsgErr = json.Unmarshal(data, &groupId)
-			dao.NewAlertContact(database.GetDb()).DeleteAlertContactGroup(groupId)
+			dao.NewAlertContact().DeleteAlertContactGroup(groupId)
 		case enums.DeleteAlertContactGroupRelByGroupId:
 			data, _ := json.Marshal(MqMsg.Data)
 			var groupId string
 			MsgErr = json.Unmarshal(data, &groupId)
-			dao.NewAlertContact(database.GetDb()).DeleteAlertContactGroupRelByGroupId(groupId)
+			dao.NewAlertContact().DeleteAlertContactGroupRelByGroupId(groupId)
 		}
 	}
 }
@@ -116,41 +116,41 @@ func tx(MqMsg forms.MqMsg, data []byte, tenantId string) error {
 }
 
 func handleMsg(MqMsg forms.MqMsg, data []byte, tenantId string) {
-	ruleDao := commonDao.NewAlarmRuleDao(database.GetDb())
-	instanceDao := commonDao.NewInstanceDao(database.GetDb())
-	prometheusDao := dao.NewPrometheusRuleDao(database.GetDb())
+	ruleDao := commonDao.NewAlarmRuleDao()
+	instanceDao := commonDao.NewInstanceDao()
+	prometheusDao := dao.NewPrometheusRuleDao()
 
 	switch MqMsg.EventEum {
 	case enums.CreateRule:
 		var param commonForm.AlarmRuleAddReqDTO
 		json.Unmarshal(data, &param)
-		ruleDao.SaveRule(ruleDao.DB, &param)
+		ruleDao.SaveRule(database.GetDb(), &param)
 		tenantId = param.TenantId
 	case enums.UpdateRule:
 		var param commonForm.AlarmRuleAddReqDTO
 		json.Unmarshal(data, &param)
-		ruleDao.UpdateRule(ruleDao.DB, &param)
+		ruleDao.UpdateRule(database.GetDb(), &param)
 		tenantId = param.TenantId
 	case enums.EnableRule:
 		var param commonForm.RuleReqDTO
 		json.Unmarshal(data, &param)
-		ruleDao.UpdateRuleState(ruleDao.DB, &param)
+		ruleDao.UpdateRuleState(database.GetDb(), &param)
 	case enums.DisableRule:
 		var param commonForm.RuleReqDTO
 		json.Unmarshal(data, &param)
-		ruleDao.UpdateRuleState(ruleDao.DB, &param)
+		ruleDao.UpdateRuleState(database.GetDb(), &param)
 	case enums.DeleteRule:
 		var param commonForm.RuleReqDTO
 		json.Unmarshal(data, &param)
-		ruleDao.DeleteRule(ruleDao.DB, &param)
+		ruleDao.DeleteRule(database.GetDb(), &param)
 	case enums.UnbindRule:
 		var param commonForm.UnBindRuleParam
 		json.Unmarshal(data, &param)
-		instanceDao.UnbindInstance(ruleDao.DB, &param)
+		instanceDao.UnbindInstance(database.GetDb(), &param)
 	case enums.BindRule:
 		var param commonForm.InstanceBindRuleDTO
 		json.Unmarshal(data, &param)
-		instanceDao.BindInstance(ruleDao.DB, &param)
+		instanceDao.BindInstance(database.GetDb(), &param)
 	default:
 		logger.Logger().Warnf("不支持的消息类型，消息类型：%v,消息%s", MqMsg.EventEum, string(data))
 	}

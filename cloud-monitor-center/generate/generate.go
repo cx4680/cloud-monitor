@@ -35,7 +35,7 @@ func generate() {
 		RealNameMethod("TableName").
 		// 生成的结构体保存路径
 		SavePath("../models/alarmInstance.go").
-		// 数据库dsn,这里可以使用 t2t.DB() 代替,参数为 *sql_script.DB 对象
+		// 数据库dsn,这里可以使用 t2t.db() 代替,参数为 *sql_script.db 对象
 		Dsn("root:123456@(127.0.0.1:3306)/hawkeye?charset=utf8mb4&parseTime=True&loc=Local").
 		// 执行
 		Run()
