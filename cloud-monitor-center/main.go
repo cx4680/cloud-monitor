@@ -1,11 +1,11 @@
 package main
 
 import (
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/sysComponent"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/sysComponent/sysRocketMq"
-	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/validator/translate"
-	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/web"
+	"code.cestc.cn/ccos-ops/cloud-monitor-center/validator/translate"
+	"code.cestc.cn/ccos-ops/cloud-monitor-center/web"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/mq"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/database"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
 	"flag"
 	"fmt"
@@ -54,14 +54,14 @@ func main() {
 
 func initRocketMq() error {
 	rc := config.GetRocketmqConfig()
-	if err := sysRocketMq.CreateTopics(rc.RuleTopic, rc.RecordTopic, rc.AlertContactTopic, rc.AlertContactGroup); err != nil {
+	if err := sysRocketMq.CreateTopics(rc.RuleTopic, rc.RecordTopic, rc.AlertContactTopic, rc.InstanceTopic); err != nil {
 		log.Printf("create topics error, %v\n", err)
 		return err
 	}
 	//TODO 初始化消费者
 	if err := sysRocketMq.StartConsumersScribe([]sysRocketMq.Consumer{{
-		Topic:   "",
-		Handler: nil,
+		Topic:   rc.InstanceTopic,
+		Handler: consumer.InstanceHandler,
 	}}); err != nil {
 		log.Printf("create rocketmq consumer error, %v\n", err)
 		return err

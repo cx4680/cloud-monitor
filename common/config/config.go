@@ -67,7 +67,7 @@ type Rocketmq struct {
 	NameServer        string `yaml:"name-server"`
 	BrokerAddr        string `yaml:"broker-addr"`
 	AlertContactTopic string `yaml:"alertContactTopic"`
-	AlertContactGroup string `yaml:"alertContactGroup"`
+	InstanceTopic     string `yaml:"instanceTopic"`
 	RuleTopic         string `yaml:"ruleTopic"`
 	RecordTopic       string `yaml:"recordTopic"`
 }

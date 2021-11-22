@@ -3,8 +3,12 @@ package task
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/dao"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/models"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/mq"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/tools"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/forms"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/service"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/database"
 	"github.com/robfig/cron"
 	"log"
 )
@@ -56,7 +60,7 @@ func slbSyncUpdate() {
 						instances = append(instances, alarmInstance)
 					}
 					alarmInstanceDao.UpdateBatchInstanceName(instances)
-					//TODO mq
+					mq.SendMsg(config.GetRocketmqConfig().InstanceTopic, tools.ToString(instances))
 				}
 				DeleteNotExistsInstances(tenantId, dbInstanceList, instances)
 			}
