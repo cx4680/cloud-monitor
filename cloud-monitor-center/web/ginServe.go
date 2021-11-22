@@ -1,8 +1,8 @@
 package web
 
 import (
-	"code.cestc.cn/ccos-ops/cloud-monitor-center/web/middleware"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/task"
+	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/web/middleware"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
 	"github.com/gin-gonic/gin"
 	"net/http"

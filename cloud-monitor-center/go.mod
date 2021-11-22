@@ -3,7 +3,6 @@ module code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center
 go 1.15
 
 require (
-	code.cestc.cn/ccos-ops/cloud-monitor-center v0.0.0-20211020014742-37a57f2e5a87
 	code.cestc.cn/ccos-ops/cloud-monitor/business-common v0.0.0-00010101000000-000000000000
 	code.cestc.cn/ccos-ops/cloud-monitor/common v0.0.0-20211028062752-e559c17fe0f2
 	github.com/gin-gonic/gin v1.7.4

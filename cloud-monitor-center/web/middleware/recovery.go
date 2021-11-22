@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	"code.cestc.cn/ccos-ops/cloud-monitor-center/global"
+	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/global"
 	"github.com/gin-gonic/gin"
 	"log"
 	"net/http"

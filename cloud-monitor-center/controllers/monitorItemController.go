@@ -1,8 +1,8 @@
 package controllers
 
 import (
-	"code.cestc.cn/ccos-ops/cloud-monitor-center/dao"
-	"code.cestc.cn/ccos-ops/cloud-monitor-center/global"
+	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/dao"
+	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/global"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )

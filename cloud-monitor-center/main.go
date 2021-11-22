@@ -1,9 +1,9 @@
 package main
 
 import (
-	"code.cestc.cn/ccos-ops/cloud-monitor-center/validator/translate"
-	"code.cestc.cn/ccos-ops/cloud-monitor-center/web"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/mq"
+	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/validator/translate"
+	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/web"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/database"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"

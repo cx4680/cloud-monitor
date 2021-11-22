@@ -26,6 +26,6 @@ func CronClear() {
 func clear() {
 	log.Println("clearAlertRecordJob start")
 	// TODO 锁
-	dao.NewAlertRecordCommonDao().DeleteExpired(clearIntervalDay)
+	dao.AlertRecordCommon.DeleteExpired(clearIntervalDay)
 	log.Println("clearAlertRecordJob end")
 }
