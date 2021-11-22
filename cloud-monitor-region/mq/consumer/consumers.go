@@ -3,10 +3,11 @@ package consumer
 import (
 	commonDao "code.cestc.cn/ccos-ops/cloud-monitor/business-common/dao"
 	commonForm "code.cestc.cn/ccos-ops/cloud-monitor/business-common/forms"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/dao"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/forms"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/models"
-	"code.cestc.cn/ccos-ops/cloud-monitor/common/database"
+
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/enums"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
 	"encoding/json"
@@ -97,7 +98,7 @@ func AlarmRuleHandler(msgs []*primitive.MessageExt) {
 }
 
 func tx(MqMsg forms.MqMsg, data []byte, tenantId string) error {
-	tx := database.GetDb()
+	tx := global.DB
 	var err error
 	defer func() {
 		if r := recover(); r != nil {
@@ -124,33 +125,33 @@ func handleMsg(MqMsg forms.MqMsg, data []byte, tenantId string) {
 	case enums.CreateRule:
 		var param commonForm.AlarmRuleAddReqDTO
 		json.Unmarshal(data, &param)
-		ruleDao.SaveRule(database.GetDb(), &param)
+		ruleDao.SaveRule(global.DB, &param)
 		tenantId = param.TenantId
 	case enums.UpdateRule:
 		var param commonForm.AlarmRuleAddReqDTO
 		json.Unmarshal(data, &param)
-		ruleDao.UpdateRule(database.GetDb(), &param)
+		ruleDao.UpdateRule(global.DB, &param)
 		tenantId = param.TenantId
 	case enums.EnableRule:
 		var param commonForm.RuleReqDTO
 		json.Unmarshal(data, &param)
-		ruleDao.UpdateRuleState(database.GetDb(), &param)
+		ruleDao.UpdateRuleState(global.DB, &param)
 	case enums.DisableRule:
 		var param commonForm.RuleReqDTO
 		json.Unmarshal(data, &param)
-		ruleDao.UpdateRuleState(database.GetDb(), &param)
+		ruleDao.UpdateRuleState(global.DB, &param)
 	case enums.DeleteRule:
 		var param commonForm.RuleReqDTO
 		json.Unmarshal(data, &param)
-		ruleDao.DeleteRule(database.GetDb(), &param)
+		ruleDao.DeleteRule(global.DB, &param)
 	case enums.UnbindRule:
 		var param commonForm.UnBindRuleParam
 		json.Unmarshal(data, &param)
-		instanceDao.UnbindInstance(database.GetDb(), &param)
+		instanceDao.UnbindInstance(global.DB, &param)
 	case enums.BindRule:
 		var param commonForm.InstanceBindRuleDTO
 		json.Unmarshal(data, &param)
-		instanceDao.BindInstance(database.GetDb(), &param)
+		instanceDao.BindInstance(global.DB, &param)
 	default:
 		logger.Logger().Warnf("不支持的消息类型，消息类型：%v,消息%s", MqMsg.EventEum, string(data))
 	}

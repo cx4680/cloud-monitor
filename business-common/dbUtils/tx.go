@@ -1,14 +1,14 @@
 package dbUtils
 
 import (
-	"code.cestc.cn/ccos-ops/cloud-monitor/common/database"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
 	"fmt"
 	"gorm.io/gorm"
 )
 
 func Tx(param interface{}, dao interface{}, f func(xx *gorm.DB, param interface{}, dao interface{}) error) (err error) {
-	tx := database.GetDb().Begin()
+	tx := global.DB.Begin()
 	defer func() {
 		if r := recover(); r != nil {
 			logger.Logger().Errorf("%v", err)

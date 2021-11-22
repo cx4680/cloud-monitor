@@ -9,6 +9,7 @@ require (
 	github.com/google/uuid v1.3.0
 	github.com/pkg/errors v0.8.1
 	github.com/robfig/cron v1.2.0
+	gorm.io/driver/mysql v1.1.2
 	gorm.io/gorm v1.22.1
 )
 

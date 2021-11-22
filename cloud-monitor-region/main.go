@@ -1,15 +1,15 @@
 package main
 
 import (
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/mq"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/redis"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/sysComponent"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/sysComponent/sysRocketMq"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/k8s"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/mq/consumer"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/task"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/validator/translate"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/web"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
-	"code.cestc.cn/ccos-ops/cloud-monitor/common/database"
+
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
 	"flag"
 	"log"
@@ -32,15 +32,9 @@ func main() {
 		os.Exit(2)
 	}
 
-	//初始化数据里连接
-	if err := database.InitDb(config.GetDbConfig()); err != nil {
-		log.Printf("init database error: %v\n", err)
+	if err := sysComponent.InitSys(); err != nil {
+		log.Printf("init sys component error: %v\n", err)
 		os.Exit(3)
-	}
-
-	if err := redis.InitClient(config.GetRedisConfig()); err != nil {
-		log.Printf("init redis error: %v\n", err)
-		os.Exit(4)
 	}
 
 	if config.GetCommonConfig().Env != "local" {
@@ -70,17 +64,12 @@ func main() {
 
 func initRocketMq() error {
 	rc := config.GetRocketmqConfig()
-	if err := mq.CreateTopics(rc.RuleTopic, rc.RecordTopic, rc.AlertContactTopic, rc.AlertContactGroup); err != nil {
+	if err := sysRocketMq.CreateTopics(rc.RuleTopic, rc.RecordTopic, rc.AlertContactTopic, rc.AlertContactGroup); err != nil {
 		log.Printf("create topics error, %v\n", err)
 		return err
 	}
-	err := mq.InitProducer()
-	if err != nil {
-		log.Printf("create rocketmq producer error, %v\n", err)
-		return err
-	}
 
-	if err = mq.StartConsumersScribe([]mq.Consumer{{
+	if err := sysRocketMq.StartConsumersScribe([]sysRocketMq.Consumer{{
 		Topic:   rc.AlertContactTopic,
 		Handler: consumer.AlertContactHandler,
 	}, {

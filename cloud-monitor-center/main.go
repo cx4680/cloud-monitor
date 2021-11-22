@@ -1,11 +1,11 @@
 package main
 
 import (
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/mq"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/sysComponent"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/sysComponent/sysRocketMq"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/validator/translate"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/web"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
-	"code.cestc.cn/ccos-ops/cloud-monitor/common/database"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
 	"flag"
 	"fmt"
@@ -27,14 +27,14 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err := database.InitDb(config.GetDbConfig()); err != nil {
-		log.Printf("init database error: %v\n", err)
-		os.Exit(2)
-	}
-
 	if err := translate.InitTrans("zh"); err != nil {
 		fmt.Printf("init trans failed, err:%v\n", err)
 		os.Exit(3)
+	}
+
+	if err := sysComponent.InitSys(); err != nil {
+		fmt.Printf("init sys components failed, err:%v\n", err)
+		os.Exit(2)
 	}
 
 	if err := initRocketMq(); err != nil {
@@ -54,17 +54,12 @@ func main() {
 
 func initRocketMq() error {
 	rc := config.GetRocketmqConfig()
-	if err := mq.CreateTopics(rc.RuleTopic, rc.RecordTopic, rc.AlertContactTopic, rc.AlertContactGroup); err != nil {
+	if err := sysRocketMq.CreateTopics(rc.RuleTopic, rc.RecordTopic, rc.AlertContactTopic, rc.AlertContactGroup); err != nil {
 		log.Printf("create topics error, %v\n", err)
 		return err
 	}
-	err := mq.InitProducer()
-	if err != nil {
-		log.Printf("create rocketmq producer error, %v\n", err)
-		return err
-	}
 	//TODO 初始化消费者
-	if err = mq.StartConsumersScribe([]mq.Consumer{{
+	if err := sysRocketMq.StartConsumersScribe([]sysRocketMq.Consumer{{
 		Topic:   "",
 		Handler: nil,
 	}}); err != nil {

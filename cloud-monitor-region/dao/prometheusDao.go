@@ -2,14 +2,15 @@ package dao
 
 import (
 	dao2 "code.cestc.cn/ccos-ops/cloud-monitor/business-common/dao"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/redis"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/sysComponent/sysRedis"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/dtos"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/errors"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/forms"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/k8s"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/models"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/utils"
-	"code.cestc.cn/ccos-ops/cloud-monitor/common/database"
+
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
 	"context"
 	"encoding/json"
@@ -34,7 +35,7 @@ func (dao *PrometheusRuleDao) GenerateUserPrometheusRule(region string, zone str
 	result := true
 	ctx := context.Background()
 	for result {
-		success, err := redis.GetClient().SetNX(ctx, key, 1, time.Minute).Result()
+		success, err := sysRedis.GetClient().SetNX(ctx, key, 1, time.Minute).Result()
 		if err != nil {
 			return
 		}
@@ -54,7 +55,7 @@ func (dao *PrometheusRuleDao) GenerateUserPrometheusRule(region string, zone str
 		}
 		dao.createUserPrometheus(alertRuleDTO, tenantId)
 	}
-	redis.GetClient().Del(ctx, key)
+	sysRedis.GetClient().Del(ctx, key)
 }
 
 func (dao *PrometheusRuleDao) createUserPrometheus(alertRuleDTO *forms.AlertRuleDTO, tenantId string) {
@@ -62,13 +63,13 @@ func (dao *PrometheusRuleDao) createUserPrometheus(alertRuleDTO *forms.AlertRule
 		PrometheusRuleID: alertRuleDTO.AlertRuleId,
 		TenantID:         tenantId,
 	}
-	database.GetDb().Create(prometheus)
+	global.DB.Create(prometheus)
 }
 
 func (dao *PrometheusRuleDao) buildPrometheusRule(region string, zone string, tenantId string) (*forms.AlertRuleDTO, error) {
 	ruleDto := &forms.AlertRuleDTO{Region: region, Zone: zone, TenantId: tenantId}
 	var list []*dtos.RuleExpress
-	database.GetDb().Raw("select t1.name as ruleName ,t1.`level`, t1.trigger_condition as ruleCondition, t1.id as ruleId,t1.product_type, t1.notify_channel as noticeChannel,t1.monitor_type        from t_alarm_rule t1        where t1.tenant_id = ?         and t1.enabled = 1         and t1.deleted = 0", tenantId).Scan(&list)
+	global.DB.Raw("select t1.name as ruleName ,t1.`level`, t1.trigger_condition as ruleCondition, t1.id as ruleId,t1.product_type, t1.notify_channel as noticeChannel,t1.monitor_type        from t_alarm_rule t1        where t1.tenant_id = ?         and t1.enabled = 1         and t1.deleted = 0", tenantId).Scan(&list)
 	var alertList []*forms.AlertDTO
 	for _, ruleExpress := range list {
 		ruleExpress.GroupIds = dao.GetNoticeGroupList(ruleExpress.RuleId)
@@ -135,6 +136,6 @@ func (dao *PrometheusRuleDao) getUserPrometheusId(tenantId string) string {
 	prometheus := &models.UserPrometheusID{
 		TenantID: tenantId,
 	}
-	database.GetDb().Find(prometheus)
+	global.DB.Find(prometheus)
 	return prometheus.PrometheusRuleID
 }

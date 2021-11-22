@@ -2,7 +2,7 @@ package service
 
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/dtos"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/redis"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/sysComponent/sysRedis"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/tools"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
 	"log"
@@ -21,7 +21,7 @@ func NewTenantService() *TenantService {
 func (s *TenantService) GetTenantInfo(tenantId string) dtos.TenantDTO {
 	var tenant dtos.TenantDTO
 	key := "userInfo:" + tenantId
-	value, err := redis.Get(key)
+	value, err := sysRedis.Get(key)
 	if err != nil {
 		log.Fatalln("获取缓存出错, key=" + key)
 	}
@@ -31,7 +31,7 @@ func (s *TenantService) GetTenantInfo(tenantId string) dtos.TenantDTO {
 	} else {
 		tenant := getTenant(tenantId)
 		if tenant != nil {
-			err := redis.SetByTimeOut(key, tools.ToString(tenant), RedisTimeOutOneHour*time.Second)
+			err := sysRedis.SetByTimeOut(key, tools.ToString(tenant), RedisTimeOutOneHour*time.Second)
 			if err != nil {
 				log.Fatalln("设置redis出错, key=" + key)
 			}

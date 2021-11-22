@@ -1,13 +1,14 @@
 package dao
 
 import (
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/constant"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/errors"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/forms"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/models"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/mq"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
-	"code.cestc.cn/ccos-ops/cloud-monitor/common/database"
+
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/enums"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/utils/snowflake"
 	"strconv"
@@ -20,25 +21,25 @@ var AlertContactGroup = new(AlertContactGroupDao)
 
 func (mpd *AlertContactGroupDao) GetAlertContactGroup(tenantId string, groupName string) *[]forms.AlertContactGroupForm {
 	var model = &[]forms.AlertContactGroupForm{}
-	database.GetDb().Raw(SelectAlterContactGroup, tenantId, groupName).Find(model)
+	global.DB.Raw(SelectAlterContactGroup, tenantId, groupName).Find(model)
 	return model
 }
 
 func (mpd *AlertContactGroupDao) GetAlertGroupContact(tenantId string, groupId string) *[]forms.AlertContactForm {
 	var model = &[]forms.AlertContactForm{}
-	database.GetDb().Raw(SelectAlterGroupContact, tenantId, groupId).Find(model)
+	global.DB.Raw(SelectAlterGroupContact, tenantId, groupId).Find(model)
 	return model
 }
 
 func (mpd *AlertContactGroupDao) InsertAlertContactGroup(param forms.AlertContactGroupParam) error {
-	var tx = database.GetDb().Begin()
+	var tx = global.DB.Begin()
 
 	var count int64
-	database.GetDb().Model(&models.AlertContactGroup{}).Where("tenant_id = ?", param.TenantId).Count(&count)
+	global.DB.Model(&models.AlertContactGroup{}).Where("tenant_id = ?", param.TenantId).Count(&count)
 	if count >= constant.MAX_GROUP_NUM {
 		return errors.NewBusinessError("联系组限制创建" + strconv.Itoa(constant.MAX_GROUP_NUM) + "个")
 	}
-	database.GetDb().Model(&models.AlertContactGroup{}).Where("tenant_id = ?", param.TenantId).Where("name = ?", param.GroupName).Count(&count)
+	global.DB.Model(&models.AlertContactGroup{}).Where("tenant_id = ?", param.TenantId).Where("name = ?", param.GroupName).Count(&count)
 	if count >= 1 {
 		return errors.NewBusinessError("联系组名重复")
 	}
@@ -69,7 +70,7 @@ func (mpd *AlertContactGroupDao) InsertAlertContactGroup(param forms.AlertContac
 }
 
 func (mpd *AlertContactGroupDao) UpdateAlertContactGroup(param forms.AlertContactGroupParam) error {
-	var tx = database.GetDb().Begin()
+	var tx = global.DB.Begin()
 
 	var count int64
 	tx.Model(&models.AlertContactGroup{}).Where("tenant_id = ?", param.TenantId).Where("name = ?", param.GroupName).Count(&count)
@@ -99,7 +100,7 @@ func (mpd *AlertContactGroupDao) UpdateAlertContactGroup(param forms.AlertContac
 }
 
 func (mpd *AlertContactGroupDao) DeleteAlertContactGroup(param forms.AlertContactGroupParam) error {
-	var tx = database.GetDb().Begin()
+	var tx = global.DB.Begin()
 
 	var model models.AlertContactGroup
 	tx.Delete(&model, param.GroupId)
@@ -122,7 +123,7 @@ func (mpd *AlertContactGroupDao) insertAlertContactGroupRel(param forms.AlertCon
 		return nil
 	}
 	var count int64
-	database.GetDb().Model(&models.AlertContactGroupRel{}).Where("tenant_id = ?", param.TenantId).Where("group_id", param.GroupId).Count(&count)
+	global.DB.Model(&models.AlertContactGroupRel{}).Where("tenant_id = ?", param.TenantId).Where("group_id", param.GroupId).Count(&count)
 	if count >= constant.MAX_CONTACT_NUM {
 		return errors.NewBusinessError("每组联系人限制" + strconv.Itoa(constant.MAX_CONTACT_NUM) + "个")
 	}
@@ -136,7 +137,7 @@ func (mpd *AlertContactGroupDao) insertAlertContactGroupRel(param forms.AlertCon
 			CreateTime: currentTime,
 			UpdateTime: currentTime,
 		}
-		db := database.GetDb().Create(alertContactGroupRel)
+		db := global.DB.Create(alertContactGroupRel)
 		if db.Error != nil {
 			return errors.NewBusinessError("添加失败")
 		}
@@ -160,7 +161,7 @@ func (mpd *AlertContactGroupDao) updateAlertContactGroupRel(param forms.AlertCon
 
 //删除联系人关联
 func (mpd *AlertContactGroupDao) deleteAlertContactGroupRel(groupId string) error {
-	var tx = database.GetDb().Begin()
+	var tx = global.DB.Begin()
 	db := tx.Where("group_id = ?", groupId).Delete(models.AlertContactGroupRel{})
 	if db.Error != nil {
 		return errors.NewBusinessError("删除失败")
