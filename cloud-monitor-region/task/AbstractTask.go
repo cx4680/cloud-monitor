@@ -16,7 +16,7 @@ func DeleteNotExistsInstances(tenantId string, dbInstanceList []models.AlarmInst
 		}
 	}
 	if len(dbInstanceList) != 0 {
-		commonDao.NewAlarmInstanceDao().DeleteInstanceList(tenantId, dbInstanceList)
-		dao.NewPrometheusRuleDao().GenerateUserPrometheusRule("", "", tenantId)
+		commonDao.AlarmInstance.DeleteInstanceList(tenantId, dbInstanceList)
+		dao.PrometheusRule.GenerateUserPrometheusRule("", "", tenantId)
 	}
 }

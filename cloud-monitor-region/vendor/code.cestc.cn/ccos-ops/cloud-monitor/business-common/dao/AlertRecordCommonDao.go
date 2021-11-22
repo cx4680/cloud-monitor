@@ -10,7 +10,6 @@ type AlertRecordCommonDao struct {
 
 var AlertRecordCommon = new(AlertRecordCommonDao)
 
-
 func (mpd *AlertRecordCommonDao) DeleteExpired(day string) {
 	database.GetDb().Where("TO_DAYS(NOW()) - TO_DAYS(create_time) >= ?", day).Delete(models.AlertRecord{})
 }

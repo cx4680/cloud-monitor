@@ -16,8 +16,6 @@ type AlarmRuleDao struct {
 
 var AlarmRule = new(AlarmRuleDao)
 
-
-
 func (dao *AlarmRuleDao) SaveRule(tx *gorm.DB, ruleReqDTO *forms.AlarmRuleAddReqDTO) string {
 	rule := buildAlarmRule(ruleReqDTO)
 	rule.ID = strconv.FormatInt(snowflake.GetWorker().NextId(), 10)

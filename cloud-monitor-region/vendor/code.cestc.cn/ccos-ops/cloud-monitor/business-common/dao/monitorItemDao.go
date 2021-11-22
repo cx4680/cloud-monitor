@@ -10,7 +10,6 @@ type MonitorItemDao struct {
 
 var MonitorItem = new(MonitorItemDao)
 
-
 func (mpd *MonitorItemDao) GetLabelsByName(name string) string {
 	var model = models.MonitorItem{}
 	database.GetDb().Debug().Where("metric_name = ?", name).First(&model)

@@ -30,7 +30,7 @@ func slbInstanceJob() {
 
 func slbSyncUpdate() {
 	var index = 1
-	alarmInstanceDao := dao.NewAlarmInstanceDao()
+	alarmInstanceDao := dao.AlarmInstance
 	for {
 		tenantIdList := alarmInstanceDao.SelectTenantIdList(slbProductType, index, pageSize)
 		if len(tenantIdList) == 0 {

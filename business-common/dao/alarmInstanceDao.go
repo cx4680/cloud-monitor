@@ -4,7 +4,6 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/models"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/database"
 	"fmt"
-	"gorm.io/gorm"
 	"strconv"
 	"strings"
 )
@@ -18,10 +17,10 @@ func (mpd *AlarmInstanceDao) CountRegionInstanceNum(tenantId string) {
 
 }
 
-func (mpd *AlarmInstanceDao) SelectTenantIdList(db *gorm.DB, productType string, pageCurrent int, pageSize int) []string {
+func (mpd *AlarmInstanceDao) SelectTenantIdList(productType string, pageCurrent int, pageSize int) []string {
 	sql := "SELECT DISTINCT t1.tenant_id FROM t_alarm_instance t1 LEFT JOIN t_alarm_rule t2 ON t1.alarm_rule_id = t2.id WHERE t1.tenant_id != '' AND t2.product_type = '%s' LIMIT %s,%s"
 	var tenantIds []string
-	db.Raw(fmt.Sprintf(sql, productType, strconv.Itoa((pageCurrent-1)*pageSize), strconv.Itoa(pageSize))).Find(tenantIds)
+	database.GetDb().Raw(fmt.Sprintf(sql, productType, strconv.Itoa((pageCurrent-1)*pageSize), strconv.Itoa(pageSize))).Find(tenantIds)
 	return tenantIds
 }
 

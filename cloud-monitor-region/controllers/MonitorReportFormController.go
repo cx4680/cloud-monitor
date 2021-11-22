@@ -37,7 +37,7 @@ func (mpc *MonitorReportFormCtl) GetAxisData(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, translate.GetErrorMsg(err))
 		return
 	}
-	monitorItemDao := dao.NewMonitorItemDao()
+	monitorItemDao := dao.MonitorItem
 	param.Labels = monitorItemDao.GetLabelsByName(param.Name)
 	c.JSON(http.StatusOK, global.NewSuccess("查询成功", mpc.service.GetAxisData(param)))
 }

@@ -11,7 +11,6 @@ type AlertRecordDao struct {
 
 var AlertRecord = new(AlertRecordDao)
 
-
 func (dao *AlertRecordDao) InsertBatch(records []*models.AlertRecord) {
 	var list []models.AlertRecord
 	for _, record := range records {

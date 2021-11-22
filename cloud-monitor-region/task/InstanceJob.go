@@ -32,7 +32,7 @@ func instanceJob() {
 
 func syncUpdate() {
 	var index = 1
-	alarmInstanceDao := dao.NewAlarmInstanceDao()
+	alarmInstanceDao := dao.AlarmInstance
 	for {
 		tenantIdList := alarmInstanceDao.SelectTenantIdList(productType, index, pageSize)
 		if len(tenantIdList) == 0 {
