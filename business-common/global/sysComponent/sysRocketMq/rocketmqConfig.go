@@ -20,6 +20,11 @@ type Consumer struct {
 	Handler func([]*primitive.MessageExt)
 }
 
+type RocketMqMsg struct {
+	Topic,
+	Content string
+}
+
 func CreateTopics(topics ...string) error {
 	cfg := config.GetRocketmqConfig()
 	testAdmin, err := admin.NewAdmin(admin.WithResolver(primitive.NewPassthroughResolver([]string{cfg.NameServer})))
@@ -43,7 +48,8 @@ func CreateTopics(topics ...string) error {
 
 func InitProducer() error {
 	cfg := config.GetRocketmqConfig()
-	p, err := rocketmq.NewProducer(
+	var err error
+	p, err = rocketmq.NewProducer(
 		producer.WithNsResolver(primitive.NewPassthroughResolver([]string{cfg.NameServer})),
 		producer.WithRetry(2),
 	)
@@ -78,7 +84,11 @@ func StartConsumersScribe(consumers []Consumer) error {
 	return nil
 }
 
-func SendMsg(topic, msg string) {
+func SendRocketMqMsg(msg RocketMqMsg) error {
+	return SendMsg(msg.Topic, msg.Content)
+}
+
+func SendMsg(topic, msg string) error {
 	mqmsg := &primitive.Message{
 		Topic: topic,
 		Body:  []byte(msg),
@@ -87,9 +97,11 @@ func SendMsg(topic, msg string) {
 
 	if err != nil {
 		fmt.Printf("send message error: %s\n", err)
+		return err
 	} else {
 		fmt.Printf("send message success: result=%s\n", res.String())
 	}
+	return nil
 }
 
 func Shutdown() {

@@ -17,11 +17,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 	"io/ioutil"
 	"net/http"
 	"strconv"
 	"strings"
-	"time"
 )
 
 type AlertContactDao struct {
@@ -29,7 +29,7 @@ type AlertContactDao struct {
 
 var AlertContact = new(AlertContactDao)
 
-var (
+const (
 	SelectAlterContact = "SELECT " +
 		"ac.id AS contact_id, " +
 		"ac.name AS contact_name, " +
@@ -146,6 +146,16 @@ func (mpd *AlertContactDao) GetAlertContact(param forms.AlertContactParam) *form
 	return alertContactFormPage
 }
 
+func (acd *AlertContactDao) Insert(db *gorm.DB, entity *models.AlertContact) {
+	currentTime := tools.GetNow()
+	contactId := strconv.FormatInt(snowflake.GetWorker().NextId(), 10)
+
+	entity.Id = contactId
+	entity.CreateTime = currentTime
+	entity.UpdateTime = currentTime
+	entity.Status = 1
+	db.Create(entity)
+}
 func (mpd *AlertContactDao) InsertAlertContact(param forms.AlertContactParam) error {
 	if param.ContactName == "" {
 		return errors.NewBusinessError("联系人名字不能为空")
@@ -161,7 +171,7 @@ func (mpd *AlertContactDao) InsertAlertContact(param forms.AlertContactParam) er
 		return errors.NewBusinessError("每个联系人最多加入" + strconv.Itoa(constant.MAX_CONTACT_GROUP) + "个联系组")
 	}
 
-	currentTime := getCurrentTime()
+	currentTime := tools.GetNow()
 	contactId := strconv.FormatInt(snowflake.GetWorker().NextId(), 10)
 	param.ContactId = contactId
 	var alertContact = &models.AlertContact{
@@ -198,7 +208,7 @@ func (mpd *AlertContactDao) UpdateAlertContact(param forms.AlertContactParam) er
 	if len(param.GroupIdList) >= constant.MAX_CONTACT_GROUP {
 		return errors.NewBusinessError("每个联系人最多加入" + strconv.Itoa(constant.MAX_CONTACT_GROUP) + "个联系组")
 	}
-	currentTime := getCurrentTime()
+	currentTime := tools.GetNow()
 	var alertContact = &models.AlertContact{
 		Id:          param.ContactId,
 		TenantId:    param.TenantId,
@@ -239,10 +249,6 @@ func (mpd *AlertContactDao) CertifyAlertContact(activeCode string) string {
 	//同步region
 	mq.SendMsg(config.GetRocketmqConfig().AlertContactTopic, enums.CertifyAlertContact, activeCode)
 	return getTenantName(model.TenantId)
-}
-
-func getCurrentTime() string {
-	return time.Now().Format("2006-01-02 15:04:05")
 }
 
 //创建联系方式

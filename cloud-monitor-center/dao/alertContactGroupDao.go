@@ -2,12 +2,14 @@ package dao
 
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/tools"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/constant"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/errors"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/forms"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/models"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/mq"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
+	"gorm.io/gorm"
 
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/enums"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/utils/snowflake"
@@ -31,6 +33,16 @@ func (mpd *AlertContactGroupDao) GetAlertGroupContact(tenantId string, groupId s
 	return model
 }
 
+func (mpd *AlertContactGroupDao) InsertGroupRelBatch(db *gorm.DB, list []*models.AlertContactGroupRel) {
+	now := tools.GetNow()
+	for _, rel := range list {
+		rel.Id = strconv.FormatInt(snowflake.GetWorker().NextId(), 10)
+		rel.UpdateTime = now
+		rel.CreateTime = now
+	}
+	db.Create(list)
+}
+
 func (mpd *AlertContactGroupDao) InsertAlertContactGroup(param forms.AlertContactGroupParam) error {
 	var tx = global.DB.Begin()
 
@@ -43,7 +55,7 @@ func (mpd *AlertContactGroupDao) InsertAlertContactGroup(param forms.AlertContac
 	if count >= 1 {
 		return errors.NewBusinessError("联系组名重复")
 	}
-	currentTime := getCurrentTime()
+	currentTime := tools.GetNow()
 	groupId := strconv.FormatInt(snowflake.GetWorker().NextId(), 10)
 	param.GroupId = groupId
 	var alertContactGroup = models.AlertContactGroup{
@@ -77,7 +89,7 @@ func (mpd *AlertContactGroupDao) UpdateAlertContactGroup(param forms.AlertContac
 	if count >= 1 {
 		return errors.NewBusinessError("联系组名重复")
 	}
-	currentTime := getCurrentTime()
+	currentTime := tools.GetNow()
 	var alertContactGroup = &models.AlertContactGroup{
 		Id:          param.GroupId,
 		TenantId:    param.TenantId,

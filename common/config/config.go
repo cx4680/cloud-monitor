@@ -100,7 +100,16 @@ func defaultAuthSdkConfig() Config {
 			DataLogPrefix: "../logs/",
 			//TODO group
 			Group: "cloud-monitor-region",
-		}}
+		},
+		Rocketmq: Rocketmq{
+			NameServer:        "127.0.0.1:9876",
+			BrokerAddr:        "127.0.0.1:10911",
+			AlertContactTopic: "alertContactTopic",
+			AlertContactGroup: "alertContactGroup",
+			RuleTopic:         "",
+			RecordTopic:       "",
+		},
+	}
 }
 
 func InitConfig(file string) error {

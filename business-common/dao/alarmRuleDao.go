@@ -5,10 +5,12 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/models"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/pageUtils"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/vo"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/utils/snowflake"
 	"gorm.io/gorm"
 	"strconv"
 	"strings"
+	"unsafe"
 )
 
 type AlarmRuleDao struct {
@@ -46,9 +48,8 @@ func (dao *AlarmRuleDao) UpdateRuleState(tx *gorm.DB, ruleReqDTO *forms.RuleReqD
 	tx.Model(&rule).Update("enabled", GetAlarmStatusTextInt(ruleReqDTO.Status))
 }
 
-func (dao *AlarmRuleDao) SelectRulePageList(param *forms.AlarmPageReqParam) interface{} {
+func (dao *AlarmRuleDao) SelectRulePageList(param *forms.AlarmPageReqParam) *vo.PageVO {
 	var model []forms.AlarmRulePageDTO
-	db := global.DB
 	selectList := &strings.Builder{}
 	var sqlParam = []interface{}{param.TenantId}
 	selectList.WriteString("SELECT name as name,monitor_type, product_type, trigger_condition,  status,  metric_name,  ruleId,  count(instance) as instanceNum, update_time       FROM (  SELECT NAME,   monitor_type,   product_type,  metric_name,  trigger_condition,    enabled AS 'status',      id     AS ruleId,    t2.instance_id AS instance,   t1.update_time   FROM t_alarm_rule t1    LEFT JOIN t_alarm_instance t2 ON t2.alarm_rule_id = t1.id  WHERE t1.tenant_id = ?    AND t1.deleted = 0")
@@ -61,7 +62,7 @@ func (dao *AlarmRuleDao) SelectRulePageList(param *forms.AlarmPageReqParam) inte
 		sqlParam = append(sqlParam, param.RuleName)
 	}
 	selectList.WriteString(") t group by t.ruleId order by t.update_time  desc ")
-	return pageUtils.Paginate(param.PageSize, param.Current, selectList.String(), sqlParam, &model, db)
+	return pageUtils.Paginate(param.PageSize, param.Current, selectList.String(), sqlParam, unsafe.Pointer(&model))
 
 }
 

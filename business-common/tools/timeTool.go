@@ -10,3 +10,7 @@ func GetMonthStartEnd(t time.Time) (time.Time, time.Time) {
 	monthEndTime := time.Date(monthEndDay.Year(), monthEndDay.Month(), monthEndDay.Day(), 23, 59, 59, 0, t.Location())
 	return monthStartTime, monthEndTime
 }
+
+func GetNow() string {
+	return time.Now().Format("2006-01-02 15:04:05")
+}
