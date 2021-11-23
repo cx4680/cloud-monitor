@@ -27,7 +27,7 @@ rocketmq:
   name-server: 127.0.0.1:9876
   broker-addr: 127.0.0.1:10911
   alertContactTopic: alertContactTopic
-  alertContactGroup: alertContactGroup
+  instanceTopic: hawkeye-instance
   ruleTopic: rule
 prometheus:
   url: http://10.255.67.70:30090/api/v1

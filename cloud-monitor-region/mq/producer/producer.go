@@ -18,3 +18,8 @@ func SendAlertRecordMsg(msg []*models.AlertRecord) {
 	cfg := config.GetRocketmqConfig()
 	sysRocketMq.SendMsg(cfg.RecordTopic, tools.ToString(msg))
 }
+
+func SendInstanceJobMsg(msg []models.AlarmInstance) {
+	cfg := config.GetRocketmqConfig()
+	sysRocketMq.SendMsg(cfg.InstanceTopic, tools.ToString(msg))
+}

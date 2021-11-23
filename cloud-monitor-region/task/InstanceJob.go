@@ -4,6 +4,7 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/dao"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/models"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/forms"
+	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/mq/producer"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/service"
 	"github.com/robfig/cron"
 	"log"
@@ -58,7 +59,7 @@ func syncUpdate() {
 						instances = append(instances, alarmInstance)
 					}
 					alarmInstanceDao.UpdateBatchInstanceName(instances)
-					//TODO mq
+					producer.SendInstanceJobMsg(instances)
 				}
 				DeleteNotExistsInstances(tenantId, dbInstanceList, instances)
 			}

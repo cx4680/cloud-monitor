@@ -50,6 +50,7 @@ func main() {
 	}
 	//加载定时任务
 	go task.CronInstanceJob()
+	go task.CronSlbInstanceJob()
 
 	logger.InitLogger(config.GetLogConfig())
 	defer logger.Logger().Sync()
@@ -64,7 +65,7 @@ func main() {
 
 func initRocketMq() error {
 	rc := config.GetRocketmqConfig()
-	if err := sysRocketMq.CreateTopics(rc.RuleTopic, rc.RecordTopic, rc.AlertContactTopic, rc.AlertContactGroup); err != nil {
+	if err := sysRocketMq.CreateTopics(rc.RuleTopic, rc.RecordTopic, rc.AlertContactTopic, rc.InstanceTopic); err != nil {
 		log.Printf("create topics error, %v\n", err)
 		return err
 	}
