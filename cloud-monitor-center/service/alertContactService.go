@@ -155,7 +155,7 @@ func (s *AlertContactService) Insert(param forms.AlertContactParam) error {
 		return errors.NewBusinessError("每个联系人最多加入" + strconv.Itoa(constant.MAX_CONTACT_GROUP) + "个联系组")
 	}
 
-	currentTime := tools.GetNow()
+	currentTime := tools.GetNowStr()
 	contactId := strconv.FormatInt(snowflake.GetWorker().NextId(), 10)
 	param.ContactId = contactId
 	var alertContact = &models.AlertContact{
@@ -181,7 +181,7 @@ func (s *AlertContactService) Update(param forms.AlertContactParam) error {
 	if len(param.GroupIdList) >= constant.MAX_CONTACT_GROUP {
 		return errors.NewBusinessError("每个联系人最多加入" + strconv.Itoa(constant.MAX_CONTACT_GROUP) + "个联系组")
 	}
-	currentTime := tools.GetNow()
+	currentTime := tools.GetNowStr()
 	var alertContact = &models.AlertContact{
 		Id:          param.ContactId,
 		TenantId:    param.TenantId,

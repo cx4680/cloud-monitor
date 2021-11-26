@@ -1,13 +1,11 @@
 package dao
 
 import (
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/dao"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/dtos"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/errors"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/service"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/tools"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/constant"
-	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/errors"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/forms"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/models"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/mq"
@@ -147,14 +145,14 @@ func (acd *AlertContactDao) Select(db *gorm.DB, param forms.AlertContactParam) *
 }
 
 func (acd *AlertContactDao) Insert(db *gorm.DB, entity *models.AlertContact) {
-	currentTime := tools.GetNow()
+	currentTime := tools.GetNowStr()
 	entity.CreateTime = currentTime
 	entity.UpdateTime = currentTime
 	db.Create(entity)
 }
 
 func (acd *AlertContactDao) Update(db *gorm.DB, entity *models.AlertContact) {
-	currentTime := tools.GetNow()
+	currentTime := tools.GetNowStr()
 	entity.UpdateTime = currentTime
 	db.Updates(entity)
 }
@@ -178,7 +176,7 @@ func (mpd *AlertContactDao) InsertAlertContact(param forms.AlertContactParam) er
 		return errors.NewBusinessError("每个联系人最多加入" + strconv.Itoa(constant.MAX_CONTACT_GROUP) + "个联系组")
 	}
 
-	currentTime := tools.GetNow()
+	currentTime := tools.GetNowStr()
 	contactId := strconv.FormatInt(snowflake.GetWorker().NextId(), 10)
 	param.ContactId = contactId
 	var alertContact = &models.AlertContact{
@@ -215,7 +213,7 @@ func (mpd *AlertContactDao) UpdateAlertContact(param forms.AlertContactParam) er
 	if len(param.GroupIdList) >= constant.MAX_CONTACT_GROUP {
 		return errors.NewBusinessError("每个联系人最多加入" + strconv.Itoa(constant.MAX_CONTACT_GROUP) + "个联系组")
 	}
-	currentTime := tools.GetNow()
+	currentTime := tools.GetNowStr()
 	var alertContact = &models.AlertContact{
 		Id:          param.ContactId,
 		TenantId:    param.TenantId,
