@@ -15,13 +15,22 @@ import (
 var p rocketmq.Producer
 var c rocketmq.PushConsumer
 
+type Topic string
+
+const (
+	SmsMarginReminder Topic = "sms_margin_reminder" //短信余量提醒
+
+	NotificationSync Topic = "notification_sync" //通知记录
+
+)
+
 type Consumer struct {
 	Topic   string
 	Handler func([]*primitive.MessageExt)
 }
 
 type RocketMqMsg struct {
-	Topic,
+	Topic   Topic
 	Content string
 }
 
@@ -86,7 +95,8 @@ func StartConsumersScribe(consumers []*Consumer) error {
 }
 
 func SendRocketMqMsg(msg RocketMqMsg) error {
-	return SendMsg(msg.Topic, msg.Content)
+	//TODO
+	return SendMsg(string(msg.Topic), msg.Content)
 }
 
 func SendMsg(topic, msg string) error {

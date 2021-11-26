@@ -13,8 +13,8 @@ type AlertRecordService struct {
 	AlertRecordDao *commonDao.AlertRecordDao
 }
 
-func NewAlertRecordService(alertRecordDao *commonDao.AlertRecordDao) *AlertRecordService {
-	return &AlertRecordService{AlertRecordDao: alertRecordDao}
+func NewAlertRecordService() *AlertRecordService {
+	return &AlertRecordService{AlertRecordDao: commonDao.AlertRecord}
 }
 
 func (s *AlertRecordService) PersistenceLocal(db *gorm.DB, param interface{}) (string, error) {

@@ -11,10 +11,8 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/tools"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/utils/snowflake"
-	"github.com/google/uuid"
 	"log"
 	"strconv"
-	"strings"
 	"time"
 )
 
@@ -23,9 +21,14 @@ type MessageService struct {
 	MCS                   *messageCenter.Service
 }
 
-func NewMessageService(notificationRecordDao *commonDao.NotificationRecordDao, messageCenterService *messageCenter.Service) *MessageService {
+type AlertMsgSendDTO struct {
+	AlertId string
+	Msg     messageCenter.MessageSendDTO
+}
+
+func NewMessageService(messageCenterService *messageCenter.Service) *MessageService {
 	return &MessageService{
-		NotificationRecordDao: notificationRecordDao,
+		NotificationRecordDao: commonDao.NotificationRecord,
 		MCS:                   messageCenterService,
 	}
 }
@@ -50,12 +53,7 @@ func (s *MessageService) TargetFilter(targetList []messageCenter.MessageTargetDT
 	targetList = nt
 }
 
-type AlertMsgSendDTO struct {
-	AlertId string
-	Msg     messageCenter.MessageSendDTO
-}
-
-func (s *MessageService) SendMsgNew(msgList []AlertMsgSendDTO, isCenter bool) error {
+func (s *MessageService) SendMsg(msgList []AlertMsgSendDTO, isCenter bool) error {
 	if !config.GetCommonConfig().HasNoticeModel {
 		log.Println("There is no message center for this env")
 		return nil
@@ -64,6 +62,8 @@ func (s *MessageService) SendMsgNew(msgList []AlertMsgSendDTO, isCenter bool) er
 		return nil
 	}
 	var recordList []commonModels.NotificationRecord
+
+	var smsSender []string
 	for _, m := range msgList {
 		msg := m.Msg
 		//TODO 确认切片引用
@@ -74,6 +74,7 @@ func (s *MessageService) SendMsgNew(msgList []AlertMsgSendDTO, isCenter bool) er
 			log.Printf("message send error, %v\n\n", err)
 			return err
 		}
+
 		for _, t := range msg.Target {
 			recordList = append(recordList, commonModels.NotificationRecord{
 				SenderId:         msg.SenderId,
@@ -83,6 +84,9 @@ func (s *MessageService) SendMsgNew(msgList []AlertMsgSendDTO, isCenter bool) er
 				NotificationType: int(t.Type),
 				Result:           1,
 			})
+			if t.Type == messageCenter.Phone {
+				smsSender = append(smsSender, msg.SenderId)
+			}
 		}
 	}
 	//save record local
@@ -90,11 +94,68 @@ func (s *MessageService) SendMsgNew(msgList []AlertMsgSendDTO, isCenter bool) er
 
 	//	sync record to center
 	if !isCenter {
-		//TODO topic
-		sysRocketMq.SendMsg("notification_sync", tools.ToString(recordList))
+		_ = sysRocketMq.SendRocketMqMsg(sysRocketMq.RocketMqMsg{
+			Topic:   sysRocketMq.NotificationSync,
+			Content: tools.ToString(recordList),
+		})
+	}
+
+	// 发送短信余量不足提醒
+	if len(smsSender) > 0 {
+		smsSender = tools.RemoveDuplicateElement(smsSender)
+		//通过MQ异步解耦
+		_ = sysRocketMq.SendRocketMqMsg(sysRocketMq.RocketMqMsg{
+			Topic:   sysRocketMq.SmsMarginReminder,
+			Content: tools.ToString(smsSender),
+		})
 	}
 	return nil
 
+}
+
+// SmsMarginReminder 短信余量提醒
+func (s *MessageService) SmsMarginReminder(sender string) {
+	count := s.NotificationRecordDao.GetTenantSMSLackRecordNum(sender)
+	if count > 0 {
+		//已发送过短信提醒
+		return
+	}
+	alreadySendNum := s.getUserCurrentMonthSmsUsedNum(sender)
+	if alreadySendNum < constants.ThresholdSmsNum {
+		//未达到提醒阈值
+		return
+	}
+	tenantDTO := dtos.TenantDTO{}
+	loginName := tenantDTO.Name
+	serialNumber := tenantDTO.Phone
+
+	params := make(map[string]string)
+	params["userName"] = loginName
+	params["msgUsed"] = string(rune(alreadySendNum))
+	params["msgLeft"] = string(rune(constants.MaxSmsNum - alreadySendNum))
+	params["msgInitial"] = string(rune(constants.MaxSmsNum))
+
+	remainderMsg := messageCenter.MessageSendDTO{
+		SenderId: sender,
+		Target: []messageCenter.MessageTargetDTO{{
+			Addr: serialNumber,
+			Type: messageCenter.Phone,
+		}},
+		SourceType: messageCenter.SMS_LACK,
+		Content:    tools.ToString(params),
+	}
+	if err := s.MCS.Send(remainderMsg); err != nil {
+		return
+	}
+	//保存发送记录
+	s.NotificationRecordDao.Insert(global.DB, commonModels.NotificationRecord{
+		SenderId:         sender,
+		SourceId:         "sms-lack-" + sender,
+		SourceType:       int(messageCenter.SMS_LACK),
+		TargetAddress:    serialNumber,
+		NotificationType: int(messageCenter.Phone),
+		Result:           1,
+	})
 }
 
 func (s *MessageService) checkSentNum(tenantId string, num int, isCenter bool) bool {
@@ -147,7 +208,8 @@ func (s *MessageService) sendNotification(sender string, num int) []commonModels
 		},
 	}
 	noticeMsgDTOList = append(noticeMsgDTOList, &noticeMsgDTO)
-	s.sendToMsgCenter(noticeMsgDTOList)
+	//TODO send to message center
+	//s.sendToMsgCenter(noticeMsgDTOList)
 
 	return s.saveNotificationRecords(noticeMsgDTOList)
 
@@ -170,48 +232,6 @@ func (s *MessageService) saveNotificationRecords(noticeMsgDTOS []*dtos.NoticeMsg
 	}
 	s.NotificationRecordDao.InsertBatch(global.DB, recordList)
 	return recordList
-}
-
-func (s *MessageService) sendToMsgCenter(noticeMsgDTOS []*dtos.NoticeMsgDTO) {
-	smsMessageDTO := buildSmsMessageReqDTO(noticeMsgDTOS)
-	s.doSendToMsgCenter(smsMessageDTO)
-}
-
-func buildSmsMessageReqDTO(noticeMsgDTOS []*dtos.NoticeMsgDTO) *dtos.SmsMessageReqDTO {
-	var msgList []dtos.MessagesBean
-	var collect map[dtos.MsgEvent][]*dtos.NoticeMsgDTO
-	for _, noticeMsgDTO := range noticeMsgDTOS {
-		if collect[noticeMsgDTO.MsgEvent] == nil {
-			var msgDTOS []*dtos.NoticeMsgDTO
-			collect[noticeMsgDTO.MsgEvent] = msgDTOS
-		}
-		collect[noticeMsgDTO.MsgEvent] = append(collect[noticeMsgDTO.MsgEvent], noticeMsgDTO)
-	}
-	for event, noticeMsxgDTOS1 := range collect {
-		var list []dtos.RecvObjectBean
-		for _, dto := range noticeMsxgDTOS1 {
-			list = append(list, dto.RevObjectBean)
-		}
-		msgList = append(msgList, dtos.MessagesBean{
-			MsgEventCode:   string(rune(event.Type)) + string(rune(event.Source)),
-			RecvObjectList: list,
-		})
-	}
-	return &dtos.SmsMessageReqDTO{
-		BusinessId: strings.ReplaceAll(uuid.New().String(), "-", ""),
-		InModeCode: constants.AppCode,
-		Messages:   msgList,
-		ReferTime:  "",
-	}
-}
-
-func (s *MessageService) doSendToMsgCenter(smsMessageReqDTO *dtos.SmsMessageReqDTO) {
-
-	resp, err := tools.HttpPostJson(config.GetCommonConfig().SmsCenterPath, *smsMessageReqDTO)
-	if err != nil {
-		log.Fatal("send message to msgCenter fail", err)
-	}
-	log.Println("send message to msgCenter resp=" + resp)
 }
 
 type ResultDTO struct {

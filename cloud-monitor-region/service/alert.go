@@ -3,6 +3,7 @@ package service
 import (
 	commonDao "code.cestc.cn/ccos-ops/cloud-monitor/business-common/dao"
 	commonDtos "code.cestc.cn/ccos-ops/cloud-monitor/business-common/dtos"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/sysComponent/sysRocketMq"
 	commonModels "code.cestc.cn/ccos-ops/cloud-monitor/business-common/models"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/service"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/service/external/messageCenter"
@@ -30,12 +31,13 @@ type AlertRecordAddService struct {
 	AlertRecordDao *commonDao.AlertRecordDao
 }
 
-func NewAlertRecordAddService() *AlertRecordAddService {
+func NewAlertRecordAddService(AlertRecordSvc *AlertRecordService, MessageSvc *service.MessageService, TenantSvc *service.TenantService) *AlertRecordAddService {
 	return &AlertRecordAddService{
+		//TODO
 		FilterChain:    nil,
-		AlertRecordSvc: nil,
-		MessageSvc:     nil,
-		TenantSvc:      nil,
+		AlertRecordSvc: AlertRecordSvc,
+		MessageSvc:     MessageSvc,
+		TenantSvc:      TenantSvc,
 		AlertRecordDao: commonDao.AlertRecord,
 	}
 }
@@ -152,7 +154,7 @@ func (s *AlertRecordAddService) checkAndBuild(alerts []*forms.AlertRecordAlertsB
 			objMap["times"] = getTime(ruleDesc.Time)
 			objMap["time"] = utils.GetDateDiff(ruleDesc.Period * 1000)
 			objMap["calType"] = ruleDesc.Statistic
-			objMap["expression"] = string(ruleDesc.ComparisonOperator)
+			objMap["expression"] = ruleDesc.ComparisonOperator
 			if st == messageCenter.ALERT_CANCEL {
 				targetValue := ""
 				if tools.IsNotBlank(ruleDesc.Unit) {
@@ -293,11 +295,11 @@ func (s *AlertRecordAddService) predicate(alert *forms.AlertRecordAlertsBean) (b
 }
 
 func (s *AlertRecordAddService) persistence(list []commonModels.AlertRecord) error {
-	return s.AlertRecordSvc.Persistence(s.AlertRecordSvc, config.GetRocketmqConfig().RecordTopic, list)
+	return s.AlertRecordSvc.Persistence(s.AlertRecordSvc, sysRocketMq.Topic(config.GetRocketmqConfig().RecordTopic), list)
 }
 
 func (s *AlertRecordAddService) sendNotice(alertMsgList []service.AlertMsgSendDTO) error {
-	return s.MessageSvc.SendMsgNew(alertMsgList, false)
+	return s.MessageSvc.SendMsg(alertMsgList, false)
 }
 
 type RuleChangeFilter struct {
