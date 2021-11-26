@@ -1,16 +1,18 @@
 package service
 
 import (
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/dao"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/errors"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/forms"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/models"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/service"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/tools"
-	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/dao"
-	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/forms"
-	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/models"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/enums"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/utils/snowflake"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
+	"strconv"
 	"strings"
 )
 
@@ -85,6 +87,7 @@ func (s *AlertContactInformationService) getInformationList(p forms.AlertContact
 	var infoList []*models.AlertContactInformation
 	if p.Phone != "" {
 		alertContactInformationPhone := &models.AlertContactInformation{
+			Id:         strconv.FormatInt(snowflake.GetWorker().NextId(), 10),
 			TenantId:   p.TenantId,
 			ContactId:  p.ContactId,
 			No:         p.Phone,
@@ -97,6 +100,7 @@ func (s *AlertContactInformationService) getInformationList(p forms.AlertContact
 	}
 	if p.Email != "" {
 		alertContactInformationEmail := &models.AlertContactInformation{
+			Id:         strconv.FormatInt(snowflake.GetWorker().NextId(), 10),
 			TenantId:   p.TenantId,
 			ContactId:  p.ContactId,
 			No:         p.Email,

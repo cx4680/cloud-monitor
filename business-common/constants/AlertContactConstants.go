@@ -1,4 +1,4 @@
-package constant
+package constants
 
 const (
 	MAX_CONTACT_NUM   = 100

@@ -9,7 +9,6 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/validator/translate"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/web"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
-
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
 	"flag"
 	"log"
