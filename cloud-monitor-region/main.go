@@ -70,7 +70,7 @@ func initRocketMq() error {
 		return err
 	}
 
-	if err := sysRocketMq.StartConsumersScribe([]sysRocketMq.Consumer{{
+	if err := sysRocketMq.StartConsumersScribe([]*sysRocketMq.Consumer{{
 		Topic:   rc.AlertContactTopic,
 		Handler: consumer.AlertContactHandler,
 	}, {

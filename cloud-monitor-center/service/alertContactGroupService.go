@@ -1,11 +1,11 @@
 package service
 
 import (
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/errors"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/service"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/tools"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/constant"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/dao"
-	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/errors"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/forms"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/models"
 	"gorm.io/gorm"
@@ -47,4 +47,8 @@ func (acgs *AlertContactGroupService) PersistenceLocal(db *gorm.DB, param interf
 
 	acgs.dao.InsertGroupRelBatch(db, relList)
 	return tools.ToString(relList), nil
+}
+
+func insert() {
+
 }

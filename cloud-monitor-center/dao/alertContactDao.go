@@ -1,8 +1,10 @@
 package dao
 
 import (
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/dao"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/dtos"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/service"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/tools"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/constant"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/errors"
@@ -117,7 +119,7 @@ const (
 		"ac.create_time DESC "
 )
 
-func (mpd *AlertContactDao) GetAlertContact(param forms.AlertContactParam) *forms.AlertContactFormPage {
+func (acd *AlertContactDao) Select(db *gorm.DB, param forms.AlertContactParam) *forms.AlertContactFormPage {
 	var model = &[]forms.AlertContactForm{}
 	var sql string
 	if param.ContactName != "" {
@@ -131,10 +133,10 @@ func (mpd *AlertContactDao) GetAlertContact(param forms.AlertContactParam) *form
 		sql = fmt.Sprintf(SelectAlterContact, param.TenantId, "")
 	}
 	var count int64
-	global.DB.Model(&models.AlertContact{}).Where("tenant_id = ?", param.TenantId).Count(&count)
+	db.Model(&models.AlertContact{}).Where("tenant_id = ?", param.TenantId).Count(&count)
 	total := count
 	sql += "LIMIT " + strconv.Itoa((param.PageCurrent-1)*param.PageSize) + "," + strconv.Itoa(param.PageSize)
-	global.DB.Raw(sql).Find(model)
+	db.Raw(sql).Find(model)
 	var alertContactFormPage = &forms.AlertContactFormPage{
 		Records: model,
 		Current: param.PageCurrent,
@@ -145,15 +147,22 @@ func (mpd *AlertContactDao) GetAlertContact(param forms.AlertContactParam) *form
 }
 
 func (acd *AlertContactDao) Insert(db *gorm.DB, entity *models.AlertContact) {
-	currentTime := tools.GetNowStr()
-	contactId := strconv.FormatInt(snowflake.GetWorker().NextId(), 10)
-
-	entity.Id = contactId
+	currentTime := tools.GetNow()
 	entity.CreateTime = currentTime
 	entity.UpdateTime = currentTime
-	entity.Status = 1
 	db.Create(entity)
 }
+
+func (acd *AlertContactDao) Update(db *gorm.DB, entity *models.AlertContact) {
+	currentTime := tools.GetNow()
+	entity.UpdateTime = currentTime
+	db.Updates(entity)
+}
+
+func (acd *AlertContactDao) Delete(db *gorm.DB, entity *models.AlertContact) {
+	db.Delete(entity)
+}
+
 func (mpd *AlertContactDao) InsertAlertContact(param forms.AlertContactParam) error {
 	if param.ContactName == "" {
 		return errors.NewBusinessError("联系人名字不能为空")
@@ -169,7 +178,7 @@ func (mpd *AlertContactDao) InsertAlertContact(param forms.AlertContactParam) er
 		return errors.NewBusinessError("每个联系人最多加入" + strconv.Itoa(constant.MAX_CONTACT_GROUP) + "个联系组")
 	}
 
-	currentTime := tools.GetNowStr()
+	currentTime := tools.GetNow()
 	contactId := strconv.FormatInt(snowflake.GetWorker().NextId(), 10)
 	param.ContactId = contactId
 	var alertContact = &models.AlertContact{
@@ -206,7 +215,7 @@ func (mpd *AlertContactDao) UpdateAlertContact(param forms.AlertContactParam) er
 	if len(param.GroupIdList) >= constant.MAX_CONTACT_GROUP {
 		return errors.NewBusinessError("每个联系人最多加入" + strconv.Itoa(constant.MAX_CONTACT_GROUP) + "个联系组")
 	}
-	currentTime := tools.GetNowStr()
+	currentTime := tools.GetNow()
 	var alertContact = &models.AlertContact{
 		Id:          param.ContactId,
 		TenantId:    param.TenantId,

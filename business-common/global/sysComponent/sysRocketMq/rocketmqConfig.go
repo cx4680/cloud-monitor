@@ -64,14 +64,15 @@ func InitProducer() error {
 	return nil
 }
 
-func StartConsumersScribe(consumers []Consumer) error {
+func StartConsumersScribe(consumers []*Consumer) error {
 	c, _ := rocketmq.NewPushConsumer(
 		consumer.WithGroupName(config.GetCommonConfig().RegionName),
 		consumer.WithNsResolver(primitive.NewPassthroughResolver([]string{config.GetRocketmqConfig().NameServer})),
 	)
 	for _, o := range consumers {
-		err := c.Subscribe(o.Topic, consumer.MessageSelector{}, func(ctx context.Context, msg ...*primitive.MessageExt) (consumer.ConsumeResult, error) {
-			o.Handler(msg)
+		m := *o
+		err := c.Subscribe(m.Topic, consumer.MessageSelector{}, func(ctx context.Context, msg ...*primitive.MessageExt) (consumer.ConsumeResult, error) {
+			m.Handler(msg)
 			return consumer.ConsumeSuccess, nil
 		})
 		if err != nil {

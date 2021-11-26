@@ -105,7 +105,6 @@ func defaultAuthSdkConfig() Config {
 			NameServer:        "127.0.0.1:9876",
 			BrokerAddr:        "127.0.0.1:10911",
 			AlertContactTopic: "alertContactTopic",
-			AlertContactGroup: "alertContactGroup",
 			RuleTopic:         "",
 			RecordTopic:       "",
 		},

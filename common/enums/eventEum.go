@@ -8,6 +8,7 @@ const (
 	DeleteAlertContact                    EventEum = "deleteAlertContact"
 	CertifyAlertContact                   EventEum = "certifyAlertContact"
 	InsertAlertContactInformation         EventEum = "insertAlertContactInformation"
+	UpdateAlertContactInformation         EventEum = "updateAlertContactInformation"
 	DeleteAlertContactInformation         EventEum = "deleteAlertContactInformation"
 	InsertAlertContactGroupRel            EventEum = "insertAlertContactGroupRel"
 	DeleteAlertContactGroupRelByContactId EventEum = "DeleteAlertContactGroupRelByContactId"

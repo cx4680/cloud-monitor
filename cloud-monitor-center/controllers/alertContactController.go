@@ -1,40 +1,48 @@
 package controllers
 
 import (
-	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/dao"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/forms"
-	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/global"
+	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/service"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/validator/translate"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/enums"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
 
 type AlertContactCtl struct {
-	dao *dao.AlertContactDao
+	service service.AlertContactService
 }
 
-func NewAlertContactCtl(dao *dao.AlertContactDao) *AlertContactCtl {
-	return &AlertContactCtl{dao}
+func NewAlertContactCtl(service service.AlertContactService) *AlertContactCtl {
+	return &AlertContactCtl{service}
 }
 
-func (mpc *AlertContactCtl) GetAlertContact(c *gin.Context) {
+var groupService = service.NewAlertContactGroupService()
+var informationService = service.NewAlertContactInformationService()
+var contactService = service.NewAlertContactService(groupService, informationService)
+
+func (acl *AlertContactCtl) GetAlertContact(c *gin.Context) {
 	var param forms.AlertContactParam
 	err := c.ShouldBindQuery(&param)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, translate.GetErrorMsg(err))
 		return
 	}
-	c.JSON(http.StatusOK, global.NewSuccess("查询成功", mpc.dao.GetAlertContact(param)))
+	c.JSON(http.StatusOK, global.NewSuccess("查询成功", acl.service.Select(param)))
 }
 
-func (mpc *AlertContactCtl) InsertAlertContact(c *gin.Context) {
+func (acl *AlertContactCtl) InsertAlertContact(c *gin.Context) {
 	var param forms.AlertContactParam
 	err := c.ShouldBindJSON(&param)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, translate.GetErrorMsg(err))
 		return
 	}
-	err = mpc.dao.InsertAlertContact(param)
+	param.EventEum = enums.InsertAlertContact
+	err = contactService.Persistence(contactService, config.GetRocketmqConfig().AlertContactTopic, param)
+	//local, err := acl.service.PersistenceLocal(global.DB, param)
 	if err != nil {
 		c.JSON(http.StatusOK, global.NewError(err.Error()))
 	} else {
@@ -42,14 +50,14 @@ func (mpc *AlertContactCtl) InsertAlertContact(c *gin.Context) {
 	}
 }
 
-func (mpc *AlertContactCtl) UpdateAlertContact(c *gin.Context) {
+func (acl *AlertContactCtl) UpdateAlertContact(c *gin.Context) {
 	var param forms.AlertContactParam
 	err := c.ShouldBindJSON(&param)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, translate.GetErrorMsg(err))
 		return
 	}
-	err = mpc.dao.UpdateAlertContact(param)
+	err = acl.service.Update(param)
 	if err != nil {
 		c.JSON(http.StatusOK, global.NewError(err.Error()))
 	} else {
@@ -57,18 +65,22 @@ func (mpc *AlertContactCtl) UpdateAlertContact(c *gin.Context) {
 	}
 }
 
-func (mpc *AlertContactCtl) DeleteAlertContact(c *gin.Context) {
+func (acl *AlertContactCtl) DeleteAlertContact(c *gin.Context) {
 	var param forms.AlertContactParam
 	err := c.ShouldBindJSON(&param)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, translate.GetErrorMsg(err))
 		return
 	}
-	mpc.dao.DeleteAlertContact(param)
-	c.JSON(http.StatusOK, global.NewSuccess("删除成功", true))
+	err = acl.service.Delete(param)
+	if err != nil {
+		c.JSON(http.StatusOK, global.NewError(err.Error()))
+	} else {
+		c.JSON(http.StatusOK, global.NewSuccess("删除成功", true))
+	}
 }
 
-func (mpc *AlertContactCtl) CertifyAlertContact(c *gin.Context) {
+func (acl *AlertContactCtl) CertifyAlertContact(c *gin.Context) {
 	activeCode := c.Query("activeCode")
-	c.JSON(http.StatusOK, global.NewSuccess("激活成功", mpc.dao.CertifyAlertContact(activeCode)))
+	c.JSON(http.StatusOK, global.NewSuccess("激活成功", acl.service.CertifyAlertContact(activeCode)))
 }
