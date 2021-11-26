@@ -34,7 +34,7 @@ func (mpd *AlertContactGroupDao) GetAlertGroupContact(tenantId string, groupId s
 }
 
 func (mpd *AlertContactGroupDao) InsertGroupRelBatch(db *gorm.DB, list []*models.AlertContactGroupRel) {
-	now := tools.GetNow()
+	now := tools.GetNowStr()
 	for _, rel := range list {
 		rel.Id = strconv.FormatInt(snowflake.GetWorker().NextId(), 10)
 		rel.UpdateTime = now
@@ -55,7 +55,7 @@ func (mpd *AlertContactGroupDao) InsertAlertContactGroup(param forms.AlertContac
 	if count >= 1 {
 		return errors.NewBusinessError("联系组名重复")
 	}
-	currentTime := tools.GetNow()
+	currentTime := tools.GetNowStr()
 	groupId := strconv.FormatInt(snowflake.GetWorker().NextId(), 10)
 	param.GroupId = groupId
 	var alertContactGroup = models.AlertContactGroup{
@@ -89,7 +89,7 @@ func (mpd *AlertContactGroupDao) UpdateAlertContactGroup(param forms.AlertContac
 	if count >= 1 {
 		return errors.NewBusinessError("联系组名重复")
 	}
-	currentTime := tools.GetNow()
+	currentTime := tools.GetNowStr()
 	var alertContactGroup = &models.AlertContactGroup{
 		Id:          param.GroupId,
 		TenantId:    param.TenantId,

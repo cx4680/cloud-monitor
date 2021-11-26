@@ -1,4 +1,4 @@
-package dtos
+package messageCenter
 
 type ReceiveType int
 
@@ -16,21 +16,16 @@ const (
 	SMS_LACK                          //短信余量
 )
 
-type MsgEvent struct {
-	Type   ReceiveType
-	Source MsgSource
+type MessageTargetDTO struct {
+	Addr string
+	Type ReceiveType
 }
 
-type NoticeMsgDTO struct {
-	SourceId      string
-	TenantId      string
-	MsgEvent      MsgEvent
-	RevObjectBean RecvObjectBean
-}
-
-type MsgSourceDTO struct {
-	Type     MsgSource
-	SourceId string
+type MessageSendDTO struct {
+	SenderId   string
+	Target     []MessageTargetDTO
+	SourceType MsgSource
+	Content    string
 }
 
 // SmsMessageReqDTO 消息中心接口入参

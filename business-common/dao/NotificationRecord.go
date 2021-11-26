@@ -5,6 +5,9 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/models"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/tools"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/utils/snowflake"
+	"gorm.io/gorm"
+	"strconv"
 	"time"
 )
 
@@ -13,8 +16,15 @@ type NotificationRecordDao struct {
 
 var NotificationRecord = new(NotificationRecordDao)
 
-func (dao *NotificationRecordDao) InsertBatch(recordList []models.NotificationRecord) {
-	global.DB.Create(&recordList)
+func (dao *NotificationRecordDao) InsertBatch(db *gorm.DB, recordList []models.NotificationRecord) {
+	if len(recordList) > 0 {
+		for _, record := range recordList {
+			record.Id = strconv.FormatInt(snowflake.GetWorker().NextId(), 10)
+			record.CreateTime = tools.GetNowStr()
+		}
+		db.Create(&recordList)
+	}
+
 }
 
 func (dao *NotificationRecordDao) GetTenantPhoneCurrentMonthRecordNum(tenantId string) int {

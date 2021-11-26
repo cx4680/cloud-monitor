@@ -4,6 +4,7 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/dtos"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/models"
+	"gorm.io/gorm"
 )
 
 type AlertRecordDao struct {
@@ -11,12 +12,8 @@ type AlertRecordDao struct {
 
 var AlertRecord = new(AlertRecordDao)
 
-func (dao *AlertRecordDao) InsertBatch(records []*models.AlertRecord) {
-	var list []models.AlertRecord
-	for _, record := range records {
-		list = append(list, *record)
-	}
-	global.DB.Create(&records)
+func (dao *AlertRecordDao) InsertBatch(db *gorm.DB, records []models.AlertRecord) {
+	db.Create(&records)
 }
 
 func (dao *AlertRecordDao) FindAlertRuleBindNum(ruleId, instanceId string) int {

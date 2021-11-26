@@ -5,5 +5,5 @@ const (
 	ThresholdSmsNum = 950  //用户每月剩余免费短信条数阈值
 )
 
-//应用程序代码
+// AppCode 应用程序代码
 const AppCode = "monitor"

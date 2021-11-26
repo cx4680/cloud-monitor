@@ -1,10 +1,8 @@
 package dao
 
 import (
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/dao"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/dtos"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/service"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/tools"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/constant"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/errors"
@@ -147,7 +145,7 @@ func (mpd *AlertContactDao) GetAlertContact(param forms.AlertContactParam) *form
 }
 
 func (acd *AlertContactDao) Insert(db *gorm.DB, entity *models.AlertContact) {
-	currentTime := tools.GetNow()
+	currentTime := tools.GetNowStr()
 	contactId := strconv.FormatInt(snowflake.GetWorker().NextId(), 10)
 
 	entity.Id = contactId
@@ -171,7 +169,7 @@ func (mpd *AlertContactDao) InsertAlertContact(param forms.AlertContactParam) er
 		return errors.NewBusinessError("每个联系人最多加入" + strconv.Itoa(constant.MAX_CONTACT_GROUP) + "个联系组")
 	}
 
-	currentTime := tools.GetNow()
+	currentTime := tools.GetNowStr()
 	contactId := strconv.FormatInt(snowflake.GetWorker().NextId(), 10)
 	param.ContactId = contactId
 	var alertContact = &models.AlertContact{
@@ -208,7 +206,7 @@ func (mpd *AlertContactDao) UpdateAlertContact(param forms.AlertContactParam) er
 	if len(param.GroupIdList) >= constant.MAX_CONTACT_GROUP {
 		return errors.NewBusinessError("每个联系人最多加入" + strconv.Itoa(constant.MAX_CONTACT_GROUP) + "个联系组")
 	}
-	currentTime := tools.GetNow()
+	currentTime := tools.GetNowStr()
 	var alertContact = &models.AlertContact{
 		Id:          param.ContactId,
 		TenantId:    param.TenantId,
@@ -389,5 +387,6 @@ func sendMsg(tenantId string, contactId string, no string, noType int, activeCod
 	noticeMsgDTO.RevObjectBean = recvObjectBean
 	var noticeMsgDTOList []*dtos.NoticeMsgDTO
 	noticeMsgDTOList = append(noticeMsgDTOList, &noticeMsgDTO)
-	service.NewMessageService(dao.NotificationRecord).SendMsg(noticeMsgDTOList, true)
+	//TODO
+	//service.NewMessageService(dao.NotificationRecord).SendMsg(noticeMsgDTOList, true)
 }

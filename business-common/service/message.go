@@ -4,7 +4,10 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/constants"
 	commonDao "code.cestc.cn/ccos-ops/cloud-monitor/business-common/dao"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/dtos"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/sysComponent/sysRocketMq"
 	commonModels "code.cestc.cn/ccos-ops/cloud-monitor/business-common/models"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/service/external/messageCenter"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/tools"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/utils/snowflake"
@@ -17,57 +20,91 @@ import (
 
 type MessageService struct {
 	NotificationRecordDao *commonDao.NotificationRecordDao
+	MCS                   *messageCenter.Service
 }
 
-func NewMessageService(notificationRecordDao *commonDao.NotificationRecordDao) *MessageService {
+func NewMessageService(notificationRecordDao *commonDao.NotificationRecordDao, messageCenterService *messageCenter.Service) *MessageService {
 	return &MessageService{
 		NotificationRecordDao: notificationRecordDao,
+		MCS:                   messageCenterService,
 	}
 }
 
-func (s *MessageService) SendMsg(msgDTOList []*dtos.NoticeMsgDTO, centerService bool) []commonModels.NotificationRecord {
+func (s *MessageService) TargetFilter(targetList []messageCenter.MessageTargetDTO, senderId string, isCenter bool) {
+	if targetList == nil || len(targetList) <= 0 {
+		return
+	}
+	var nt []messageCenter.MessageTargetDTO
+	for _, t := range targetList {
+		if messageCenter.Email == t.Type {
+			nt = append(nt, t)
+		} else {
+			num := s.NotificationRecordDao.GetTenantPhoneCurrentMonthRecordNum(senderId)
+			if s.checkSentNum(senderId, num, isCenter) {
+				nt = append(nt, t)
+			} else {
+				log.Printf("too many records have been sent, send refused, sender=%s \n", senderId)
+			}
+		}
+	}
+	targetList = nt
+}
+
+type AlertMsgSendDTO struct {
+	AlertId string
+	Msg     messageCenter.MessageSendDTO
+}
+
+func (s *MessageService) SendMsgNew(msgList []AlertMsgSendDTO, isCenter bool) error {
 	if !config.GetCommonConfig().HasNoticeModel {
-		log.Println("There is no message center for this project")
+		log.Println("There is no message center for this env")
 		return nil
 	}
-	if msgDTOList == nil || len(msgDTOList) <= 0 {
+	if msgList == nil || len(msgList) <= 0 {
 		return nil
 	}
+	var recordList []commonModels.NotificationRecord
+	for _, m := range msgList {
+		msg := m.Msg
+		//TODO 确认切片引用
+		s.TargetFilter(msg.Target, msg.SenderId, isCenter)
 
-	noticeMsgDTOS := s.removeSmsExcessiveUser(msgDTOList, centerService)
-	if noticeMsgDTOS == nil || len(noticeMsgDTOS) <= 0 {
-		return nil
+		//send msg
+		if err := s.MCS.Send(msg); err != nil {
+			log.Printf("message send error, %v\n\n", err)
+			return err
+		}
+		for _, t := range msg.Target {
+			recordList = append(recordList, commonModels.NotificationRecord{
+				SenderId:         msg.SenderId,
+				SourceId:         m.AlertId,
+				SourceType:       int(msg.SourceType),
+				TargetAddress:    t.Addr,
+				NotificationType: int(t.Type),
+				Result:           1,
+			})
+		}
 	}
-	s.sendToMsgCenter(noticeMsgDTOS)
-	return s.saveNotificationRecords(noticeMsgDTOS)
+	//save record local
+	s.NotificationRecordDao.InsertBatch(global.DB, recordList)
+
+	//	sync record to center
+	if !isCenter {
+		//TODO topic
+		sysRocketMq.SendMsg("notification_sync", tools.ToString(recordList))
+	}
+	return nil
 
 }
 
-func (s *MessageService) removeSmsExcessiveUser(msgDTOList []*dtos.NoticeMsgDTO, centerService bool) []*dtos.NoticeMsgDTO {
-	var list []*dtos.NoticeMsgDTO
-	for _, noticeMsgDTO := range msgDTOList {
-		if noticeMsgDTO.MsgEvent.Type == dtos.Email {
-			list = append(list, noticeMsgDTO)
-			continue
-		}
-		num := s.NotificationRecordDao.GetTenantPhoneCurrentMonthRecordNum(noticeMsgDTO.TenantId)
-		if !s.checkSentNum(noticeMsgDTO.TenantId, num, centerService) {
-			log.Printf("too many records have been sent, send refused, sender=%s \n", noticeMsgDTO.TenantId)
-			continue
-		}
-
-	}
-	return list
-}
-
-func (s *MessageService) checkSentNum(tenantId string, num int, centerService bool) bool {
+func (s *MessageService) checkSentNum(tenantId string, num int, isCenter bool) bool {
 	//check local
 	if num > constants.MaxSmsNum {
 		log.Println("user ", tenantId, " already used more", constants.MaxSmsNum, ", send sms refused.")
 		return false
 	}
 	//	check remote
-	if !centerService {
+	if !isCenter {
 		num = s.getUserCurrentMonthSmsUsedNum(tenantId)
 		if num > constants.MaxSmsNum {
 			log.Println("user ", tenantId, " already used more", constants.MaxSmsNum, ", send sms refused.")
@@ -131,7 +168,7 @@ func (s *MessageService) saveNotificationRecords(noticeMsgDTOS []*dtos.NoticeMsg
 			CreateTime:       now,
 		})
 	}
-	s.NotificationRecordDao.InsertBatch(recordList)
+	s.NotificationRecordDao.InsertBatch(global.DB, recordList)
 	return recordList
 }
 

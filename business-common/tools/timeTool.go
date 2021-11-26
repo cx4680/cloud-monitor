@@ -2,7 +2,12 @@ package tools
 
 import "time"
 
-// 获取指定时间所在月的开始 结束时间
+const (
+	FullTimeFmt = "2006-01-02 15:04:05"
+	ZoneTimeFmt = "2006-01-02T15:04:05Z"
+)
+
+// GetMonthStartEnd 获取指定时间所在月的开始 结束时间
 func GetMonthStartEnd(t time.Time) (time.Time, time.Time) {
 	monthStartDay := t.AddDate(0, 0, -t.Day()+1)
 	monthStartTime := time.Date(monthStartDay.Year(), monthStartDay.Month(), monthStartDay.Day(), 0, 0, 0, 0, t.Location())
@@ -11,6 +16,24 @@ func GetMonthStartEnd(t time.Time) (time.Time, time.Time) {
 	return monthStartTime, monthEndTime
 }
 
-func GetNow() string {
-	return time.Now().Format("2006-01-02 15:04:05")
+func GetNow() time.Time {
+	return time.Now()
+}
+
+func GetNowStr() string {
+	return time.Now().Format(FullTimeFmt)
+}
+
+func TimeToStr(t time.Time, fmt string) string {
+	return t.Format(fmt)
+}
+
+func StrToTime(fmt, str string) (t time.Time) {
+	t, _ = time.Parse(fmt, str)
+	return
+}
+
+func TimeParseForZone(s string) time.Time {
+	parse, _ := time.Parse(ZoneTimeFmt, s)
+	return time.Unix(parse.Unix(), 0)
 }
