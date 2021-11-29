@@ -36,7 +36,7 @@ func CreateTopics(topics ...string) error {
 	cfg := config.GetRocketmqConfig()
 	testAdmin, err := admin.NewAdmin(admin.WithResolver(primitive.NewPassthroughResolver([]string{cfg.NameServer})))
 	if err != nil {
-		fmt.Sprintf("create topic error %+v", err)
+		fmt.Printf("create topic error %+v\n", err)
 		return err
 	}
 	for _, topic := range topics {
@@ -46,7 +46,7 @@ func CreateTopics(topics ...string) error {
 			admin.WithBrokerAddrCreate(cfg.BrokerAddr),
 		)
 		if err != nil {
-			fmt.Sprintf("create topic error %+v", err)
+			fmt.Printf("create topic error %+v", err)
 			return err
 		}
 	}
