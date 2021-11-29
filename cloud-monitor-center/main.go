@@ -3,6 +3,7 @@ package main
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/sysComponent"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/sysComponent/sysRocketMq"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/task"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/mq/consumer"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/validator/translate"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/web"
@@ -43,6 +44,11 @@ func main() {
 		os.Exit(5)
 	}
 
+	if err := initTask(); err != nil {
+		log.Printf("init task error, %v\n", err)
+		os.Exit(6)
+	}
+
 	logger.InitLogger(config.GetLogConfig())
 	defer logger.Logger().Sync()
 
@@ -71,6 +77,13 @@ func initRocketMq() error {
 }
 
 func initTask() error {
-	//TODO
+	bt := task.NewBusinessTaskImpl()
+	if err := bt.Add(task.BusinessTaskDTO{
+		Cron: "0 0 0/1 * * ?",
+		Name: "clearAlertRecordJob",
+		Task: task.Clear,
+	}); err != nil {
+		return err
+	}
 	return nil
 }
