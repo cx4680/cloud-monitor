@@ -26,24 +26,21 @@ func (s *TenantService) GetTenantInfo(tenantId string) dtos.TenantDTO {
 		log.Fatalln("获取缓存出错, key=" + key)
 	}
 	if tools.IsNotBlank(value) {
-		//
 		tools.ToObject(value, &tenant)
-	} else {
-		tenant := getTenant(tenantId)
-		if tenant != nil {
-			err := sysRedis.SetByTimeOut(key, tools.ToString(tenant), RedisTimeOutOneHour*time.Second)
-			if err != nil {
-				log.Fatalln("设置redis出错, key=" + key)
-			}
-		} else {
-			log.Fatalln("获取租户信息为空")
-		}
+		return tenant
 	}
-
-	return tenant
+	tenantFromRemote := getTenantFromServer(tenantId)
+	if tenantFromRemote == nil {
+		log.Fatalln("获取租户信息为空")
+		return tenant
+	}
+	if e := sysRedis.SetByTimeOut(key, tools.ToString(tenantFromRemote), RedisTimeOutOneHour*time.Second); e != nil {
+		log.Fatalln("设置redis出错, key=" + key)
+	}
+	return *tenantFromRemote
 }
 
-func getTenant(tenantId string) *dtos.TenantDTO {
+func getTenantFromServer(tenantId string) *dtos.TenantDTO {
 	m := make(map[string]string, 1)
 	m["loginId"] = tenantId
 	resp, err := tools.HttpPostJson(config.GetCommonConfig().TenantUrl, m)
