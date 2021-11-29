@@ -50,12 +50,17 @@ func (s *AlertRecordAddService) Add(f forms.InnerAlertRecordAddForm) error {
 	}
 	list, alertMsgList := s.checkAndBuild(f.Alerts)
 	//持久化
-	if err := s.persistence(list); err != nil {
-		return err
+	if list != nil && len(list) > 0 {
+		if err := s.persistence(list); err != nil {
+			return err
+		}
 	}
+
 	//发送通知
-	if err := s.sendNotice(alertMsgList); err != nil {
-		return err
+	if alertMsgList != nil && len(alertMsgList) > 0 {
+		if err := s.sendNotice(alertMsgList); err != nil {
+			return err
+		}
 	}
 	return nil
 }

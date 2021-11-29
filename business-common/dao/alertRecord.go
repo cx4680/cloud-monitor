@@ -4,6 +4,7 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/dtos"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/models"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/tools"
 	"gorm.io/gorm"
 )
 
@@ -36,5 +37,9 @@ func (dao *AlertRecordDao) FindContactInfoByGroupIds(groupIds []string) []dtos.C
 func (dao *AlertRecordDao) FindFirstInstanceInfo(instanceId string) *models.AlarmInstance {
 	var alarmInstance models.AlarmInstance
 	global.DB.Raw("select * from t_alarm_instance where instance_id=? limit 1", instanceId).Scan(&alarmInstance)
+	if tools.IsBlank(alarmInstance.AlarmRuleID) {
+		//未查询到数据
+		return nil
+	}
 	return &alarmInstance
 }
