@@ -98,11 +98,10 @@ func SendRocketMqMsg(msg RocketMqMsg) error {
 }
 
 func SendMsg(topic, msg string) error {
-	mqmsg := &primitive.Message{
+	res, err := p.SendSync(context.Background(), &primitive.Message{
 		Topic: topic,
 		Body:  []byte(msg),
-	}
-	res, err := p.SendSync(context.Background(), mqmsg)
+	})
 
 	if err != nil {
 		fmt.Printf("send message error: %s\n", err)
