@@ -6,7 +6,6 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/forms"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/mq/producer"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/service"
-	"github.com/robfig/cron"
 	"log"
 )
 
@@ -14,18 +13,7 @@ var pageSize = 100
 
 var productType = "云服务器ECS"
 
-func CronInstanceJob() {
-	c := cron.New()
-	err := c.AddFunc("0 0 0/1 * * ?", instanceJob)
-	if err != nil {
-		log.Println("clearAlertRecordJob error", err)
-	}
-	c.Start()
-	defer c.Stop()
-	select {}
-}
-
-func instanceJob() {
+func InstanceJob() {
 	log.Println("instanceJob start")
 	syncUpdate()
 	log.Println("instanceJob end")

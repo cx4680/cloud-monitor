@@ -6,24 +6,12 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/forms"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/mq/producer"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/service"
-	"github.com/robfig/cron"
 	"log"
 )
 
 var slbProductType = "负载均衡SLB"
 
-func CronSlbInstanceJob() {
-	c := cron.New()
-	err := c.AddFunc("0 0 0/1 * * ?", slbInstanceJob)
-	if err != nil {
-		log.Println("clearAlertRecordJob error", err)
-	}
-	c.Start()
-	defer c.Stop()
-	select {}
-}
-
-func slbInstanceJob() {
+func SlbInstanceJob() {
 	log.Println("slbInstanceJob start")
 	slbSyncUpdate()
 	log.Println("slbInstanceJob end")

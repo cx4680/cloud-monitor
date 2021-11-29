@@ -3,6 +3,7 @@ package main
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/sysComponent"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/sysComponent/sysRocketMq"
+	commonTask "code.cestc.cn/ccos-ops/cloud-monitor/business-common/task"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/k8s"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/mq/consumer"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/task"
@@ -48,8 +49,10 @@ func main() {
 		os.Exit(5)
 	}
 	//加载定时任务
-	go task.CronInstanceJob()
-	go task.CronSlbInstanceJob()
+	if err := initTask(); err != nil {
+		log.Printf("init task error, %v\n", err)
+		os.Exit(6)
+	}
 
 	logger.InitLogger(config.GetLogConfig())
 	defer logger.Logger().Sync()
@@ -79,5 +82,26 @@ func initRocketMq() error {
 		log.Printf("create rocketmq consumer error, %v\n", err)
 		return err
 	}
+	return nil
+}
+
+func initTask() error {
+	bt := commonTask.NewBusinessTaskImpl()
+	if err := bt.Add(commonTask.BusinessTaskDTO{
+		Cron: "0 0 0/1 * * ?",
+		Name: "instanceJob",
+		Task: task.InstanceJob,
+	}); err != nil {
+		return err
+	}
+
+	if err := bt.Add(commonTask.BusinessTaskDTO{
+		Cron: "0 0 0/1 * * ?",
+		Task: task.SlbInstanceJob,
+	}); err != nil {
+		return err
+	}
+
+	bt.Start()
 	return nil
 }
