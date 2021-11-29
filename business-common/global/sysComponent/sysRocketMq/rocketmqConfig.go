@@ -9,11 +9,9 @@ import (
 	"github.com/apache/rocketmq-client-go/v2/consumer"
 	"github.com/apache/rocketmq-client-go/v2/primitive"
 	"github.com/apache/rocketmq-client-go/v2/producer"
-	"log"
 )
 
 var p rocketmq.Producer
-var c rocketmq.PushConsumer
 
 type Topic string
 
@@ -113,13 +111,4 @@ func SendMsg(topic, msg string) error {
 		fmt.Printf("send message success: result=%s\n", res.String())
 	}
 	return nil
-}
-
-func Shutdown() {
-	if err := p.Shutdown(); err != nil {
-		log.Printf("shutdown rocketmq producer error, %v\n", err)
-	}
-	if err := c.Shutdown(); err != nil {
-		log.Printf("shutdown rocketmq consumer error, %v\n", err)
-	}
 }
