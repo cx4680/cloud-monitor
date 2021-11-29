@@ -69,3 +69,8 @@ func initRocketMq() error {
 	}
 	return nil
 }
+
+func initTask() error {
+	//TODO
+	return nil
+}
