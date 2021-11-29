@@ -85,5 +85,7 @@ func initTask() error {
 	}); err != nil {
 		return err
 	}
+
+	bt.Start()
 	return nil
 }
