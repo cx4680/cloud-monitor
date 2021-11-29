@@ -1,10 +1,12 @@
 package service
 
 import (
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/constants"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/dtos"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/sysComponent/sysRedis"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/tools"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
+	"fmt"
 	"log"
 	"time"
 )
@@ -20,7 +22,8 @@ func NewTenantService() *TenantService {
 
 func (s *TenantService) GetTenantInfo(tenantId string) dtos.TenantDTO {
 	var tenant dtos.TenantDTO
-	key := "userInfo:" + tenantId
+	key := fmt.Sprintf(constants.TenantInfoKey, tenantId)
+
 	value, err := sysRedis.Get(key)
 	if err != nil {
 		log.Fatalln("获取缓存出错, key=" + key)
