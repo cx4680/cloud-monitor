@@ -7,7 +7,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func Tx(param interface{}, dao interface{}, f func(xx *gorm.DB, param interface{}, dao interface{}) error) (err error) {
+func Tx(param interface{}, f func(xx *gorm.DB, param interface{}) error) (err error) {
 	tx := global.DB.Begin()
 	defer func() {
 		if r := recover(); r != nil {
@@ -16,7 +16,7 @@ func Tx(param interface{}, dao interface{}, f func(xx *gorm.DB, param interface{
 			err = fmt.Errorf("%v", err)
 		}
 	}()
-	err = f(tx, param, dao)
+	err = f(tx, param)
 	if err != nil {
 		tx.Rollback()
 		return

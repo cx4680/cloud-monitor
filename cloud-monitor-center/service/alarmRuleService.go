@@ -10,8 +10,8 @@ import (
 	"strings"
 )
 
-func CreateRule(tx *gorm.DB, param interface{}, dd interface{}) error {
-	ruleDao := dd.(*dao.AlarmRuleDao)
+func CreateRule(tx *gorm.DB, param interface{}) error {
+	ruleDao := dao.AlarmRule
 	dto := param.(*forms.AlarmRuleAddReqDTO)
 	id := ruleDao.SaveRule(tx, dto)
 	dto.Id = id
@@ -19,24 +19,24 @@ func CreateRule(tx *gorm.DB, param interface{}, dd interface{}) error {
 	return err
 }
 
-func UpdateRule(tx *gorm.DB, param interface{}, dd interface{}) error {
-	ruleDao := dd.(*dao.AlarmRuleDao)
+func UpdateRule(tx *gorm.DB, param interface{}) error {
+	ruleDao := dao.AlarmRule
 	dto := param.(*forms.AlarmRuleAddReqDTO)
 	ruleDao.UpdateRule(tx, dto)
 	err := mq.SendMsg(config.GetRocketmqConfig().RuleTopic, enums.UpdateRule, dto)
 	return err
 }
 
-func DeleteRule(tx *gorm.DB, param interface{}, dd interface{}) error {
-	ruleDao := dd.(*dao.AlarmRuleDao)
+func DeleteRule(tx *gorm.DB, param interface{}) error {
+	ruleDao := dao.AlarmRule
 	dto := param.(*forms.RuleReqDTO)
 	ruleDao.DeleteRule(tx, dto)
 	err := mq.SendMsg(config.GetRocketmqConfig().RuleTopic, enums.DeleteRule, param)
 	return err
 }
 
-func ChangeRuleStatus(tx *gorm.DB, param interface{}, dd interface{}) error {
-	ruleDao := dd.(*dao.AlarmRuleDao)
+func ChangeRuleStatus(tx *gorm.DB, param interface{}) error {
+	ruleDao := dao.AlarmRule
 	dto := param.(*forms.RuleReqDTO)
 	ruleDao.UpdateRuleState(tx, dto)
 	enum := enums.DisableRule

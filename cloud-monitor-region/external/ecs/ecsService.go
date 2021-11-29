@@ -1,11 +1,12 @@
 package ecs
 
 import (
-	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/external"
+	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/forms"
+	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/vo"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
-	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
 	"encoding/json"
-	"errors"
+	"io/ioutil"
+	"net/http"
 	"strings"
 )
 
@@ -32,21 +33,20 @@ type VmParams struct {
 	StatusList []int  `json:"statusList,omitempty"`
 }
 
-func GetUserInstancePage(form *VmParams, pageIndex int, pageSize int, userCode string) (*QueryPageResult, error) {
-	request := &external.QueryPageRequest{Data: form, PageIndex: pageIndex, PageSize: pageSize}
-	resp, err := external.PageList(userCode, request, config.GetCommonConfig().EcsInnerGateway+"/noauth/ecs/PageList")
+var ecsInnerGateway = config.GetEcsConfig().InnerGateway
+
+func PageList(form *forms.EcsQueryPageForm) (*vo.EcsPageVO, error) {
+	path := ecsInnerGateway + "/noauth/ecs/PageList"
+	jsonStr, _ := json.Marshal(form)
+	resp, err := http.Post(path, "application/json", strings.NewReader(string(jsonStr)))
 	if err != nil {
 		return nil, err
 	}
-	result := &Response{}
-	if json.Unmarshal(resp, result); err != nil {
-		logger.Logger().Errorf("check result parse  failed, err:%v\n", err)
-		return nil, err
-	}
-	if strings.EqualFold(result.Code, "0") {
-		return &result.Data, nil
-	}
-	return nil, errors.New(result.Msg)
+	defer resp.Body.Close()
+	result, _ := ioutil.ReadAll(resp.Body)
+	var ecsQueryPageVO vo.EcsQueryPageVO
+	json.Unmarshal(result, &ecsQueryPageVO)
+	return &ecsQueryPageVO.Data, nil
 }
 
 type Response struct {

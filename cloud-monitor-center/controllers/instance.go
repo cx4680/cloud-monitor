@@ -34,7 +34,7 @@ func (ctl *InstanceCtl) Unbind(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, translate.GetErrorMsg(err))
 		return
 	}
-	err := dbUtils.Tx(&param, ctl.dao, service.UnbindInstance)
+	err := dbUtils.Tx(&param, service.UnbindInstance)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, err.Error())
 		return
@@ -50,7 +50,7 @@ func (ctl *InstanceCtl) Bind(c *gin.Context) {
 	}
 	tenantId, _ := c.Get(global.TenantId)
 	param.TenantId = tenantId.(string)
-	err := dbUtils.Tx(&param, ctl.dao, service.BindInstance)
+	err := dbUtils.Tx(&param, service.BindInstance)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, err.Error())
 		return

@@ -52,7 +52,7 @@ func (ctl *AlarmRuleCtl) CreateRule(c *gin.Context) {
 	userId, _ := c.Get(global.UserId)
 	param.UserId = userId.(string)
 	addMetricName(&param, ctl)
-	err := dbUtils.Tx(&param, ctl.dao, service.CreateRule)
+	err := dbUtils.Tx(&param, service.CreateRule)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, err.Error())
@@ -72,7 +72,7 @@ func (ctl *AlarmRuleCtl) UpdateRule(c *gin.Context) {
 	userId, _ := c.Get(global.UserId)
 	param.UserId = userId.(string)
 	addMetricName(&param, ctl)
-	err := dbUtils.Tx(&param, ctl.dao, service.UpdateRule)
+	err := dbUtils.Tx(&param, service.UpdateRule)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, err.Error())
 		return
@@ -90,7 +90,7 @@ func (ctl *AlarmRuleCtl) DeleteRule(c *gin.Context) {
 	param.TenantId = tenantId.(string)
 	userId, _ := c.Get(global.UserId)
 	param.TenantId = userId.(string)
-	err := dbUtils.Tx(&param, ctl.dao, service.DeleteRule)
+	err := dbUtils.Tx(&param, service.DeleteRule)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, err.Error())
 		return
@@ -106,7 +106,7 @@ func (ctl *AlarmRuleCtl) ChangeRuleStatus(c *gin.Context) {
 	}
 	tenantId, _ := c.Get(global.TenantId)
 	param.TenantId = tenantId.(string)
-	err := dbUtils.Tx(&param, ctl.dao, service.ChangeRuleStatus)
+	err := dbUtils.Tx(&param, service.ChangeRuleStatus)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, err.Error())
 		return

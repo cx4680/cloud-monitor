@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/dao"
+	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/external/ecs"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/forms"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/global"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/service"
@@ -54,7 +55,7 @@ func (mpc *MonitorReportFormCtl) GetTop(c *gin.Context) {
 		Current:  1,
 		PageSize: 1000,
 	}
-	rows := service.EcsPageList(form)
+	rows, err := ecs.PageList(&form)
 	var instanceList []string
 	for _, ecsVO := range rows.Rows {
 		if ecsVO.InstanceId == "" {

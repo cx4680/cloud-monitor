@@ -9,16 +9,16 @@ import (
 	"gorm.io/gorm"
 )
 
-func UnbindInstance(tx *gorm.DB, param interface{}, dd interface{}) error {
-	instanceDao := dd.(*dao.InstanceDao)
+func UnbindInstance(tx *gorm.DB, param interface{}) error {
+	instanceDao := dao.Instance
 	dto := param.(*forms.UnBindRuleParam)
 	instanceDao.UnbindInstance(tx, dto)
 	mq.SendMsg(config.GetRocketmqConfig().RuleTopic, enums.UnbindRule, param)
 	return nil
 }
 
-func BindInstance(tx *gorm.DB, param interface{}, dd interface{}) error {
-	instanceDao := dd.(*dao.InstanceDao)
+func BindInstance(tx *gorm.DB, param interface{}) error {
+	instanceDao := dao.Instance
 	dto := param.(*forms.InstanceBindRuleDTO)
 	instanceDao.BindInstance(tx, dto)
 	mq.SendMsg(config.GetRocketmqConfig().RuleTopic, enums.BindRule, param)

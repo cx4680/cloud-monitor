@@ -7,8 +7,8 @@ type EcsQueryPageVO struct {
 }
 
 type EcsPageVO struct {
-	Total int     `json:"total"`
-	Rows  []ECSVO `json:"rows"`
+	Total int      `json:"total"`
+	Rows  []*ECSVO `json:"rows"`
 }
 
 type ECSVO struct {

@@ -44,7 +44,7 @@ type Response struct {
 }
 type QueryPageResult struct {
 	Total int
-	Rows  []InfoBean
+	Rows  []*InfoBean
 }
 
 type InfoBean struct {

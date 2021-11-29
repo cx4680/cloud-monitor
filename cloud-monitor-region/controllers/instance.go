@@ -3,10 +3,10 @@ package controllers
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/dao"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/external/ecs"
+	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/forms"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/global"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/utils"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/validator/translate"
-	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/vo"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
@@ -30,42 +30,23 @@ func NewInstanceCtl(dao *dao.InstanceDao) *InstanceCtl {
 // @Success 200 {object} vo.InstanceVO
 // @Router /hawkeye/instance/page [get]
 func (ic *InstanceCtl) Page(c *gin.Context) {
-	var params = &UserInstancePageQueryForm{}
+	var params = &forms.EcsQueryPageForm{}
 	if err := c.ShouldBindQuery(params); err != nil {
 		c.JSON(http.StatusBadRequest, translate.GetErrorMsg(err))
 		return
 	}
-	vmParams := ecs.VmParams{HostId: params.InstanceId, HostName: params.InstanceName, Status: params.Status, StatusList: params.StatusList}
 	tenantId, exists := c.Get("tenantId")
 	if !exists {
 		c.JSON(http.StatusBadRequest, "tenantId not exists")
 		return
 	}
-	ret, err := ecs.GetUserInstancePage(&vmParams, params.Current, params.PageSize, tenantId.(string))
+	params.TenantId = tenantId.(string)
+	ret, err := ecs.PageList(params)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, translate.GetErrorMsg(err))
 		return
 	}
-	pageVO := vo.PageVO{Total: ret.Total, Size: params.PageSize, Current: params.Current}
-	if ret != nil && ret.Total > 0 {
-		list := make([]interface{}, ret.Total)
-		for index, row := range ret.Rows {
-			instanceVO := InstanceVO{
-				Id:           row.Id,
-				InstanceId:   row.HostId,
-				InstanceName: row.HostName,
-				Ip:           row.Ip,
-				Status:       row.Status,
-			}
-			if row.TemplateSpecInfoBean != nil {
-				instanceVO.Region = row.TemplateSpecInfoBean.RegionCode
-			}
-			list[index] = instanceVO
-		}
-		pageVO.Records = list
-	}
-	c.JSON(http.StatusOK, global.NewSuccess("查询成功", pageVO))
-
+	c.JSON(http.StatusOK, global.NewSuccess("查询成功", ret))
 }
 
 // GetInstanceNumByRegion
@@ -84,8 +65,8 @@ func (ic *InstanceCtl) GetInstanceNumByRegion(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, "tenantId not exists")
 		return
 	}
-	vmParams := ecs.VmParams{}
-	ret, err := ecs.GetUserInstancePage(&vmParams, 1, 10, tenantId.(string))
+	vmParams := &forms.EcsQueryPageForm{}
+	ret, err := ecs.PageList(vmParams)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, translate.GetErrorMsg(err))
 		return
