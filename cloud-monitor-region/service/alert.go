@@ -33,8 +33,9 @@ type AlertRecordAddService struct {
 
 func NewAlertRecordAddService(AlertRecordSvc *AlertRecordService, MessageSvc *service.MessageService, TenantSvc *service.TenantService) *AlertRecordAddService {
 	return &AlertRecordAddService{
-		//TODO
-		FilterChain:    nil,
+		FilterChain: []Filter{&RuleChangeFilter{
+			AlertRecordDao: commonDao.AlertRecord,
+		}},
 		AlertRecordSvc: AlertRecordSvc,
 		MessageSvc:     MessageSvc,
 		TenantSvc:      TenantSvc,
