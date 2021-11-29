@@ -19,12 +19,25 @@ var NotificationRecord = new(NotificationRecordDao)
 func (dao *NotificationRecordDao) InsertBatch(db *gorm.DB, recordList []models.NotificationRecord) {
 	if len(recordList) > 0 {
 		for _, record := range recordList {
-			record.Id = strconv.FormatInt(snowflake.GetWorker().NextId(), 10)
-			record.CreateTime = tools.GetNowStr()
+			if tools.IsBlank(record.Id) {
+				record.Id = strconv.FormatInt(snowflake.GetWorker().NextId(), 10)
+			}
+			if tools.IsBlank(record.CreateTime) {
+				record.CreateTime = tools.GetNowStr()
+			}
 		}
 		db.Create(&recordList)
 	}
+}
 
+func (dao *NotificationRecordDao) Insert(db *gorm.DB, record models.NotificationRecord) {
+	if tools.IsBlank(record.Id) {
+		record.Id = strconv.FormatInt(snowflake.GetWorker().NextId(), 10)
+	}
+	if tools.IsBlank(record.CreateTime) {
+		record.CreateTime = tools.GetNowStr()
+	}
+	db.Create(&record)
 }
 
 func (dao *NotificationRecordDao) GetTenantPhoneCurrentMonthRecordNum(tenantId string) int {

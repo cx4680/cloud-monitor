@@ -1,19 +1,19 @@
 package controllers
 
 import (
-	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/dao"
-	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/forms"
-	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/global"
+	dao2 "code.cestc.cn/ccos-ops/cloud-monitor/business-common/dao"
+	forms2 "code.cestc.cn/ccos-ops/cloud-monitor/business-common/forms"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/validator/translate"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
 
 type AlertContactGroupCtl struct {
-	dao *dao.AlertContactGroupDao
+	dao *dao2.AlertContactGroupDao
 }
 
-func NewAlertContactGroupCtl(dao *dao.AlertContactGroupDao) *AlertContactGroupCtl {
+func NewAlertContactGroupCtl(dao *dao2.AlertContactGroupDao) *AlertContactGroupCtl {
 	return &AlertContactGroupCtl{dao}
 }
 
@@ -30,7 +30,7 @@ func (mpc *AlertContactGroupCtl) GetAlertGroupContact(c *gin.Context) {
 }
 
 func (mpc *AlertContactGroupCtl) InsertAlertContactGroup(c *gin.Context) {
-	var param forms.AlertContactGroupParam
+	var param forms2.AlertContactGroupParam
 	err := c.ShouldBindJSON(&param)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, translate.GetErrorMsg(err))
@@ -45,7 +45,7 @@ func (mpc *AlertContactGroupCtl) InsertAlertContactGroup(c *gin.Context) {
 }
 
 func (mpc *AlertContactGroupCtl) UpdateAlertContactGroup(c *gin.Context) {
-	var param forms.AlertContactGroupParam
+	var param forms2.AlertContactGroupParam
 	err := c.ShouldBindJSON(&param)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, translate.GetErrorMsg(err))
@@ -60,7 +60,7 @@ func (mpc *AlertContactGroupCtl) UpdateAlertContactGroup(c *gin.Context) {
 }
 
 func (mpc *AlertContactGroupCtl) DeleteAlertContactGroup(c *gin.Context) {
-	var param forms.AlertContactGroupParam
+	var param forms2.AlertContactGroupParam
 	err := c.ShouldBindJSON(&param)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, translate.GetErrorMsg(err))

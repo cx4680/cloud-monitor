@@ -4,6 +4,7 @@ import (
 	commonDao "code.cestc.cn/ccos-ops/cloud-monitor/business-common/dao"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/controllers"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/dao"
+	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/service"
 )
 
 func loadRouters() {
@@ -34,7 +35,7 @@ func monitorItemRouters() {
 }
 
 func alertContactRouters() {
-	alertContactCtl := controllers.NewAlertContactCtl(dao.AlertContact)
+	alertContactCtl := controllers.NewAlertContactCtl(service.AlertContactService{})
 	group := router.Group("/hawkeye/alertContact/")
 	{
 		group.GET("/getAlertContact", alertContactCtl.GetAlertContact)
@@ -46,7 +47,7 @@ func alertContactRouters() {
 }
 
 func alertContactGroupRouters() {
-	alertContactGroupCtl := controllers.NewAlertContactGroupCtl(dao.AlertContactGroup)
+	alertContactGroupCtl := controllers.NewAlertContactGroupCtl(commonDao.AlertContactGroup)
 	group := router.Group("/hawkeye/alertContactGroup/")
 	{
 		group.GET("/getAlertContactGroup", alertContactGroupCtl.GetAlertContactGroup)

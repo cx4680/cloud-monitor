@@ -8,20 +8,20 @@ import (
 
 type SyncService interface {
 	PersistenceLocal(*gorm.DB, interface{}) (string, error)
-	SyncRemote(string, string) error
+	SyncRemote(sysRocketMq.Topic, string) error
 }
 
 type AbstractSyncServiceImpl struct {
 }
 
-func (s *AbstractSyncServiceImpl) SyncRemote(topic, msg string) error {
+func (s *AbstractSyncServiceImpl) SyncRemote(topic sysRocketMq.Topic, msg string) error {
 	return sysRocketMq.SendRocketMqMsg(sysRocketMq.RocketMqMsg{
 		Topic:   topic,
 		Content: msg,
 	})
 }
 
-func (s *AbstractSyncServiceImpl) Persistence(c SyncService, topic string, param interface{}) error {
+func (s *AbstractSyncServiceImpl) Persistence(c SyncService, topic sysRocketMq.Topic, param interface{}) error {
 	return global.DB.Transaction(func(tx *gorm.DB) error {
 		content, err2 := c.PersistenceLocal(tx, param)
 		if err2 != nil {
@@ -34,7 +34,7 @@ func (s *AbstractSyncServiceImpl) Persistence(c SyncService, topic string, param
 	})
 }
 
-func (s *AbstractSyncServiceImpl) PersistenceInner(db *gorm.DB, c SyncService, topic string, param interface{}) error {
+func (s *AbstractSyncServiceImpl) PersistenceInner(db *gorm.DB, c SyncService, topic sysRocketMq.Topic, param interface{}) error {
 	content, err := c.PersistenceLocal(db, param)
 	if err != nil {
 		return err

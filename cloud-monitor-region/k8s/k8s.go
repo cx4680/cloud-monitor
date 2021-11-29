@@ -3,6 +3,7 @@ package k8s
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/errors"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/forms"
+	c "code.cestc.cn/ccos-ops/cloud-monitor/common/config"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
 	"context"
 	"encoding/json"
@@ -14,7 +15,6 @@ import (
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
-	"os"
 	"strings"
 )
 
@@ -30,8 +30,8 @@ var resource *schema.GroupVersionResource
 
 func InitK8s() error {
 	var config *rest.Config
-	if strings.EqualFold(os.Getenv("active"), "local") {
-		cfg, err := clientcmd.BuildConfigFromFlags("", "D:\\dev-go\\cloud-monitor\\cloud-monitor-region\\k8s\\config.yml")
+	if strings.EqualFold(c.GetCommonConfig().Env, "local") {
+		cfg, err := clientcmd.BuildConfigFromFlags("", "config.yml")
 		if err != nil {
 			return err
 		}

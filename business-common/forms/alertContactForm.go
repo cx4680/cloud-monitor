@@ -37,6 +37,7 @@ type AlertContactParam struct {
 	PageCurrent int      `form:"pageCurrent"`
 	PageSize    int      `form:"pageSize"`
 	GroupIdList []string `form:"groupIdList"`
+	EventEum    enums.EventEum
 }
 
 type MqMsg struct {

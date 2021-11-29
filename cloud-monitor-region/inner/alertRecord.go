@@ -9,12 +9,12 @@ import (
 )
 
 type AlertRecordCtl struct {
-	alertRecordService *service.AlertRecordService
+	alertRecordAddSvc *service.AlertRecordAddService
 }
 
-func NewAlertRecordCtl(alertRecordService *service.AlertRecordService) *AlertRecordCtl {
+func NewAlertRecordCtl(alertRecordAddSvc *service.AlertRecordAddService) *AlertRecordCtl {
 	return &AlertRecordCtl{
-		alertRecordService: alertRecordService,
+		alertRecordAddSvc: alertRecordAddSvc,
 	}
 }
 
@@ -25,8 +25,7 @@ func (ctl AlertRecordCtl) AddAlertRecord(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, translate.GetErrorMsg(err))
 		return
 	}
-	err := ctl.alertRecordService.RecordAlertAndSendMessage(&f)
-	if err != nil {
+	if err := ctl.alertRecordAddSvc.Add(f); err != nil {
 		c.JSON(http.StatusInternalServerError, "创建告警记录失败")
 	}
 

@@ -1,18 +1,14 @@
 package dao
 
 import (
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/constants"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/errors"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/forms"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/models"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/tools"
-	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/constant"
-	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/errors"
-	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/forms"
-	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/models"
-	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/mq"
-	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
-	"gorm.io/gorm"
-
-	"code.cestc.cn/ccos-ops/cloud-monitor/common/enums"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/utils/snowflake"
+	"gorm.io/gorm"
 	"strconv"
 )
 
@@ -48,8 +44,8 @@ func (mpd *AlertContactGroupDao) InsertAlertContactGroup(param forms.AlertContac
 
 	var count int64
 	global.DB.Model(&models.AlertContactGroup{}).Where("tenant_id = ?", param.TenantId).Count(&count)
-	if count >= constant.MAX_GROUP_NUM {
-		return errors.NewBusinessError("联系组限制创建" + strconv.Itoa(constant.MAX_GROUP_NUM) + "个")
+	if count >= constants.MAX_GROUP_NUM {
+		return errors.NewBusinessError("联系组限制创建" + strconv.Itoa(constants.MAX_GROUP_NUM) + "个")
 	}
 	global.DB.Model(&models.AlertContactGroup{}).Where("tenant_id = ?", param.TenantId).Where("name = ?", param.GroupName).Count(&count)
 	if count >= 1 {
@@ -76,8 +72,6 @@ func (mpd *AlertContactGroupDao) InsertAlertContactGroup(param forms.AlertContac
 		return err
 	}
 	tx.Commit()
-	//同步region
-	mq.SendMsg(config.GetRocketmqConfig().AlertContactTopic, enums.InsertAlertContactGroup, alertContactGroup)
 	return nil
 }
 
@@ -106,8 +100,6 @@ func (mpd *AlertContactGroupDao) UpdateAlertContactGroup(param forms.AlertContac
 		return err
 	}
 	tx.Commit()
-	//同步region
-	mq.SendMsg(config.GetRocketmqConfig().AlertContactTopic, enums.UpdateAlertContactGroup, alertContactGroup)
 	return nil
 }
 
@@ -123,8 +115,6 @@ func (mpd *AlertContactGroupDao) DeleteAlertContactGroup(param forms.AlertContac
 		return err
 	}
 	tx.Commit()
-	//同步region
-	mq.SendMsg(config.GetRocketmqConfig().AlertContactTopic, enums.DeleteAlertContactGroup, param.GroupId)
 	return nil
 }
 
@@ -136,8 +126,8 @@ func (mpd *AlertContactGroupDao) insertAlertContactGroupRel(param forms.AlertCon
 	}
 	var count int64
 	global.DB.Model(&models.AlertContactGroupRel{}).Where("tenant_id = ?", param.TenantId).Where("group_id", param.GroupId).Count(&count)
-	if count >= constant.MAX_CONTACT_NUM {
-		return errors.NewBusinessError("每组联系人限制" + strconv.Itoa(constant.MAX_CONTACT_NUM) + "个")
+	if count >= constants.MAX_CONTACT_NUM {
+		return errors.NewBusinessError("每组联系人限制" + strconv.Itoa(constants.MAX_CONTACT_NUM) + "个")
 	}
 	for _, contactId := range param.ContactIdList {
 		var alertContactGroupRel = &models.AlertContactGroupRel{
@@ -153,8 +143,6 @@ func (mpd *AlertContactGroupDao) insertAlertContactGroupRel(param forms.AlertCon
 		if db.Error != nil {
 			return errors.NewBusinessError("添加失败")
 		}
-		//同步region
-		mq.SendMsg(config.GetRocketmqConfig().AlertContactTopic, enums.InsertAlertContactGroupRel, alertContactGroupRel)
 	}
 	return nil
 }
@@ -178,7 +166,5 @@ func (mpd *AlertContactGroupDao) deleteAlertContactGroupRel(groupId string) erro
 	if db.Error != nil {
 		return errors.NewBusinessError("删除失败")
 	}
-	//同步region
-	mq.SendMsg(config.GetRocketmqConfig().AlertContactTopic, enums.DeleteAlertContactGroupRelByGroupId, groupId)
 	return nil
 }
