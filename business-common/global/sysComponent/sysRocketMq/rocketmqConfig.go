@@ -25,8 +25,7 @@ const (
 	RecordTopic   Topic = "alert_record"               //告警历史记录
 	InstanceTopic Topic = "alert_correlation_instance" //告警关联实例
 
-	AlertContactTopic      Topic = "alert_contact"       //告警联系人
-	AlertContactGroupTopic Topic = "alert_contact_group" //告警联系人组
+	AlertContactTopic Topic = "alertContactTopic" //告警联系人
 
 	DeleteInstanceTopic Topic = "deleteInstanceTopic"
 )

@@ -1,7 +1,7 @@
 package constants
 
 const (
-	MAX_CONTACT_NUM   = 100
-	MAX_GROUP_NUM     = 10
-	MAX_CONTACT_GROUP = 5
+	MaxContactNum   = 100 //每个租户限制可创建联系人数量
+	MaxGroupNum     = 10  //每个租户限制创建联系组数量
+	MaxContactGroup = 5   //单个联系人可加入联系组数量
 )

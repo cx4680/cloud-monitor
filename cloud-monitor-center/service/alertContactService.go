@@ -21,14 +21,16 @@ type AlertContactService struct {
 	dao                            *dao.AlertContactDao
 	alertContactGroupService       *AlertContactGroupService
 	alertContactInformationService *AlertContactInformationService
+	alertContactGroupRelService    *AlertContactGroupRelService
 }
 
-func NewAlertContactService(alertContactGroupService *AlertContactGroupService, alertContactInformationService *AlertContactInformationService) *AlertContactService {
+func NewAlertContactService(alertContactGroupService *AlertContactGroupService, alertContactInformationService *AlertContactInformationService, alertContactGroupRelService *AlertContactGroupRelService) *AlertContactService {
 	return &AlertContactService{
 		AbstractSyncServiceImpl:        service.AbstractSyncServiceImpl{},
 		dao:                            dao.AlertContact,
 		alertContactGroupService:       alertContactGroupService,
 		alertContactInformationService: alertContactInformationService,
+		alertContactGroupRelService:    alertContactGroupRelService,
 	}
 }
 
@@ -36,41 +38,18 @@ func (s *AlertContactService) PersistenceLocal(db *gorm.DB, param interface{}) (
 	p := param.(forms.AlertContactParam)
 	switch p.EventEum {
 	case enums.InsertAlertContact:
-		//参数校验
-		if p.ContactName == "" {
-			return "", errors.NewBusinessError("联系人名字不能为空")
+		alertContact, err := s.insertAlertContact(db, p)
+		if err != nil {
+			return "", err
 		}
-		//每个账号限制创建100个联系人
-		var count int64
-		global.DB.Model(&models.AlertContact{}).Where("tenant_id = ?", p.TenantId).Count(&count)
-		if count >= constants.MAX_CONTACT_NUM {
-			return "", errors.NewBusinessError("联系人限制创建" + strconv.Itoa(constants.MAX_CONTACT_NUM) + "个")
-		}
-		//每个联系人最多加入5个联系组
-		if len(p.GroupIdList) >= constants.MAX_CONTACT_GROUP {
-			return "", errors.NewBusinessError("每个联系人最多加入" + strconv.Itoa(constants.MAX_CONTACT_GROUP) + "个联系组")
-		}
-		id := strconv.FormatInt(snowflake.GetWorker().NextId(), 10)
-		p.ContactId = id
-		//数据入库
-		alertContact := &models.AlertContact{
-			Id:          id,
-			TenantId:    p.TenantId,
-			Name:        p.ContactName,
-			Description: p.Description,
-			CreateUser:  p.CreateUser,
-			Status:      1,
-		}
-		s.dao.Insert(db, alertContact)
-
-		//保存联系方式
-		if err := s.alertContactInformationService.PersistenceInner(db, s.alertContactInformationService, sysRocketMq.AlertContactTopic, p); err != nil {
-			return "", errors.NewBusinessError(err.Error())
-		}
-		//保存联系人组关联
-		if err := s.alertContactGroupService.PersistenceInner(db, s.alertContactGroupService, sysRocketMq.AlertContactTopic, param); err != nil {
-			return "", errors.NewBusinessError(err.Error())
-		}
+		////保存联系方式
+		//if err := s.alertContactInformationService.PersistenceInner(db, s.alertContactInformationService, sysRocketMq.AlertContactTopic, p); err != nil {
+		//	return "", err
+		//}
+		////保存联系人组关联
+		//if err := s.alertContactGroupRelService.PersistenceInner(db, s.alertContactGroupRelService, sysRocketMq.AlertContactTopic, p); err != nil {
+		//	return "", err
+		//}
 		msg := forms.MqMsg{
 			EventEum: enums.InsertAlertContact,
 			Data:     alertContact,
@@ -81,8 +60,8 @@ func (s *AlertContactService) PersistenceLocal(db *gorm.DB, param interface{}) (
 			return "", errors.NewBusinessError("联系人名字不能为空")
 		}
 		//每个联系人最多加入5个联系组
-		if len(p.GroupIdList) >= constants.MAX_CONTACT_GROUP {
-			return "", errors.NewBusinessError("每个联系人最多加入" + strconv.Itoa(constants.MAX_CONTACT_GROUP) + "个联系组")
+		if len(p.GroupIdList) >= constants.MaxContactGroup {
+			return "", errors.NewBusinessError("每个联系人最多加入" + strconv.Itoa(constants.MaxContactGroup) + "个联系组")
 		}
 		var alertContact = &models.AlertContact{
 			Id:          p.ContactId,
@@ -139,37 +118,34 @@ func (s *AlertContactService) Select(param forms.AlertContactParam) *forms.Alert
 	return s.dao.Select(db, param)
 }
 
-func (s *AlertContactService) Insert(param forms.AlertContactParam) error {
-	db := global.DB
-	if param.ContactName == "" {
-		return errors.NewBusinessError("联系人名字不能为空")
+func (s *AlertContactService) insertAlertContact(db *gorm.DB, p forms.AlertContactParam) (*models.AlertContact, error) {
+	//参数校验
+	if p.ContactName == "" {
+		return nil, errors.NewBusinessError("联系人名字不能为空")
 	}
 	//每个账号限制创建100个联系人
 	var count int64
-	global.DB.Model(&models.AlertContact{}).Where("tenant_id = ?", param.TenantId).Count(&count)
-	if count >= constants.MAX_CONTACT_NUM {
-		return errors.NewBusinessError("联系人限制创建" + strconv.Itoa(constants.MAX_CONTACT_NUM) + "个")
+	global.DB.Model(&models.AlertContact{}).Where("tenant_id = ?", p.TenantId).Count(&count)
+	if count >= constants.MaxContactNum {
+		return nil, errors.NewBusinessError("联系人限制创建" + strconv.Itoa(constants.MaxContactNum) + "个")
 	}
 	//每个联系人最多加入5个联系组
-	if len(param.GroupIdList) >= constants.MAX_CONTACT_GROUP {
-		return errors.NewBusinessError("每个联系人最多加入" + strconv.Itoa(constants.MAX_CONTACT_GROUP) + "个联系组")
+	if len(p.GroupIdList) >= constants.MaxContactGroup {
+		return nil, errors.NewBusinessError("每个联系人最多加入" + strconv.Itoa(constants.MaxContactGroup) + "个联系组")
 	}
-
-	currentTime := tools.GetNowStr()
-	contactId := strconv.FormatInt(snowflake.GetWorker().NextId(), 10)
-	param.ContactId = contactId
-	var alertContact = &models.AlertContact{
-		Id:          contactId,
-		TenantId:    param.TenantId,
-		Name:        param.ContactName,
+	id := strconv.FormatInt(snowflake.GetWorker().NextId(), 10)
+	p.ContactId = id
+	//数据入库
+	alertContact := &models.AlertContact{
+		Id:          id,
+		TenantId:    p.TenantId,
+		Name:        p.ContactName,
+		Description: p.Description,
+		CreateUser:  p.CreateUser,
 		Status:      1,
-		Description: param.Description,
-		CreateUser:  param.CreateUser,
-		CreateTime:  currentTime,
-		UpdateTime:  currentTime,
 	}
 	s.dao.Insert(db, alertContact)
-	return nil
+	return alertContact, nil
 }
 
 func (s *AlertContactService) Update(param forms.AlertContactParam) error {
@@ -178,8 +154,8 @@ func (s *AlertContactService) Update(param forms.AlertContactParam) error {
 		return errors.NewBusinessError("联系人名字不能为空")
 	}
 	//每个联系人最多加入5个联系组
-	if len(param.GroupIdList) >= constants.MAX_CONTACT_GROUP {
-		return errors.NewBusinessError("每个联系人最多加入" + strconv.Itoa(constants.MAX_CONTACT_GROUP) + "个联系组")
+	if len(param.GroupIdList) >= constants.MaxContactGroup {
+		return errors.NewBusinessError("每个联系人最多加入" + strconv.Itoa(constants.MaxContactGroup) + "个联系组")
 	}
 	currentTime := tools.GetNowStr()
 	var alertContact = &models.AlertContact{

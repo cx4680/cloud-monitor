@@ -30,8 +30,7 @@ func InitSys() error {
 		sysRocketMq.AlertContactTopic,
 		sysRocketMq.RecordTopic,
 		sysRocketMq.RuleTopic,
-		sysRocketMq.NotificationSyncTopic,
-		sysRocketMq.AlertContactGroupTopic}
+		sysRocketMq.NotificationSyncTopic}
 
 	err := sysRocketMq.CreateTopics(topics...)
 	if err != nil {
