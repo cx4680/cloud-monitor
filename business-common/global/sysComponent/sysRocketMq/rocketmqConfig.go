@@ -15,17 +15,18 @@ import (
 var p rocketmq.Producer
 
 type Topic string
+type Group string
 
 const (
 	SmsMarginReminderTopic Topic = "sms_margin_reminder" //短信余量提醒
-	NotificationSyncTopic  Topic = "notification_sync"   //通知记录
+	NotificationSyncTopic  Topic = "all_notification"    //通知记录
 
-	RuleTopic     Topic = "rule"             //告警规则
-	RecordTopic   Topic = "record"           //告警历史记录
-	InstanceTopic Topic = "hawkeye-instance" //实例
+	RuleTopic     Topic = "alert_rule"                 //告警规则
+	RecordTopic   Topic = "alert_record"               //告警历史记录
+	InstanceTopic Topic = "alert_correlation_instance" //告警关联实例
 
-	AlertContactTopic      Topic = "alertContactTopic" //告警联系人
-	AlertContactGroupTopic Topic = "alertContactGroup" //告警联系人组
+	AlertContactTopic      Topic = "alert_contact"       //告警联系人
+	AlertContactGroupTopic Topic = "alert_contact_group" //告警联系人组
 )
 
 type Consumer struct {
@@ -77,9 +78,9 @@ func InitProducer() error {
 	return nil
 }
 
-func StartConsumersScribe(consumers []*Consumer) error {
+func StartConsumersScribe(group Group, consumers []*Consumer) error {
 	c, _ := rocketmq.NewPushConsumer(
-		consumer.WithGroupName(config.GetCommonConfig().RegionName),
+		consumer.WithGroupName(string(group)),
 		consumer.WithNsResolver(primitive.NewPassthroughResolver([]string{config.GetRocketmqConfig().NameServer})),
 	)
 	for _, o := range consumers {

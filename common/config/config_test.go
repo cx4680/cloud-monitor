@@ -7,13 +7,13 @@ import (
 	"testing"
 )
 
-var cf = flag.String("config.yml", "../config.yml.local.yml", "config.yml path")
+var cf = flag.String("cfg.yml", "../cfg.yml.local.yml", "cfg.yml path")
 
 func TestInitConfig(t *testing.T) {
 	flag.Parse()
 	err := InitConfig(*cf)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "init config.yml error: %v", err)
+		fmt.Fprintf(os.Stderr, "init cfg.yml error: %v", err)
 		os.Exit(1)
 	}
 }

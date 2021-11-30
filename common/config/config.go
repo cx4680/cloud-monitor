@@ -83,7 +83,7 @@ type RedisConfig struct {
 	Password string
 }
 
-var config = defaultAuthSdkConfig()
+var cfg = defaultAuthSdkConfig()
 
 func defaultAuthSdkConfig() Config {
 	return Config{
@@ -101,6 +101,16 @@ func defaultAuthSdkConfig() Config {
 			NameServer: "127.0.0.1:9876",
 			BrokerAddr: "127.0.0.1:10911",
 		},
+		Common: CommonConfig{
+			Env:               "local",
+			Nk:                "",
+			TenantUrl:         "",
+			SmsCenterPath:     "",
+			HawkeyeCenterPath: "",
+			HasNoticeModel:    false,
+			RegionName:        "local",
+			EcsInnerGateway:   "",
+		},
 	}
 }
 
@@ -110,7 +120,7 @@ func InitConfig(file string) error {
 		return err
 	}
 
-	err = yaml.Unmarshal(data, &config)
+	err = yaml.Unmarshal(data, &cfg)
 	if err != nil {
 		return err
 	}
@@ -120,35 +130,35 @@ func InitConfig(file string) error {
 }
 
 func GetCommonConfig() CommonConfig {
-	return config.Common
+	return cfg.Common
 }
 func GetServeConfig() Serve {
-	return config.Serve
+	return cfg.Serve
 }
 func GetDbConfig() DB {
-	return config.DB
+	return cfg.DB
 }
 func GetLogConfig() LogConfig {
-	return config.Logger
+	return cfg.Logger
 }
 
 func GetRedisConfig() RedisConfig {
-	return config.Redis
+	return cfg.Redis
 }
 
 //TODO 写在tools中
 func GetHttpConfig() HttpConfig {
-	return config.HttpConfig
+	return cfg.HttpConfig
 }
 
 func GetRocketmqConfig() Rocketmq {
-	return config.Rocketmq
+	return cfg.Rocketmq
 }
 
 func GetPrometheusConfig() Prometheus {
-	return config.Prometheus
+	return cfg.Prometheus
 }
 
 func GetEcsConfig() Ecs {
-	return config.Ecs
+	return cfg.Ecs
 }

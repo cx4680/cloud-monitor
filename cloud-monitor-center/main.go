@@ -61,7 +61,7 @@ func main() {
 
 func initRocketMqConsumers() error {
 	//TODO 初始化消费者
-	if err := sysRocketMq.StartConsumersScribe([]*sysRocketMq.Consumer{{
+	if err := sysRocketMq.StartConsumersScribe("cloud-monitor-center", []*sysRocketMq.Consumer{{
 		Topic:   sysRocketMq.InstanceTopic,
 		Handler: consumer.InstanceHandler,
 	}}); err != nil {

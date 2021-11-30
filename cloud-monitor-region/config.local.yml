@@ -44,7 +44,7 @@ common:
   smsCenterPath: ''
   hawkeyeCenterPath: ''
   hasNoticeModel: false
-  regionName: ''
+  regionName: 'local'
   ecs-inner-gateway: http://ecs-gateway.inner.center.intranet.cecloudcs.com
 redis:
   addr: 'localhost:6379'
