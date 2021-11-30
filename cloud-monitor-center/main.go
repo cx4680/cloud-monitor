@@ -3,6 +3,7 @@ package main
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/sysComponent"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/sysComponent/sysRocketMq"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/task"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/mq/consumer"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/validator/translate"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/web"
@@ -38,9 +39,14 @@ func main() {
 		os.Exit(2)
 	}
 
-	if err := initRocketMq(); err != nil {
+	if err := initRocketMqConsumers(); err != nil {
 		log.Printf("create rocketmq consumer error, %v\n", err)
 		os.Exit(5)
+	}
+
+	if err := initTask(); err != nil {
+		log.Printf("init task error, %v\n", err)
+		os.Exit(6)
 	}
 
 	logger.InitLogger(config.GetLogConfig())
@@ -53,15 +59,10 @@ func main() {
 	}
 }
 
-func initRocketMq() error {
-	rc := config.GetRocketmqConfig()
-	if err := sysRocketMq.CreateTopics(rc.RuleTopic, rc.RecordTopic, rc.AlertContactTopic, rc.InstanceTopic); err != nil {
-		log.Printf("create topics error, %v\n", err)
-		return err
-	}
+func initRocketMqConsumers() error {
 	//TODO 初始化消费者
 	if err := sysRocketMq.StartConsumersScribe([]*sysRocketMq.Consumer{{
-		Topic:   rc.InstanceTopic,
+		Topic:   sysRocketMq.InstanceTopic,
 		Handler: consumer.InstanceHandler,
 	}}); err != nil {
 		log.Printf("create rocketmq consumer error, %v\n", err)
@@ -71,6 +72,15 @@ func initRocketMq() error {
 }
 
 func initTask() error {
-	//TODO
+	bt := task.NewBusinessTaskImpl()
+	if err := bt.Add(task.BusinessTaskDTO{
+		Cron: "0 0 0/1 * * ?",
+		Name: "clearAlertRecordJob",
+		Task: task.Clear,
+	}); err != nil {
+		return err
+	}
+
+	bt.Start()
 	return nil
 }

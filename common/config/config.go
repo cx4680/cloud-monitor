@@ -64,12 +64,8 @@ type HttpConfig struct {
 }
 
 type Rocketmq struct {
-	NameServer        string `yaml:"name-server"`
-	BrokerAddr        string `yaml:"broker-addr"`
-	AlertContactTopic string `yaml:"alertContactTopic"`
-	InstanceTopic     string `yaml:"instanceTopic"`
-	RuleTopic         string `yaml:"ruleTopic"`
-	RecordTopic       string `yaml:"recordTopic"`
+	NameServer string `yaml:"name-server"`
+	BrokerAddr string `yaml:"broker-addr"`
 }
 
 type Prometheus struct {
@@ -102,11 +98,8 @@ func defaultAuthSdkConfig() Config {
 			Group: "cloud-monitor-region",
 		},
 		Rocketmq: Rocketmq{
-			NameServer:        "127.0.0.1:9876",
-			BrokerAddr:        "127.0.0.1:10911",
-			AlertContactTopic: "alertContactTopic",
-			RuleTopic:         "",
-			RecordTopic:       "",
+			NameServer: "127.0.0.1:9876",
+			BrokerAddr: "127.0.0.1:10911",
 		},
 	}
 }

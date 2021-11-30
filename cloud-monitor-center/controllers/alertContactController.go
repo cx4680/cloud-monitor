@@ -6,7 +6,6 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/sysComponent/sysRocketMq"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/service"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/validator/translate"
-	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/enums"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -42,7 +41,7 @@ func (acl *AlertContactCtl) InsertAlertContact(c *gin.Context) {
 		return
 	}
 	param.EventEum = enums.InsertAlertContact
-	err = contactService.Persistence(contactService, sysRocketMq.Topic(config.GetRocketmqConfig().AlertContactTopic), param)
+	err = contactService.Persistence(contactService, sysRocketMq.AlertContactTopic, param)
 	//local, err := acl.service.PersistenceLocal(global.DB, param)
 	if err != nil {
 		c.JSON(http.StatusOK, global.NewError(err.Error()))

@@ -10,7 +10,6 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/models"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/service"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/tools"
-	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/enums"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/utils/snowflake"
 	"gorm.io/gorm"
@@ -65,11 +64,11 @@ func (s *AlertContactService) PersistenceLocal(db *gorm.DB, param interface{}) (
 		s.dao.Insert(db, alertContact)
 
 		//保存联系方式
-		if err := s.alertContactInformationService.PersistenceInner(db, s.alertContactInformationService, sysRocketMq.Topic(config.GetRocketmqConfig().AlertContactTopic), p); err != nil {
+		if err := s.alertContactInformationService.PersistenceInner(db, s.alertContactInformationService, sysRocketMq.AlertContactTopic, p); err != nil {
 			return "", errors.NewBusinessError(err.Error())
 		}
 		//保存联系人组关联
-		if err := s.alertContactGroupService.PersistenceInner(db, s.alertContactGroupService, sysRocketMq.Topic(config.GetRocketmqConfig().AlertContactTopic), param); err != nil {
+		if err := s.alertContactGroupService.PersistenceInner(db, s.alertContactGroupService, sysRocketMq.AlertContactTopic, param); err != nil {
 			return "", errors.NewBusinessError(err.Error())
 		}
 		msg := forms.MqMsg{
@@ -95,11 +94,11 @@ func (s *AlertContactService) PersistenceLocal(db *gorm.DB, param interface{}) (
 		s.dao.Update(db, alertContact)
 
 		//更新联系方式
-		if err := s.alertContactInformationService.PersistenceInner(db, s.alertContactInformationService, sysRocketMq.Topic(config.GetRocketmqConfig().AlertContactTopic), param); err != nil {
+		if err := s.alertContactInformationService.PersistenceInner(db, s.alertContactInformationService, sysRocketMq.AlertContactTopic, param); err != nil {
 			return "", errors.NewBusinessError(err.Error())
 		}
 		//更新联系人组关联
-		if err := s.alertContactGroupService.PersistenceInner(db, s.alertContactGroupService, sysRocketMq.Topic(config.GetRocketmqConfig().AlertContactTopic), param); err != nil {
+		if err := s.alertContactGroupService.PersistenceInner(db, s.alertContactGroupService, sysRocketMq.AlertContactTopic, param); err != nil {
 			return "", errors.NewBusinessError(err.Error())
 		}
 
