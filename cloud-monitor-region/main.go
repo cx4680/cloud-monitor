@@ -31,18 +31,16 @@ func main() {
 		log.Printf("init trans failed, err:%v\n", err)
 		os.Exit(2)
 	}
+	if err := k8s.InitK8s(); err != nil {
+		log.Printf("init k8s error: %v\n", err)
+		os.Exit(5)
+	}
 
 	if err := sysComponent.InitSys(); err != nil {
 		log.Printf("init sys component error: %v\n", err)
 		os.Exit(3)
 	}
 
-	if config.GetCommonConfig().Env != "local" {
-		if err := k8s.InitK8s(); err != nil {
-			log.Printf("init k8s error: %v\n", err)
-			os.Exit(5)
-		}
-	}
 	//加载mq
 	if err := initRocketMqConsumers(); err != nil {
 		log.Printf("init rocketmq error, %v\n", err)

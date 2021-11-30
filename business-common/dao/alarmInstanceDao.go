@@ -7,7 +7,6 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/vo"
 	"fmt"
 	"strings"
-	"unsafe"
 )
 
 type AlarmInstanceDao struct {
@@ -23,7 +22,7 @@ func (mpd *AlarmInstanceDao) SelectTenantIdList(productType string, pageCurrent 
 	sql := "SELECT DISTINCT   t1.tenant_id FROM   t_alarm_instance t1 LEFT JOIN t_alarm_rule t2 ON t1.alarm_rule_id = t2.id LEFT JOIN monitor_product t3 ON t3.`name` = t2.product_type WHERE   t1.tenant_id != '' AND t3.id  = ?"
 	var sqlParam = []interface{}{productType}
 	var tenantIds []string
-	return pageUtils.Paginate(pageSize, pageCurrent, sql, sqlParam, unsafe.Pointer(&tenantIds))
+	return pageUtils.Paginate(pageSize, pageCurrent, sql, sqlParam, &tenantIds)
 }
 
 func (mpd *AlarmInstanceDao) UpdateBatchInstanceName(models []*models.AlarmInstance) {

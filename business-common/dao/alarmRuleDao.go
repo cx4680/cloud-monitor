@@ -10,7 +10,6 @@ import (
 	"gorm.io/gorm"
 	"strconv"
 	"strings"
-	"unsafe"
 )
 
 type AlarmRuleDao struct {
@@ -62,7 +61,7 @@ func (dao *AlarmRuleDao) SelectRulePageList(param *forms.AlarmPageReqParam) *vo.
 		sqlParam = append(sqlParam, param.RuleName)
 	}
 	selectList.WriteString(") t group by t.ruleId order by t.update_time  desc ")
-	return pageUtils.Paginate(param.PageSize, param.Current, selectList.String(), sqlParam, unsafe.Pointer(&model))
+	return pageUtils.Paginate(param.PageSize, param.Current, selectList.String(), sqlParam, &model)
 
 }
 

@@ -6,7 +6,6 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/models"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/pageUtils"
 	"gorm.io/gorm"
-	"unsafe"
 )
 
 type InstanceDao struct {
@@ -17,7 +16,7 @@ var Instance = new(InstanceDao)
 func (dao *InstanceDao) SelectInstanceRulePage(param *forms.InstanceRulePageReqParam) interface{} {
 	var model []forms.InstanceRuleDTO
 	var sqlParam = []interface{}{param.InstanceId}
-	return pageUtils.Paginate(param.PageSize, param.Current, "select t2.id,t2.name,t2.metric_name as monitorItem,t2.trigger_condition  as ruleCondition,product_type,monitor_type ,t1.create_time from t_alarm_instance  t1        JOIN t_alarm_rule t2  on t2.id=t1.alarm_rule_id       where t1.instance_id=? and t2.deleted=0  ORDER BY create_time desc  , name ASC", sqlParam, unsafe.Pointer(&model))
+	return pageUtils.Paginate(param.PageSize, param.Current, "select t2.id,t2.name,t2.metric_name as monitorItem,t2.trigger_condition  as ruleCondition,product_type,monitor_type ,t1.create_time from t_alarm_instance  t1        JOIN t_alarm_rule t2  on t2.id=t1.alarm_rule_id       where t1.instance_id=? and t2.deleted=0  ORDER BY create_time desc  , name ASC", sqlParam, &model)
 }
 
 func (dao *InstanceDao) UnbindInstance(tx *gorm.DB, param *forms.UnBindRuleParam) {

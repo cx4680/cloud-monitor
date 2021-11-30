@@ -3,10 +3,9 @@ package pageUtils
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/vo"
-	"unsafe"
 )
 
-func Paginate(pageSize int, current int, sql string, sqlParam []interface{}, retPoint unsafe.Pointer) *vo.PageVO {
+func Paginate(pageSize int, current int, sql string, sqlParam []interface{}, retPoint interface{}) *vo.PageVO {
 	pageSize = correctionPageSize(pageSize)
 
 	db := global.DB

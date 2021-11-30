@@ -24,30 +24,8 @@ func AlarmRuleHandler(msgList []*primitive.MessageExt) {
 		if err != nil {
 			continue
 		}
-		err = tx(MqMsg, data)
-		if err != nil {
-			fmt.Printf("sync error: %v ,%v\n", msgList[i], err)
-		}
+		handleMsg(MqMsg, data)
 	}
-}
-
-func tx(MqMsg forms.MqMsg, data []byte) error {
-	tx := global.DB
-	var err error
-	defer func() {
-		if r := recover(); r != nil {
-			logger.Logger().Errorf("%v", err)
-			tx.Rollback()
-			err = fmt.Errorf("%v", err)
-		}
-	}()
-	handleMsg(MqMsg, data)
-	if err != nil {
-		tx.Rollback()
-		return err
-	}
-	err = tx.Commit().Error
-	return err
 }
 
 func handleMsg(MqMsg forms.MqMsg, data []byte) {

@@ -28,8 +28,11 @@ func SyncUpdate(task InterfaceTask, productType string, update bool) {
 			break
 		}
 		pageTotal = pageVo.Total
-		tenantList := pageVo.Records.([]string)
-		for _, tenantId := range tenantList {
+		if pageTotal == 0 {
+			return
+		}
+		tenantList := pageVo.Records.(*[]string)
+		for _, tenantId := range *tenantList {
 			dbInstanceList := dao.AlarmInstance.SelectInstanceList(tenantId, productType)
 			instances, err := task.GetInstanceList(tenantId)
 			if err != nil {
