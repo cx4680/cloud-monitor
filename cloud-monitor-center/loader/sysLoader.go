@@ -1,7 +1,6 @@
 package loader
 
 import (
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/loader"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/sysComponent/sysRocketMq"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/task"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/mq/consumer"
@@ -10,11 +9,16 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
 )
 
-type SysLoaderImpl struct {
-	loader.AbstractSysLoader
+type TransactionLoader struct {
 }
 
-func (s SysLoaderImpl) InitTask() error {
+func (t *TransactionLoader) Load() error {
+	return translate.InitTrans("zh")
+}
+
+type TaskLoader struct{}
+
+func (t *TaskLoader) Load() error {
 	bt := task.NewBusinessTaskImpl()
 	if err := bt.Add(task.BusinessTaskDTO{
 		Cron: "0 0 0/1 * * ?",
@@ -28,24 +32,27 @@ func (s SysLoaderImpl) InitTask() error {
 	return nil
 }
 
-func (s *SysLoaderImpl) InitRocketMqConsumers() error {
-	//TODO 初始化消费者
+type RocketMQConsumerLoader struct{}
+
+func (r *RocketMQConsumerLoader) Load() error {
 	if err := sysRocketMq.StartConsumersScribe("cloud-monitor-center", []*sysRocketMq.Consumer{{
 		Topic:   sysRocketMq.InstanceTopic,
 		Handler: consumer.InstanceHandler,
 	}}); err != nil {
 		return err
 	}
-	return nil
-}
 
-func (s *SysLoaderImpl) InitWebServe() error {
-	if err := web.Start(config.GetServeConfig()); err != nil {
+	if err := sysRocketMq.StartConsumersScribe("cloud-monitor-center", []*sysRocketMq.Consumer{{
+		Topic:   sysRocketMq.SmsMarginReminderTopic,
+		Handler: consumer.SmsMarginReminderConsumer,
+	}}); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (s *SysLoaderImpl) InitTrans() error {
-	return translate.InitTrans("zh")
+type WebServeLoader struct{}
+
+func (w *WebServeLoader) Load() error {
+	return web.Start(config.GetServeConfig())
 }
