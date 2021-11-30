@@ -12,7 +12,7 @@ import (
 // @BasePath /
 func main() {
 
-	l := commonLoader.SysSysGuideImpl{InitList: []commonLoader.SysLoader{
+	l := commonLoader.SysSysGuideImpl{LoaderList: []commonLoader.SysLoader{
 		&commonLoader.ConfigLoader{},
 		&loader.TransactionLoader{},
 		&commonLoader.SysComponentLoader{},
@@ -22,6 +22,6 @@ func main() {
 	}}
 
 	if err := l.StartServe(); err != nil {
-		os.Exit(-1)
+		os.Exit(1)
 	}
 }

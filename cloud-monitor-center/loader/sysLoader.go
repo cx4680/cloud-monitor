@@ -35,20 +35,13 @@ func (t *TaskLoader) Load() error {
 type RocketMQConsumerLoader struct{}
 
 func (r *RocketMQConsumerLoader) Load() error {
-	if err := sysRocketMq.StartConsumersScribe("cloud-monitor-center", []*sysRocketMq.Consumer{{
+	return sysRocketMq.StartConsumersScribe("cloud-monitor-center", []*sysRocketMq.Consumer{{
 		Topic:   sysRocketMq.InstanceTopic,
 		Handler: consumer.InstanceHandler,
-	}}); err != nil {
-		return err
-	}
-
-	if err := sysRocketMq.StartConsumersScribe("cloud-monitor-center", []*sysRocketMq.Consumer{{
+	}, {
 		Topic:   sysRocketMq.SmsMarginReminderTopic,
 		Handler: consumer.SmsMarginReminderConsumer,
-	}}); err != nil {
-		return err
-	}
-	return nil
+	}})
 }
 
 type WebServeLoader struct{}

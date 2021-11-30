@@ -8,7 +8,7 @@ import (
 
 func main() {
 
-	l := commonLoader.SysSysGuideImpl{InitList: []commonLoader.SysLoader{
+	l := commonLoader.SysSysGuideImpl{LoaderList: []commonLoader.SysLoader{
 		&commonLoader.ConfigLoader{},
 		&loader.TransactionLoader{},
 		&commonLoader.SysComponentLoader{},
