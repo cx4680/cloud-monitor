@@ -17,6 +17,6 @@ func SendAlertRecordMsg(msg []*models.AlertRecord) {
 	sysRocketMq.SendMsg(sysRocketMq.RecordTopic, tools.ToString(msg))
 }
 
-func SendInstanceJobMsg(msg []models.AlarmInstance) {
-	sysRocketMq.SendMsg(sysRocketMq.InstanceTopic, tools.ToString(msg))
+func SendInstanceJobMsg(topic sysRocketMq.Topic, msg []*models.AlarmInstance) {
+	sysRocketMq.SendMsg(topic, tools.ToString(msg))
 }

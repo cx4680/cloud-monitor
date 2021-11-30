@@ -27,6 +27,8 @@ const (
 
 	AlertContactTopic      Topic = "alert_contact"       //告警联系人
 	AlertContactGroupTopic Topic = "alert_contact_group" //告警联系人组
+
+	DeleteInstanceTopic Topic = "deleteInstanceTopic"
 )
 
 type Consumer struct {

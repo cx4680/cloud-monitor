@@ -81,21 +81,27 @@ func initRocketMqConsumers() error {
 
 func initTask() error {
 	bt := commonTask.NewBusinessTaskImpl()
+	var corn = "0 0 0/1 * * ?"
 	if err := bt.Add(commonTask.BusinessTaskDTO{
-		Cron: "0 0 0/1 * * ?",
+		Cron: corn,
 		Name: "instanceJob",
-		Task: task.InstanceJob,
+		Task: task.NewEcsJob().SyncJob,
 	}); err != nil {
 		return err
 	}
 
 	if err := bt.Add(commonTask.BusinessTaskDTO{
-		Cron: "0 0 0/1 * * ?",
-		Task: task.SlbInstanceJob,
+		Cron: corn,
+		Task: task.NewSlbJob().SyncJob,
 	}); err != nil {
 		return err
 	}
-
+	if err := bt.Add(commonTask.BusinessTaskDTO{
+		Cron: corn,
+		Task: task.NewEipJob().SyncJob,
+	}); err != nil {
+		return err
+	}
 	bt.Start()
 	return nil
 }

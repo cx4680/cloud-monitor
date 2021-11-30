@@ -2,12 +2,11 @@ package consumer
 
 import (
 	commonDao "code.cestc.cn/ccos-ops/cloud-monitor/business-common/dao"
-	commonForm "code.cestc.cn/ccos-ops/cloud-monitor/business-common/forms"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/dao"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/forms"
 
-	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/models"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/models"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/enums"
 	"encoding/json"
 	"fmt"

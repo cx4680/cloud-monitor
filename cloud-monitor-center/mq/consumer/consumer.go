@@ -11,9 +11,12 @@ import (
 func InstanceHandler(msgs []*primitive.MessageExt) {
 	alarmInstanceDao := dao.AlarmInstance
 	for i := range msgs {
-		var instances []models.AlarmInstance
+		var instances []*models.AlarmInstance
 		fmt.Printf("subscribe callback: %v \n", msgs[i])
-		json.Unmarshal(msgs[i].Body, &instances)
+		err := json.Unmarshal(msgs[i].Body, &instances)
+		if err != nil {
+			continue
+		}
 		alarmInstanceDao.UpdateBatchInstanceName(instances)
 	}
 }

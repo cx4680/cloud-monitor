@@ -1,36 +1,24 @@
 package task
 
 import (
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/models"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/external/ecs"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/forms"
-	"github.com/robfig/cron"
 	"log"
 )
-
-func CronEcsInstanceJob() {
-	c := cron.New()
-	ecsInstanceJob := newEcsJob()
-	err := c.AddFunc("0 0 0/1 * * ?", ecsInstanceJob.syncJob)
-	if err != nil {
-		log.Println("clearAlertRecordJob error", err)
-	}
-	c.Start()
-	defer c.Stop()
-	select {}
-}
 
 type EcsSyncJob struct {
 }
 
-func newEcsJob() *EcsSyncJob {
+func NewEcsJob() *EcsSyncJob {
 	return &EcsSyncJob{}
 }
-func (ecsSyncJob *EcsSyncJob) syncJob() {
+func (ecsSyncJob *EcsSyncJob) SyncJob() {
 	log.Println("ecs instanceJob start")
 	SyncUpdate(ecsSyncJob, "1", true)
 	log.Println("ecs instanceJob end")
 }
-func (ecsSyncJob *EcsSyncJob) GetInstanceList(tenantId string) (interface{}, error) {
+func (ecsSyncJob *EcsSyncJob) GetInstanceList(tenantId string) ([]*models.AlarmInstance, error) {
 	pageForm := &forms.EcsQueryPageForm{
 		TenantId: tenantId,
 		Current:  pageIndex,
@@ -40,5 +28,9 @@ func (ecsSyncJob *EcsSyncJob) GetInstanceList(tenantId string) (interface{}, err
 	if err != nil {
 		return nil, err
 	}
-	return pageVO.Rows, nil
+	var infos = make([]*models.AlarmInstance, pageVO.Total)
+	for i, row := range pageVO.Rows {
+		infos[i] = &models.AlarmInstance{InstanceID: row.InstanceId, InstanceName: row.InstanceName}
+	}
+	return infos, nil
 }

@@ -55,7 +55,7 @@ type InfoBean struct {
 	PayModel      int         `json:"payModel"`
 	FreezeTime    string      `json:"freezeTime"`
 	UserCode      string      `json:"userCode"`
-	InstanceUid   interface{} `json:"instanceUid"`
+	InstanceUid   string      `json:"instanceUid"`
 	Uid           string      `json:"uid"`
 	RegionCode    string      `json:"regionCode"`
 	ResourceCode  string      `json:"resourceCode"`

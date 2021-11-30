@@ -21,7 +21,7 @@ import (
 // @BasePath /
 func main() {
 	//解析命令参数
-	var cf = flag.String("config", "cloud-monitor-center/config.local.yml", "config.yml path")
+	var cf = flag.String("config", "config.local.yml", "config.yml path")
 	flag.Parse()
 
 	if err := config.InitConfig(*cf); err != nil {

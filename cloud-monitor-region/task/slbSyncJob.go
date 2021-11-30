@@ -1,44 +1,34 @@
 package task
 
 import (
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/models"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/external/slb"
-	"github.com/robfig/cron"
 	"log"
 )
-
-func CronSlbInstanceJob() {
-	c := cron.New()
-	job := newSlbJob()
-	err := c.AddFunc("0 0 0/1 * * ?", job.syncJob)
-	if err != nil {
-		log.Println("clearAlertRecordJob error", err)
-	}
-	c.Start()
-	defer c.Stop()
-	select {}
-}
 
 type SlbSyncJob struct {
 }
 
-func newSlbJob() *SlbSyncJob {
+func NewSlbJob() *SlbSyncJob {
 	return &SlbSyncJob{}
 }
-func (slbJob *SlbSyncJob) syncJob() {
+func (slbJob *SlbSyncJob) SyncJob() {
 	log.Println("slbInstanceJob start")
 	SyncUpdate(slbJob, "3", true)
 	log.Println("slbInstanceJob end")
 }
 
-func (slbJob *SlbSyncJob) GetInstanceList(tenantId string) (interface{}, error) {
+type A struct {
+}
+
+func (slbJob *SlbSyncJob) GetInstanceList(tenantId string) ([]*models.AlarmInstance, error) {
 	pageVO, err := slb.GetSlbInstancePage(nil, pageIndex, pageSize, tenantId)
 	if err != nil {
 		return nil, err
 	}
-	var infos []*ProjectInstanceInfo
+	var infos = make([]*models.AlarmInstance, pageVO.Total)
 	for i, row := range pageVO.Rows {
-		info := ProjectInstanceInfo{InstanceId: row.LbUid, InstanceName: row.Name}
-		infos[i] = &info
+		infos[i] = &models.AlarmInstance{InstanceID: row.LbUid, InstanceName: row.Name}
 	}
 	return infos, nil
 }
