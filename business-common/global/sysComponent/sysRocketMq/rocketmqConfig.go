@@ -15,6 +15,7 @@ import (
 var p rocketmq.Producer
 
 type Topic string
+type Group string
 
 const (
 	SmsMarginReminderTopic Topic = "sms_margin_reminder" //短信余量提醒
@@ -77,9 +78,9 @@ func InitProducer() error {
 	return nil
 }
 
-func StartConsumersScribe(consumers []*Consumer) error {
+func StartConsumersScribe(group Group, consumers []*Consumer) error {
 	c, _ := rocketmq.NewPushConsumer(
-		consumer.WithGroupName(config.GetCommonConfig().RegionName),
+		consumer.WithGroupName(string(group)),
 		consumer.WithNsResolver(primitive.NewPassthroughResolver([]string{config.GetRocketmqConfig().NameServer})),
 	)
 	for _, o := range consumers {

@@ -66,7 +66,7 @@ func main() {
 }
 
 func initRocketMqConsumers() error {
-	if err := sysRocketMq.StartConsumersScribe([]*sysRocketMq.Consumer{{
+	if err := sysRocketMq.StartConsumersScribe(sysRocketMq.Group(config.GetCommonConfig().RegionName), []*sysRocketMq.Consumer{{
 		Topic:   sysRocketMq.AlertContactTopic,
 		Handler: consumer.AlertContactHandler,
 	}, {
