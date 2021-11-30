@@ -301,7 +301,7 @@ func (s *AlertRecordAddService) predicate(alert *forms.AlertRecordAlertsBean) (b
 }
 
 func (s *AlertRecordAddService) persistence(list []commonModels.AlertRecord) error {
-	return s.AlertRecordSvc.Persistence(s.AlertRecordSvc, sysRocketMq.Topic(config.GetRocketmqConfig().RecordTopic), list)
+	return s.AlertRecordSvc.Persistence(s.AlertRecordSvc, sysRocketMq.RecordTopic, list)
 }
 
 func (s *AlertRecordAddService) sendNotice(alertMsgList []service.AlertMsgSendDTO) error {

@@ -44,7 +44,7 @@ func main() {
 		}
 	}
 	//加载mq
-	if err := initRocketMq(); err != nil {
+	if err := initRocketMqConsumers(); err != nil {
 		log.Printf("init rocketmq error, %v\n", err)
 		os.Exit(5)
 	}
@@ -65,18 +65,12 @@ func main() {
 	}
 }
 
-func initRocketMq() error {
-	rc := config.GetRocketmqConfig()
-	if err := sysRocketMq.CreateTopics(rc.RuleTopic, rc.RecordTopic, rc.AlertContactTopic, rc.InstanceTopic); err != nil {
-		log.Printf("create topics error, %v\n", err)
-		return err
-	}
-
+func initRocketMqConsumers() error {
 	if err := sysRocketMq.StartConsumersScribe([]*sysRocketMq.Consumer{{
-		Topic:   rc.AlertContactTopic,
+		Topic:   sysRocketMq.AlertContactTopic,
 		Handler: consumer.AlertContactHandler,
 	}, {
-		Topic:   rc.RuleTopic,
+		Topic:   sysRocketMq.RuleTopic,
 		Handler: consumer.AlarmRuleHandler,
 	}}); err != nil {
 		log.Printf("create rocketmq consumer error, %v\n", err)

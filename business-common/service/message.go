@@ -95,7 +95,7 @@ func (s *MessageService) SendMsg(msgList []AlertMsgSendDTO, isCenter bool) error
 	//	sync record to center
 	if !isCenter {
 		_ = sysRocketMq.SendRocketMqMsg(sysRocketMq.RocketMqMsg{
-			Topic:   sysRocketMq.NotificationSync,
+			Topic:   sysRocketMq.NotificationSyncTopic,
 			Content: tools.ToString(recordList),
 		})
 	}
@@ -105,7 +105,7 @@ func (s *MessageService) SendMsg(msgList []AlertMsgSendDTO, isCenter bool) error
 		smsSender = tools.RemoveDuplicateElement(smsSender)
 		//通过MQ异步解耦
 		_ = sysRocketMq.SendRocketMqMsg(sysRocketMq.RocketMqMsg{
-			Topic:   sysRocketMq.SmsMarginReminder,
+			Topic:   sysRocketMq.SmsMarginReminderTopic,
 			Content: tools.ToString(smsSender),
 		})
 	}

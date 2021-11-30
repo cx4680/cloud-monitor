@@ -23,5 +23,20 @@ func InitSys() error {
 		log.Printf("create rocketmq consumer error, %v\n", err)
 		return err
 	}
+
+	topics := []sysRocketMq.Topic{
+		sysRocketMq.SmsMarginReminderTopic,
+		sysRocketMq.InstanceTopic,
+		sysRocketMq.AlertContactTopic,
+		sysRocketMq.RecordTopic,
+		sysRocketMq.RuleTopic,
+		sysRocketMq.NotificationSyncTopic,
+		sysRocketMq.AlertContactGroupTopic}
+
+	err := sysRocketMq.CreateTopics(topics...)
+	if err != nil {
+		log.Printf("create rocketmq topics error, %v\n", err)
+		return err
+	}
 	return nil
 }
