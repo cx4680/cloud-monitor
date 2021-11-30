@@ -28,7 +28,7 @@ func (s SysLoaderImpl) InitTask() error {
 	return nil
 }
 
-func (s SysLoaderImpl) InitRocketMqConsumers() error {
+func (s *SysLoaderImpl) InitRocketMqConsumers() error {
 	//TODO 初始化消费者
 	if err := sysRocketMq.StartConsumersScribe("cloud-monitor-center", []*sysRocketMq.Consumer{{
 		Topic:   sysRocketMq.InstanceTopic,
@@ -39,13 +39,13 @@ func (s SysLoaderImpl) InitRocketMqConsumers() error {
 	return nil
 }
 
-func (s SysLoaderImpl) InitWebServe() error {
+func (s *SysLoaderImpl) InitWebServe() error {
 	if err := web.Start(config.GetServeConfig()); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (s SysLoaderImpl) InitTrans() error {
+func (s *SysLoaderImpl) InitTrans() error {
 	return translate.InitTrans("zh")
 }

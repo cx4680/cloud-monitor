@@ -16,7 +16,7 @@ type SysLoaderImpl struct {
 	loader.AbstractSysLoader
 }
 
-func (s SysLoaderImpl) InitTask() error {
+func (s *SysLoaderImpl) InitTask() error {
 	bt := commonTask.NewBusinessTaskImpl()
 	if err := bt.Add(commonTask.BusinessTaskDTO{
 		Cron: "0 0 0/1 * * ?",
@@ -43,7 +43,7 @@ func (s SysLoaderImpl) InitTask() error {
 	return nil
 }
 
-func (s SysLoaderImpl) InitRocketMqConsumers() error {
+func (s *SysLoaderImpl) InitRocketMqConsumers() error {
 	if err := sysRocketMq.StartConsumersScribe(sysRocketMq.Group(config.GetCommonConfig().RegionName), []*sysRocketMq.Consumer{{
 		Topic:   sysRocketMq.AlertContactTopic,
 		Handler: consumer.AlertContactHandler,
@@ -57,13 +57,13 @@ func (s SysLoaderImpl) InitRocketMqConsumers() error {
 	return nil
 }
 
-func (s SysLoaderImpl) InitWebServe() error {
+func (s *SysLoaderImpl) InitWebServe() error {
 	if err := web.Start(config.GetServeConfig()); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (s SysLoaderImpl) InitTrans() error {
+func (s *SysLoaderImpl) InitTrans() error {
 	return translate.InitTrans("zh")
 }
