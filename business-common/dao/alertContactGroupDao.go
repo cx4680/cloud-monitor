@@ -44,8 +44,8 @@ func (mpd *AlertContactGroupDao) InsertAlertContactGroup(param forms.AlertContac
 
 	var count int64
 	global.DB.Model(&models.AlertContactGroup{}).Where("tenant_id = ?", param.TenantId).Count(&count)
-	if count >= constants.MAX_GROUP_NUM {
-		return errors.NewBusinessError("联系组限制创建" + strconv.Itoa(constants.MAX_GROUP_NUM) + "个")
+	if count >= constants.MaxGroupNum {
+		return errors.NewBusinessError("联系组限制创建" + strconv.Itoa(constants.MaxGroupNum) + "个")
 	}
 	global.DB.Model(&models.AlertContactGroup{}).Where("tenant_id = ?", param.TenantId).Where("name = ?", param.GroupName).Count(&count)
 	if count >= 1 {
@@ -126,8 +126,8 @@ func (mpd *AlertContactGroupDao) insertAlertContactGroupRel(param forms.AlertCon
 	}
 	var count int64
 	global.DB.Model(&models.AlertContactGroupRel{}).Where("tenant_id = ?", param.TenantId).Where("group_id", param.GroupId).Count(&count)
-	if count >= constants.MAX_CONTACT_NUM {
-		return errors.NewBusinessError("每组联系人限制" + strconv.Itoa(constants.MAX_CONTACT_NUM) + "个")
+	if count >= constants.MaxContactNum {
+		return errors.NewBusinessError("每组联系人限制" + strconv.Itoa(constants.MaxContactNum) + "个")
 	}
 	for _, contactId := range param.ContactIdList {
 		var alertContactGroupRel = &models.AlertContactGroupRel{

@@ -19,9 +19,7 @@ func NewAlertContactCtl(service service.AlertContactService) *AlertContactCtl {
 	return &AlertContactCtl{service}
 }
 
-var groupService = service.NewAlertContactGroupService()
-var informationService = service.NewAlertContactInformationService()
-var contactService = service.NewAlertContactService(groupService, informationService)
+var contactService = service.NewAlertContactService(service.NewAlertContactGroupService(), service.NewAlertContactInformationService(), service.NewAlertContactGroupRelService())
 
 func (acl *AlertContactCtl) GetAlertContact(c *gin.Context) {
 	var param forms.AlertContactParam

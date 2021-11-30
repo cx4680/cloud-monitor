@@ -105,7 +105,7 @@ const (
 		"ac.create_time DESC "
 )
 
-func (acd *AlertContactDao) Select(db *gorm.DB, param forms.AlertContactParam) *forms.AlertContactFormPage {
+func (d *AlertContactDao) Select(db *gorm.DB, param forms.AlertContactParam) *forms.AlertContactFormPage {
 	var model = &[]forms.AlertContactForm{}
 	var sql string
 	if param.ContactName != "" {
@@ -132,24 +132,21 @@ func (acd *AlertContactDao) Select(db *gorm.DB, param forms.AlertContactParam) *
 	return alertContactFormPage
 }
 
-func (acd *AlertContactDao) Insert(db *gorm.DB, entity *models.AlertContact) {
-	currentTime := tools.GetNowStr()
-	entity.CreateTime = currentTime
-	entity.UpdateTime = currentTime
+func (d *AlertContactDao) Insert(db *gorm.DB, entity *models.AlertContact) {
 	db.Create(entity)
 }
 
-func (acd *AlertContactDao) Update(db *gorm.DB, entity *models.AlertContact) {
+func (d *AlertContactDao) Update(db *gorm.DB, entity *models.AlertContact) {
 	currentTime := tools.GetNowStr()
 	entity.UpdateTime = currentTime
 	db.Updates(entity)
 }
 
-func (acd *AlertContactDao) Delete(db *gorm.DB, entity *models.AlertContact) {
+func (d *AlertContactDao) Delete(db *gorm.DB, entity *models.AlertContact) {
 	db.Delete(entity)
 }
 
-func (mpd *AlertContactDao) CertifyAlertContact(activeCode string) string {
+func (d *AlertContactDao) CertifyAlertContact(activeCode string) string {
 	var model = &models.AlertContactInformation{}
 	global.DB.Model(model).Where("active_code = ?", activeCode).Update("is_certify", 1)
 	return model.TenantId

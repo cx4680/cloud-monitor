@@ -33,8 +33,7 @@ func (s *AlertContactInformationService) PersistenceLocal(db *gorm.DB, param int
 	p := param.(forms.AlertContactParam)
 	switch p.EventEum {
 	case enums.InsertAlertContact:
-		infoList := s.getInformationList(p)
-		s.dao.InsertBatch(db, infoList)
+		infoList := s.getInformationList(db, p)
 		return tools.ToString(forms.MqMsg{
 			EventEum: enums.InsertAlertContactInformation,
 			Data:     infoList,
@@ -82,7 +81,7 @@ func (s *AlertContactInformationService) getActiveCode() (string, int) {
 	return strings.ReplaceAll(uuid.New().String(), "-", ""), 0
 }
 
-func (s *AlertContactInformationService) getInformationList(p forms.AlertContactParam) []*models.AlertContactInformation {
+func (s *AlertContactInformationService) getInformationList(db *gorm.DB, p forms.AlertContactParam) []*models.AlertContactInformation {
 	activeCode, isCertify := s.getActiveCode()
 	var infoList []*models.AlertContactInformation
 	if p.Phone != "" {
@@ -111,5 +110,6 @@ func (s *AlertContactInformationService) getInformationList(p forms.AlertContact
 		}
 		infoList = append(infoList, alertContactInformationEmail)
 	}
+	s.dao.InsertBatch(db, infoList)
 	return infoList
 }

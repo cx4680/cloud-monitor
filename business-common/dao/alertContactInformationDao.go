@@ -22,9 +22,11 @@ func (acid *AlertContactInformationDao) Insert(db *gorm.DB, entity *models.Alert
 }
 
 func (acid *AlertContactInformationDao) InsertBatch(db *gorm.DB, list []*models.AlertContactInformation) {
+	if len(list) == 0 {
+		return
+	}
 	currentTime := tools.GetNowStr()
 	for _, information := range list {
-		information.Id = strconv.FormatInt(snowflake.GetWorker().NextId(), 10)
 		information.CreateTime = currentTime
 		information.UpdateTime = currentTime
 	}
