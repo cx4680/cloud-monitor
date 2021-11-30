@@ -21,7 +21,7 @@ func HttpGet(path string) (string, error) {
 	return string(body), nil
 }
 
-// params 格式 a=123&b=234
+// HttpPost params 格式 a=123&b=234
 func HttpPost(path string, params string) (string, error) {
 	resp, err := http.Post(path,
 		"application/x-www-form-urlencoded",
