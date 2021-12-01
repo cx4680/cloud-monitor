@@ -46,6 +46,9 @@ func (mpd *AlarmInstanceDao) SelectInstanceList(tenantId string, productType str
 }
 
 func (mpd *AlarmInstanceDao) DeleteInstanceList(tenantId string, models []*models.AlarmInstance) {
+	if len(models) == 0 {
+		return
+	}
 	sql := "DELETE FROM t_alarm_instance WHERE tenant_id = %s and instance_id IN ('%s')"
 	var arr []string
 	for _, v := range models {

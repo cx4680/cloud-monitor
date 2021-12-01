@@ -2,6 +2,7 @@ package task
 
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/dao"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/dtos"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/sysComponent/sysRocketMq"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/models"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/mq/producer"
@@ -66,7 +67,11 @@ func DeleteNotExistsInstances(tenantId string, dbInstanceList []*models.AlarmIns
 	}
 	if len(deletedList) != 0 {
 		dao.AlarmInstance.DeleteInstanceList(tenantId, deletedList)
-		producer.SendInstanceJobMsg(sysRocketMq.DeleteInstanceTopic, deletedList)
+		instance := &dtos.Instance{
+			TenantId: tenantId,
+			List:     deletedList,
+		}
+		producer.SendInstanceJobMsg(sysRocketMq.DeleteInstanceTopic, instance)
 		service.PrometheusRule.GenerateUserPrometheusRule(tenantId)
 	}
 }

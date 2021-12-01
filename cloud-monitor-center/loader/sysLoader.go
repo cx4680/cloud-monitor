@@ -41,6 +41,9 @@ func (r *RocketMQConsumerLoader) Load() error {
 	}, {
 		Topic:   sysRocketMq.SmsMarginReminderTopic,
 		Handler: consumer.SmsMarginReminderConsumer,
+	}, {
+		Topic:   sysRocketMq.DeleteInstanceTopic,
+		Handler: consumer.DeleteInstanceHandler,
 	}})
 }
 
