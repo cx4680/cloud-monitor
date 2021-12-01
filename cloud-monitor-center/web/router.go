@@ -14,6 +14,7 @@ func loadRouters() {
 	alertContactGroupRouters()
 	alarmRule()
 	instance()
+	alertRecord()
 }
 
 func monitorProductRouters() {
@@ -80,4 +81,14 @@ func instance() {
 		group.POST("/bind", ctl.Bind)
 		group.POST("/ruleList", ctl.GetRuleList)
 	}
+}
+
+func alertRecord() {
+	ctl := controllers.NewAlertRecordController()
+	group := router.Group("/hawkeye/alertRecord/")
+	{
+		group.POST("/page", ctl.GetPageList)
+		group.GET("/detail", ctl.GetDetail)
+	}
+
 }

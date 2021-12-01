@@ -2,7 +2,7 @@ package models
 
 import "time"
 
-// 告警记录
+// AlertRecord 告警记录
 type AlertRecord struct {
 	ID           string    `gorm:"column:id;primary_key"`
 	Status       string    `gorm:"column:status;NOT NULL"` // 告警状态 firing resolved
