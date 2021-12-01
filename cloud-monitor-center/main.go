@@ -1,6 +1,7 @@
 package main
 
 import (
+	commonLoader "code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/sysGuide"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/loader"
 	"os"
 )
@@ -10,8 +11,17 @@ import (
 // @description  This is a sample server Petstore server.
 // @BasePath /
 func main() {
-	l := &loader.SysLoaderImpl{}
-	if err := l.StartServe(l); err != nil {
-		os.Exit(-1)
+
+	l := commonLoader.SysSysGuideImpl{LoaderList: []commonLoader.SysLoader{
+		&commonLoader.ConfigLoader{},
+		&loader.TransactionLoader{},
+		&commonLoader.SysComponentLoader{},
+		&loader.RocketMQConsumerLoader{},
+		&loader.TaskLoader{},
+		&loader.WebServeLoader{},
+	}}
+
+	if err := l.StartServe(); err != nil {
+		os.Exit(1)
 	}
 }
