@@ -1,6 +1,7 @@
 package web
 
 import (
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/web/middleware"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
 	"github.com/gin-gonic/gin"
@@ -28,7 +29,7 @@ func Start(cfg config.Serve) error {
 func doStart(cfg config.Serve) error {
 
 	router.NoRoute(func(c *gin.Context) {
-		c.HTML(http.StatusNotFound, "path not found", nil)
+		c.JSON(http.StatusNotFound, global.NewError("接口不存在"))
 	})
 
 	port := "8081"
