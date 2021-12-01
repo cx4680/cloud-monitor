@@ -73,8 +73,5 @@ func (w *WebServeLoader) Load() error {
 type K8sLoader struct{}
 
 func (k *K8sLoader) Load() error {
-	if config.GetCommonConfig().Env != "local" {
-		return k8s.InitK8s()
-	}
-	return nil
+	return k8s.InitK8s()
 }

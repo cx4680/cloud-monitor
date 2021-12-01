@@ -11,10 +11,10 @@ func main() {
 	l := commonLoader.SysSysGuideImpl{LoaderList: []commonLoader.SysLoader{
 		&commonLoader.ConfigLoader{},
 		&loader.TransactionLoader{},
+		&loader.K8sLoader{},
 		&commonLoader.SysComponentLoader{},
 		&loader.RocketMQConsumerLoader{},
 		&loader.TaskLoader{},
-		&loader.K8sLoader{},
 		&loader.WebServeLoader{},
 	}}
 

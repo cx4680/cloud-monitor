@@ -31,7 +31,7 @@ var resource *schema.GroupVersionResource
 func InitK8s() error {
 	var config *rest.Config
 	if strings.EqualFold(c.GetCommonConfig().Env, "local") {
-		cfg, err := clientcmd.BuildConfigFromFlags("", "C:\\Users\\wujuan\\AppData\\Roaming\\Lens\\kubeconfigs\\edb76672-2857-4654-8bb2-dcadcc6560a0")
+		cfg, err := clientcmd.BuildConfigFromFlags("", "k8s-config-local.yml")
 		if err != nil {
 			return err
 		}
