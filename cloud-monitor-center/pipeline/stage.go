@@ -1,4 +1,4 @@
-package loader
+package pipeline
 
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/sysComponent/sysRocketMq"
@@ -7,18 +7,20 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/validator/translate"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/web"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
+	"context"
 )
 
-type TransactionLoader struct {
+type TransactionActuatorStage struct {
 }
 
-func (t *TransactionLoader) Load() error {
+func (s *TransactionActuatorStage) Exec(c *context.Context) error {
 	return translate.InitTrans("zh")
 }
 
-type TaskLoader struct{}
+type TaskActuatorStage struct {
+}
 
-func (t *TaskLoader) Load() error {
+func (ta *TaskActuatorStage) Exec(c *context.Context) error {
 	bt := task.NewBusinessTaskImpl()
 	if err := bt.Add(task.BusinessTaskDTO{
 		Cron: "0 0 0/1 * * ?",
@@ -32,9 +34,10 @@ func (t *TaskLoader) Load() error {
 	return nil
 }
 
-type RocketMQConsumerLoader struct{}
+type MQActuatorStage struct {
+}
 
-func (r *RocketMQConsumerLoader) Load() error {
+func (ma *MQActuatorStage) Exec(c *context.Context) error {
 	return sysRocketMq.StartConsumersScribe("cloud-monitor-center", []*sysRocketMq.Consumer{{
 		Topic:   sysRocketMq.InstanceTopic,
 		Handler: consumer.InstanceHandler,
@@ -47,8 +50,9 @@ func (r *RocketMQConsumerLoader) Load() error {
 	}})
 }
 
-type WebServeLoader struct{}
+type WebActuatorStage struct {
+}
 
-func (w *WebServeLoader) Load() error {
+func (wa *WebActuatorStage) Exec(c *context.Context) error {
 	return web.Start(config.GetServeConfig())
 }

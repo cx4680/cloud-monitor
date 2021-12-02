@@ -1,4 +1,4 @@
-package sysGuide
+package pipeline
 
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/sysComponent"

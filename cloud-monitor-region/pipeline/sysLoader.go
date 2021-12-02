@@ -1,4 +1,4 @@
-package loader
+package pipeline
 
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/sysComponent/sysRocketMq"
@@ -9,19 +9,20 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/validator/translate"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/web"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
-	"log"
+	"context"
 )
 
-type TransactionLoader struct {
+type TransactionActuatorStage struct {
 }
 
-func (t *TransactionLoader) Load() error {
+func (s *TransactionActuatorStage) Exec(c *context.Context) error {
 	return translate.InitTrans("zh")
 }
 
-type TaskLoader struct{}
+type TaskActuatorStage struct {
+}
 
-func (t *TaskLoader) Load() error {
+func (ta *TaskActuatorStage) Exec(c *context.Context) error {
 	bt := commonTask.NewBusinessTaskImpl()
 	if err := bt.Add(commonTask.BusinessTaskDTO{
 		Cron: "0 0 0/1 * * ?",
@@ -48,30 +49,28 @@ func (t *TaskLoader) Load() error {
 	return nil
 }
 
-type RocketMQConsumerLoader struct{}
+type MQActuatorStage struct {
+}
 
-func (r *RocketMQConsumerLoader) Load() error {
-	if err := sysRocketMq.StartConsumersScribe(sysRocketMq.Group(config.GetCommonConfig().RegionName), []*sysRocketMq.Consumer{{
+func (ma *MQActuatorStage) Exec(c *context.Context) error {
+	return sysRocketMq.StartConsumersScribe(sysRocketMq.Group(config.GetCommonConfig().RegionName), []*sysRocketMq.Consumer{{
 		Topic:   sysRocketMq.AlertContactTopic,
 		Handler: consumer.AlertContactHandler,
 	}, {
 		Topic:   sysRocketMq.RuleTopic,
 		Handler: consumer.AlarmRuleHandler,
-	}}); err != nil {
-		log.Printf("create rocketmq consumer error, %v\n", err)
-		return err
-	}
-	return nil
+	}})
 }
 
-type WebServeLoader struct{}
+type K8sActuatorStage struct{}
 
-func (w *WebServeLoader) Load() error {
-	return web.Start(config.GetServeConfig())
-}
-
-type K8sLoader struct{}
-
-func (k *K8sLoader) Load() error {
+func (k *K8sActuatorStage) Exec(c *context.Context) error {
 	return k8s.InitK8s()
+}
+
+type WebActuatorStage struct {
+}
+
+func (wa *WebActuatorStage) Exec(c *context.Context) error {
+	return web.Start(config.GetServeConfig())
 }

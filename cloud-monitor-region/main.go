@@ -1,24 +1,25 @@
 package main
 
 import (
-	commonLoader "code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/sysGuide"
-	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/loader"
+	cp "code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/pipeline"
+	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/pipeline"
+	"context"
 	"os"
 )
 
 func main() {
 
-	guide := commonLoader.SysSysGuideImpl{}
-	guide.RegisterLoader(&commonLoader.ConfigLoader{})
-	guide.RegisterLoader(&loader.TransactionLoader{})
-	guide.RegisterLoader(&loader.K8sLoader{})
-	guide.RegisterLoader(&commonLoader.SysComponentLoader{})
-	guide.RegisterLoader(&loader.RocketMQConsumerLoader{})
-	guide.RegisterLoader(&loader.TaskLoader{})
-	guide.RegisterLoader(&loader.WebServeLoader{})
-
-	if err := guide.StartServe(); err != nil {
-		os.Exit(-1)
+	c := context.Background()
+	pl := cp.ActuatorPipeline{}
+	if err := pl.First(&cp.ConfigActuatorStage{}).
+		Then(&pipeline.TransactionActuatorStage{}).
+		Then(&cp.SysComponentActuatorStage{}).
+		Then(&pipeline.TaskActuatorStage{}).
+		Then(&pipeline.MQActuatorStage{}).
+		Then(&pipeline.K8sActuatorStage{}).
+		Then(&pipeline.WebActuatorStage{}).
+		Exec(&c); err != nil {
+		os.Exit(1)
 	}
 
 }
