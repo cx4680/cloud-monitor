@@ -40,7 +40,6 @@ func (acl *AlertContactCtl) InsertAlertContact(c *gin.Context) {
 	}
 	param.EventEum = enums.InsertAlertContact
 	err = contactService.Persistence(contactService, sysRocketMq.AlertContactTopic, param)
-	//local, err := acl.service.PersistenceLocal(global.DB, param)
 	if err != nil {
 		c.JSON(http.StatusOK, global.NewError(err.Error()))
 	} else {
@@ -55,7 +54,8 @@ func (acl *AlertContactCtl) UpdateAlertContact(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, translate.GetErrorMsg(err))
 		return
 	}
-	err = acl.service.Update(param)
+	param.EventEum = enums.UpdateAlertContact
+	err = contactService.Persistence(contactService, sysRocketMq.AlertContactTopic, param)
 	if err != nil {
 		c.JSON(http.StatusOK, global.NewError(err.Error()))
 	} else {
@@ -70,7 +70,9 @@ func (acl *AlertContactCtl) DeleteAlertContact(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, translate.GetErrorMsg(err))
 		return
 	}
-	err = acl.service.Delete(param)
+	param.TenantId = "1"
+	param.EventEum = enums.DeleteAlertContact
+	err = contactService.Persistence(contactService, sysRocketMq.AlertContactTopic, param)
 	if err != nil {
 		c.JSON(http.StatusOK, global.NewError(err.Error()))
 	} else {

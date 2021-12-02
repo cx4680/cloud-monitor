@@ -11,14 +11,14 @@ type AlertContactGroupRelDao struct {
 
 var AlertContactGroupRel = new(AlertContactGroupRelDao)
 
-func (acid *AlertContactGroupRelDao) Insert(db *gorm.DB, entity *models.AlertContactGroupRel) {
+func (d *AlertContactGroupRelDao) Insert(db *gorm.DB, entity *models.AlertContactGroupRel) {
 	currentTime := tools.GetNowStr()
 	entity.CreateTime = currentTime
 	entity.UpdateTime = currentTime
 	db.Create(entity)
 }
 
-func (acid *AlertContactGroupRelDao) InsertBatch(db *gorm.DB, list []*models.AlertContactGroupRel) {
+func (d *AlertContactGroupRelDao) InsertBatch(db *gorm.DB, list []*models.AlertContactGroupRel) {
 	if len(list) == 0 {
 		return
 	}
@@ -30,11 +30,15 @@ func (acid *AlertContactGroupRelDao) InsertBatch(db *gorm.DB, list []*models.Ale
 	db.Create(list)
 }
 
-func (acid *AlertContactGroupRelDao) Update(db *gorm.DB, list []*models.AlertContactGroupRel, entity *models.AlertContactGroupRel) {
-	acid.Delete(db, entity)
-	acid.InsertBatch(db, list)
+func (d *AlertContactGroupRelDao) Update(db *gorm.DB, list []*models.AlertContactGroupRel, entity *models.AlertContactGroupRel) {
+	d.Delete(db, entity)
+	d.InsertBatch(db, list)
 }
 
-func (acid *AlertContactGroupRelDao) Delete(db *gorm.DB, entity *models.AlertContactGroupRel) {
-	db.Delete(entity)
+func (d *AlertContactGroupRelDao) Delete(db *gorm.DB, entity *models.AlertContactGroupRel) {
+	if entity.ContactId != "" {
+		db.Where("tenant_id = ? AND contact_id = ?", entity.TenantId, entity.ContactId).Delete(models.AlertContactGroupRel{})
+	} else {
+		db.Where("tenant_id = ? AND group_id = ?", entity.TenantId, entity.GroupId).Delete(models.AlertContactGroupRel{})
+	}
 }

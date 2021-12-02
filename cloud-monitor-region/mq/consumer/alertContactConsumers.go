@@ -43,9 +43,9 @@ func AlertContactHandler(msgs []*primitive.MessageExt) {
 			commonDao.AlertContactInformation.InsertBatch(global.DB, modelList)
 		case enums.DeleteAlertContactInformation:
 			data, _ := json.Marshal(MqMsg.Data)
-			var contactId string
-			MsgErr = json.Unmarshal(data, &contactId)
-			dao.AlertContact.DeleteAlertContactInformation(contactId)
+			var model *models.AlertContactInformation
+			MsgErr = json.Unmarshal(data, &model)
+			commonDao.AlertContactInformation.Delete(global.DB, model)
 		case enums.InsertAlertContactGroupRel:
 			data, _ := json.Marshal(MqMsg.Data)
 			var modelList []*models.AlertContactGroupRel
@@ -53,9 +53,9 @@ func AlertContactHandler(msgs []*primitive.MessageExt) {
 			commonDao.AlertContactGroupRel.InsertBatch(global.DB, modelList)
 		case enums.DeleteAlertContactGroupRelByContactId:
 			data, _ := json.Marshal(MqMsg.Data)
-			var contactId string
-			MsgErr = json.Unmarshal(data, &contactId)
-			dao.AlertContact.DeleteAlertContactGroupRelByContactId(contactId)
+			var model *models.AlertContactGroupRel
+			MsgErr = json.Unmarshal(data, &model)
+			commonDao.AlertContactGroupRel.Delete(global.DB, model)
 		case enums.CertifyAlertContact:
 			data, _ := json.Marshal(MqMsg.Data)
 			var activeCode string

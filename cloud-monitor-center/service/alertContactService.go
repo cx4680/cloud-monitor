@@ -42,43 +42,21 @@ func (s *AlertContactService) PersistenceLocal(db *gorm.DB, param interface{}) (
 		if err != nil {
 			return "", err
 		}
-		////保存联系方式
-		//if err := s.alertContactInformationService.PersistenceInner(db, s.alertContactInformationService, sysRocketMq.AlertContactTopic, p); err != nil {
-		//	return "", err
-		//}
-		////保存联系人组关联
-		//if err := s.alertContactGroupRelService.PersistenceInner(db, s.alertContactGroupRelService, sysRocketMq.AlertContactTopic, p); err != nil {
-		//	return "", err
-		//}
+		p.ContactId = alertContact.Id
+
+		//保存 联系方式 和 联系人组关联
+		if err := s.persistenceInner(db, p); err != nil {
+			return "", err
+		}
 		msg := forms.MqMsg{
 			EventEum: enums.InsertAlertContact,
 			Data:     alertContact,
 		}
 		return tools.ToString(msg), nil
 	case enums.UpdateAlertContact:
-		if p.ContactName == "" {
-			return "", errors.NewBusinessError("联系人名字不能为空")
-		}
-		//每个联系人最多加入5个联系组
-		if len(p.GroupIdList) >= constants.MaxContactGroup {
-			return "", errors.NewBusinessError("每个联系人最多加入" + strconv.Itoa(constants.MaxContactGroup) + "个联系组")
-		}
-		var alertContact = &models.AlertContact{
-			Id:          p.ContactId,
-			TenantId:    p.TenantId,
-			Name:        p.ContactName,
-			Status:      1,
-			Description: p.Description,
-		}
-		s.dao.Update(db, alertContact)
-
-		//更新联系方式
-		if err := s.alertContactInformationService.PersistenceInner(db, s.alertContactInformationService, sysRocketMq.AlertContactTopic, param); err != nil {
-			return "", errors.NewBusinessError(err.Error())
-		}
-		//更新联系人组关联
-		if err := s.alertContactGroupService.PersistenceInner(db, s.alertContactGroupService, sysRocketMq.AlertContactTopic, param); err != nil {
-			return "", errors.NewBusinessError(err.Error())
+		alertContact, err := s.updateAlertContact(db, p)
+		if err != nil {
+			return "", err
 		}
 
 		msg := forms.MqMsg{
@@ -87,24 +65,25 @@ func (s *AlertContactService) PersistenceLocal(db *gorm.DB, param interface{}) (
 		}
 		return tools.ToString(msg), nil
 	case enums.DeleteAlertContact:
-		if p.ContactId == "" {
-			return "", errors.NewBusinessError("联系人ID不能为空")
+		alertContact, err := s.deleteAlertContact(db, p)
+		if err != nil {
+			return "", err
 		}
-		var alertContact = &models.AlertContact{
-			Id:       p.ContactId,
-			TenantId: p.TenantId,
+		//删除 联系方式 和 联系人组关联
+		if err := s.persistenceInner(db, p); err != nil {
+			return "", err
 		}
-		s.dao.Delete(db, alertContact)
 		msg := forms.MqMsg{
 			EventEum: enums.DeleteAlertContact,
 			Data:     alertContact,
 		}
 		return tools.ToString(msg), nil
 	case enums.CertifyAlertContact:
-		s.dao.CertifyAlertContact(p.ActiveCode)
+		activeCode := param.(string)
+		s.dao.CertifyAlertContact(activeCode)
 		msg := forms.MqMsg{
 			EventEum: enums.CertifyAlertContact,
-			Data:     p.ActiveCode,
+			Data:     activeCode,
 		}
 		return tools.ToString(msg), nil
 	default:
@@ -133,56 +112,67 @@ func (s *AlertContactService) insertAlertContact(db *gorm.DB, p forms.AlertConta
 	if len(p.GroupIdList) >= constants.MaxContactGroup {
 		return nil, errors.NewBusinessError("每个联系人最多加入" + strconv.Itoa(constants.MaxContactGroup) + "个联系组")
 	}
-	id := strconv.FormatInt(snowflake.GetWorker().NextId(), 10)
-	p.ContactId = id
+	currentTime := tools.GetNowStr()
 	//数据入库
 	alertContact := &models.AlertContact{
-		Id:          id,
+		Id:          strconv.FormatInt(snowflake.GetWorker().NextId(), 10),
 		TenantId:    p.TenantId,
 		Name:        p.ContactName,
 		Description: p.Description,
 		CreateUser:  p.CreateUser,
 		Status:      1,
+		CreateTime:  currentTime,
+		UpdateTime:  currentTime,
 	}
 	s.dao.Insert(db, alertContact)
 	return alertContact, nil
 }
 
-func (s *AlertContactService) Update(param forms.AlertContactParam) error {
-	db := global.DB
-	if param.ContactName == "" {
-		return errors.NewBusinessError("联系人名字不能为空")
+func (s *AlertContactService) updateAlertContact(db *gorm.DB, p forms.AlertContactParam) (*models.AlertContact, error) {
+	if p.ContactName == "" {
+		return nil, errors.NewBusinessError("联系人名字不能为空")
 	}
 	//每个联系人最多加入5个联系组
-	if len(param.GroupIdList) >= constants.MaxContactGroup {
-		return errors.NewBusinessError("每个联系人最多加入" + strconv.Itoa(constants.MaxContactGroup) + "个联系组")
+	if len(p.GroupIdList) >= constants.MaxContactGroup {
+		return nil, errors.NewBusinessError("每个联系人最多加入" + strconv.Itoa(constants.MaxContactGroup) + "个联系组")
 	}
 	currentTime := tools.GetNowStr()
 	var alertContact = &models.AlertContact{
-		Id:          param.ContactId,
-		TenantId:    param.TenantId,
-		Name:        param.ContactName,
+		Id:          p.ContactId,
+		TenantId:    p.TenantId,
+		Name:        p.ContactName,
 		Status:      1,
-		Description: param.Description,
+		Description: p.Description,
 		UpdateTime:  currentTime,
 	}
 	s.dao.Update(db, alertContact)
-	return nil
+	return alertContact, nil
 }
 
-func (s *AlertContactService) Delete(param forms.AlertContactParam) error {
-	db := global.DB
-	if param.ContactId == "" {
-		return errors.NewBusinessError("联系人ID不能为空")
+func (s *AlertContactService) deleteAlertContact(db *gorm.DB, p forms.AlertContactParam) (*models.AlertContact, error) {
+	if p.ContactId == "" {
+		return nil, errors.NewBusinessError("联系人ID不能为空")
 	}
 	var alertContact = &models.AlertContact{
-		Id:       param.ContactId,
-		TenantId: param.TenantId,
+		Id:       p.ContactId,
+		TenantId: p.TenantId,
 	}
 	s.dao.Delete(db, alertContact)
-	return nil
+	return alertContact, nil
 }
 
 func (s *AlertContactService) CertifyAlertContact(activeCode string) string {
 	return s.dao.CertifyAlertContact(activeCode)
+}
+
+func (s *AlertContactService) persistenceInner(db *gorm.DB, p forms.AlertContactParam) error {
+	//保存联系方式
+	if err := s.alertContactInformationService.PersistenceInner(db, s.alertContactInformationService, sysRocketMq.AlertContactTopic, p); err != nil {
+		return err
+	}
+	//保存联系人组关联
+	if err := s.alertContactGroupRelService.PersistenceInner(db, s.alertContactGroupRelService, sysRocketMq.AlertContactTopic, p); err != nil {
+		return err
+	}
+	return nil
 }

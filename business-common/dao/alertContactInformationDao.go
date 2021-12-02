@@ -13,7 +13,7 @@ type AlertContactInformationDao struct {
 
 var AlertContactInformation = new(AlertContactInformationDao)
 
-func (acid *AlertContactInformationDao) Insert(db *gorm.DB, entity *models.AlertContactInformation) {
+func (d *AlertContactInformationDao) Insert(db *gorm.DB, entity *models.AlertContactInformation) {
 	currentTime := tools.GetNowStr()
 	entity.Id = strconv.FormatInt(snowflake.GetWorker().NextId(), 10)
 	entity.CreateTime = currentTime
@@ -21,7 +21,7 @@ func (acid *AlertContactInformationDao) Insert(db *gorm.DB, entity *models.Alert
 	db.Create(entity)
 }
 
-func (acid *AlertContactInformationDao) InsertBatch(db *gorm.DB, list []*models.AlertContactInformation) {
+func (d *AlertContactInformationDao) InsertBatch(db *gorm.DB, list []*models.AlertContactInformation) {
 	if len(list) == 0 {
 		return
 	}
@@ -33,11 +33,11 @@ func (acid *AlertContactInformationDao) InsertBatch(db *gorm.DB, list []*models.
 	db.Create(list)
 }
 
-func (acid *AlertContactInformationDao) Update(db *gorm.DB, list []*models.AlertContactInformation, entity *models.AlertContactInformation) {
-	acid.Delete(db, entity)
-	acid.InsertBatch(db, list)
+func (d *AlertContactInformationDao) Update(db *gorm.DB, list []*models.AlertContactInformation, entity *models.AlertContactInformation) {
+	d.Delete(db, entity)
+	d.InsertBatch(db, list)
 }
 
-func (acid *AlertContactInformationDao) Delete(db *gorm.DB, entity *models.AlertContactInformation) {
-	db.Delete(entity)
+func (d *AlertContactInformationDao) Delete(db *gorm.DB, entity *models.AlertContactInformation) {
+	db.Where("tenant_id = ? AND contact_id = ?", entity.TenantId, entity.ContactId).Delete(models.AlertContactInformation{})
 }

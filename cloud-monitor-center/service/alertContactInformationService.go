@@ -55,16 +55,13 @@ func (s *AlertContactInformationService) PersistenceLocal(db *gorm.DB, param int
 		//	Data:     alertContactInformation,
 		//}), nil
 	case enums.DeleteAlertContact:
-		if p.ContactId == "" {
-			return "", errors.NewBusinessError("联系人ID不能为空")
-		}
 		var alertContactInformation = &models.AlertContactInformation{
-			Id:       p.ContactId,
-			TenantId: p.TenantId,
+			ContactId: p.ContactId,
+			TenantId:  p.TenantId,
 		}
 		s.dao.Delete(db, alertContactInformation)
 		return tools.ToString(forms.MqMsg{
-			EventEum: enums.DeleteAlertContactGroupRelByGroupId,
+			EventEum: enums.DeleteAlertContactInformation,
 			Data:     alertContactInformation,
 		}), nil
 	default:

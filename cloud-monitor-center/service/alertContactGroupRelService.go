@@ -42,7 +42,14 @@ func (s *AlertContactGroupRelService) PersistenceLocal(db *gorm.DB, param interf
 	case enums.UpdateAlertContact:
 		return "", errors.NewBusinessError("系统异常")
 	case enums.DeleteAlertContact:
-		return "", errors.NewBusinessError("系统异常")
+		alertContactGroupRel, err := s.deleteAlertContactGroupRelByContactId(db, p)
+		if err != nil {
+			return "", err
+		}
+		return tools.ToString(forms.MqMsg{
+			EventEum: enums.DeleteAlertContactGroupRelByContactId,
+			Data:     alertContactGroupRel,
+		}), nil
 	default:
 		return "", errors.NewBusinessError("系统异常")
 
@@ -68,4 +75,22 @@ func (s *AlertContactGroupRelService) insertAlertContactRel(db *gorm.DB, p forms
 	}
 	s.dao.InsertBatch(db, infoList)
 	return infoList, nil
+}
+
+func (s *AlertContactGroupRelService) deleteAlertContactGroupRelByContactId(db *gorm.DB, p forms.AlertContactParam) (*models.AlertContactGroupRel, error) {
+	var alertContactGroupRel = &models.AlertContactGroupRel{
+		ContactId: p.ContactId,
+		TenantId:  p.TenantId,
+	}
+	s.dao.Delete(db, alertContactGroupRel)
+	return alertContactGroupRel, nil
+}
+
+func (s *AlertContactGroupRelService) deleteAlertContactGroupRelByGroupId(db *gorm.DB, p forms.AlertContactGroupParam) (*models.AlertContactGroupRel, error) {
+	var alertContactGroupRel = &models.AlertContactGroupRel{
+		GroupId:  p.GroupId,
+		TenantId: p.TenantId,
+	}
+	s.dao.Delete(db, alertContactGroupRel)
+	return alertContactGroupRel, nil
 }

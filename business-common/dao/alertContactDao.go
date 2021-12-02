@@ -4,7 +4,6 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/forms"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/models"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/tools"
 	"fmt"
 	"gorm.io/gorm"
 	"strconv"
@@ -137,13 +136,11 @@ func (d *AlertContactDao) Insert(db *gorm.DB, entity *models.AlertContact) {
 }
 
 func (d *AlertContactDao) Update(db *gorm.DB, entity *models.AlertContact) {
-	currentTime := tools.GetNowStr()
-	entity.UpdateTime = currentTime
 	db.Updates(entity)
 }
 
 func (d *AlertContactDao) Delete(db *gorm.DB, entity *models.AlertContact) {
-	db.Delete(entity)
+	db.Where("tenant_id = ? AND id = ?", entity.TenantId, entity.Id).Delete(models.AlertContact{})
 }
 
 func (d *AlertContactDao) CertifyAlertContact(activeCode string) string {
