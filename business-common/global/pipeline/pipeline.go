@@ -17,19 +17,19 @@ type ActuatorPipeline struct {
 }
 
 type ComposingActuator struct {
-	F Actuator
-	S Actuator
+	First  Actuator
+	Second Actuator
 }
 
-func (p *ActuatorPipeline) First(a Actuator) Pipeline {
-	p.Actuator = a
+func (p *ActuatorPipeline) First(actuator Actuator) Pipeline {
+	p.Actuator = actuator
 	return p
 }
 
-func (p *ActuatorPipeline) Then(a Actuator) Pipeline {
+func (p *ActuatorPipeline) Then(actuator Actuator) Pipeline {
 	state := &ComposingActuator{
-		F: p.Actuator,
-		S: a,
+		First:  p.Actuator,
+		Second: actuator,
 	}
 	return &ActuatorPipeline{
 		Actuator: state,
@@ -42,10 +42,10 @@ func (p *ActuatorPipeline) Exec(c *context.Context) error {
 }
 
 func (ps *ComposingActuator) Exec(c *context.Context) error {
-	if err := ps.F.Exec(c); err != nil {
+	if err := ps.First.Exec(c); err != nil {
 		return err
 	}
-	if err := ps.S.Exec(c); err != nil {
+	if err := ps.Second.Exec(c); err != nil {
 		return err
 	}
 	return nil
