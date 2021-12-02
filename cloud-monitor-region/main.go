@@ -10,8 +10,8 @@ func main() {
 
 	loader := cp.NewMainLoader().AddStage(&pipeline.TransactionActuatorStage{}).
 		AddStage(&pipeline.TaskActuatorStage{}).
-		AddStage(&pipeline.MQActuatorStage{}).
 		AddStage(&pipeline.K8sActuatorStage{}).
+		AddStage(&pipeline.MQActuatorStage{}).
 		AddStage(&pipeline.WebActuatorStage{})
 
 	_, err := loader.Start()

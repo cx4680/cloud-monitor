@@ -80,7 +80,7 @@ type RuleCondition struct {
 	Times              int    `json:"times"`
 	Statistics         string `json:"statistics"`
 	ComparisonOperator string `json:"comparisonOperator"`
-	Threshold          int    `json:"threshold"`
+	Threshold          string `json:"threshold"`
 	Unit               string `json:"unit"`
 	Labels             string `json:"labels"`
 	MonitorItemName    string `json:"monitorItemName"`
