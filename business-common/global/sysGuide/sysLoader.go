@@ -15,11 +15,15 @@ type SysGuide interface {
 }
 
 type SysSysGuideImpl struct {
-	LoaderList []SysLoader
+	loaderList []SysLoader
+}
+
+func (s *SysSysGuideImpl) RegisterLoader(l SysLoader) {
+	s.loaderList = append(s.loaderList, l)
 }
 
 func (s *SysSysGuideImpl) StartServe() error {
-	for _, init := range s.LoaderList {
+	for _, init := range s.loaderList {
 		if err := init.Load(); err != nil {
 			return err
 		}

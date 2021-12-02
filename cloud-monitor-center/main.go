@@ -12,16 +12,15 @@ import (
 // @BasePath /
 func main() {
 
-	l := commonLoader.SysSysGuideImpl{LoaderList: []commonLoader.SysLoader{
-		&commonLoader.ConfigLoader{},
-		&loader.TransactionLoader{},
-		&commonLoader.SysComponentLoader{},
-		&loader.RocketMQConsumerLoader{},
-		&loader.TaskLoader{},
-		&loader.WebServeLoader{},
-	}}
+	guide := commonLoader.SysSysGuideImpl{}
+	guide.RegisterLoader(&commonLoader.ConfigLoader{})
+	guide.RegisterLoader(&loader.TransactionLoader{})
+	guide.RegisterLoader(&commonLoader.SysComponentLoader{})
+	guide.RegisterLoader(&loader.RocketMQConsumerLoader{})
+	guide.RegisterLoader(&loader.TaskLoader{})
+	guide.RegisterLoader(&loader.WebServeLoader{})
 
-	if err := l.StartServe(); err != nil {
+	if err := guide.StartServe(); err != nil {
 		os.Exit(1)
 	}
 }
