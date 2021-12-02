@@ -24,20 +24,22 @@ type AlertContactFormPage struct {
 }
 
 type AlertContactParam struct {
-	TenantId    string   `form:"tenantId"`
-	ContactId   string   `form:"contactId"`
-	ContactName string   `form:"contactName"`
-	GroupName   string   `form:"groupName"`
-	Phone       string   `form:"phone"`
-	Email       string   `form:"email"`
-	Lanxin      string   `form:"lanxin"`
-	CreateUser  string   `form:"createUser"`
-	Description string   `form:"description"`
-	ActiveCode  string   `form:"activeCode"`
-	PageCurrent int      `form:"pageCurrent"`
-	PageSize    int      `form:"pageSize"`
-	GroupIdList []string `form:"groupIdList"`
-	EventEum    enums.EventEum
+	TenantId      string   `form:"tenantId"`
+	ContactId     string   `form:"contactId"`
+	ContactName   string   `form:"contactName"`
+	GroupId       string   `form:"groupId"`
+	GroupName     string   `form:"groupName"`
+	Phone         string   `form:"phone"`
+	Email         string   `form:"email"`
+	Lanxin        string   `form:"lanxin"`
+	CreateUser    string   `form:"createUser"`
+	Description   string   `form:"description"`
+	ActiveCode    string   `form:"activeCode"`
+	PageCurrent   int      `form:"pageCurrent"`
+	PageSize      int      `form:"pageSize"`
+	ContactIdList []string `form:"contactIdList"`
+	GroupIdList   []string `form:"groupIdList"`
+	EventEum      enums.EventEum
 }
 
 type MqMsg struct {

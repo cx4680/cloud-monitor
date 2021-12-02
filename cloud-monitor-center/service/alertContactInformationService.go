@@ -33,33 +33,19 @@ func (s *AlertContactInformationService) PersistenceLocal(db *gorm.DB, param int
 	p := param.(forms.AlertContactParam)
 	switch p.EventEum {
 	case enums.InsertAlertContact:
-		infoList := s.getInformationList(db, p)
+		List := s.insertAlertContactInformation(db, p)
 		return tools.ToString(forms.MqMsg{
 			EventEum: enums.InsertAlertContactInformation,
-			Data:     infoList,
+			Data:     List,
 		}), nil
 	case enums.UpdateAlertContact:
-		p.EventEum = enums.DeleteAlertContactInformation
-		s.PersistenceLocal(db, p)
-		p.EventEum = enums.InsertAlertContactInformation
-		s.PersistenceLocal(db, p)
-		return "", nil
-		//infoList := s.getInformationList(p)
-		//var alertContactInformation = &models.AlertContactInformation{
-		//	Id:       p.ContactId,
-		//	TenantId: p.TenantId,
-		//}
-		//s.dao.Update(db, infoList, alertContactInformation)
-		//return tools.ToString(forms.MqMsg{
-		//	EventEum: enums.UpdateAlertContactGroup,
-		//	Data:     alertContactInformation,
-		//}), nil
+		List := s.updateAlertContactInformation(db, p)
+		return tools.ToString(forms.MqMsg{
+			EventEum: enums.UpdateAlertContactInformation,
+			Data:     List,
+		}), nil
 	case enums.DeleteAlertContact:
-		var alertContactInformation = &models.AlertContactInformation{
-			ContactId: p.ContactId,
-			TenantId:  p.TenantId,
-		}
-		s.dao.Delete(db, alertContactInformation)
+		alertContactInformation := s.deleteAlertContactInformation(db, p)
 		return tools.ToString(forms.MqMsg{
 			EventEum: enums.DeleteAlertContactInformation,
 			Data:     alertContactInformation,
@@ -78,7 +64,28 @@ func (s *AlertContactInformationService) getActiveCode() (string, int) {
 	return strings.ReplaceAll(uuid.New().String(), "-", ""), 0
 }
 
-func (s *AlertContactInformationService) getInformationList(db *gorm.DB, p forms.AlertContactParam) []*models.AlertContactInformation {
+func (s *AlertContactInformationService) insertAlertContactInformation(db *gorm.DB, p forms.AlertContactParam) []*models.AlertContactInformation {
+	List := s.getInformationList(p)
+	s.dao.InsertBatch(db, List)
+	return List
+}
+
+func (s *AlertContactInformationService) updateAlertContactInformation(db *gorm.DB, p forms.AlertContactParam) []*models.AlertContactInformation {
+	List := s.getInformationList(p)
+	s.dao.Update(db, List)
+	return List
+}
+
+func (s *AlertContactInformationService) deleteAlertContactInformation(db *gorm.DB, p forms.AlertContactParam) *models.AlertContactInformation {
+	var alertContactInformation = &models.AlertContactInformation{
+		ContactId: p.ContactId,
+		TenantId:  p.TenantId,
+	}
+	s.dao.Delete(db, alertContactInformation)
+	return alertContactInformation
+}
+
+func (s *AlertContactInformationService) getInformationList(p forms.AlertContactParam) []*models.AlertContactInformation {
 	activeCode, isCertify := s.getActiveCode()
 	var infoList []*models.AlertContactInformation
 	if p.Phone != "" {
@@ -107,6 +114,5 @@ func (s *AlertContactInformationService) getInformationList(db *gorm.DB, p forms
 		}
 		infoList = append(infoList, alertContactInformationEmail)
 	}
-	s.dao.InsertBatch(db, infoList)
 	return infoList
 }

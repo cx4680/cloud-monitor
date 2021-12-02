@@ -58,7 +58,10 @@ func (s *AlertContactService) PersistenceLocal(db *gorm.DB, param interface{}) (
 		if err != nil {
 			return "", err
 		}
-
+		//更新 联系方式 和 联系人组关联
+		if err := s.persistenceInner(db, p); err != nil {
+			return "", err
+		}
 		msg := forms.MqMsg{
 			EventEum: enums.UpdateAlertContact,
 			Data:     alertContact,

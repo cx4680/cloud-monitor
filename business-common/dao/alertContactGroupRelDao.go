@@ -23,15 +23,18 @@ func (d *AlertContactGroupRelDao) InsertBatch(db *gorm.DB, list []*models.AlertC
 		return
 	}
 	currentTime := tools.GetNowStr()
-	for _, information := range list {
-		information.CreateTime = currentTime
-		information.UpdateTime = currentTime
+	for _, v := range list {
+		v.CreateTime = currentTime
+		v.UpdateTime = currentTime
 	}
 	db.Create(list)
 }
 
-func (d *AlertContactGroupRelDao) Update(db *gorm.DB, list []*models.AlertContactGroupRel, entity *models.AlertContactGroupRel) {
-	d.Delete(db, entity)
+func (d *AlertContactGroupRelDao) Update(db *gorm.DB, list []*models.AlertContactGroupRel) {
+	if len(list) == 0 {
+		return
+	}
+	d.Delete(db, list[0])
 	d.InsertBatch(db, list)
 }
 

@@ -40,14 +40,21 @@ func (s *AlertContactGroupRelService) PersistenceLocal(db *gorm.DB, param interf
 		}
 		return tools.ToString(msg), nil
 	case enums.UpdateAlertContact:
-		return "", errors.NewBusinessError("系统异常")
-	case enums.DeleteAlertContact:
-		alertContactGroupRel, err := s.deleteAlertContactGroupRelByContactId(db, p)
+		List, err := s.updateAlertContactGroupRel(db, p)
 		if err != nil {
 			return "", err
 		}
 		return tools.ToString(forms.MqMsg{
-			EventEum: enums.DeleteAlertContactGroupRelByContactId,
+			EventEum: enums.UpdateAlertContactGroupRel,
+			Data:     List,
+		}), nil
+	case enums.DeleteAlertContact:
+		alertContactGroupRel, err := s.deleteAlertContactGroupRel(db, p)
+		if err != nil {
+			return "", err
+		}
+		return tools.ToString(forms.MqMsg{
+			EventEum: enums.DeleteAlertContactGroupRel,
 			Data:     alertContactGroupRel,
 		}), nil
 	default:
@@ -57,6 +64,42 @@ func (s *AlertContactGroupRelService) PersistenceLocal(db *gorm.DB, param interf
 }
 
 func (s *AlertContactGroupRelService) insertAlertContactRel(db *gorm.DB, p forms.AlertContactParam) ([]*models.AlertContactGroupRel, error) {
+	list, err := s.getAlertContactGroupRelList(db, p)
+	if err != nil {
+		return nil, err
+	}
+	s.dao.InsertBatch(db, list)
+	return list, nil
+}
+
+func (s *AlertContactGroupRelService) updateAlertContactGroupRel(db *gorm.DB, p forms.AlertContactParam) ([]*models.AlertContactGroupRel, error) {
+	list, err := s.getAlertContactGroupRelList(db, p)
+	if err != nil {
+		return nil, err
+	}
+	s.dao.Update(db, list)
+	return list, nil
+}
+
+func (s *AlertContactGroupRelService) deleteAlertContactGroupRel(db *gorm.DB, p forms.AlertContactParam) (*models.AlertContactGroupRel, error) {
+	if p.ContactId != "" {
+		var alertContactGroupRel = &models.AlertContactGroupRel{
+			ContactId: p.ContactId,
+			TenantId:  p.TenantId,
+		}
+		s.dao.Delete(db, alertContactGroupRel)
+		return alertContactGroupRel, nil
+	} else {
+		var alertContactGroupRel = &models.AlertContactGroupRel{
+			GroupId:  p.GroupId,
+			TenantId: p.TenantId,
+		}
+		s.dao.Delete(db, alertContactGroupRel)
+		return alertContactGroupRel, nil
+	}
+}
+
+func (s *AlertContactGroupRelService) getAlertContactGroupRelList(db *gorm.DB, p forms.AlertContactParam) ([]*models.AlertContactGroupRel, error) {
 	var infoList []*models.AlertContactGroupRel
 	var count int64
 	for _, v := range p.GroupIdList {
@@ -73,24 +116,5 @@ func (s *AlertContactGroupRelService) insertAlertContactRel(db *gorm.DB, p forms
 		}
 		infoList = append(infoList, alertContactGroup)
 	}
-	s.dao.InsertBatch(db, infoList)
 	return infoList, nil
-}
-
-func (s *AlertContactGroupRelService) deleteAlertContactGroupRelByContactId(db *gorm.DB, p forms.AlertContactParam) (*models.AlertContactGroupRel, error) {
-	var alertContactGroupRel = &models.AlertContactGroupRel{
-		ContactId: p.ContactId,
-		TenantId:  p.TenantId,
-	}
-	s.dao.Delete(db, alertContactGroupRel)
-	return alertContactGroupRel, nil
-}
-
-func (s *AlertContactGroupRelService) deleteAlertContactGroupRelByGroupId(db *gorm.DB, p forms.AlertContactGroupParam) (*models.AlertContactGroupRel, error) {
-	var alertContactGroupRel = &models.AlertContactGroupRel{
-		GroupId:  p.GroupId,
-		TenantId: p.TenantId,
-	}
-	s.dao.Delete(db, alertContactGroupRel)
-	return alertContactGroupRel, nil
 }
