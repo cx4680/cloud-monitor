@@ -3,7 +3,6 @@ package main
 import (
 	cp "code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/pipeline"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/pipeline"
-	"context"
 	"os"
 )
 
@@ -12,15 +11,16 @@ import (
 // @description  This is a sample server Petstore server.
 // @BasePath /
 func main() {
-	c := context.Background()
-	pl := cp.ActuatorPipeline{}
-	if err := pl.First(&cp.ConfigActuatorStage{}).
-		Then(&pipeline.TransactionActuatorStage{}).
-		Then(&cp.SysComponentActuatorStage{}).
-		Then(&pipeline.TaskActuatorStage{}).
-		Then(&pipeline.MQActuatorStage{}).
-		Then(&pipeline.WebActuatorStage{}).
-		Exec(&c); err != nil {
+
+	loader := cp.NewMainLoader()
+	loader.AddStage(&pipeline.TransactionActuatorStage{})
+	loader.AddStage(&pipeline.TaskActuatorStage{})
+	loader.AddStage(&pipeline.MQActuatorStage{})
+	loader.AddStage(&pipeline.WebActuatorStage{})
+
+	_, err := loader.Start()
+	if err != nil {
 		os.Exit(1)
 	}
+
 }

@@ -22,3 +22,27 @@ type SysComponentActuatorStage struct {
 func (sa *SysComponentActuatorStage) Exec(c *context.Context) error {
 	return sysComponent.InitSys()
 }
+
+type SysLoader interface {
+	AddStage(Actuator) SysLoader
+	Start() (*context.Context, error)
+}
+
+type MainLoader struct {
+	Pipeline Pipeline
+}
+
+func NewMainLoader() *MainLoader {
+	pipeline := (&ActuatorPipeline{}).First(&ConfigActuatorStage{}).Then(&SysComponentActuatorStage{})
+	return &MainLoader{Pipeline: pipeline}
+}
+
+func (l *MainLoader) AddStage(actuator Actuator) SysLoader {
+	l.Pipeline = l.Pipeline.Then(actuator)
+	return l
+}
+
+func (l *MainLoader) Start() (*context.Context, error) {
+	c := context.Background()
+	return &c, l.Pipeline.Exec(&c)
+}
