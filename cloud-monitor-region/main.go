@@ -8,7 +8,9 @@ import (
 
 func main() {
 
-	loader := cp.NewMainLoader().AddStage(&pipeline.TransactionActuatorStage{}).
+	loader := cp.NewMainLoader().
+		AddStage(&pipeline.DBInitActuatorStage{}).
+		AddStage(&pipeline.TransactionActuatorStage{}).
 		AddStage(&pipeline.TaskActuatorStage{}).
 		AddStage(&pipeline.K8sActuatorStage{}).
 		AddStage(&pipeline.MQActuatorStage{}).
