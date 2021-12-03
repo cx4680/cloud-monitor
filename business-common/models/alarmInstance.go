@@ -5,7 +5,7 @@ import "time"
 type AlarmInstance struct {
 	AlarmRuleID  string    `gorm:"column:alarm_rule_id"`
 	InstanceID   string    `gorm:"column:instance_id"`
-	CreateTime   time.Time `gorm:"column:create_time;autoCreateTime;default:time.now()"` // 创建时间
+	CreateTime   time.Time `gorm:"column:create_time;autoCreateTime;type:datetime"` // 创建时间
 	RegionCode   string    `gorm:"column:region_code"`
 	ZoneCode     string    `gorm:"column:zone_code"`
 	Ip           string    `gorm:"column:ip"`
