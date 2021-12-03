@@ -1,7 +1,7 @@
 package tests
 
 import (
-	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/models"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/models"
 	"fmt"
 	"github.com/google/uuid"
 	"gorm.io/driver/mysql"

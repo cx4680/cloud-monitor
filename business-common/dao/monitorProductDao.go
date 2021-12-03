@@ -2,7 +2,7 @@ package dao
 
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
-	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/models"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/models"
 )
 
 type MonitorProductDao struct {

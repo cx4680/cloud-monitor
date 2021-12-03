@@ -1,20 +1,20 @@
 package controllers
 
 import (
+	dao2 "code.cestc.cn/ccos-ops/cloud-monitor/business-common/dao"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
-	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/dao"
+	models2 "code.cestc.cn/ccos-ops/cloud-monitor/business-common/models"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/forms"
-	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/models"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/validator/translate"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
 
 type MonitorProductCtl struct {
-	dao *dao.MonitorProductDao
+	dao *dao2.MonitorProductDao
 }
 
-func NewMonitorProductCtl(dao *dao.MonitorProductDao) *MonitorProductCtl {
+func NewMonitorProductCtl(dao *dao2.MonitorProductDao) *MonitorProductCtl {
 	return &MonitorProductCtl{dao}
 }
 
@@ -44,8 +44,8 @@ func (mpc *MonitorProductCtl) UpdateById(c *gin.Context) {
 		return
 	}
 
-	var p = &models.MonitorProduct{
-		ID:         f.Id,
+	var p = &models2.MonitorProduct{
+		Id:         f.Id,
 		Name:       f.Name,
 		CreateUser: f.CreateUser,
 	}

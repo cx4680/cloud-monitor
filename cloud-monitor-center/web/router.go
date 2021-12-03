@@ -18,7 +18,7 @@ func loadRouters() {
 }
 
 func monitorProductRouters() {
-	monitorProductCtl := controllers.NewMonitorProductCtl(dao.MonitorProduct)
+	monitorProductCtl := controllers.NewMonitorProductCtl(commonDao.MonitorProduct)
 	group := router.Group("/hawkeye/monitorProduct/")
 	{
 		group.GET("/getAllMonitorProducts", monitorProductCtl.GetAllMonitorProducts)
