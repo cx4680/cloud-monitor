@@ -19,7 +19,7 @@ func NewAlertContactCtl(service service.AlertContactService) *AlertContactCtl {
 	return &AlertContactCtl{service}
 }
 
-var contactService = service.NewAlertContactService(service.NewAlertContactGroupService(), service.NewAlertContactInformationService(), service.NewAlertContactGroupRelService())
+var alertContactService = service.NewAlertContactService(service.NewAlertContactGroupService(service.NewAlertContactGroupRelService()), service.NewAlertContactInformationService(), service.NewAlertContactGroupRelService())
 
 func (acl *AlertContactCtl) GetAlertContact(c *gin.Context) {
 	var param forms.AlertContactParam
@@ -39,7 +39,7 @@ func (acl *AlertContactCtl) InsertAlertContact(c *gin.Context) {
 		return
 	}
 	param.EventEum = enums.InsertAlertContact
-	err = contactService.Persistence(contactService, sysRocketMq.AlertContactTopic, param)
+	err = alertContactService.Persistence(alertContactService, sysRocketMq.AlertContactTopic, param)
 	if err != nil {
 		c.JSON(http.StatusOK, global.NewError(err.Error()))
 	} else {
@@ -55,7 +55,7 @@ func (acl *AlertContactCtl) UpdateAlertContact(c *gin.Context) {
 		return
 	}
 	param.EventEum = enums.UpdateAlertContact
-	err = contactService.Persistence(contactService, sysRocketMq.AlertContactTopic, param)
+	err = alertContactService.Persistence(alertContactService, sysRocketMq.AlertContactTopic, param)
 	if err != nil {
 		c.JSON(http.StatusOK, global.NewError(err.Error()))
 	} else {
@@ -72,7 +72,7 @@ func (acl *AlertContactCtl) DeleteAlertContact(c *gin.Context) {
 	}
 	param.TenantId = "1"
 	param.EventEum = enums.DeleteAlertContact
-	err = contactService.Persistence(contactService, sysRocketMq.AlertContactTopic, param)
+	err = alertContactService.Persistence(alertContactService, sysRocketMq.AlertContactTopic, param)
 	if err != nil {
 		c.JSON(http.StatusOK, global.NewError(err.Error()))
 	} else {

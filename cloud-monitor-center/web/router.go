@@ -48,7 +48,7 @@ func alertContactRouters() {
 }
 
 func alertContactGroupRouters() {
-	alertContactGroupCtl := controllers.NewAlertContactGroupCtl(commonDao.AlertContactGroup)
+	alertContactGroupCtl := controllers.NewAlertContactGroupCtl(service.AlertContactGroupService{})
 	group := router.Group("/hawkeye/alertContactGroup/")
 	{
 		group.GET("/getAlertContactGroup", alertContactGroupCtl.GetAlertContactGroup)

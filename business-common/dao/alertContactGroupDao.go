@@ -17,19 +17,31 @@ type AlertContactGroupDao struct {
 
 var AlertContactGroup = new(AlertContactGroupDao)
 
-func (mpd *AlertContactGroupDao) GetAlertContactGroup(tenantId string, groupName string) *[]forms.AlertContactGroupForm {
+func (d *AlertContactGroupDao) SelectAlertContactGroup(db *gorm.DB, param forms.AlertContactParam) *[]forms.AlertContactGroupForm {
 	var model = &[]forms.AlertContactGroupForm{}
-	global.DB.Raw(SelectAlterContactGroup, tenantId, groupName).Find(model)
+	db.Raw(SelectAlterContactGroup, param.TenantId, param.GroupName).Find(model)
 	return model
 }
 
-func (mpd *AlertContactGroupDao) GetAlertGroupContact(tenantId string, groupId string) *[]forms.AlertContactForm {
+func (d *AlertContactGroupDao) SelectAlertGroupContact(db *gorm.DB, param forms.AlertContactParam) *[]forms.AlertContactForm {
 	var model = &[]forms.AlertContactForm{}
-	global.DB.Raw(SelectAlterGroupContact, tenantId, groupId).Find(model)
+	db.Raw(SelectAlterGroupContact, param.TenantId, param.GroupId).Find(model)
 	return model
 }
 
-func (mpd *AlertContactGroupDao) InsertGroupRelBatch(db *gorm.DB, list []*models.AlertContactGroupRel) {
+func (d *AlertContactGroupDao) Insert(db *gorm.DB, entity *models.AlertContactGroup) {
+	db.Create(entity)
+}
+
+func (d *AlertContactGroupDao) Update(db *gorm.DB, entity *models.AlertContactGroup) {
+	db.Updates(entity)
+}
+
+func (d *AlertContactGroupDao) Delete(db *gorm.DB, entity *models.AlertContactGroup) {
+	db.Where("tenant_id = ? AND id = ?", entity.TenantId, entity.Id).Delete(models.AlertContactGroup{})
+}
+
+func (d *AlertContactGroupDao) InsertGroupRelBatch(db *gorm.DB, list []*models.AlertContactGroupRel) {
 	now := tools.GetNowStr()
 	for _, rel := range list {
 		rel.Id = strconv.FormatInt(snowflake.GetWorker().NextId(), 10)
@@ -39,7 +51,7 @@ func (mpd *AlertContactGroupDao) InsertGroupRelBatch(db *gorm.DB, list []*models
 	db.Create(list)
 }
 
-func (mpd *AlertContactGroupDao) InsertAlertContactGroup(param forms.AlertContactGroupParam) error {
+func (d *AlertContactGroupDao) InsertAlertContactGroup(param forms.AlertContactGroupParam) error {
 	var tx = global.DB.Begin()
 
 	var count int64
@@ -66,7 +78,7 @@ func (mpd *AlertContactGroupDao) InsertAlertContactGroup(param forms.AlertContac
 	tx = tx.Create(alertContactGroup)
 
 	// 添加联系人组关联
-	err := mpd.insertAlertContactGroupRel(param, currentTime)
+	err := d.insertAlertContactGroupRel(param, currentTime)
 	if err != nil {
 		tx.Rollback()
 		return err
@@ -75,7 +87,7 @@ func (mpd *AlertContactGroupDao) InsertAlertContactGroup(param forms.AlertContac
 	return nil
 }
 
-func (mpd *AlertContactGroupDao) UpdateAlertContactGroup(param forms.AlertContactGroupParam) error {
+func (d *AlertContactGroupDao) UpdateAlertContactGroup(param forms.AlertContactGroupParam) error {
 	var tx = global.DB.Begin()
 
 	var count int64
@@ -94,7 +106,7 @@ func (mpd *AlertContactGroupDao) UpdateAlertContactGroup(param forms.AlertContac
 	tx.Model(alertContactGroup).Updates(alertContactGroup)
 
 	//更新联系人关联
-	err := mpd.updateAlertContactGroupRel(param, currentTime)
+	err := d.updateAlertContactGroupRel(param, currentTime)
 	if err != nil {
 		tx.Rollback()
 		return err
@@ -103,13 +115,13 @@ func (mpd *AlertContactGroupDao) UpdateAlertContactGroup(param forms.AlertContac
 	return nil
 }
 
-func (mpd *AlertContactGroupDao) DeleteAlertContactGroup(param forms.AlertContactGroupParam) error {
+func (d *AlertContactGroupDao) DeleteAlertContactGroup(param forms.AlertContactGroupParam) error {
 	var tx = global.DB.Begin()
 
 	var model models.AlertContactGroup
 	tx.Delete(&model, param.GroupId)
 	//删除联系人关联
-	err := mpd.deleteAlertContactGroupRel(param.GroupId)
+	err := d.deleteAlertContactGroupRel(param.GroupId)
 	if err != nil {
 		tx.Rollback()
 		return err
@@ -119,7 +131,7 @@ func (mpd *AlertContactGroupDao) DeleteAlertContactGroup(param forms.AlertContac
 }
 
 //新增联系人关联
-func (mpd *AlertContactGroupDao) insertAlertContactGroupRel(param forms.AlertContactGroupParam, currentTime string) error {
+func (d *AlertContactGroupDao) insertAlertContactGroupRel(param forms.AlertContactGroupParam, currentTime string) error {
 	//return errors.NewBusinessError("事务test")
 	if len(param.ContactIdList) == 0 {
 		return nil
@@ -148,11 +160,11 @@ func (mpd *AlertContactGroupDao) insertAlertContactGroupRel(param forms.AlertCon
 }
 
 //更新联系人关联
-func (mpd *AlertContactGroupDao) updateAlertContactGroupRel(param forms.AlertContactGroupParam, currentTime string) error {
+func (d *AlertContactGroupDao) updateAlertContactGroupRel(param forms.AlertContactGroupParam, currentTime string) error {
 	//清除旧联系人组关联
-	deleteErr := mpd.deleteAlertContactGroupRel(param.GroupId)
+	deleteErr := d.deleteAlertContactGroupRel(param.GroupId)
 	//添加新联系人组关联
-	insertErr := mpd.insertAlertContactGroupRel(param, currentTime)
+	insertErr := d.insertAlertContactGroupRel(param, currentTime)
 	if deleteErr != nil && insertErr != nil {
 		return errors.NewBusinessError("修改失败")
 	}
@@ -160,7 +172,7 @@ func (mpd *AlertContactGroupDao) updateAlertContactGroupRel(param forms.AlertCon
 }
 
 //删除联系人关联
-func (mpd *AlertContactGroupDao) deleteAlertContactGroupRel(groupId string) error {
+func (d *AlertContactGroupDao) deleteAlertContactGroupRel(groupId string) error {
 	var tx = global.DB.Begin()
 	db := tx.Where("group_id = ?", groupId).Delete(models.AlertContactGroupRel{})
 	if db.Error != nil {
