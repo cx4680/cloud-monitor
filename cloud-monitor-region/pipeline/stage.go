@@ -61,6 +61,9 @@ func (ma *MQActuatorStage) Exec(c *context.Context) error {
 		Topic:   sysRocketMq.AlertContactTopic,
 		Handler: consumer.AlertContactHandler,
 	}, {
+		Topic:   sysRocketMq.AlertContactGroupTopic,
+		Handler: consumer.AlertContactGroupHandler,
+	}, {
 		Topic:   sysRocketMq.RuleTopic,
 		Handler: consumer.AlarmRuleHandler,
 	}})
@@ -87,7 +90,7 @@ func (p *ProjectInitializerFetch) Fetch(db *gorm.DB) ([]interface{}, []string) {
 	var sqls []string
 
 	tables = append(tables, &models.UserPrometheusID{})
-	//TODO
+	// TODO
 
 	return tables, sqls
 }

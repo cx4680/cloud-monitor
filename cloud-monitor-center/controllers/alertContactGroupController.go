@@ -49,7 +49,7 @@ func (acgc *AlertContactGroupCtl) InsertAlertContactGroup(c *gin.Context) {
 		return
 	}
 	param.EventEum = enums.InsertAlertContactGroup
-	err = alertContactGroupService.Persistence(alertContactGroupService, sysRocketMq.AlertContactTopic, param)
+	err = alertContactGroupService.Persistence(alertContactGroupService, sysRocketMq.AlertContactGroupTopic, param)
 	if err != nil {
 		c.JSON(http.StatusOK, global.NewError(err.Error()))
 	} else {
@@ -65,7 +65,7 @@ func (acgc *AlertContactGroupCtl) UpdateAlertContactGroup(c *gin.Context) {
 		return
 	}
 	param.EventEum = enums.UpdateAlertContactGroup
-	err = alertContactGroupService.Persistence(alertContactGroupService, sysRocketMq.AlertContactTopic, param)
+	err = alertContactGroupService.Persistence(alertContactGroupService, sysRocketMq.AlertContactGroupTopic, param)
 	if err != nil {
 		c.JSON(http.StatusOK, global.NewError(err.Error()))
 	} else {
@@ -81,7 +81,7 @@ func (acgc *AlertContactGroupCtl) DeleteAlertContactGroup(c *gin.Context) {
 		return
 	}
 	param.EventEum = enums.DeleteAlertContactGroup
-	err = alertContactGroupService.Persistence(alertContactGroupService, sysRocketMq.AlertContactTopic, param)
+	err = alertContactGroupService.Persistence(alertContactGroupService, sysRocketMq.AlertContactGroupTopic, param)
 	if err != nil {
 		c.JSON(http.StatusOK, global.NewError(err.Error()))
 	} else {

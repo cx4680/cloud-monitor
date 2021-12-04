@@ -166,12 +166,12 @@ func (s *AlertContactService) CertifyAlertContact(activeCode string) string {
 }
 
 func (s *AlertContactService) persistenceInner(db *gorm.DB, p forms.AlertContactParam) error {
-	//保存联系方式
+	//联系方式
 	if err := s.alertContactInformationService.PersistenceInner(db, s.alertContactInformationService, sysRocketMq.AlertContactTopic, p); err != nil {
 		return err
 	}
-	//保存联系人组关联
-	if err := s.alertContactGroupRelService.PersistenceInner(db, s.alertContactGroupRelService, sysRocketMq.AlertContactTopic, p); err != nil {
+	//联系人组关联
+	if err := s.alertContactGroupRelService.PersistenceInner(db, s.alertContactGroupRelService, sysRocketMq.AlertContactGroupTopic, p); err != nil {
 		return err
 	}
 	return nil

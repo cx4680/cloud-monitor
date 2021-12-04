@@ -49,6 +49,11 @@ func AlertContactHandler(msgs []*primitive.MessageExt) {
 			var model *models.AlertContactInformation
 			MsgErr = json.Unmarshal(data, &model)
 			dao.AlertContactInformation.Delete(global.DB, model)
+		case enums.CertifyAlertContact:
+			data, _ := json.Marshal(MqMsg.Data)
+			var activeCode string
+			MsgErr = json.Unmarshal(data, &activeCode)
+			dao.AlertContact.CertifyAlertContact(activeCode)
 		case enums.InsertAlertContactGroupRel:
 			data, _ := json.Marshal(MqMsg.Data)
 			var modelList []*models.AlertContactGroupRel
@@ -64,11 +69,30 @@ func AlertContactHandler(msgs []*primitive.MessageExt) {
 			var model *models.AlertContactGroupRel
 			MsgErr = json.Unmarshal(data, &model)
 			dao.AlertContactGroupRel.Delete(global.DB, model)
-		case enums.CertifyAlertContact:
+		}
+	}
+}
+
+func AlertContactGroupHandler(msgs []*primitive.MessageExt) {
+	for i := range msgs {
+		fmt.Printf("subscribe callback: %v \n", msgs[i])
+		MsgErr = json.Unmarshal(msgs[i].Body, &MqMsg)
+		switch MqMsg.EventEum {
+		case enums.InsertAlertContactGroupRel:
 			data, _ := json.Marshal(MqMsg.Data)
-			var activeCode string
-			MsgErr = json.Unmarshal(data, &activeCode)
-			dao.AlertContact.CertifyAlertContact(activeCode)
+			var modelList []*models.AlertContactGroupRel
+			MsgErr = json.Unmarshal(data, &modelList)
+			dao.AlertContactGroupRel.InsertBatch(global.DB, modelList)
+		case enums.UpdateAlertContactGroupRel:
+			data, _ := json.Marshal(MqMsg.Data)
+			var modelList []*models.AlertContactGroupRel
+			MsgErr = json.Unmarshal(data, &modelList)
+			dao.AlertContactGroupRel.Update(global.DB, modelList)
+		case enums.DeleteAlertContactGroupRel:
+			data, _ := json.Marshal(MqMsg.Data)
+			var model *models.AlertContactGroupRel
+			MsgErr = json.Unmarshal(data, &model)
+			dao.AlertContactGroupRel.Delete(global.DB, model)
 		case enums.InsertAlertContactGroup:
 			data, _ := json.Marshal(MqMsg.Data)
 			var model *models.AlertContactGroup

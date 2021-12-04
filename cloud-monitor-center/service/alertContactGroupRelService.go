@@ -29,7 +29,7 @@ func NewAlertContactGroupRelService() *AlertContactGroupRelService {
 func (s *AlertContactGroupRelService) PersistenceLocal(db *gorm.DB, param interface{}) (string, error) {
 	p := param.(forms.AlertContactParam)
 	switch p.EventEum {
-	case enums.InsertAlertContact:
+	case enums.InsertAlertContact, enums.InsertAlertContactGroup:
 		relList, err := s.insertAlertContactRel(db, p)
 		if err != nil {
 			return "", err
@@ -39,7 +39,7 @@ func (s *AlertContactGroupRelService) PersistenceLocal(db *gorm.DB, param interf
 			Data:     relList,
 		}
 		return tools.ToString(msg), nil
-	case enums.UpdateAlertContact:
+	case enums.UpdateAlertContact, enums.UpdateAlertContactGroup:
 		List, err := s.updateAlertContactGroupRel(db, p)
 		if err != nil {
 			return "", err
@@ -48,7 +48,7 @@ func (s *AlertContactGroupRelService) PersistenceLocal(db *gorm.DB, param interf
 			EventEum: enums.UpdateAlertContactGroupRel,
 			Data:     List,
 		}), nil
-	case enums.DeleteAlertContact:
+	case enums.DeleteAlertContact, enums.DeleteAlertContactGroup:
 		alertContactGroupRel, err := s.deleteAlertContactGroupRel(db, p)
 		if err != nil {
 			return "", err
@@ -59,7 +59,6 @@ func (s *AlertContactGroupRelService) PersistenceLocal(db *gorm.DB, param interf
 		}), nil
 	default:
 		return "", errors.NewBusinessError("系统异常")
-
 	}
 }
 
@@ -82,39 +81,47 @@ func (s *AlertContactGroupRelService) updateAlertContactGroupRel(db *gorm.DB, p 
 }
 
 func (s *AlertContactGroupRelService) deleteAlertContactGroupRel(db *gorm.DB, p forms.AlertContactParam) (*models.AlertContactGroupRel, error) {
+	var alertContactGroupRel = &models.AlertContactGroupRel{}
 	if p.ContactId != "" {
-		var alertContactGroupRel = &models.AlertContactGroupRel{
-			ContactId: p.ContactId,
-			TenantId:  p.TenantId,
-		}
-		s.dao.Delete(db, alertContactGroupRel)
-		return alertContactGroupRel, nil
+		alertContactGroupRel.TenantId = p.TenantId
+		alertContactGroupRel.ContactId = p.ContactId
 	} else {
-		var alertContactGroupRel = &models.AlertContactGroupRel{
-			GroupId:  p.GroupId,
-			TenantId: p.TenantId,
-		}
-		s.dao.Delete(db, alertContactGroupRel)
-		return alertContactGroupRel, nil
+		alertContactGroupRel.TenantId = p.TenantId
+		alertContactGroupRel.GroupId = p.GroupId
 	}
+	s.dao.Delete(db, alertContactGroupRel)
+	return alertContactGroupRel, nil
 }
 
 func (s *AlertContactGroupRelService) getAlertContactGroupRelList(db *gorm.DB, p forms.AlertContactParam) ([]*models.AlertContactGroupRel, error) {
-	var infoList []*models.AlertContactGroupRel
+	var list []*models.AlertContactGroupRel
 	var count int64
-	for _, v := range p.GroupIdList {
-		db.Model(&models.AlertContactGroupRel{}).Where("tenant_id = ?", p.TenantId).Where("group_id = ?", v).Count(&count)
-		if count >= constants.MaxContactNum {
-			return nil, errors.NewBusinessError("每组联系人限制创建" + strconv.Itoa(constants.MaxContactNum) + "个")
+	if len(p.ContactIdList) > 0 {
+		for _, v := range p.ContactIdList {
+			alertContactGroupRel := &models.AlertContactGroupRel{
+				Id:         strconv.FormatInt(snowflake.GetWorker().NextId(), 10),
+				TenantId:   p.TenantId,
+				ContactId:  v,
+				GroupId:    p.GroupId,
+				CreateUser: p.CreateUser,
+			}
+			list = append(list, alertContactGroupRel)
 		}
-		alertContactGroup := &models.AlertContactGroupRel{
-			Id:         strconv.FormatInt(snowflake.GetWorker().NextId(), 10),
-			TenantId:   p.TenantId,
-			ContactId:  p.ContactId,
-			GroupId:    v,
-			CreateUser: p.CreateUser,
+	} else {
+		for _, v := range p.GroupIdList {
+			db.Model(&models.AlertContactGroupRel{}).Where("tenant_id = ? AND contact_id = ?", p.TenantId, p.ContactId).Count(&count)
+			if count >= constants.MaxContactNum {
+				return nil, errors.NewBusinessError("每个联系人最多加入" + strconv.Itoa(constants.MaxContactGroup) + "个联系组")
+			}
+			alertContactGroupRel := &models.AlertContactGroupRel{
+				Id:         strconv.FormatInt(snowflake.GetWorker().NextId(), 10),
+				TenantId:   p.TenantId,
+				ContactId:  p.ContactId,
+				GroupId:    v,
+				CreateUser: p.CreateUser,
+			}
+			list = append(list, alertContactGroupRel)
 		}
-		infoList = append(infoList, alertContactGroup)
 	}
-	return infoList, nil
+	return list, nil
 }

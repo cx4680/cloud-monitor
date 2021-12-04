@@ -6,6 +6,7 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/errors"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/forms"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/sysComponent/sysRocketMq"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/models"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/service"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/tools"
@@ -51,6 +52,11 @@ func (s *AlertContactGroupService) PersistenceLocal(db *gorm.DB, param interface
 		if err != nil {
 			return "", err
 		}
+		//保存联系人组关联
+		p.GroupId = alertContactGroup.Id
+		if err := s.alertContactGroupRelService.PersistenceInner(db, s.alertContactGroupRelService, sysRocketMq.AlertContactGroupTopic, p); err != nil {
+			return "", err
+		}
 		return tools.ToString(forms.MqMsg{
 			EventEum: enums.InsertAlertContactGroup,
 			Data:     alertContactGroup,
@@ -62,12 +68,16 @@ func (s *AlertContactGroupService) PersistenceLocal(db *gorm.DB, param interface
 		}
 		//联系组名不可重复
 		var count int64
-		global.DB.Model(&models.AlertContactGroup{}).Where("tenant_id = ? AND name = ?", p.TenantId, p.GroupName).Count(&count)
+		global.DB.Model(&models.AlertContactGroup{}).Where("tenant_id = ? AND id != ? AND name = ?", p.TenantId, p.GroupId, p.GroupName).Count(&count)
 		if count >= 1 {
 			return "", errors.NewBusinessError("联系组名重复")
 		}
 		alertContactGroup, err := s.updateAlertContactGroup(db, p)
 		if err != nil {
+			return "", err
+		}
+		//更新联系人组关联
+		if err := s.alertContactGroupRelService.PersistenceInner(db, s.alertContactGroupRelService, sysRocketMq.AlertContactGroupTopic, p); err != nil {
 			return "", err
 		}
 		return tools.ToString(forms.MqMsg{
@@ -77,6 +87,10 @@ func (s *AlertContactGroupService) PersistenceLocal(db *gorm.DB, param interface
 	case enums.DeleteAlertContactGroup:
 		alertContactGroup, err := s.deleteAlertContactGroup(db, p)
 		if err != nil {
+			return "", err
+		}
+		//更新联系人组关联
+		if err := s.alertContactGroupRelService.PersistenceInner(db, s.alertContactGroupRelService, sysRocketMq.AlertContactGroupTopic, p); err != nil {
 			return "", err
 		}
 		return tools.ToString(forms.MqMsg{

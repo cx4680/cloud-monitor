@@ -28,6 +28,7 @@ func InitSys() error {
 		sysRocketMq.SmsMarginReminderTopic,
 		sysRocketMq.InstanceTopic,
 		sysRocketMq.AlertContactTopic,
+		sysRocketMq.AlertContactGroupTopic,
 		sysRocketMq.RecordTopic,
 		sysRocketMq.RuleTopic,
 		sysRocketMq.NotificationSyncTopic,
