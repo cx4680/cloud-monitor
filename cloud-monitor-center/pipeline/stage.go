@@ -1,13 +1,17 @@
 package pipeline
 
 import (
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/sysComponent/sysDb"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/sysComponent/sysRocketMq"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/models"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/task"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/mq/consumer"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/validator/translate"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/web"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
 	"context"
+	"gorm.io/gorm"
 )
 
 type TransactionActuatorStage struct {
@@ -55,4 +59,32 @@ type WebActuatorStage struct {
 
 func (wa *WebActuatorStage) Exec(c *context.Context) error {
 	return web.Start(config.GetServeConfig())
+}
+
+type ProjectInitializerFetch struct {
+}
+
+func (p *ProjectInitializerFetch) Fetch(db *gorm.DB) ([]interface{}, []string) {
+	var tables []interface{}
+	var sqls []string
+
+	tables = append(tables, &models.UserPrometheusID{})
+	// TODO
+
+	return tables, sqls
+}
+
+type DBInitActuatorStage struct {
+}
+
+func (d *DBInitActuatorStage) Exec(c *context.Context) error {
+	initializer := sysDb.DBInitializer{
+		DB:      global.DB,
+		Fetches: []sysDb.InitializerFetch{new(sysDb.CommonInitializerFetch), new(ProjectInitializerFetch)},
+	}
+
+	if err := initializer.Initnitialization(); err != nil {
+		return err
+	}
+	return nil
 }

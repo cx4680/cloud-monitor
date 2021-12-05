@@ -3,7 +3,6 @@ package web
 import (
 	commonDao "code.cestc.cn/ccos-ops/cloud-monitor/business-common/dao"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/controllers"
-	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/dao"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/service"
 )
 
@@ -28,7 +27,7 @@ func monitorProductRouters() {
 }
 
 func monitorItemRouters() {
-	monitorItemCtl := controllers.NewMonitorItemCtl(dao.MonitorItem)
+	monitorItemCtl := controllers.NewMonitorItemCtl(commonDao.MonitorItem)
 	group := router.Group("/hawkeye/monitorItem/")
 	{
 		group.GET("/getMonitorItemsById", monitorItemCtl.GetMonitorItemsById)

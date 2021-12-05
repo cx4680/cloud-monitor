@@ -27,8 +27,14 @@ func (mpc *MonitorReportFormCtl) GetData(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, translate.GetErrorMsg(err))
 		return
 	}
-	param.Labels = "instance,device"
-	c.JSON(http.StatusOK, global.NewSuccess("查询成功", mpc.service.GetData(param)))
+	monitorItemDao := dao.MonitorItem
+	param.Labels = monitorItemDao.GetMonitorItemByName(param.Name).Labels
+	data, err := mpc.service.GetData(param)
+	if err == nil {
+		c.JSON(http.StatusOK, global.NewSuccess("查询成功", data))
+	} else {
+		c.JSON(http.StatusOK, global.NewError(err.Error()))
+	}
 }
 
 func (mpc *MonitorReportFormCtl) GetAxisData(c *gin.Context) {
@@ -38,9 +44,12 @@ func (mpc *MonitorReportFormCtl) GetAxisData(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, translate.GetErrorMsg(err))
 		return
 	}
-	monitorItemDao := dao.MonitorItem
-	param.Labels = monitorItemDao.GetLabelsByName(param.Name)
-	c.JSON(http.StatusOK, global.NewSuccess("查询成功", mpc.service.GetAxisData(param)))
+	data, err := mpc.service.GetAxisData(param)
+	if err == nil {
+		c.JSON(http.StatusOK, global.NewSuccess("查询成功", data))
+	} else {
+		c.JSON(http.StatusOK, global.NewError(err.Error()))
+	}
 }
 
 func (mpc *MonitorReportFormCtl) GetTop(c *gin.Context) {
@@ -56,6 +65,9 @@ func (mpc *MonitorReportFormCtl) GetTop(c *gin.Context) {
 		PageSize: 1000,
 	}
 	rows, err := ecs.PageList(&form)
+	if rows == nil {
+		c.JSON(http.StatusOK, global.NewSuccess("查询成功，该租户无ecs", []forms.PrometheusInstance{}))
+	}
 	var instanceList []string
 	for _, ecsVO := range rows.Rows {
 		if ecsVO.InstanceId == "" {

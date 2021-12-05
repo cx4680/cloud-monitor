@@ -30,7 +30,7 @@ rocketmq:
   instanceTopic: hawkeye-instance
   ruleTopic: rule
 prometheus:
-  url: http://10.255.67.70:30090/api/v1
+  url: http://10.255.191.82:30090/api/v1
   query: /query?query=
   queryRange: /query_range?query=
 

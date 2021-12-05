@@ -13,6 +13,7 @@ import (
 func main() {
 
 	loader := cp.NewMainLoader()
+	loader.AddStage(&pipeline.DBInitActuatorStage{})
 	loader.AddStage(&pipeline.TransactionActuatorStage{})
 	loader.AddStage(&pipeline.TaskActuatorStage{})
 	loader.AddStage(&pipeline.MQActuatorStage{})

@@ -7,6 +7,7 @@ type MonitorProduct struct {
 	Description string `gorm:"column:description" json:"description"` // 描述
 	CreateUser  string `gorm:"column:create_user" json:"create_user"` // 创建人
 	CreateTime  string `gorm:"column:create_time" json:"create_time"` // 创建时间
+	Route       string `gorm:"column:route" json:"route"`             // 路由
 }
 
 func (*MonitorProduct) TableName() string {

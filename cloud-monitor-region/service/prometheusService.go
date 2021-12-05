@@ -6,6 +6,7 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
 	"encoding/json"
 	"net/http"
+	"strings"
 )
 
 var cfg = config.GetPrometheusConfig()
@@ -26,7 +27,7 @@ func QueryRange(pql string, start string, end string, step string, tenantId stri
 
 func sendRequest(url string, pql string, tenantId string) forms.PrometheusResponse {
 	logger.Logger().Infof("url:%v\n", url+pql)
-	response, err := http.Get(url + pql)
+	response, err := http.Get(strings.ReplaceAll(url+pql, " ", ""))
 	if err != nil {
 		logger.Logger().Errorf("error:%v\n", err)
 	}
