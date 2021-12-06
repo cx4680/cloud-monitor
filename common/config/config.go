@@ -16,6 +16,7 @@ type Config struct {
 	Prometheus Prometheus   `yaml:"prometheus"`
 	Common     CommonConfig `yaml:"common"`
 	Redis      RedisConfig  `yaml:"redis"`
+	Iam        IamConfig    `yaml:"iam"`
 }
 
 type CommonConfig struct {
@@ -75,6 +76,12 @@ type Prometheus struct {
 type RedisConfig struct {
 	Addr     string
 	Password string
+}
+
+type IamConfig struct {
+	Site   string
+	Region string
+	Log    string
 }
 
 var cfg = defaultAuthSdkConfig()
@@ -150,4 +157,8 @@ func GetRocketmqConfig() Rocketmq {
 
 func GetPrometheusConfig() Prometheus {
 	return cfg.Prometheus
+}
+
+func GetIamConfig() IamConfig {
+	return cfg.Iam
 }

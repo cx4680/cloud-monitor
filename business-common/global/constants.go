@@ -9,3 +9,4 @@ const (
 
 const TenantId = "tenantId"
 const UserId = "userId"
+const UserType = "userType"

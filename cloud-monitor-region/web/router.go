@@ -4,13 +4,16 @@ import (
 	commonDao "code.cestc.cn/ccos-ops/cloud-monitor/business-common/dao"
 	commonService "code.cestc.cn/ccos-ops/cloud-monitor/business-common/service"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/service/external/messageCenter"
+	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/actuator"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/controllers"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/dao"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/docs"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/inner"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/service"
+	"github.com/gin-gonic/gin"
 	gs "github.com/swaggo/gin-swagger"
 	"github.com/swaggo/gin-swagger/swaggerFiles"
+	"net/http"
 )
 
 func loadRouters() {
@@ -87,5 +90,23 @@ func innerCtl() {
 	group := router.Group("/hawkeye/inner/")
 	{
 		group.POST("/alertRecord/insert", ctl.AddAlertRecord)
+	}
+}
+
+func actuatorMapping() {
+	group := router.Group("/actuator")
+	{
+		group.GET("/env", func(c *gin.Context) {
+			c.JSON(http.StatusOK, actuator.Env())
+		})
+		group.GET("/info", func(c *gin.Context) {
+			c.JSON(http.StatusOK, actuator.Info())
+		})
+		group.GET("/health", func(c *gin.Context) {
+			c.JSON(http.StatusOK, actuator.Health())
+		})
+		group.GET("/metrics", func(c *gin.Context) {
+			c.JSON(http.StatusOK, actuator.Metrics())
+		})
 	}
 }

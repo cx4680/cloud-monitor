@@ -10,6 +10,7 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/validator/translate"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/web"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
+	"code.cestc.cn/yyptb-group_tech/iam-sdk-go/pkg/middleware"
 	"context"
 	"gorm.io/gorm"
 	"io/ioutil"
@@ -97,5 +98,14 @@ func (d *DBInitActuatorStage) Exec(c *context.Context) error {
 	if err := initializer.Initnitialization(); err != nil {
 		return err
 	}
+	return nil
+}
+
+type IamActuatorStage struct {
+}
+
+func (i *IamActuatorStage) Exec(c *context.Context) error {
+	cfg := config.GetIamConfig()
+	middleware.InitIamConfig(cfg.Site, cfg.Region, cfg.Log)
 	return nil
 }

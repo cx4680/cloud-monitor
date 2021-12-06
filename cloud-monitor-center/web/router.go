@@ -2,8 +2,13 @@ package web
 
 import (
 	commonDao "code.cestc.cn/ccos-ops/cloud-monitor/business-common/dao"
+	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/actuator"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/controllers"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/service"
+	"code.cestc.cn/yyptb-group_tech/iam-sdk-go/pkg/middleware"
+	"code.cestc.cn/yyptb-group_tech/iam-sdk-go/pkg/models"
+	"github.com/gin-gonic/gin"
+	"net/http"
 )
 
 func loadRouters() {
@@ -14,13 +19,23 @@ func loadRouters() {
 	alarmRule()
 	instance()
 	alertRecord()
+
+	actuatorMapping()
 }
 
 func monitorProductRouters() {
 	monitorProductCtl := controllers.NewMonitorProductCtl(commonDao.MonitorProduct)
 	group := router.Group("/hawkeye/monitorProduct/")
 	{
-		group.GET("/getAllMonitorProducts", monitorProductCtl.GetAllMonitorProducts)
+		group.GET("/getAllMonitorProducts", func(c *gin.Context) {
+			identity := &models.Identity{Product: "ECS", Action: "GetInstanceList", ResourceType: "*", ResourceId: "*"}
+			// IAM鉴权接口
+			err := middleware.AuthIdentify(c, identity, "")
+			if err != nil {
+				c.JSON(200, err)
+				c.Abort()
+			}
+		}, monitorProductCtl.GetAllMonitorProducts)
 		group.GET("/getById", monitorProductCtl.GetById)
 		group.PUT("/updateById", monitorProductCtl.UpdateById)
 	}
@@ -90,4 +105,22 @@ func alertRecord() {
 		group.GET("/detail", ctl.GetDetail)
 	}
 
+}
+
+func actuatorMapping() {
+	group := router.Group("/actuator")
+	{
+		group.GET("/env", func(c *gin.Context) {
+			c.JSON(http.StatusOK, actuator.Env())
+		})
+		group.GET("/info", func(c *gin.Context) {
+			c.JSON(http.StatusOK, actuator.Info())
+		})
+		group.GET("/health", func(c *gin.Context) {
+			c.JSON(http.StatusOK, actuator.Health())
+		})
+		group.GET("/metrics", func(c *gin.Context) {
+			c.JSON(http.StatusOK, actuator.Metrics())
+		})
+	}
 }

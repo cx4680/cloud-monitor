@@ -9,6 +9,7 @@ import (
 func main() {
 
 	loader := cp.NewMainLoader().
+		AddStage(&pipeline.IamActuatorStage{}).
 		AddStage(&pipeline.DBInitActuatorStage{}).
 		AddStage(&pipeline.TransactionActuatorStage{}).
 		AddStage(&pipeline.TaskActuatorStage{}).
