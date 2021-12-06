@@ -14,7 +14,6 @@ type Config struct {
 	HttpConfig HttpConfig   `yaml:"http"`
 	Rocketmq   Rocketmq     `yaml:"rocketmq"`
 	Prometheus Prometheus   `yaml:"prometheus"`
-	Ecs        Ecs          `yaml:"ecs"`
 	Common     CommonConfig `yaml:"common"`
 	Redis      RedisConfig  `yaml:"redis"`
 }
@@ -72,10 +71,6 @@ type Prometheus struct {
 	Url        string `yaml:"url"`
 	Query      string `yaml:"query"`
 	QueryRange string `yaml:"queryRange"`
-}
-
-type Ecs struct {
-	InnerGateway string `yaml:"inner-gateway"`
 }
 
 type RedisConfig struct {
@@ -157,8 +152,4 @@ func GetRocketmqConfig() Rocketmq {
 
 func GetPrometheusConfig() Prometheus {
 	return cfg.Prometheus
-}
-
-func GetEcsConfig() Ecs {
-	return cfg.Ecs
 }

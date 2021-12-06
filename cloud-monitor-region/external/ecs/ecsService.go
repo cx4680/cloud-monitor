@@ -34,7 +34,7 @@ type VmParams struct {
 }
 
 func PageList(form *forms.EcsQueryPageForm) (*vo.EcsPageVO, error) {
-	var ecsInnerGateway = config.GetEcsConfig().InnerGateway
+	var ecsInnerGateway = config.GetCommonConfig().EcsInnerGateway
 	path := ecsInnerGateway + "/noauth/ecs/PageList"
 	jsonStr, _ := json.Marshal(form)
 	resp, err := http.Post(path, "application/json", strings.NewReader(string(jsonStr)))

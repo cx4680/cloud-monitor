@@ -32,7 +32,7 @@ func (mpd *MonitorReportFormService) GetData(request forms.PrometheusRequest) ([
 	result := prometheusResponse.Data.Result[0].Value
 	prometheusValue := forms.PrometheusValue{
 		Time:  strconv.Itoa(int(result[0].(float64))),
-		Value: result[1].(string),
+		Value: changeDecimal(result[1].(string)),
 	}
 	return []forms.PrometheusValue{prometheusValue}, nil
 }
@@ -44,10 +44,10 @@ func (mpd *MonitorReportFormService) GetTop(request forms.PrometheusRequest) ([]
 		return nil, err
 	}
 	if request.Name == constant.EcsCpuUsage {
-		pql = strings.ReplaceAll(constant.EcsCpuUsageTopExpr, constant.MetricLabel, instances)
+		pql = strings.ReplaceAll(constant.EcsCpuUsageTopExpr, constant.MetricLabel, constant.INSTANCE+"=~'"+instances+"'")
 	} else {
 		monitorItem := getMonitorItemByName(request.Name)
-		pql = strings.ReplaceAll(monitorItem.MetricsLinux, constant.MetricLabel, instances)
+		pql = strings.ReplaceAll(monitorItem.MetricsLinux, constant.MetricLabel, constant.INSTANCE+"=~'"+instances+"'")
 	}
 	prometheusResponse := Query(pql, request.Time)
 	result := prometheusResponse.Data.Result
@@ -55,7 +55,7 @@ func (mpd *MonitorReportFormService) GetTop(request forms.PrometheusRequest) ([]
 	for i := range result {
 		instanceDTO := forms.PrometheusInstance{
 			Instance: result[i].Metric[constant.INSTANCE],
-			Value:    result[i].Value[1].(string),
+			Value:    changeDecimal(result[i].Value[1].(string)),
 		}
 		instanceList = append(instanceList, instanceDTO)
 	}
@@ -168,7 +168,7 @@ func getEcsInstances() (string, error) {
 	}
 	var instanceList []string
 	for _, ecsVO := range rows.Rows {
-		if ecsVO.InstanceId == "" {
+		if ecsVO.InstanceId != "" {
 			instanceList = append(instanceList, ecsVO.InstanceId)
 		}
 	}

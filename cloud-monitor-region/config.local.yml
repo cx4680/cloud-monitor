@@ -34,9 +34,6 @@ prometheus:
   query: /query?query=
   queryRange: /query_range?query=
 
-ecs:
-  inner-gateway: http://ecs-gateway.inner.center.intranet.cecloudcs.com
-
 common:
   env: local
   nk: http://aopesb.wh002.test.cecloud.com/cestc
@@ -45,7 +42,7 @@ common:
   hawkeyeCenterPath: ''
   hasNoticeModel: false
   regionName: 'local'
-  ecs-inner-gateway: http://ecs-gateway.inner.center.intranet.cecloudcs.com
+  ecs-inner-gateway: http://ecs-gateway.inner.dev001.intranet.cecloudcs.com
 redis:
   addr: 'localhost:6379'
   password: ''
