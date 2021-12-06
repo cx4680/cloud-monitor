@@ -4,7 +4,6 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/sysComponent/sysDb"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/sysComponent/sysRocketMq"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/models"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/task"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/tools"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/mq/consumer"
@@ -72,7 +71,6 @@ func (p *ProjectInitializerFetch) Fetch(db *gorm.DB) ([]interface{}, []string, e
 	var tables []interface{}
 	var sqls []string
 
-	tables = append(tables, &models.UserPrometheusID{})
 	//加载SQL
 	sqlBytes, err := ioutil.ReadFile("script/center.sql")
 	if err != nil {

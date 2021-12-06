@@ -9,27 +9,28 @@ import (
 	"strings"
 )
 
-var cfg = config.GetPrometheusConfig()
-
-func Query(pql string, time string, tenantId string) forms.PrometheusResponse {
+func Query(pql string, time string) forms.PrometheusResponse {
+	var cfg = config.GetPrometheusConfig()
 	url := cfg.Url + cfg.Query
 	if time != "" {
 		pql += "&time=" + time
 	}
-	return sendRequest(url, pql, tenantId)
+	return sendRequest(url, pql)
 }
 
-func QueryRange(pql string, start string, end string, step string, tenantId string) forms.PrometheusResponse {
+func QueryRange(pql string, start string, end string, step string) forms.PrometheusResponse {
+	var cfg = config.GetPrometheusConfig()
 	url := cfg.Url + cfg.QueryRange
 	pql += "&start=" + start + "&end=" + end + "&step=" + step
-	return sendRequest(url, pql, tenantId)
+	return sendRequest(url, pql)
 }
 
-func sendRequest(url string, pql string, tenantId string) forms.PrometheusResponse {
+func sendRequest(url string, pql string) forms.PrometheusResponse {
 	logger.Logger().Infof("url:%v\n", url+pql)
-	response, err := http.Get(strings.ReplaceAll(url+pql, " ", ""))
+	response, err := http.Get(url + strings.ReplaceAll(pql, " ", ""))
 	if err != nil {
 		logger.Logger().Errorf("error:%v\n", err)
+		return forms.PrometheusResponse{}
 	}
 	var prometheusResponse forms.PrometheusResponse
 	err = json.NewDecoder(response.Body).Decode(&prometheusResponse)

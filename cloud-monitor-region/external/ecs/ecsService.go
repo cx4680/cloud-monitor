@@ -33,9 +33,8 @@ type VmParams struct {
 	StatusList []int  `json:"statusList,omitempty"`
 }
 
-var ecsInnerGateway = config.GetEcsConfig().InnerGateway
-
 func PageList(form *forms.EcsQueryPageForm) (*vo.EcsPageVO, error) {
+	var ecsInnerGateway = config.GetEcsConfig().InnerGateway
 	path := ecsInnerGateway + "/noauth/ecs/PageList"
 	jsonStr, _ := json.Marshal(form)
 	resp, err := http.Post(path, "application/json", strings.NewReader(string(jsonStr)))

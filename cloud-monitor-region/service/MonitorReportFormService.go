@@ -5,6 +5,7 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/errors"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/models"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/constant"
+	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/external/ecs"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/forms"
 	"fmt"
 	"strconv"
@@ -23,7 +24,7 @@ func (mpd *MonitorReportFormService) GetData(request forms.PrometheusRequest) ([
 		return nil, errors.NewBusinessError("instance为空")
 	}
 	pql := getPql(request)
-	prometheusResponse := Query(pql, request.Time, request.TenantId)
+	prometheusResponse := Query(pql, request.Time)
 	var Values []forms.PrometheusValue
 	if len(prometheusResponse.Data.Result) == 0 {
 		return Values, nil
@@ -36,15 +37,19 @@ func (mpd *MonitorReportFormService) GetData(request forms.PrometheusRequest) ([
 	return []forms.PrometheusValue{prometheusValue}, nil
 }
 
-func (mpd *MonitorReportFormService) GetTop(request forms.PrometheusRequest) []forms.PrometheusInstance {
+func (mpd *MonitorReportFormService) GetTop(request forms.PrometheusRequest) ([]forms.PrometheusInstance, error) {
 	var pql string
+	instances, err := getEcsInstances()
+	if err != nil {
+		return nil, err
+	}
 	if request.Name == constant.EcsCpuUsage {
-		pql = strings.ReplaceAll(constant.EcsCpuUsageTopExpr, constant.MetricLabel, request.Instance)
+		pql = strings.ReplaceAll(constant.EcsCpuUsageTopExpr, constant.MetricLabel, instances)
 	} else {
 		monitorItem := getMonitorItemByName(request.Name)
-		pql = strings.ReplaceAll(monitorItem.MetricsLinux, constant.MetricLabel, request.Instance)
+		pql = strings.ReplaceAll(monitorItem.MetricsLinux, constant.MetricLabel, instances)
 	}
-	prometheusResponse := Query(pql, request.Time, request.TenantId)
+	prometheusResponse := Query(pql, request.Time)
 	result := prometheusResponse.Data.Result
 	var instanceList []forms.PrometheusInstance
 	for i := range result {
@@ -54,7 +59,7 @@ func (mpd *MonitorReportFormService) GetTop(request forms.PrometheusRequest) []f
 		}
 		instanceList = append(instanceList, instanceDTO)
 	}
-	return instanceList
+	return instanceList, nil
 }
 
 func (mpd *MonitorReportFormService) GetAxisData(request forms.PrometheusRequest) (forms.PrometheusAxis, error) {
@@ -62,7 +67,7 @@ func (mpd *MonitorReportFormService) GetAxisData(request forms.PrometheusRequest
 		return forms.PrometheusAxis{}, errors.NewBusinessError("instance为空")
 	}
 	pql := getPql(request)
-	prometheusResponse := QueryRange(pql, strconv.Itoa(request.Start), strconv.Itoa(request.End), strconv.Itoa(request.Step), request.TenantId)
+	prometheusResponse := QueryRange(pql, strconv.Itoa(request.Start), strconv.Itoa(request.End), strconv.Itoa(request.Step))
 	result := prometheusResponse.Data.Result
 
 	labels := strings.Split(getMonitorItemByName(request.Name).Labels, ",")
@@ -144,4 +149,28 @@ func changeDecimal(value string) string {
 func getMonitorItemByName(name string) models.MonitorItem {
 	monitorItemDao := dao.MonitorItem
 	return monitorItemDao.GetMonitorItemByName(name)
+}
+
+//查询租户的ECS实例列表
+func getEcsInstances() (string, error) {
+	var form = forms.EcsQueryPageForm{
+		TenantId: "210011082310350",
+		//TenantId: param.TenantId,
+		Current:  1,
+		PageSize: 1000,
+	}
+	rows, err := ecs.PageList(&form)
+	if err != nil {
+		return "", err
+	}
+	if rows == nil || rows.Rows == nil {
+		return "", nil
+	}
+	var instanceList []string
+	for _, ecsVO := range rows.Rows {
+		if ecsVO.InstanceId == "" {
+			instanceList = append(instanceList, ecsVO.InstanceId)
+		}
+	}
+	return strings.Join(instanceList, "|"), nil
 }
