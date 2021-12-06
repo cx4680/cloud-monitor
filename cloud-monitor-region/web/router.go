@@ -76,6 +76,14 @@ func slb() {
 	}
 }
 
+func cbr() {
+	ctl := controllers.NewCbrCtl()
+	group := router.Group("/hawkeye/cbr/")
+	{
+		group.GET("/page", ctl.Page)
+	}
+}
+
 func nat() {
 	ctl := controllers.NewNatCtl()
 	group := router.Group("/hawkeye/nat/")

@@ -41,7 +41,6 @@ func (ta *TaskActuatorStage) Exec(c *context.Context) error {
 	}); err != nil {
 		return err
 	}
-
 	if err := bt.Add(commonTask.BusinessTaskDTO{
 		Cron: corn,
 		Task: task.NewSlbJob().SyncJob,
@@ -51,6 +50,12 @@ func (ta *TaskActuatorStage) Exec(c *context.Context) error {
 	if err := bt.Add(commonTask.BusinessTaskDTO{
 		Cron: corn,
 		Task: task.NewEipJob().SyncJob,
+	}); err != nil {
+		return err
+	}
+	if err := bt.Add(commonTask.BusinessTaskDTO{
+		Cron: corn,
+		Task: task.NewCbrJob().SyncJob,
 	}); err != nil {
 		return err
 	}
