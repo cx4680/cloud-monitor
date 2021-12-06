@@ -6,6 +6,7 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/sysComponent/sysRocketMq"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/models"
 	commonTask "code.cestc.cn/ccos-ops/cloud-monitor/business-common/task"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/tools"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/k8s"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/mq/consumer"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/task"
@@ -14,6 +15,9 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
 	"context"
 	"gorm.io/gorm"
+	"io/ioutil"
+	"log"
+	"strings"
 )
 
 type TransactionActuatorStage struct {
@@ -85,14 +89,24 @@ func (wa *WebActuatorStage) Exec(c *context.Context) error {
 type ProjectInitializerFetch struct {
 }
 
-func (p *ProjectInitializerFetch) Fetch(db *gorm.DB) ([]interface{}, []string) {
+func (p *ProjectInitializerFetch) Fetch(db *gorm.DB) ([]interface{}, []string, error) {
 	var tables []interface{}
 	var sqls []string
 
 	tables = append(tables, &models.UserPrometheusID{})
-	// TODO
 
-	return tables, sqls
+	//加载SQL
+	sqlBytes, err := ioutil.ReadFile("script/region.sql")
+	if err != nil {
+		log.Println("load sql file error", err)
+		return nil, nil, err
+	}
+	sql := string(sqlBytes)
+	if tools.IsNotBlank(sql) {
+		sqls = append(sqls, strings.Split(sql, ";")...)
+	}
+
+	return tables, sqls, nil
 }
 
 type DBInitActuatorStage struct {
