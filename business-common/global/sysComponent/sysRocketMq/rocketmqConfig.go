@@ -10,6 +10,7 @@ import (
 	"github.com/apache/rocketmq-client-go/v2/primitive"
 	"github.com/apache/rocketmq-client-go/v2/producer"
 	"github.com/pkg/errors"
+	"sync"
 )
 
 var p rocketmq.Producer
@@ -43,6 +44,12 @@ type RocketMqMsg struct {
 
 func CreateTopics(topics ...Topic) error {
 	cfg := config.GetRocketmqConfig()
+
+	brokerAddr, err2 := getBrokerAddr(cfg)
+	if err2 != nil {
+		return err2
+	}
+
 	testAdmin, err := admin.NewAdmin(admin.WithResolver(primitive.NewPassthroughResolver([]string{cfg.NameServer})))
 	if err != nil {
 		fmt.Printf("create topic error %+v\n", err)
@@ -52,7 +59,7 @@ func CreateTopics(topics ...Topic) error {
 		err = testAdmin.CreateTopic(
 			context.Background(),
 			admin.WithTopicCreate(string(topic)),
-			admin.WithBrokerAddrCreate(cfg.BrokerAddr),
+			admin.WithBrokerAddrCreate(brokerAddr),
 		)
 		if err != nil {
 			fmt.Printf("create topic error %+v", err)
@@ -60,6 +67,29 @@ func CreateTopics(topics ...Topic) error {
 		}
 	}
 	return nil
+}
+
+func getBrokerAddr(cfg config.Rocketmq) (string, error) {
+	c := &Client{
+		responseTable:    sync.Map{},
+		connectionTable:  sync.Map{},
+		option:           TcpOption{},
+		processors:       nil,
+		connectionLocker: sync.Mutex{},
+		interceptor:      nil,
+	}
+	broker, e := c.GetBrokerDataList(cfg.NameServer)
+	if e != nil {
+		return "", e
+	}
+	brokerAddr := ""
+	for _, b := range broker.BrokerDataList {
+		for _, v := range b.BrokerAddresses {
+			brokerAddr = v
+			break
+		}
+	}
+	return brokerAddr, nil
 }
 
 func InitProducer() error {

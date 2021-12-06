@@ -64,7 +64,6 @@ type HttpConfig struct {
 
 type Rocketmq struct {
 	NameServer string `yaml:"name-server"`
-	BrokerAddr string `yaml:"broker-addr"`
 }
 
 type Prometheus struct {
@@ -94,7 +93,6 @@ func defaultAuthSdkConfig() Config {
 		},
 		Rocketmq: Rocketmq{
 			NameServer: "127.0.0.1:9876",
-			BrokerAddr: "127.0.0.1:10911",
 		},
 		Common: CommonConfig{
 			Env:               "local",
