@@ -19,6 +19,7 @@ func loadRouters() {
 	instance()
 	eip()
 	slb()
+	nat()
 	MonitorReportForm()
 	innerCtl()
 }
@@ -67,6 +68,14 @@ func eip() {
 func slb() {
 	ctl := controllers.NewSlbCtl()
 	group := router.Group("/hawkeye/slb/")
+	{
+		group.GET("/page", ctl.Page)
+	}
+}
+
+func nat() {
+	ctl := controllers.NewNatCtl()
+	group := router.Group("/hawkeye/nat/")
 	{
 		group.GET("/page", ctl.Page)
 	}

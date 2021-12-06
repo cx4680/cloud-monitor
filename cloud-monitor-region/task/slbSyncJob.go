@@ -18,9 +18,6 @@ func (slbJob *SlbSyncJob) SyncJob() {
 	log.Println("slbInstanceJob end")
 }
 
-type A struct {
-}
-
 func (slbJob *SlbSyncJob) GetInstanceList(tenantId string) ([]*models.AlarmInstance, error) {
 	pageVO, err := slb.GetSlbInstancePage(nil, pageIndex, pageSize, tenantId)
 	if err != nil {
