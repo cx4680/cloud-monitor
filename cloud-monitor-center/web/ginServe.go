@@ -54,6 +54,7 @@ func loadPlugin(cfg config.Serve) {
 		//router.Use(middleware.GinLogger())
 	}
 	//自定义组件
+	router.Use(middleware.Recovery())
 	router.Use(middleware.Cors())
 	router.Use(middleware.Auth())
 }

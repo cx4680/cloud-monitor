@@ -162,7 +162,7 @@ func (dao *AlarmRuleDao) deleteOthers(tx *gorm.DB, ruleId string) {
 }
 
 func getNotifyChannel(notifyChannel string) int {
-	notify, _ := strconv.Atoi(GetConfigItem(nil, "33", notifyChannel).Code)
+	notify, _ := strconv.Atoi(ConfigItem.GetConfigItem(nil, "33", notifyChannel).Code)
 	return notify
 }
 

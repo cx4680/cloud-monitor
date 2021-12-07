@@ -16,11 +16,11 @@ func loadRouters() {
 	monitorItemRouters()
 	alertContactRouters()
 	alertContactGroupRouters()
-	alarmRule()
-	instance()
-	alertRecord()
-
+	alarmRuleRouters()
+	instanceRouters()
+	alertRecordRouters()
 	actuatorMapping()
+	configItemRouters()
 }
 
 func monitorProductRouters() {
@@ -65,7 +65,7 @@ func alertContactGroupRouters() {
 	}
 }
 
-func alarmRule() {
+func alarmRuleRouters() {
 	ruleCtl := controllers.NewAlarmRuleCtl(commonDao.AlarmRule)
 	group := router.Group("/hawkeye/rule/")
 	{
@@ -78,7 +78,7 @@ func alarmRule() {
 	}
 }
 
-func instance() {
+func instanceRouters() {
 	ctl := controllers.NewInstanceCtl(commonDao.Instance)
 	group := router.Group("/hawkeye/instance/")
 	{
@@ -89,7 +89,7 @@ func instance() {
 	}
 }
 
-func alertRecord() {
+func alertRecordRouters() {
 	ctl := controllers.NewAlertRecordController()
 	group := router.Group("/hawkeye/alertRecord/")
 	{
@@ -114,5 +114,20 @@ func actuatorMapping() {
 		group.GET("/metrics", func(c *gin.Context) {
 			c.JSON(http.StatusOK, actuator.Metrics())
 		})
+	}
+}
+
+func configItemRouters() {
+	ctl := controllers.NewConfigItemCtl()
+	group := router.Group("/hawkeye/configItem/")
+	{
+		group.GET("/getStatisticalPeriodList", ctl.GetStatisticalPeriodList)
+		group.GET("/getContinuousCycleList", ctl.GetContinuousCycleList)
+		group.GET("/getStatisticalMethodsList", ctl.GetStatisticalMethodsList)
+		group.GET("/getComparisonMethodList", ctl.GetComparisonMethodList)
+		group.GET("/getOverviewItemList", ctl.GetOverviewItemList)
+		group.GET("/getRegionList", ctl.GetRegionList)
+		group.GET("/getMonitorRange", ctl.GetMonitorRange)
+		group.GET("/getNoticeChannel", ctl.GetNoticeChannel)
 	}
 }

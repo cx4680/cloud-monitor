@@ -8,7 +8,7 @@ import (
 func ToString(obj interface{}) string {
 	str, err := json.Marshal(obj)
 	if err != nil {
-		log.Fatalln("序列化json字符串失败", err)
+		log.Printf("序列化json字符串失败 %v", err)
 	}
 	return string(str)
 }
@@ -16,6 +16,6 @@ func ToString(obj interface{}) string {
 func ToObject(str string, obj interface{}) {
 	err := json.Unmarshal([]byte(str), obj)
 	if err != nil {
-		log.Fatalln("反序列化json失败")
+		log.Printf("反序列化json失败,err:%v",err)
 	}
 }
