@@ -1,9 +1,11 @@
 package controllers
 
 import (
+	commonGlobal "code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/service"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/tools"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/dao"
-	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/external/ecs"
-	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/forms"
+	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/external"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/global"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/utils"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/validator/translate"
@@ -19,34 +21,21 @@ func NewInstanceCtl(dao *dao.InstanceDao) *InstanceCtl {
 	return &InstanceCtl{dao}
 }
 
-// Page
-// @Summary Page
-// @Schemes
-// @Description GetById
-// @Tags InstanceCtl
-// @Accept json
-// @Produce json
-// @Param id query  string true "id"
-// @Success 200 {object} vo.InstanceVO
-// @Router /hawkeye/instance/page [get]
-func (ic *InstanceCtl) Page(c *gin.Context) {
-	var params = &forms.EcsQueryPageForm{}
-	if err := c.ShouldBindQuery(params); err != nil {
-		c.JSON(http.StatusBadRequest, translate.GetErrorMsg(err))
+func (ctl *InstanceCtl) GetPage(c *gin.Context) {
+	tenantId, _ := c.Get(commonGlobal.TenantId)
+	form := service.InstancePageForm{}
+	if err := c.ShouldBindQuery(form); err != nil {
+		c.JSON(http.StatusBadRequest, global.NewError(translate.GetErrorMsg(err)))
 		return
 	}
-	tenantId, exists := c.Get("tenantId")
-	if !exists {
-		c.JSON(http.StatusBadRequest, "tenantId not exists")
-		return
-	}
-	params.TenantId = tenantId.(string)
-	ret, err := ecs.PageList(params)
+	form.TenantId = tools.ToString(tenantId)
+	instanceService := external.ProductInstanceServiceMap[form.Product]
+	page, err := instanceService.GetPage(form, instanceService.(service.InstanceStage))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, translate.GetErrorMsg(err))
+		c.JSON(http.StatusInternalServerError, global.NewError("查询失败"))
 		return
 	}
-	c.JSON(http.StatusOK, global.NewSuccess("查询成功", ret))
+	c.JSON(http.StatusOK, global.NewSuccess("查询成功", page))
 }
 
 // GetInstanceNumByRegion
@@ -59,44 +48,24 @@ func (ic *InstanceCtl) Page(c *gin.Context) {
 // @Param id query  string true "id"
 // @Success 200 {object} vo.AlarmInstanceRegionVO
 // @Router /hawkeye/instance/page [get]
-func (ic *InstanceCtl) GetInstanceNumByRegion(ctx *gin.Context) {
-	tenantId, exists := ctx.Get("tenantId")
-	if !exists {
-		ctx.JSON(http.StatusBadRequest, "tenantId not exists")
+func (ctl *InstanceCtl) GetInstanceNumByRegion(c *gin.Context) {
+	tenantId, _ := c.Get(commonGlobal.TenantId)
+	form := service.InstancePageForm{}
+	if err := c.ShouldBindQuery(form); err != nil {
+		c.JSON(http.StatusBadRequest, global.NewError(translate.GetErrorMsg(err)))
 		return
 	}
-	vmParams := &forms.EcsQueryPageForm{}
-	ret, err := ecs.PageList(vmParams)
+	form.TenantId = tools.ToString(tenantId)
+	instanceService := external.ProductInstanceServiceMap["ecs"]
+	page, err := instanceService.GetPage(form, instanceService.(service.InstanceStage))
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, translate.GetErrorMsg(err))
+		c.JSON(http.StatusInternalServerError, global.NewError("查询失败"))
 		return
 	}
-	bindNum := ic.dao.GetInstanceNum(tenantId.(string))
-	total := utils.If(bindNum > ret.Total, bindNum, ret.Total)
+	bindNum := ctl.dao.GetInstanceNum(tenantId.(string))
+	total := utils.If(bindNum > page.Total, bindNum, page.Total)
 	vo := &AlarmInstanceRegionVO{Total: total.(int), BindNum: bindNum}
-	ctx.JSON(http.StatusOK, global.NewSuccess("查询成功", vo))
-}
-
-type UserInstancePageQueryForm struct {
-	InstanceId   string `form:"instanceId,omitempty"`
-	InstanceName string `form:"instanceName,omitempty"`
-	Status       int    `form:"status,omitempty"`
-	StatusList   []int  `form:"statusList,omitempty"`
-	Current      int    `form:"current,omitempty,default=1"`
-	PageSize     int    `form:"pageSize,omitempty,default=10"`
-}
-
-type InstanceVO struct {
-	Id           int
-	InstanceId   string
-	InstanceName string
-	Region       string
-	Ip           string
-
-	/**
-	 * 0: 待处理 1: 启动中 2: 运行中 3: 关机中 4: 停止 5: 重启中 6: 异常 7: 删除 12:未识别, 其他: 未知
-	 */
-	Status int
+	c.JSON(http.StatusOK, global.NewSuccess("查询成功", vo))
 }
 
 type AlarmInstanceRegionVO struct {

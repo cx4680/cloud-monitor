@@ -1,15 +1,15 @@
-package slb
+package external
 
 import (
-	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/external"
-	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
-	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
-	"encoding/json"
-	"github.com/pkg/errors"
-	"strings"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/service"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/tools"
 )
 
-type QueryParam struct {
+type SlbInstanceService struct {
+	service.InstanceServiceImpl
+}
+
+type SlbQueryParam struct {
 	RegionCode  string   `json:"regionCode,omitempty"`
 	Address     string   `json:"address,omitempty"`
 	LbUid       string   `json:"lbUid,omitempty"`
@@ -20,34 +20,27 @@ type QueryParam struct {
 	StateList   []string `json:"stateList,omitempty"`
 }
 
-func GetSlbInstancePage(form *QueryParam, pageIndex int, pageSize int, userCode string) (*QueryPageResult, error) {
-	request := &external.QueryPageRequest{Data: form, PageIndex: pageIndex, PageSize: pageSize}
-	resp, err := external.PageList(userCode, request, config.GetCommonConfig().Nk+"?appId=600006&format=json&method=CESTC_UNHQ_queryLVSMachineList")
-	if err != nil {
-		return nil, err
-	}
-	result := &Response{}
-	if json.Unmarshal(resp, result); err != nil {
-		logger.Logger().Errorf("check result parse  failed, err:%v\n", err)
-		return nil, err
-	}
-	if strings.EqualFold(result.Code, "0") {
-		return &result.Data, nil
-	}
-	return nil, errors.New(result.Msg)
+type SlbQueryPageRequest struct {
+	OrderName string      `json:"orderName,omitempty"`
+	OrderRule string      `json:"OrderRule,omitempty"`
+	PageIndex int         `json:"pageIndex,omitempty"`
+	PageSize  int         `json:"pageSize,omitempty"`
+	Data      interface{} `json:"data,omitempty"`
+	//临时传递
+	TenantId string
 }
 
-type Response struct {
+type SlbResponse struct {
 	Code string
 	Msg  string
-	Data QueryPageResult
+	Data SlbQueryPageResult
 }
-type QueryPageResult struct {
+type SlbQueryPageResult struct {
 	Total int
-	Rows  []*InfoBean
+	Rows  []*SlbInfoBean
 }
 
-type InfoBean struct {
+type SlbInfoBean struct {
 	SubnetId    int         `json:"subnetId"`
 	UnbindEip   interface{} `json:"unbindEip"`
 	OldState    interface{} `json:"oldState"`
@@ -103,4 +96,51 @@ type InfoBean struct {
 	Name       string      `json:"name"`
 	NetworkUid string      `json:"networkUid"`
 	ZoneCode   interface{} `json:"zoneCode"`
+}
+
+func (slb *SlbInstanceService) convertRealForm(form service.InstancePageForm) interface{} {
+	queryParam := SlbQueryParam{
+		Address:   form.ExtraAttr["privateIp"],
+		LbUid:     form.InstanceId,
+		Name:      form.InstanceName,
+		StateList: form.StatusList,
+	}
+	return SlbQueryPageRequest{
+		PageIndex: form.Current,
+		PageSize:  form.PageSize,
+		Data:      queryParam,
+		TenantId:  form.TenantId,
+	}
+}
+
+func (slb *SlbInstanceService) doRequest(url string, form interface{}) (interface{}, error) {
+	var f = form.(SlbQueryPageRequest)
+	respStr, err := tools.HttpPostJson(url, form, map[string]string{"userCode": f.TenantId})
+	if err != nil {
+		return nil, err
+	}
+	var resp SlbResponse
+	tools.ToObject(respStr, &resp)
+	return resp, nil
+}
+
+func (slb *SlbInstanceService) convertResp(realResp interface{}) (int, []service.InstanceCommonVO) {
+	vo := realResp.(SlbResponse)
+	var list []service.InstanceCommonVO
+	if vo.Data.Total > 0 {
+		for _, d := range vo.Data.Rows {
+			list = append(list, service.InstanceCommonVO{
+				Id:   string(rune(d.Id)),
+				Name: d.Name,
+				Labels: []service.InstanceLabel{{
+					Name:  "subnetName",
+					Value: d.SubnetName,
+				}, {
+					Name:  "status",
+					Value: d.State,
+				}},
+			})
+		}
+	}
+	return vo.Data.Total, list
 }
