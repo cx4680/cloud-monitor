@@ -84,12 +84,12 @@ func (dao *K8sPrometheusService) buildPrometheusRule(region string, zone string,
 				continue
 			}
 			alert.Alert = fmt.Sprintf("%s#%s#%s", ruleExpress.RuleId, instance.InstanceId, conditionId)
-			alert.Expr = fmt.Sprintf("%s_over_time(%s{%s}[%s])%s%v", dao2.GetConfigItem(ruleExpress.RuleCondition.Statistics, "3", "").Data, ruleExpress.RuleCondition.MetricName, dao.getLabels(instance.InstanceId, ruleExpress.RuleCondition.Labels), utils.SecToTime(ruleExpress.RuleCondition.Period), dao2.GetConfigItem(ruleExpress.RuleCondition.ComparisonOperator, "4", "").Data, ruleExpress.RuleCondition.Threshold)
+			alert.Expr = fmt.Sprintf("%s_over_time(%s{%s}[%s])%s%v", dao2.ConfigItem.GetConfigItem(ruleExpress.RuleCondition.Statistics, "3", "").Data, ruleExpress.RuleCondition.MetricName, dao.getLabels(instance.InstanceId, ruleExpress.RuleCondition.Labels), utils.SecToTime(ruleExpress.RuleCondition.Period), dao2.ConfigItem.GetConfigItem(ruleExpress.RuleCondition.ComparisonOperator, "4", "").Data, ruleExpress.RuleCondition.Threshold)
 			alert.RuleType = "alert"
 			alert.ForTime = utils.SecToTime(ruleExpress.RuleCondition.Times * ruleExpress.RuleCondition.Period)
 			alert.Summary = dao.getTemplateLabels(ruleExpress.RuleCondition.Labels)
 			labelMaps := map[string]interface{}{}
-			labelMaps["severity"] = dao2.GetConfigItem(ruleExpress.Level, "28", "").Name
+			labelMaps["severity"] = dao2.ConfigItem.GetConfigItem(ruleExpress.Level, "28", "").Name
 			labelMaps["app"] = "hawkeye"
 			labelMaps["namespace"] = "product-cec-hawkeye"
 			alert.Labels = labelMaps
