@@ -1,4 +1,4 @@
-package global
+package iam
 
 import (
 	"code.cestc.cn/yyptb-group_tech/iam-sdk-go/pkg/middleware"
@@ -6,7 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func IamAuthIdentify(identity *models.Identity) gin.HandlerFunc {
+func AuthIdentify(identity *models.Identity) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// IAM鉴权接口
 		err := middleware.AuthIdentify(c, identity, "")

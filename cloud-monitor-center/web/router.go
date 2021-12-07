@@ -2,7 +2,7 @@ package web
 
 import (
 	commonDao "code.cestc.cn/ccos-ops/cloud-monitor/business-common/dao"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/iam"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/actuator"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/controllers"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/service"
@@ -27,7 +27,7 @@ func monitorProductRouters() {
 	monitorProductCtl := controllers.NewMonitorProductCtl(commonDao.MonitorProduct)
 	group := router.Group("/hawkeye/monitorProduct/")
 	{
-		group.GET("/getAllMonitorProducts", global.IamAuthIdentify(&models.Identity{Product: "ECS", Action: "GetInstanceList", ResourceType: "*", ResourceId: "*"}), monitorProductCtl.GetAllMonitorProducts)
+		group.GET("/getAllMonitorProducts", iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetAllMonitorProductsList", ResourceType: "*", ResourceId: "*"}), monitorProductCtl.GetAllMonitorProducts)
 		group.GET("/getById", monitorProductCtl.GetById)
 		group.PUT("/updateById", monitorProductCtl.UpdateById)
 	}
@@ -37,7 +37,7 @@ func monitorItemRouters() {
 	monitorItemCtl := controllers.NewMonitorItemCtl(commonDao.MonitorItem)
 	group := router.Group("/hawkeye/monitorItem/")
 	{
-		group.GET("/getMonitorItemsById", monitorItemCtl.GetMonitorItemsById)
+		group.GET("/getMonitorItemsById", iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetMonitorItemsByIdList", ResourceType: "*", ResourceId: "*"}), monitorItemCtl.GetMonitorItemsById)
 	}
 }
 
@@ -69,12 +69,12 @@ func alarmRule() {
 	ruleCtl := controllers.NewAlarmRuleCtl(commonDao.AlarmRule)
 	group := router.Group("/hawkeye/rule/")
 	{
-		group.POST("/page", ruleCtl.SelectRulePageList)
-		group.POST("/detail", ruleCtl.GetDetail)
-		group.POST("/create", ruleCtl.CreateRule)
-		group.POST("/update", ruleCtl.UpdateRule)
-		group.POST("/delete", ruleCtl.DeleteRule)
-		group.POST("/changeStatus", ruleCtl.ChangeRuleStatus)
+		group.POST("/page", iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetAlertRulePageList", ResourceType: "*", ResourceId: "*"}), ruleCtl.SelectRulePageList)
+		group.POST("/detail", iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetAlertRuleDetail", ResourceType: "*", ResourceId: "*"}), ruleCtl.GetDetail)
+		group.POST("/create", iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "CreateAlertRule", ResourceType: "*", ResourceId: "*"}), ruleCtl.CreateRule)
+		group.POST("/update", iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "UpdateAlertRule", ResourceType: "*", ResourceId: "*"}), ruleCtl.UpdateRule)
+		group.POST("/delete", iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "DeleteAlertRule", ResourceType: "*", ResourceId: "*"}), ruleCtl.DeleteRule)
+		group.POST("/changeStatus", iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "ChangeGetAlertRuleStatus", ResourceType: "*", ResourceId: "*"}), ruleCtl.ChangeRuleStatus)
 	}
 }
 
@@ -82,10 +82,10 @@ func instance() {
 	ctl := controllers.NewInstanceCtl(commonDao.Instance)
 	group := router.Group("/hawkeye/instance/")
 	{
-		group.POST("/rulePage", ctl.Page)
-		group.POST("/unbind", ctl.Unbind)
-		group.POST("/bind", ctl.Bind)
-		group.POST("/ruleList", ctl.GetRuleList)
+		group.POST("/rulePage", iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetInstanceRulePageList", ResourceType: "*", ResourceId: "*"}), ctl.Page)
+		group.POST("/unbind", iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "UnbindInstanceRule", ResourceType: "*", ResourceId: "*"}), ctl.Unbind)
+		group.POST("/bind", iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "BindInstanceRule", ResourceType: "*", ResourceId: "*"}), ctl.Bind)
+		group.POST("/ruleList", iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetInstanceRuleList", ResourceType: "*", ResourceId: "*"}), ctl.GetRuleList)
 	}
 }
 
@@ -93,8 +93,8 @@ func alertRecord() {
 	ctl := controllers.NewAlertRecordController()
 	group := router.Group("/hawkeye/alertRecord/")
 	{
-		group.POST("/page", ctl.GetPageList)
-		group.GET("/detail", ctl.GetDetail)
+		group.POST("/page", iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetAlertRecordPageList", ResourceType: "*", ResourceId: "*"}), ctl.GetPageList)
+		group.GET("/detail", iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetAlertRecordDetail", ResourceType: "*", ResourceId: "*"}), ctl.GetDetail)
 	}
 
 }
