@@ -29,17 +29,19 @@ type TaskActuatorStage struct {
 }
 
 func (ta *TaskActuatorStage) Exec(c *context.Context) error {
-	bt := task.NewBusinessTaskImpl()
-	if err := bt.Add(task.BusinessTaskDTO{
-		Cron: "0 0 0/1 * * ?",
-		Name: "clearAlertRecordJob",
-		Task: task.Clear,
-	}); err != nil {
-		return err
-	}
+	var err error
+	go func() {
+		bt := task.NewBusinessTaskImpl()
+		err = bt.Add(task.BusinessTaskDTO{
+			Cron: "0 0 0/1 * * ?",
+			Name: "clearAlertRecordJob",
+			Task: task.Clear,
+		})
 
-	bt.Start()
-	return nil
+		bt.Start()
+		defer bt.Stop()
+	}()
+	return err
 }
 
 type MQActuatorStage struct {

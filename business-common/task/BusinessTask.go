@@ -46,3 +46,7 @@ func (t *BusinessTaskImpl) Start() {
 	t.c.Start()
 	//defer t.c.Stop()
 }
+
+func (t *BusinessTaskImpl) Stop() {
+	t.c.Stop()
+}
