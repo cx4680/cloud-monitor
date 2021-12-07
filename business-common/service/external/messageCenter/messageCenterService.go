@@ -65,7 +65,7 @@ func (s *Service) doSend(smsMessageReqDTO *SmsMessageReqDTO) error {
 		log.Println("send message is empty")
 		return nil
 	}
-	resp, err := tools.HttpPostJson(config.GetCommonConfig().SmsCenterPath, *smsMessageReqDTO)
+	resp, err := tools.HttpPostJson(config.GetCommonConfig().SmsCenterPath, *smsMessageReqDTO, nil)
 	if err != nil {
 		log.Fatal("send message to msgCenter fail", err)
 		return err

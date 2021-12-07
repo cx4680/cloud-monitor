@@ -33,36 +33,7 @@ type TaskActuatorStage struct {
 
 func (ta *TaskActuatorStage) Exec(c *context.Context) error {
 	bt := commonTask.NewBusinessTaskImpl()
-	corn := "0 0 0/1 * * ?"
-	if err := bt.Add(commonTask.BusinessTaskDTO{
-		Cron: corn,
-		Name: "instanceJob",
-		Task: task.NewEcsJob().SyncJob,
-	}); err != nil {
-		return err
-	}
-	if err := bt.Add(commonTask.BusinessTaskDTO{
-		Cron: corn,
-		Task: task.NewSlbJob().SyncJob,
-	}); err != nil {
-		return err
-	}
-	if err := bt.Add(commonTask.BusinessTaskDTO{
-		Cron: corn,
-		Task: task.NewEipJob().SyncJob,
-	}); err != nil {
-		return err
-	}
-	if err := bt.Add(commonTask.BusinessTaskDTO{
-		Cron: corn,
-		Task: task.NewCbrJob().SyncJob,
-	}); err != nil {
-		return err
-	}
-	if err := bt.Add(commonTask.BusinessTaskDTO{
-		Cron: corn,
-		Task: task.NewNatJob().SyncJob,
-	}); err != nil {
+	if err := task.AddSyncJobs(bt); err != nil {
 		return err
 	}
 	bt.Start()

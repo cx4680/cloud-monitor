@@ -54,12 +54,17 @@ func HttpPostForm(path string, params map[string][]string) (string, error) {
 
 }
 
-func HttpPostJson(path string, params interface{}) (string, error) {
+func HttpPostJson(path string, params interface{}, headers map[string]string) (string, error) {
 	req, err := http.NewRequest("POST", path, bytes.NewBuffer([]byte(ToString(params))))
 	if err != nil {
 		return "", err
 	}
 	req.Header.Set("Content-Type", "application/json")
+	if headers != nil && len(headers) > 0 {
+		for k, v := range headers {
+			req.Header.Set(k, v)
+		}
+	}
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
