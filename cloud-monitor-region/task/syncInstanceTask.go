@@ -7,6 +7,7 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/models"
 	commonService "code.cestc.cn/ccos-ops/cloud-monitor/business-common/service"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/task"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/tools"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/external"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/mq/producer"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/service"
@@ -16,16 +17,17 @@ import (
 func AddSyncJobs(bt *task.BusinessTaskImpl) error {
 	list := dao.MonitorProduct.SelectMonitorProductList()
 	for _, product := range *list {
-		err := bt.Add(task.BusinessTaskDTO{
-			//TODO cron from product
-			Cron: "",
-			Name: product.Name,
-			Task: func() {
-				_ = Run(product.Description)
-			},
-		})
-		if err != nil {
-			return err
+		if tools.IsNotBlank(product.Cron) {
+			err := bt.Add(task.BusinessTaskDTO{
+				Cron: product.Cron,
+				Name: product.Name,
+				Task: func() {
+					_ = Run(product.Description)
+				},
+			})
+			if err != nil {
+				return err
+			}
 		}
 	}
 	return nil
