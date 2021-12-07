@@ -4,8 +4,9 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/dao"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/errors"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/models"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/service"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/constant"
-	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/external/ecs"
+	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/external"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/forms"
 	"fmt"
 	"strconv"
@@ -153,23 +154,26 @@ func getMonitorItemByName(name string) models.MonitorItem {
 
 //查询租户的ECS实例列表
 func getEcsInstances() (string, error) {
-	var form = forms.EcsQueryPageForm{
+	form := service.InstancePageForm{
 		TenantId: "210011082310350",
-		//TenantId: param.TenantId,
 		Current:  1,
 		PageSize: 1000,
+		Product:  "ecs",
 	}
-	rows, err := ecs.PageList(&form)
+
+	instanceService := external.ProductInstanceServiceMap["ecs"]
+	page, err := instanceService.GetPage(form, instanceService.(service.InstanceStage))
+
 	if err != nil {
 		return "", err
 	}
-	if rows == nil || rows.Rows == nil {
+	if page.Total <= 0 {
 		return "", nil
 	}
 	var instanceList []string
-	for _, ecsVO := range rows.Rows {
-		if ecsVO.InstanceId != "" {
-			instanceList = append(instanceList, ecsVO.InstanceId)
+	for _, ecsVO := range page.Records.([]service.InstanceCommonVO) {
+		if ecsVO.Id != "" {
+			instanceList = append(instanceList, ecsVO.Id)
 		}
 	}
 	return strings.Join(instanceList, "|"), nil
