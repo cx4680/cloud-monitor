@@ -13,6 +13,7 @@ require (
 	github.com/go-playground/validator/v10 v10.9.0
 	github.com/gohouse/converter v0.0.3
 	github.com/google/uuid v1.3.0
+	github.com/pkg/errors v0.9.1
 	gorm.io/gorm v1.22.1
 )
 
@@ -33,7 +34,6 @@ require (
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/natefinch/lumberjack v2.0.0+incompatible // indirect
-	github.com/pkg/errors v0.9.1 // indirect
 	github.com/robfig/cron v1.2.0 // indirect
 	github.com/sirupsen/logrus v1.8.1 // indirect
 	github.com/tidwall/gjson v1.9.4 // indirect

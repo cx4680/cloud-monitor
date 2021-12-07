@@ -56,5 +56,5 @@ func (mpd *AlarmInstanceDao) DeleteInstanceList(tenantId string, models []*model
 	}
 	sql1 := strings.Join(arr, "','")
 	var i int
-	global.DB.Raw(fmt.Sprintf(sql, tenantId, sql1)).Find(i)
+	global.DB.Raw(fmt.Sprintf(sql, tenantId, sql1)).Find(&i)
 }

@@ -5,6 +5,8 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/vo"
 	"encoding/json"
 	"fmt"
+	"net/http"
+	"net/url"
 	"strconv"
 	"testing"
 	"unsafe"
@@ -46,12 +48,25 @@ func TestDelete1(t *testing.T) {
 }
 
 func TestSafe1(t *testing.T) {
-	d := vo.PageVO{
-		Records: "gg",
-	}
-	marshal, err := json.Marshal(d)
+	get, err := http.Get("http://10.255.191.82:30090/api/v1/query?query=" + url.QueryEscape("ebs_stock_all{instance=\"10.150.132.138:8080\"}"))
 	if err != nil {
-
+		fmt.Printf("%v", err)
 	}
-	fmt.Printf("%+v", string(marshal))
+	fmt.Printf("%v", get)
+}
+
+func TestSafe2(t *testing.T) {
+	apiUrl := "http://127.0.0.1:9090/get"
+	// URL param
+	data := url.Values{}
+	data.Set("name", "小王子")
+	data.Set("age", "18")
+	u, err := url.ParseRequestURI(apiUrl)
+	if err != nil {
+		fmt.Printf("parse url requestUrl failed, err:%v\n", err)
+	}
+	u.RawQuery = data.Encode()
+	fmt.Println(u.String())
+	resp, _ := http.Get(u.String())
+	fmt.Println(resp)
 }
