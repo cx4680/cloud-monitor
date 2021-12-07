@@ -3,6 +3,7 @@ package service
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/dao"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/tools"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/vo"
 	"github.com/pkg/errors"
 )
@@ -71,6 +72,8 @@ func (is *InstanceServiceImpl) getRequestUrl(product string) (string, error) {
 	if p == nil {
 		return "", errors.New("产品配置有误")
 	}
-	//TODO 返回url字段拼接
-	return "", nil
+	if tools.IsBlank(p.Host) || tools.IsBlank(p.PageUrl) {
+		return "", errors.New("产品配置有误")
+	}
+	return p.Host + p.PageUrl, nil
 }
