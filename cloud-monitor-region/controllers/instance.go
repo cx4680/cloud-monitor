@@ -56,7 +56,7 @@ func (ctl *InstanceCtl) GetInstanceNumByRegion(c *gin.Context) {
 		return
 	}
 	form.TenantId = tools.ToString(tenantId)
-	instanceService := external.ProductInstanceServiceMap["ecs"]
+	instanceService := external.ProductInstanceServiceMap[external.ECS]
 	page, err := instanceService.GetPage(form, instanceService.(service.InstanceStage))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, global.NewError("查询失败"))

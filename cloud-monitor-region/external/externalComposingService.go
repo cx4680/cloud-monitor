@@ -2,20 +2,29 @@ package external
 
 import commonService "code.cestc.cn/ccos-ops/cloud-monitor/business-common/service"
 
+//已接入的产品简称
+const (
+	ECS = "ecs"
+	CBR = "cbr"
+	EIP = "eip"
+	NAT = "nat"
+	SLB = "slb"
+)
+
 var ProductInstanceServiceMap = map[string]commonService.InstanceService{
-	"cbr": &CbrInstanceService{
+	CBR: &CbrInstanceService{
 		InstanceServiceImpl: commonService.InstanceServiceImpl{},
 	},
-	"ecs": &EcsInstanceService{
+	ECS: &EcsInstanceService{
 		InstanceServiceImpl: commonService.InstanceServiceImpl{},
 	},
-	"eip": &EipInstanceService{
+	EIP: &EipInstanceService{
 		InstanceServiceImpl: commonService.InstanceServiceImpl{},
 	},
-	"nat": &NatInstanceService{
+	NAT: &NatInstanceService{
 		InstanceServiceImpl: commonService.InstanceServiceImpl{},
 	},
-	"slb": &SlbInstanceService{
+	SLB: &SlbInstanceService{
 		InstanceServiceImpl: commonService.InstanceServiceImpl{},
 	},
 }

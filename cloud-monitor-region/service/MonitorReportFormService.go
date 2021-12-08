@@ -161,7 +161,7 @@ func getEcsInstances() (string, error) {
 		Product:  "ecs",
 	}
 
-	instanceService := external.ProductInstanceServiceMap["ecs"]
+	instanceService := external.ProductInstanceServiceMap[external.ECS]
 	page, err := instanceService.GetPage(form, instanceService.(service.InstanceStage))
 
 	if err != nil {
