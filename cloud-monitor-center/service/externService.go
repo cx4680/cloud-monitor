@@ -4,7 +4,6 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/tools"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
 	"fmt"
-	"net/http"
 )
 
 type ExternService struct {
@@ -16,11 +15,7 @@ func NewExternService() *ExternService {
 
 func (externService *ExternService) GetRegionList(tenantId string) ([]*ResultBean, error) {
 	path := fmt.Sprintf("%s?format=json&method=%s&appId=%s", config.GetCommonConfig().Nk, "QUERY_REGION_INFO", "CESTC_UNHQ_queryPoolsByLoginId")
-	header := http.Header{}
-	header.Add("userCode", tenantId)
-	param := map[string]string{}
-	param["loginId"] = tenantId
-	json, err := tools.HttpHeaderPostJson(path, header, param)
+	json, err := tools.HttpPostJson(path, map[string]string{"loginId": tenantId}, map[string]string{"userCode": tenantId})
 	if err != nil {
 		return nil, err
 	}

@@ -122,12 +122,12 @@ func configItemRouters() {
 	group := router.Group("/hawkeye/configItem/")
 	{
 		group.GET("/getStatisticalPeriodList", ctl.GetStatisticalPeriodList)
-		group.GET("/getContinuousCycleList", ctl.GetContinuousCycleList)
-		group.GET("/getStatisticalMethodsList", ctl.GetStatisticalMethodsList)
-		group.GET("/getComparisonMethodList", ctl.GetComparisonMethodList)
-		group.GET("/getOverviewItemList", ctl.GetOverviewItemList)
+		group.GET("/getContinuousCycleList", iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetContinuousCycleList", ResourceType: "*", ResourceId: "*"}), ctl.GetContinuousCycleList)
+		group.GET("/getStatisticalMethodsList", iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetStatisticalMethodsList", ResourceType: "*", ResourceId: "*"}), ctl.GetStatisticalMethodsList)
+		group.GET("/getComparisonMethodList", iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetComparisonMethodList", ResourceType: "*", ResourceId: "*"}), ctl.GetComparisonMethodList)
+		group.GET("/getOverviewItemList", iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetOverviewItemList", ResourceType: "*", ResourceId: "*"}), ctl.GetOverviewItemList)
 		group.GET("/getRegionList", ctl.GetRegionList)
-		group.GET("/getMonitorRange", ctl.GetMonitorRange)
+		group.GET("/getMonitorRange", iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetMonitorRangeList", ResourceType: "*", ResourceId: "*"}), ctl.GetMonitorRange)
 		group.GET("/getNoticeChannel", ctl.GetNoticeChannel)
 	}
 }

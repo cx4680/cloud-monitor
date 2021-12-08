@@ -78,7 +78,7 @@ type SlbInfoBean struct {
 	BandWidthUid  string        `json:"bandWidthUid"`
 	Address       string        `json:"address"`
 	LbUid         string        `json:"lbUid"`
-	Ip            interface{}   `json:"ip"`
+	Ip            string        `json:"ip"`
 	StateList     interface{}   `json:"stateList"`
 	EipInstaceUid interface{}   `json:"eipInstaceUid"`
 	FloatingIpUid string        `json:"floatingIpUid"`
@@ -130,14 +130,20 @@ func (slb *SlbInstanceService) convertResp(realResp interface{}) (int, []service
 	if vo.Data.Total > 0 {
 		for _, d := range vo.Data.Rows {
 			list = append(list, service.InstanceCommonVO{
-				Id:   string(rune(d.Id)),
+				Id:   d.LbUid,
 				Name: d.Name,
 				Labels: []service.InstanceLabel{{
-					Name:  "subnetName",
-					Value: d.SubnetName,
+					Name:  "eipIp",
+					Value: d.Eip.Ip,
 				}, {
-					Name:  "status",
-					Value: d.State,
+					Name:  "privateIp",
+					Value: d.Ip,
+				}, {
+					Name:  "vpcName",
+					Value: d.NetworkName,
+				}, {
+					Name:  "vpcId",
+					Value: d.NetworkUid,
 				}},
 			})
 		}

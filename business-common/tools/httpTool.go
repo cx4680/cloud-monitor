@@ -78,23 +78,3 @@ func HttpPostJson(path string, params interface{}, headers map[string]string) (s
 	}
 	return string(body), nil
 }
-
-func HttpHeaderPostJson(path string, header http.Header,params interface{}) (string, error) {
-	req, err := http.NewRequest(http.MethodPost, path, bytes.NewBuffer([]byte(ToString(params))))
-	if err != nil {
-		return "", err
-	}
-	req.Header=header
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return "", err
-	}
-	return string(body), nil
-}

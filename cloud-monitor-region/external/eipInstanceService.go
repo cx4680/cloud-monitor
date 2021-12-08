@@ -110,11 +110,17 @@ func (eip *EipInstanceService) convertResp(realResp interface{}) (int, []service
 				Id:   d.InstanceUid,
 				Name: d.Name,
 				Labels: []service.InstanceLabel{{
-					Name:  "ipAddress",
+					Name:  "eipAddress",
 					Value: d.IpAddress,
 				}, {
 					Name:  "status",
 					Value: string(rune(d.Status)),
+				}, {
+					Name:  "bandWidth",
+					Value: string(rune(d.BandWidth)),
+				}, {
+					Name:  "bindInstanceId",
+					Value: d.BandWidthUid,
 				}},
 			})
 		}
