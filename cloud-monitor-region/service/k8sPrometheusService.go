@@ -3,7 +3,6 @@ package service
 import (
 	dao2 "code.cestc.cn/ccos-ops/cloud-monitor/business-common/dao"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/sysComponent/sysRedis"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/dtos"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/errors"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/forms"
@@ -11,11 +10,10 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/models"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/utils"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
-	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"strings"
-	"time"
 )
 
 type K8sPrometheusService struct {
@@ -30,35 +28,10 @@ func (dao *K8sPrometheusService) GenerateUserPrometheusRule(tenantId string) {
 		logger.Logger().Infof(err.Error())
 		return
 	}
-	key := "hawkeye-rule-" + tenantId
-	result := true
-	ctx := context.Background()
-	for result {
-		success, err := sysRedis.GetClient().SetNX(ctx, key, 1, time.Minute).Result()
-		if err != nil {
-			return
-		}
-		if !success {
-			time.Sleep(time.Second)
-		}
-		result = !success
+	err = k8s.ApplyAlertRule(alertRuleDTO)
+	if err != nil {
+		log.Printf("调用api apply 规格失败 %+v", err)
 	}
-	id := dao.getUserPrometheusId(tenantId)
-	if len(id) > 0 {
-		alertRuleDTO.AlertRuleId = id
-		err := k8s.UpdateAlertRule(alertRuleDTO)
-		if err != nil {
-			logger.Logger().Errorf("规则更新失败%+v", err)
-		}
-	} else {
-		_, err := k8s.CreateAlertRule(alertRuleDTO)
-		if err != nil {
-			logger.Logger().Errorf("规则创建失败%+v", err)
-		} else {
-			dao.createUserPrometheus(alertRuleDTO, tenantId)
-		}
-	}
-	sysRedis.GetClient().Del(ctx, key)
 }
 
 func (dao *K8sPrometheusService) createUserPrometheus(alertRuleDTO *forms.AlertRuleDTO, tenantId string) {
@@ -136,9 +109,7 @@ func (dao *K8sPrometheusService) getTemplateLabels(labelStr string) string {
 }
 
 func (dao *K8sPrometheusService) getUserPrometheusId(tenantId string) string {
-	prometheus := &models.UserPrometheusID{
-		TenantID: tenantId,
-	}
-	global.DB.Find(prometheus)
+	prometheus := &models.UserPrometheusID{}
+	global.DB.Where("tenant_id=?", tenantId).Find(prometheus)
 	return prometheus.PrometheusRuleID
 }

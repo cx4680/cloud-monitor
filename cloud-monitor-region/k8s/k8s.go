@@ -31,7 +31,7 @@ var resource *schema.GroupVersionResource
 func InitK8s() error {
 	var config *rest.Config
 	if strings.EqualFold(c.GetCommonConfig().Env, "local") {
-		cfg, err := clientcmd.BuildConfigFromFlags("", "k8s-config-local.yml")
+		cfg, err := clientcmd.BuildConfigFromFlags("", "D:\\dev-go\\cloud-monitor\\cloud-monitor-region\\k8s-config-local.yml")
 		if err != nil {
 			return err
 		}
@@ -133,4 +133,18 @@ func alertRuleToObject(alertRuleDTO *forms.AlertRuleDTO) *map[string]interface{}
 	spec["groups"] = &array
 	result["spec"] = &spec
 	return &result
+}
+
+func ApplyAlertRule(alertRuleDTO *forms.AlertRuleDTO) error {
+	rules := alertRuleToObject(alertRuleDTO)
+	requestObj, err2 := json.Marshal(rules)
+	if err2 != nil {
+		logger.Logger().Errorf("调用api更新规则失败%v", err2)
+		return errors.NewBussinessError(3, "调用api更新规则失败")
+	}
+	_, err := client.Resource(*resource).Namespace(namespace).Patch(context.TODO(), alertRuleDTO.TenantId, types.ApplyPatchType, requestObj, metav1.ApplyOptions{FieldManager: "application/apply-patch"}.ToPatchOptions())
+	if err != nil {
+		return err
+	}
+	return nil
 }
