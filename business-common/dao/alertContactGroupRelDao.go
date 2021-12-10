@@ -22,6 +22,7 @@ func (d *AlertContactGroupRelDao) InsertBatch(db *gorm.DB, list []*models.AlertC
 	if len(list) == 0 {
 		return
 	}
+
 	currentTime := tools.GetNowStr()
 	for _, v := range list {
 		v.CreateTime = currentTime

@@ -63,9 +63,44 @@ func (s *AlertContactGroupRelService) PersistenceLocal(db *gorm.DB, param interf
 }
 
 func (s *AlertContactGroupRelService) insertAlertContactRel(db *gorm.DB, p forms.AlertContactParam) ([]*models.AlertContactGroupRel, error) {
-	list, err := s.getAlertContactGroupRelList(db, p)
-	if err != nil {
-		return nil, err
+	var list []*models.AlertContactGroupRel
+	var count int64
+	if len(p.ContactIdList) > 0 {
+		if len(p.ContactIdList) > constants.MaxContactNum {
+			return nil, errors.NewBusinessError("联系组限制添加" + strconv.Itoa(constants.MaxContactNum) + "个联系人")
+		}
+		for _, contactId := range p.ContactIdList {
+			db.Model(&models.AlertContactGroupRel{}).Where("tenant_id = ? AND contact_id = ?", p.TenantId, contactId).Count(&count)
+			if count >= constants.MaxContactNum {
+				return nil, errors.NewBusinessError("有联系人已加入" + strconv.Itoa(constants.MaxContactGroup) + "个联系组")
+			}
+			alertContactGroupRel := &models.AlertContactGroupRel{
+				Id:         strconv.FormatInt(snowflake.GetWorker().NextId(), 10),
+				TenantId:   p.TenantId,
+				ContactId:  contactId,
+				GroupId:    p.GroupId,
+				CreateUser: p.CreateUser,
+			}
+			list = append(list, alertContactGroupRel)
+		}
+	} else if len(p.GroupIdList) > 0 {
+		if len(p.GroupIdList) > constants.MaxContactGroup {
+			return nil, errors.NewBusinessError("联系人限制加入" + strconv.Itoa(constants.MaxContactGroup) + "个联系组")
+		}
+		for _, groupId := range p.GroupIdList {
+			db.Model(&models.AlertContactGroupRel{}).Where("tenant_id = ? AND group_id = ?", p.TenantId, groupId).Count(&count)
+			if count >= constants.MaxContactNum {
+				return nil, errors.NewBusinessError("有联系组已有" + strconv.Itoa(constants.MaxContactNum) + "个联系人")
+			}
+			alertContactGroupRel := &models.AlertContactGroupRel{
+				Id:         strconv.FormatInt(snowflake.GetWorker().NextId(), 10),
+				TenantId:   p.TenantId,
+				ContactId:  p.ContactId,
+				GroupId:    groupId,
+				CreateUser: p.CreateUser,
+			}
+			list = append(list, alertContactGroupRel)
+		}
 	}
 	s.dao.InsertBatch(db, list)
 	return list, nil

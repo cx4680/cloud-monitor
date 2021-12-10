@@ -2,6 +2,7 @@ package service
 
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/dao"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/dtos"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/errors"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/forms"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/models"
@@ -10,8 +11,11 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/enums"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/utils/snowflake"
+	"encoding/json"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
+	"io/ioutil"
+	"net/http"
 	"strconv"
 	"strings"
 )
@@ -33,10 +37,14 @@ func (s *AlertContactInformationService) PersistenceLocal(db *gorm.DB, param int
 	p := param.(forms.AlertContactParam)
 	switch p.EventEum {
 	case enums.InsertAlertContact:
-		List := s.insertAlertContactInformation(db, p)
+		list := s.insertAlertContactInformation(db, p)
+		// TODO 激活邮箱
+		//for _, information := range list {
+		//	sendCertifyMsg(information.TenantId, information.ContactId, information.No, information.Type, information.ActiveCode)
+		//}
 		return tools.ToString(forms.MqMsg{
 			EventEum: enums.InsertAlertContactInformation,
-			Data:     List,
+			Data:     list,
 		}), nil
 	case enums.UpdateAlertContact:
 		List := s.updateAlertContactInformation(db, p)
@@ -115,4 +123,56 @@ func (s *AlertContactInformationService) getInformationList(p forms.AlertContact
 		infoList = append(infoList, alertContactInformationEmail)
 	}
 	return infoList
+}
+
+//发送激活信息
+func sendCertifyMsg(tenantId string, contactId string, no string, noType int, activeCode string) {
+	if no == "" {
+		return
+	}
+	params := make(map[string]string)
+	params["userName"] = getTenantName(tenantId)
+	params["verifyBtn"] = "/#/alarm/activation?code=" + activeCode
+	params["activationlink"] = "code=" + activeCode
+	var noticeMsgDTO = dtos.NoticeMsgDTO{}
+	if noType == 1 {
+		noticeMsgDTO.MsgEvent = dtos.MsgEvent{
+			Type:   dtos.Phone, //TODO 枚举
+			Source: dtos.VERIFY,
+		}
+	} else {
+		noticeMsgDTO.MsgEvent = dtos.MsgEvent{
+			Type:   dtos.Email, //TODO 枚举
+			Source: dtos.VERIFY,
+		}
+	}
+	noticeMsgDTO.TenantId = tenantId
+	noticeMsgDTO.SourceId = "activation-" + contactId
+	var recvObjectBean = dtos.RecvObjectBean{
+		RecvObject:     no,
+		RecvObjectType: 2,
+		NoticeContent:  tools.ToString(params),
+	}
+	noticeMsgDTO.RevObjectBean = recvObjectBean
+	var noticeMsgDTOList []*dtos.NoticeMsgDTO
+	noticeMsgDTOList = append(noticeMsgDTOList, &noticeMsgDTO)
+	//TODO
+	//service.NewMessageService(dao.NotificationRecord).SendMsg(noticeMsgDTOList, true)
+}
+
+//获取租户名字
+func getTenantName(tenantId string) string {
+	var request = strings.NewReader("{\"loginId\":\"" + tenantId + "\"}")
+	response, err := http.Post(config.GetCommonConfig().TenantUrl, "application/json; charset=utf-8", request)
+	if err != nil {
+		return "未命名"
+	}
+	data, err := ioutil.ReadAll(response.Body)
+	var result map[string]map[string]map[string]string
+	err = json.Unmarshal(data, &result)
+	if result["module"] != nil {
+		return result["module"]["login"]["loginCode"]
+	} else {
+		return result["result"]["login"]["loginCode"]
+	}
 }

@@ -45,11 +45,11 @@ func alertContactRouters() {
 	alertContactCtl := controllers.NewAlertContactCtl(service.AlertContactService{})
 	group := router.Group("/hawkeye/alertContact/")
 	{
-		group.GET("/getAlertContact", alertContactCtl.GetAlertContact)
-		group.POST("/setAlertContact", alertContactCtl.InsertAlertContact)
-		group.POST("/updateAlertContact", alertContactCtl.UpdateAlertContact)
-		group.POST("/deleteAlertContact", alertContactCtl.DeleteAlertContact)
-		group.GET("/certifyAlertContact", alertContactCtl.CertifyAlertContact)
+		group.GET("/getAlertContact", iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetAlertContact", ResourceType: "*", ResourceId: "*"}), alertContactCtl.GetAlertContact)
+		group.POST("/setAlertContact", iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "SetAlertContact", ResourceType: "*", ResourceId: "*"}), alertContactCtl.InsertAlertContact)
+		group.POST("/updateAlertContact", iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "UpdateAlertContact", ResourceType: "*", ResourceId: "*"}), alertContactCtl.UpdateAlertContact)
+		group.POST("/deleteAlertContact", iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "DeleteAlertContact", ResourceType: "*", ResourceId: "*"}), alertContactCtl.DeleteAlertContact)
+		group.GET("/certifyAlertContact", iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "CertifyAlertContact", ResourceType: "*", ResourceId: "*"}), alertContactCtl.CertifyAlertContact)
 	}
 }
 
@@ -57,11 +57,11 @@ func alertContactGroupRouters() {
 	alertContactGroupCtl := controllers.NewAlertContactGroupCtl(service.AlertContactGroupService{})
 	group := router.Group("/hawkeye/alertContactGroup/")
 	{
-		group.GET("/getAlertContactGroup", alertContactGroupCtl.GetAlertContactGroup)
-		group.GET("/getAlertContact", alertContactGroupCtl.GetAlertGroupContact)
-		group.POST("/setAlertContactGroup", alertContactGroupCtl.InsertAlertContactGroup)
-		group.POST("/updateAlertContactGroup", alertContactGroupCtl.UpdateAlertContactGroup)
-		group.POST("/deleteAlertContactGroup", alertContactGroupCtl.DeleteAlertContactGroup)
+		group.GET("/getAlertContactGroup", iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetAlertContactGroup", ResourceType: "*", ResourceId: "*"}), alertContactGroupCtl.GetAlertContactGroup)
+		group.GET("/getAlertContact", iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetAlertContact", ResourceType: "*", ResourceId: "*"}), alertContactGroupCtl.GetAlertGroupContact)
+		group.POST("/setAlertContactGroup", iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "SetAlertContactGroup", ResourceType: "*", ResourceId: "*"}), alertContactGroupCtl.InsertAlertContactGroup)
+		group.POST("/updateAlertContactGroup", iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "UpdateAlertContactGroup", ResourceType: "*", ResourceId: "*"}), alertContactGroupCtl.UpdateAlertContactGroup)
+		group.POST("/deleteAlertContactGroup", iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "DeleteAlertContactGroup", ResourceType: "*", ResourceId: "*"}), alertContactGroupCtl.DeleteAlertContactGroup)
 	}
 }
 

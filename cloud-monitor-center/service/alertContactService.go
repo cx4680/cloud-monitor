@@ -94,11 +94,10 @@ func (s *AlertContactService) PersistenceLocal(db *gorm.DB, param interface{}) (
 		}
 		return tools.ToString(msg), nil
 	case enums.CertifyAlertContact:
-		activeCode := param.(string)
-		s.dao.CertifyAlertContact(activeCode)
+		s.dao.CertifyAlertContact(p.ActiveCode)
 		msg := forms.MqMsg{
 			EventEum: enums.CertifyAlertContact,
-			Data:     activeCode,
+			Data:     p.ActiveCode,
 		}
 		return tools.ToString(msg), nil
 	default:
@@ -106,10 +105,8 @@ func (s *AlertContactService) PersistenceLocal(db *gorm.DB, param interface{}) (
 	}
 }
 
-func (s *AlertContactService) Select(param forms.AlertContactParam) *forms.AlertContactFormPage {
-	param.TenantId = "1"
-	db := global.DB
-	return s.dao.Select(db, param)
+func (s *AlertContactService) SelectAlertContact(param forms.AlertContactParam) *forms.AlertContactFormPage {
+	return s.dao.Select(global.DB, param)
 }
 
 func (s *AlertContactService) insertAlertContact(db *gorm.DB, p forms.AlertContactParam) (*models.AlertContact, error) {
@@ -136,6 +133,13 @@ func (s *AlertContactService) insertAlertContact(db *gorm.DB, p forms.AlertConta
 }
 
 func (s *AlertContactService) updateAlertContact(db *gorm.DB, p forms.AlertContactParam) (*models.AlertContact, error) {
+	//校验联系人是否为该租户所有
+	var check int64
+	db.Model(&models.AlertContact{}).Where("tenant_id = ? AND contact_id = ?", p.TenantId, p.ContactId).Count(&check)
+	if check == 0 {
+		return nil, errors.NewBusinessError("该租户无此联系人")
+	}
+
 	currentTime := tools.GetNowStr()
 	var alertContact = &models.AlertContact{
 		Id:          p.ContactId,

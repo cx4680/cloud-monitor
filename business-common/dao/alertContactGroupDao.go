@@ -1,21 +1,71 @@
 package dao
 
 import (
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/constants"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/errors"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/forms"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/models"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/tools"
-	"code.cestc.cn/ccos-ops/cloud-monitor/common/utils/snowflake"
 	"gorm.io/gorm"
-	"strconv"
 )
 
 type AlertContactGroupDao struct {
 }
 
 var AlertContactGroup = new(AlertContactGroupDao)
+
+const (
+	SelectAlterContactGroup = "SELECT " +
+		"acg.id AS group_id, " +
+		"acg.name AS group_name, " +
+		"acg.description AS description, " +
+		"acg.create_time AS create_time, " +
+		"acg.update_time AS update_time, " +
+		"COUNT( acgr.group_id ) AS contact_count " +
+		"FROM " +
+		"alert_contact_group AS acg " +
+		"LEFT JOIN alert_contact_group_rel AS acgr ON acg.id = acgr.group_id AND acg.tenant_id = acgr.tenant_id " +
+		"WHERE " +
+		"acg.tenant_id = ? " +
+		"AND acg.name LIKE CONCAT('%',?,'%') " +
+		"GROUP BY " +
+		"acg.id " +
+		"ORDER BY " +
+		"acg.create_time DESC "
+
+	SelectAlterGroupContact = "SELECT " +
+		"ac.id AS contact_id, " +
+		"ac.name AS contact_name, " +
+		"acg.group_id AS group_id, " +
+		"acg.group_name AS group_name, " +
+		"GROUP_CONCAT( CASE aci.type WHEN 1 THEN aci.NO END ) AS phone, " +
+		"GROUP_CONCAT( CASE aci.type WHEN 1 THEN aci.is_certify END ) AS phone_certify, " +
+		"GROUP_CONCAT( CASE aci.type WHEN 2 THEN aci.NO END ) AS email, " +
+		"GROUP_CONCAT( CASE aci.type WHEN 2 THEN aci.is_certify END ) AS email_certify, " +
+		"GROUP_CONCAT( CASE aci.type WHEN 3 THEN aci.NO END ) AS lanxin, " +
+		"GROUP_CONCAT( CASE aci.type WHEN 3 THEN aci.is_certify END ) AS lanxin_certify, " +
+		"ac.description AS description " +
+		"FROM " +
+		"alert_contact AS ac " +
+		"LEFT JOIN alert_contact_information AS aci ON ac.id = aci.contact_id AND ac.tenant_id = aci.tenant_id " +
+		"LEFT JOIN ( " +
+		"SELECT " +
+		"acgr.contact_id AS contact_id, " +
+		"acgr.tenant_id AS tenant_id, " +
+		"GROUP_CONCAT( acg.id ) AS group_id, " +
+		"GROUP_CONCAT( acg.name ) AS group_name " +
+		"FROM " +
+		"alert_contact_group AS acg " +
+		"LEFT JOIN alert_contact_group_rel AS acgr ON acg.id = acgr.group_id AND acg.tenant_id = acgr.tenant_id " +
+		"GROUP BY " +
+		"acgr.contact_id ) " +
+		"AS acg ON ac.id = acg.contact_id AND ac.tenant_id = acg.tenant_id " +
+		"WHERE " +
+		"ac.status = 1 " +
+		"AND ac.tenant_id = ? " +
+		"AND acg.group_id = ? " +
+		"GROUP BY " +
+		"ac.id " +
+		"ORDER BY " +
+		"ac.create_time DESC "
+)
 
 func (d *AlertContactGroupDao) SelectAlertContactGroup(db *gorm.DB, param forms.AlertContactParam) *[]forms.AlertContactGroupForm {
 	var model = &[]forms.AlertContactGroupForm{}
@@ -39,144 +89,4 @@ func (d *AlertContactGroupDao) Update(db *gorm.DB, entity *models.AlertContactGr
 
 func (d *AlertContactGroupDao) Delete(db *gorm.DB, entity *models.AlertContactGroup) {
 	db.Where("tenant_id = ? AND id = ?", entity.TenantId, entity.Id).Delete(models.AlertContactGroup{})
-}
-
-func (d *AlertContactGroupDao) InsertGroupRelBatch(db *gorm.DB, list []*models.AlertContactGroupRel) {
-	now := tools.GetNowStr()
-	for _, rel := range list {
-		rel.Id = strconv.FormatInt(snowflake.GetWorker().NextId(), 10)
-		rel.UpdateTime = now
-		rel.CreateTime = now
-	}
-	db.Create(list)
-}
-
-func (d *AlertContactGroupDao) InsertAlertContactGroup(param forms.AlertContactGroupParam) error {
-	var tx = global.DB.Begin()
-
-	var count int64
-	global.DB.Model(&models.AlertContactGroup{}).Where("tenant_id = ?", param.TenantId).Count(&count)
-	if count >= constants.MaxGroupNum {
-		return errors.NewBusinessError("联系组限制创建" + strconv.Itoa(constants.MaxGroupNum) + "个")
-	}
-	global.DB.Model(&models.AlertContactGroup{}).Where("tenant_id = ?", param.TenantId).Where("name = ?", param.GroupName).Count(&count)
-	if count >= 1 {
-		return errors.NewBusinessError("联系组名重复")
-	}
-	currentTime := tools.GetNowStr()
-	groupId := strconv.FormatInt(snowflake.GetWorker().NextId(), 10)
-	param.GroupId = groupId
-	var alertContactGroup = models.AlertContactGroup{
-		Id:          groupId,
-		TenantId:    param.TenantId,
-		Name:        param.GroupName,
-		Description: param.Description,
-		CreateUser:  param.CreateUser,
-		CreateTime:  currentTime,
-		UpdateTime:  currentTime,
-	}
-	tx = tx.Create(alertContactGroup)
-
-	// 添加联系人组关联
-	err := d.insertAlertContactGroupRel(param, currentTime)
-	if err != nil {
-		tx.Rollback()
-		return err
-	}
-	tx.Commit()
-	return nil
-}
-
-func (d *AlertContactGroupDao) UpdateAlertContactGroup(param forms.AlertContactGroupParam) error {
-	var tx = global.DB.Begin()
-
-	var count int64
-	tx.Model(&models.AlertContactGroup{}).Where("tenant_id = ?", param.TenantId).Where("name = ?", param.GroupName).Count(&count)
-	if count >= 1 {
-		return errors.NewBusinessError("联系组名重复")
-	}
-	currentTime := tools.GetNowStr()
-	var alertContactGroup = &models.AlertContactGroup{
-		Id:          param.GroupId,
-		TenantId:    param.TenantId,
-		Name:        param.GroupName,
-		Description: param.Description,
-		UpdateTime:  currentTime,
-	}
-	tx.Model(alertContactGroup).Updates(alertContactGroup)
-
-	//更新联系人关联
-	err := d.updateAlertContactGroupRel(param, currentTime)
-	if err != nil {
-		tx.Rollback()
-		return err
-	}
-	tx.Commit()
-	return nil
-}
-
-func (d *AlertContactGroupDao) DeleteAlertContactGroup(param forms.AlertContactGroupParam) error {
-	var tx = global.DB.Begin()
-
-	var model models.AlertContactGroup
-	tx.Delete(&model, param.GroupId)
-	//删除联系人关联
-	err := d.deleteAlertContactGroupRel(param.GroupId)
-	if err != nil {
-		tx.Rollback()
-		return err
-	}
-	tx.Commit()
-	return nil
-}
-
-//新增联系人关联
-func (d *AlertContactGroupDao) insertAlertContactGroupRel(param forms.AlertContactGroupParam, currentTime string) error {
-	//return errors.NewBusinessError("事务test")
-	if len(param.ContactIdList) == 0 {
-		return nil
-	}
-	var count int64
-	global.DB.Model(&models.AlertContactGroupRel{}).Where("tenant_id = ?", param.TenantId).Where("group_id", param.GroupId).Count(&count)
-	if count >= constants.MaxContactNum {
-		return errors.NewBusinessError("每组联系人限制" + strconv.Itoa(constants.MaxContactNum) + "个")
-	}
-	for _, contactId := range param.ContactIdList {
-		var alertContactGroupRel = &models.AlertContactGroupRel{
-			Id:         strconv.FormatInt(snowflake.GetWorker().NextId(), 10),
-			TenantId:   param.TenantId,
-			ContactId:  contactId,
-			GroupId:    param.GroupId,
-			CreateUser: param.CreateUser,
-			CreateTime: currentTime,
-			UpdateTime: currentTime,
-		}
-		db := global.DB.Create(alertContactGroupRel)
-		if db.Error != nil {
-			return errors.NewBusinessError("添加失败")
-		}
-	}
-	return nil
-}
-
-//更新联系人关联
-func (d *AlertContactGroupDao) updateAlertContactGroupRel(param forms.AlertContactGroupParam, currentTime string) error {
-	//清除旧联系人组关联
-	deleteErr := d.deleteAlertContactGroupRel(param.GroupId)
-	//添加新联系人组关联
-	insertErr := d.insertAlertContactGroupRel(param, currentTime)
-	if deleteErr != nil && insertErr != nil {
-		return errors.NewBusinessError("修改失败")
-	}
-	return nil
-}
-
-//删除联系人关联
-func (d *AlertContactGroupDao) deleteAlertContactGroupRel(groupId string) error {
-	var tx = global.DB.Begin()
-	db := tx.Where("group_id = ?", groupId).Delete(models.AlertContactGroupRel{})
-	if db.Error != nil {
-		return errors.NewBusinessError("删除失败")
-	}
-	return nil
 }

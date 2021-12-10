@@ -28,7 +28,7 @@ func (acl *AlertContactCtl) GetAlertContact(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, translate.GetErrorMsg(err))
 		return
 	}
-	c.JSON(http.StatusOK, global.NewSuccess("查询成功", acl.service.Select(param)))
+	c.JSON(http.StatusOK, global.NewSuccess("查询成功", acl.service.SelectAlertContact(param)))
 }
 
 func (acl *AlertContactCtl) InsertAlertContact(c *gin.Context) {
@@ -81,6 +81,17 @@ func (acl *AlertContactCtl) DeleteAlertContact(c *gin.Context) {
 }
 
 func (acl *AlertContactCtl) CertifyAlertContact(c *gin.Context) {
-	activeCode := c.Query("activeCode")
-	c.JSON(http.StatusOK, global.NewSuccess("激活成功", acl.service.CertifyAlertContact(activeCode)))
+	var param forms.AlertContactParam
+	err := c.ShouldBindQuery(param)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, translate.GetErrorMsg(err))
+		return
+	}
+	param.EventEum = enums.CertifyAlertContact
+	err = alertContactService.Persistence(alertContactService, sysRocketMq.AlertContactTopic, param)
+	if err != nil {
+		c.JSON(http.StatusOK, global.NewError(err.Error()))
+	} else {
+		c.JSON(http.StatusOK, global.NewSuccess("删除成功", true))
+	}
 }
