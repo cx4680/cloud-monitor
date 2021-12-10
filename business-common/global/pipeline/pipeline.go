@@ -2,51 +2,38 @@ package pipeline
 
 import "context"
 
-type Actuator interface {
-	Exec(c *context.Context) error
-}
+type Actuator func(c *context.Context) error
 
 type Pipeline interface {
-	Actuator
 	First(Actuator) Pipeline
 	Then(Actuator) Pipeline
+	Exec(*context.Context) error
 }
 
 type ActuatorPipeline struct {
 	Actuator Actuator
 }
 
-type ComposingActuator struct {
-	First  Actuator
-	Second Actuator
-}
-
-func (p *ActuatorPipeline) First(actuator Actuator) Pipeline {
-	p.Actuator = actuator
+func (p *ActuatorPipeline) First(ac Actuator) Pipeline {
+	p.Actuator = ac
 	return p
 }
 
-func (p *ActuatorPipeline) Then(actuator Actuator) Pipeline {
-	state := &ComposingActuator{
-		First:  p.Actuator,
-		Second: actuator,
-	}
+func (p *ActuatorPipeline) Then(ac Actuator) Pipeline {
 	return &ActuatorPipeline{
-		Actuator: state,
+		Actuator: func(c *context.Context) error {
+			if err := p.Actuator(c); err != nil {
+				return err
+			}
+			if err := ac(c); err != nil {
+				return err
+			}
+			return nil
+		},
 	}
 
 }
 
 func (p *ActuatorPipeline) Exec(c *context.Context) error {
-	return p.Actuator.Exec(c)
-}
-
-func (ps *ComposingActuator) Exec(c *context.Context) error {
-	if err := ps.First.Exec(c); err != nil {
-		return err
-	}
-	if err := ps.Second.Exec(c); err != nil {
-		return err
-	}
-	return nil
+	return p.Actuator(c)
 }

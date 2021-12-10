@@ -7,22 +7,6 @@ import (
 	"flag"
 )
 
-type ConfigActuatorStage struct {
-}
-
-func (ca *ConfigActuatorStage) Exec(c *context.Context) error {
-	var cf = flag.String("config", "config.local.yml", "config.yml path")
-	flag.Parse()
-	return config.InitConfig(*cf)
-}
-
-type SysComponentActuatorStage struct {
-}
-
-func (sa *SysComponentActuatorStage) Exec(c *context.Context) error {
-	return sysComponent.InitSys()
-}
-
 type SysLoader interface {
 	AddStage(Actuator) SysLoader
 	Start() (*context.Context, error)
@@ -33,7 +17,14 @@ type MainLoader struct {
 }
 
 func NewMainLoader() *MainLoader {
-	pipeline := (&ActuatorPipeline{}).First(&ConfigActuatorStage{}).Then(&SysComponentActuatorStage{})
+	pipeline := (&ActuatorPipeline{}).First(func(c *context.Context) error {
+		var cf = flag.String("config", "config.local.yml", "config.yml path")
+		flag.Parse()
+		return config.InitConfig(*cf)
+	},
+	).Then(func(c *context.Context) error {
+		return sysComponent.InitSys()
+	})
 	return &MainLoader{Pipeline: pipeline}
 }
 
