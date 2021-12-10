@@ -7,7 +7,6 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/errors"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/forms"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/k8s"
-	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/models"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/utils"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
 	"encoding/json"
@@ -32,14 +31,6 @@ func (dao *K8sPrometheusService) GenerateUserPrometheusRule(tenantId string) {
 	if err != nil {
 		log.Printf("调用api apply 规格失败 %+v", err)
 	}
-}
-
-func (dao *K8sPrometheusService) createUserPrometheus(alertRuleDTO *forms.AlertRuleDTO, tenantId string) {
-	prometheus := &models.UserPrometheusID{
-		PrometheusRuleID: alertRuleDTO.AlertRuleId,
-		TenantID:         tenantId,
-	}
-	global.DB.Create(prometheus)
 }
 
 func (dao *K8sPrometheusService) buildPrometheusRule(region string, zone string, tenantId string) (*forms.AlertRuleDTO, error) {
@@ -106,10 +97,4 @@ func (dao *K8sPrometheusService) getTemplateLabels(labelStr string) string {
 	}
 	s := builder.String()
 	return s[0:strings.LastIndex(s, ",")]
-}
-
-func (dao *K8sPrometheusService) getUserPrometheusId(tenantId string) string {
-	prometheus := &models.UserPrometheusID{}
-	global.DB.Where("tenant_id=?", tenantId).Find(prometheus)
-	return prometheus.PrometheusRuleID
 }

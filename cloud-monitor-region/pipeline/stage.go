@@ -7,7 +7,6 @@ import (
 	commonTask "code.cestc.cn/ccos-ops/cloud-monitor/business-common/task"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/tools"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/k8s"
-	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/models"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/mq/consumer"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/task"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/validator/translate"
@@ -75,8 +74,6 @@ type ProjectInitializerFetch struct {
 func (p *ProjectInitializerFetch) Fetch(db *gorm.DB) ([]interface{}, []string, error) {
 	var tables []interface{}
 	var sqls []string
-
-	tables = append(tables, &models.UserPrometheusID{})
 
 	//加载SQL
 	sqlBytes, err := ioutil.ReadFile("script/region.sql")

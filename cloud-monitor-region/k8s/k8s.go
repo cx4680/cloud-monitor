@@ -7,9 +7,7 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
 	"context"
 	"encoding/json"
-	"fmt"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/dynamic"
@@ -31,7 +29,7 @@ var resource *schema.GroupVersionResource
 func InitK8s() error {
 	var config *rest.Config
 	if strings.EqualFold(c.GetCommonConfig().Env, "local") {
-		cfg, err := clientcmd.BuildConfigFromFlags("", "D:\\dev-go\\cloud-monitor\\cloud-monitor-region\\k8s-config-local.yml")
+		cfg, err := clientcmd.BuildConfigFromFlags("", "k8s-config-local.yml")
 		if err != nil {
 			return err
 		}
@@ -53,36 +51,6 @@ func InitK8s() error {
 		Group:    group,
 		Version:  version,
 		Resource: plural,
-	}
-	return nil
-}
-
-func CreateAlertRule(alertRuleDTO *forms.AlertRuleDTO) (*forms.AlertRuleDTO, error) {
-	requestObj := alertRuleToObject(alertRuleDTO)
-	rules := &unstructured.Unstructured{
-		Object: *requestObj,
-	}
-	create, err := client.Resource(*resource).Namespace(namespace).Create(context.TODO(), rules, metav1.CreateOptions{})
-	if err != nil {
-		sprintf := fmt.Sprintf("调用api创建规格失败 %+v", err)
-		return nil, errors.NewBussinessError(2, sprintf)
-	}
-	alertRuleDTO.AlertRuleId = alertRuleDTO.TenantId
-	fmt.Printf("%v", create)
-	return alertRuleDTO, nil
-}
-
-func UpdateAlertRule(alertRuleDTO *forms.AlertRuleDTO) error {
-	rules := alertRuleToObject(alertRuleDTO)
-	requestObj, err2 := json.Marshal(rules)
-	if err2 != nil {
-		logger.Logger().Errorf("调用api更新规则失败%v", err2)
-		return errors.NewBussinessError(3, "调用api更新规则失败")
-	}
-	_, err := client.Resource(*resource).Namespace(namespace).Patch(context.TODO(), alertRuleDTO.AlertRuleId, types.MergePatchType, requestObj, metav1.PatchOptions{})
-	if err != nil {
-		logger.Logger().Errorf("调用api更新规则失败%v", err)
-		return errors.NewBussinessError(3, "调用api更新规则失败")
 	}
 	return nil
 }

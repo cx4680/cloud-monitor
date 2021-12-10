@@ -16,6 +16,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/swaggo/gin-swagger v1.3.1
 	github.com/swaggo/swag v1.7.3
+	golang.org/x/net v0.0.0-20210928044308-7d9f5e0b762b
 	gorm.io/driver/mysql v1.1.2
 	gorm.io/gorm v1.22.1
 	k8s.io/apimachinery v0.22.3
@@ -66,7 +67,6 @@ require (
 	go.uber.org/multierr v1.7.0 // indirect
 	go.uber.org/zap v1.19.1 // indirect
 	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519 // indirect
-	golang.org/x/net v0.0.0-20210928044308-7d9f5e0b762b // indirect
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d // indirect
 	golang.org/x/sys v0.0.0-20211007075335-d3039528d8ac // indirect
 	golang.org/x/term v0.0.0-20210220032956-6a3ed077a48d // indirect
