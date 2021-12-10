@@ -2,7 +2,6 @@ package pipeline
 
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/tools"
-	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/models"
 	"gorm.io/gorm"
 	"io/ioutil"
 	"log"
