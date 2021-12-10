@@ -80,7 +80,7 @@ func (ecs *EcsInstanceService) convertResp(realResp interface{}) (int, []service
 				Name: d.InstanceName,
 				Labels: []service.InstanceLabel{{
 					Name:  "status",
-					Value: string(rune(d.Status)),
+					Value: strconv.Itoa(d.Status),
 				}},
 			})
 		}

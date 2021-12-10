@@ -3,6 +3,7 @@ package external
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/service"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/tools"
+	"strconv"
 )
 
 type NatInstanceService struct {
@@ -91,7 +92,7 @@ func (nat *NatInstanceService) convertResp(realResp interface{}) (int, []service
 	if vo.Data.Total > 0 {
 		for _, d := range vo.Data.Rows {
 			list = append(list, service.InstanceCommonVO{
-				Id:   string(rune(d.Id)),
+				Id:   strconv.Itoa(d.Id),
 				Name: d.Name,
 				Labels: []service.InstanceLabel{{
 					Name:  "subnetName",

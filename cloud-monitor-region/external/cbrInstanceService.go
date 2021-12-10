@@ -3,6 +3,7 @@ package external
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/service"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/tools"
+	"strconv"
 )
 
 type CbrInstanceService struct {
@@ -44,8 +45,8 @@ func (c *CbrInstanceService) convertRealForm(form service.InstancePageForm) inte
 		TenantId:   form.TenantId,
 		VaultId:    form.InstanceId,
 		VaultName:  form.InstanceName,
-		PageNumber: string(rune(form.Current)),
-		PageSize:   string(rune(form.PageSize)),
+		PageNumber: strconv.Itoa(form.Current),
+		PageSize:   strconv.Itoa(form.PageSize),
 	}
 	if form.StatusList != nil {
 		param.Status = form.StatusList[0]

@@ -174,10 +174,10 @@ func (s *AlertRecordAddService) checkAndBuild(alerts []*forms.AlertRecordAlertsB
 				if tools.IsNotBlank(ruleDesc.Unit) {
 					targetValue = ruleDesc.Unit
 				}
-				targetValue = string(rune(ruleDesc.TargetValue)) + targetValue
+				targetValue = strconv.Itoa(ruleDesc.TargetValue) + targetValue
 				objMap["targetValue"] = targetValue
 			} else if st == messageCenter.ALERT_OPEN {
-				objMap["targetValue"] = string(rune(ruleDesc.TargetValue))
+				objMap["targetValue"] = strconv.Itoa(ruleDesc.TargetValue)
 			}
 
 			objMap["evaluationCount"] = getTime(ruleDesc.Time)
@@ -291,7 +291,7 @@ func getLabelMap(summary string) map[string]string {
 }
 
 func getTime(time int) string {
-	return "持续" + string(rune(time)) + "个周期"
+	return "持续" + strconv.Itoa(time) + "个周期"
 }
 
 func (s *AlertRecordAddService) predicate(alert *forms.AlertRecordAlertsBean) (bool, error) {

@@ -131,9 +131,9 @@ func (s *MessageService) SmsMarginReminder(sender string) {
 
 	params := make(map[string]string)
 	params["userName"] = loginName
-	params["msgUsed"] = string(rune(alreadySendNum))
-	params["msgLeft"] = string(rune(constants.MaxSmsNum - alreadySendNum))
-	params["msgInitial"] = string(rune(constants.MaxSmsNum))
+	params["msgUsed"] = strconv.Itoa(alreadySendNum)
+	params["msgLeft"] = strconv.Itoa(constants.MaxSmsNum - alreadySendNum)
+	params["msgInitial"] = strconv.Itoa(constants.MaxSmsNum)
 
 	remainderMsg := messageCenter.MessageSendDTO{
 		SenderId: sender,
@@ -189,9 +189,9 @@ func (s *MessageService) sendNotification(sender string, num int) []commonModels
 
 	params := make(map[string]string)
 	params["userName"] = logingName
-	params["msgUsed"] = string(rune(num))
-	params["msgLeft"] = string(rune(constants.MaxSmsNum - num))
-	params["msgInitial"] = string(rune(constants.MaxSmsNum))
+	params["msgUsed"] = strconv.Itoa(num)
+	params["msgLeft"] = strconv.Itoa(constants.MaxSmsNum - num)
+	params["msgInitial"] = strconv.Itoa(constants.MaxSmsNum)
 
 	var noticeMsgDTOList []*dtos.NoticeMsgDTO
 	noticeMsgDTO := dtos.NoticeMsgDTO{

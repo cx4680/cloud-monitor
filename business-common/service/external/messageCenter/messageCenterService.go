@@ -5,6 +5,7 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
 	"github.com/google/uuid"
 	"log"
+	"strconv"
 	"strings"
 )
 
@@ -46,7 +47,7 @@ func (s *Service) buildReq(msgList []MessageSendDTO) (req *SmsMessageReqDTO) {
 			})
 		}
 		list = append(list, MessagesBean{
-			MsgEventCode:   string(rune(msg.SourceType)),
+			MsgEventCode:   strconv.Itoa(int(msg.SourceType)),
 			RecvObjectList: recvList,
 		})
 

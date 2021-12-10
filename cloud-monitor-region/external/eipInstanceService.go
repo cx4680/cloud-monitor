@@ -114,10 +114,10 @@ func (eip *EipInstanceService) convertResp(realResp interface{}) (int, []service
 					Value: d.IpAddress,
 				}, {
 					Name:  "status",
-					Value: string(rune(d.Status)),
+					Value: strconv.Itoa(d.Status),
 				}, {
 					Name:  "bandWidth",
-					Value: string(rune(d.BandWidth)),
+					Value: strconv.Itoa(d.BandWidth),
 				}, {
 					Name:  "bindInstanceId",
 					Value: d.BandWidthUid,
