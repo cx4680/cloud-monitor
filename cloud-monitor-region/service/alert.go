@@ -315,21 +315,3 @@ func (s *AlertRecordAddService) persistence(list []commonModels.AlertRecord) err
 func (s *AlertRecordAddService) sendNotice(alertMsgList []service.AlertMsgSendDTO) error {
 	return s.MessageSvc.SendMsg(alertMsgList, false)
 }
-
-type RuleChangeFilter struct {
-	AlertRecordDao *commonDao.AlertRecordDao
-}
-
-func (f *RuleChangeFilter) DoFilter(alert *forms.AlertRecordAlertsBean) (bool, error) {
-	ruleDesc := &commonDtos.RuleDesc{}
-	tools.ToObject(alert.Annotations.Description, ruleDesc)
-	if ruleDesc == nil {
-		return false, errors.New("序列化告警数据失败")
-	}
-	//	判断该条告警对应的规则是否删除、禁用、解绑
-	if num := f.AlertRecordDao.FindAlertRuleBindNum(ruleDesc.InstanceId, ruleDesc.RuleId); num <= 0 {
-		log.Println("此告警规则已删除/禁用/解绑")
-		return false, nil
-	}
-	return true, nil
-}
