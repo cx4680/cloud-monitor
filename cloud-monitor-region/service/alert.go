@@ -19,12 +19,10 @@ import (
 	"strings"
 )
 
-type Filter interface {
-	DoFilter(alert *forms.AlertRecordAlertsBean) (bool, error)
-}
+type filter func(*forms.AlertRecordAlertsBean) (bool, error)
 
 type AlertRecordAddService struct {
-	FilterChain    []Filter
+	FilterChain    []filter
 	AlertRecordSvc *AlertRecordService
 	MessageSvc     *service.MessageService
 	TenantSvc      *service.TenantService
@@ -33,8 +31,18 @@ type AlertRecordAddService struct {
 
 func NewAlertRecordAddService(AlertRecordSvc *AlertRecordService, MessageSvc *service.MessageService, TenantSvc *service.TenantService) *AlertRecordAddService {
 	return &AlertRecordAddService{
-		FilterChain: []Filter{&RuleChangeFilter{
-			AlertRecordDao: commonDao.AlertRecord,
+		FilterChain: []filter{func(alert *forms.AlertRecordAlertsBean) (bool, error) {
+			ruleDesc := &commonDtos.RuleDesc{}
+			tools.ToObject(alert.Annotations.Description, ruleDesc)
+			if ruleDesc == nil {
+				return false, errors.New("序列化告警数据失败")
+			}
+			//	判断该条告警对应的规则是否删除、禁用、解绑
+			if num := commonDao.AlertRecord.FindAlertRuleBindNum(ruleDesc.InstanceId, ruleDesc.RuleId); num <= 0 {
+				log.Println("此告警规则已删除/禁用/解绑")
+				return false, nil
+			}
+			return true, nil
 		}},
 		AlertRecordSvc: AlertRecordSvc,
 		MessageSvc:     MessageSvc,
@@ -287,8 +295,8 @@ func getTime(time int) string {
 }
 
 func (s *AlertRecordAddService) predicate(alert *forms.AlertRecordAlertsBean) (bool, error) {
-	for _, filter := range s.FilterChain {
-		ret, err := filter.DoFilter(alert)
+	for _, f := range s.FilterChain {
+		ret, err := f(alert)
 		if err != nil {
 			return false, err
 		}
@@ -306,22 +314,4 @@ func (s *AlertRecordAddService) persistence(list []commonModels.AlertRecord) err
 
 func (s *AlertRecordAddService) sendNotice(alertMsgList []service.AlertMsgSendDTO) error {
 	return s.MessageSvc.SendMsg(alertMsgList, false)
-}
-
-type RuleChangeFilter struct {
-	AlertRecordDao *commonDao.AlertRecordDao
-}
-
-func (f *RuleChangeFilter) DoFilter(alert *forms.AlertRecordAlertsBean) (bool, error) {
-	ruleDesc := &commonDtos.RuleDesc{}
-	tools.ToObject(alert.Annotations.Description, ruleDesc)
-	if ruleDesc == nil {
-		return false, errors.New("序列化告警数据失败")
-	}
-	//	判断该条告警对应的规则是否删除、禁用、解绑
-	if num := f.AlertRecordDao.FindAlertRuleBindNum(ruleDesc.InstanceId, ruleDesc.RuleId); num <= 0 {
-		log.Println("此告警规则已删除/禁用/解绑")
-		return false, nil
-	}
-	return true, nil
 }
