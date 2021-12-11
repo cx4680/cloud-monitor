@@ -2,10 +2,10 @@ package service
 
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/dao"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/enums"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/forms"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/sysComponent/sysRocketMq"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/mq"
-	"code.cestc.cn/ccos-ops/cloud-monitor/common/enums"
 	"gorm.io/gorm"
 	"strings"
 )

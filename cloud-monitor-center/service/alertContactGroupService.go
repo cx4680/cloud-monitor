@@ -3,6 +3,7 @@ package service
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/constants"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/dao"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/enums"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/errors"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/forms"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
@@ -10,7 +11,6 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/models"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/service"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/tools"
-	"code.cestc.cn/ccos-ops/cloud-monitor/common/enums"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/utils/snowflake"
 	"gorm.io/gorm"
 	"strconv"
@@ -107,9 +107,7 @@ func (s *AlertContactGroupService) SelectAlertContactGroup(param forms.AlertCont
 }
 
 func (s *AlertContactGroupService) SelectAlertGroupContact(param forms.AlertContactParam) *[]forms.AlertContactForm {
-	param.TenantId = "1"
-	db := global.DB
-	return s.dao.SelectAlertGroupContact(db, param)
+	return s.dao.SelectAlertGroupContact(global.DB, param)
 }
 
 func (s *AlertContactGroupService) insertAlertContactGroup(db *gorm.DB, p forms.AlertContactParam) (*models.AlertContactGroup, error) {

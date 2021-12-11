@@ -2,10 +2,11 @@ package consumer
 
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/dao"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/enums"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/forms"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/models"
-	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/forms"
-	"code.cestc.cn/ccos-ops/cloud-monitor/common/enums"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
 	"encoding/json"
 	"fmt"
 	"github.com/apache/rocketmq-client-go/v2/primitive"
@@ -53,7 +54,7 @@ func AlertContactHandler(msgs []*primitive.MessageExt) {
 			data, _ := json.Marshal(MqMsg.Data)
 			var activeCode string
 			MsgErr = json.Unmarshal(data, &activeCode)
-			dao.AlertContact.CertifyAlertContact(activeCode)
+			dao.AlertContact.CertifyAlertContact(global.DB, activeCode)
 		case enums.InsertAlertContactGroupRel:
 			data, _ := json.Marshal(MqMsg.Data)
 			var modelList []*models.AlertContactGroupRel
@@ -61,15 +62,18 @@ func AlertContactHandler(msgs []*primitive.MessageExt) {
 			dao.AlertContactGroupRel.InsertBatch(global.DB, modelList)
 		case enums.UpdateAlertContactGroupRel:
 			data, _ := json.Marshal(MqMsg.Data)
-			var modelList []*models.AlertContactGroupRel
-			MsgErr = json.Unmarshal(data, &modelList)
-			dao.AlertContactGroupRel.Update(global.DB, modelList)
+			var model updateAlertContactGroupRel
+			MsgErr = json.Unmarshal(data, &model)
+			dao.AlertContactGroupRel.Update(global.DB, model.RelList, model.Param)
 		case enums.DeleteAlertContactGroupRel:
 			data, _ := json.Marshal(MqMsg.Data)
 			var model *models.AlertContactGroupRel
 			MsgErr = json.Unmarshal(data, &model)
 			dao.AlertContactGroupRel.Delete(global.DB, model)
 		}
+	}
+	if MsgErr != nil {
+		logger.Logger().Errorf("%v", MsgErr)
 	}
 }
 
@@ -85,9 +89,9 @@ func AlertContactGroupHandler(msgs []*primitive.MessageExt) {
 			dao.AlertContactGroupRel.InsertBatch(global.DB, modelList)
 		case enums.UpdateAlertContactGroupRel:
 			data, _ := json.Marshal(MqMsg.Data)
-			var modelList []*models.AlertContactGroupRel
-			MsgErr = json.Unmarshal(data, &modelList)
-			dao.AlertContactGroupRel.Update(global.DB, modelList)
+			var model updateAlertContactGroupRel
+			MsgErr = json.Unmarshal(data, &model)
+			dao.AlertContactGroupRel.Update(global.DB, model.RelList, model.Param)
 		case enums.DeleteAlertContactGroupRel:
 			data, _ := json.Marshal(MqMsg.Data)
 			var model *models.AlertContactGroupRel
@@ -110,4 +114,12 @@ func AlertContactGroupHandler(msgs []*primitive.MessageExt) {
 			dao.AlertContactGroup.Delete(global.DB, model)
 		}
 	}
+	if MsgErr != nil {
+		logger.Logger().Errorf("%v", MsgErr)
+	}
+}
+
+type updateAlertContactGroupRel struct {
+	RelList []*models.AlertContactGroupRel
+	Param   forms.AlertContactParam
 }

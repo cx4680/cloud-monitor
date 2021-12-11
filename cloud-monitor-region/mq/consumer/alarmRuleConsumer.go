@@ -2,12 +2,10 @@ package consumer
 
 import (
 	commonDao "code.cestc.cn/ccos-ops/cloud-monitor/business-common/dao"
-	commonForm "code.cestc.cn/ccos-ops/cloud-monitor/business-common/forms"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/enums"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/forms"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
-	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/forms"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/service"
-
-	"code.cestc.cn/ccos-ops/cloud-monitor/common/enums"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
 	"encoding/json"
 	"fmt"
@@ -35,45 +33,45 @@ func handleMsg(MqMsg forms.MqMsg, data []byte) {
 	var tenantId string
 	switch MqMsg.EventEum {
 	case enums.CreateRule:
-		var param commonForm.AlarmRuleAddReqDTO
+		var param forms.AlarmRuleAddReqDTO
 		if err := json.Unmarshal(data, &param); err != nil {
 			return
 		}
 		ruleDao.SaveRule(global.DB, &param)
 		tenantId = param.TenantId
 	case enums.UpdateRule:
-		var param commonForm.AlarmRuleAddReqDTO
+		var param forms.AlarmRuleAddReqDTO
 		if err := json.Unmarshal(data, &param); err != nil {
 			return
 		}
 		ruleDao.UpdateRule(global.DB, &param)
 		tenantId = param.TenantId
 	case enums.EnableRule:
-		var param commonForm.RuleReqDTO
+		var param forms.RuleReqDTO
 		if err := json.Unmarshal(data, &param); err != nil {
 			return
 		}
 		ruleDao.UpdateRuleState(global.DB, &param)
 	case enums.DisableRule:
-		var param commonForm.RuleReqDTO
+		var param forms.RuleReqDTO
 		if err := json.Unmarshal(data, &param); err != nil {
 			return
 		}
 		ruleDao.UpdateRuleState(global.DB, &param)
 	case enums.DeleteRule:
-		var param commonForm.RuleReqDTO
+		var param forms.RuleReqDTO
 		if err := json.Unmarshal(data, &param); err != nil {
 			return
 		}
 		ruleDao.DeleteRule(global.DB, &param)
 	case enums.UnbindRule:
-		var param commonForm.UnBindRuleParam
+		var param forms.UnBindRuleParam
 		if err := json.Unmarshal(data, &param); err != nil {
 			return
 		}
 		instanceDao.UnbindInstance(global.DB, &param)
 	case enums.BindRule:
-		var param commonForm.InstanceBindRuleDTO
+		var param forms.InstanceBindRuleDTO
 		if err := json.Unmarshal(data, &param); err != nil {
 			return
 		}

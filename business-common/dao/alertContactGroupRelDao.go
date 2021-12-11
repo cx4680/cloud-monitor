@@ -78,14 +78,14 @@ func (d *AlertContactGroupRelDao) InsertBatch(db *gorm.DB, list []*models.AlertC
 	db.Create(list)
 }
 
-func (d *AlertContactGroupRelDao) Update(db *gorm.DB, list []*models.AlertContactGroupRel) {
+func (d *AlertContactGroupRelDao) Update(db *gorm.DB, list []*models.AlertContactGroupRel, param forms.AlertContactParam) {
 	if len(list) == 0 {
 		return
 	}
-	if list[0].ContactId == "" {
-		db.Where("tenant_id = ? AND contact_id = ?", list[0].TenantId, list[0].ContactId).Delete(models.AlertContactGroupRel{})
+	if param.ContactId != "" {
+		db.Where("tenant_id = ? AND contact_id = ?", param.TenantId, param.ContactId).Delete(models.AlertContactGroupRel{})
 	} else {
-		db.Where("tenant_id = ? AND group_id = ?", list[0].TenantId, list[0].GroupId).Delete(models.AlertContactGroupRel{})
+		db.Where("tenant_id = ? AND group_id = ?", param.TenantId, param.GroupId).Delete(models.AlertContactGroupRel{})
 	}
 	d.InsertBatch(db, list)
 }
