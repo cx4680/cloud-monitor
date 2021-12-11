@@ -11,11 +11,8 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/enums"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/utils/snowflake"
-	"encoding/json"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
-	"io/ioutil"
-	"net/http"
 	"strconv"
 	"strings"
 )
@@ -131,7 +128,7 @@ func sendCertifyMsg(tenantId string, contactId string, no string, noType int, ac
 		return
 	}
 	params := make(map[string]string)
-	params["userName"] = getTenantName(tenantId)
+	params["userName"] = service.NewTenantService().GetTenantInfo(tenantId).Name
 	params["verifyBtn"] = "/#/alarm/activation?code=" + activeCode
 	params["activationlink"] = "code=" + activeCode
 	var noticeMsgDTO = dtos.NoticeMsgDTO{}
@@ -158,21 +155,4 @@ func sendCertifyMsg(tenantId string, contactId string, no string, noType int, ac
 	noticeMsgDTOList = append(noticeMsgDTOList, &noticeMsgDTO)
 	//TODO
 	//service.NewMessageService(dao.NotificationRecord).SendMsg(noticeMsgDTOList, true)
-}
-
-//获取租户名字
-func getTenantName(tenantId string) string {
-	var request = strings.NewReader("{\"loginId\":\"" + tenantId + "\"}")
-	response, err := http.Post(config.GetCommonConfig().TenantUrl, "application/json; charset=utf-8", request)
-	if err != nil {
-		return "未命名"
-	}
-	data, err := ioutil.ReadAll(response.Body)
-	var result map[string]map[string]map[string]string
-	err = json.Unmarshal(data, &result)
-	if result["module"] != nil {
-		return result["module"]["login"]["loginCode"]
-	} else {
-		return result["result"]["login"]["loginCode"]
-	}
 }

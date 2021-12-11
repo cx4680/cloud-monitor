@@ -1,6 +1,7 @@
 package dao
 
 import (
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/forms"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/models"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/tools"
 	"gorm.io/gorm"
@@ -8,6 +9,52 @@ import (
 
 type AlertContactGroupRelDao struct {
 }
+
+const (
+	checkAlertContact = "SELECT " +
+		"ac.id AS contact_id, " +
+		"ac.name AS contact_name, " +
+		"acg.group_id AS group_id, " +
+		"acg.group_name AS group_name, " +
+		"acg.group_count AS group_count " +
+		"FROM " +
+		"alert_contact AS ac " +
+		"LEFT JOIN alert_contact_information AS aci ON ac.id = aci.contact_id AND ac.tenant_id = aci.tenant_id " +
+		"LEFT JOIN " +
+		"( " +
+		"SELECT " +
+		"acgr.contact_id AS contact_id, " +
+		"acgr.tenant_id AS tenant_id, " +
+		"GROUP_CONCAT( acg.id ) AS group_id, " +
+		"GROUP_CONCAT( acg.name ) AS group_name, " +
+		"COUNT( acgr.contact_id ) AS group_count  " +
+		"FROM " +
+		"alert_contact_group AS acg " +
+		"LEFT JOIN alert_contact_group_rel AS acgr ON acg.id = acgr.group_id AND acg.tenant_id = acgr.tenant_id " +
+		"GROUP BY " +
+		"acgr.contact_id " +
+		") " +
+		"AS acg ON ac.id = acg.contact_id AND ac.tenant_id = acg.tenant_id " +
+		"WHERE " +
+		"ac.status = 1 " +
+		"AND ac.tenant_id = ? " +
+		"AND ac.id = ? " +
+		"GROUP BY " +
+		"ac.id "
+
+	checkAlertContactGroup = "SELECT " +
+		"acg.id AS group_id, " +
+		"acg.name AS group_name, " +
+		"COUNT( acgr.group_id ) AS contact_count " +
+		"FROM " +
+		"alert_contact_group AS acg " +
+		"LEFT JOIN alert_contact_group_rel AS acgr ON acg.id = acgr.group_id AND acg.tenant_id = acgr.tenant_id " +
+		"WHERE " +
+		"acg.tenant_id = ? " +
+		"AND acg.id = ? " +
+		"GROUP BY " +
+		"acg.id "
+)
 
 var AlertContactGroupRel = new(AlertContactGroupRelDao)
 
@@ -49,4 +96,16 @@ func (d *AlertContactGroupRelDao) Delete(db *gorm.DB, entity *models.AlertContac
 	} else {
 		db.Where("tenant_id = ? AND group_id = ?", entity.TenantId, entity.GroupId).Delete(models.AlertContactGroupRel{})
 	}
+}
+
+func (d *AlertContactGroupRelDao) CheckAlertContact(db *gorm.DB, tenantId string, contactId string) *[]forms.AlertContactForm {
+	var model = &[]forms.AlertContactForm{}
+	db.Raw(checkAlertContact, tenantId, contactId).Find(model)
+	return model
+}
+
+func (d *AlertContactGroupRelDao) CheckAlertContactGroup(db *gorm.DB, tenantId string, groupId string) *[]forms.AlertContactGroupForm {
+	var model = &[]forms.AlertContactGroupForm{}
+	db.Raw(checkAlertContactGroup, tenantId, groupId).Find(model)
+	return model
 }

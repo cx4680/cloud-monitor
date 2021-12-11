@@ -14,13 +14,23 @@ type AlertContactForm struct {
 	Lanxin        string `orm:"lanxin" json:"lanxin"`
 	LanxinCertify string `orm:"lanxin_certify" json:"lanxinCertify"`
 	Description   string `orm:"description" json:"description"`
+	GroupCount    int    `orm:"groupCount" json:"groupCount"`
+}
+
+type AlertContactGroupForm struct {
+	GroupId      string `orm:"group_id" json:"groupId"`
+	GroupName    string `orm:"group_name" json:"groupName"`
+	Description  string `orm:"description" json:"description"`
+	CreateTime   string `orm:"create_time" json:"createTime"`
+	UpdateTime   string `orm:"update_time" json:"updateTime"`
+	ContactCount int    `orm:"contactCount" json:"contactCount"`
 }
 
 type AlertContactFormPage struct {
-	Records *[]AlertContactForm `json:"records"`
-	Current int                 `json:"current"`
-	Size    int                 `json:"size"`
-	Total   int64               `json:"total"`
+	Records interface{} `json:"records"`
+	Current int         `json:"current"`
+	Size    int         `json:"size"`
+	Total   int64       `json:"total"`
 }
 
 type AlertContactParam struct {

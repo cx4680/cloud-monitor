@@ -2,7 +2,6 @@ package dao
 
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/forms"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/models"
 	"fmt"
 	"gorm.io/gorm"
@@ -26,21 +25,25 @@ const (
 		"GROUP_CONCAT( CASE aci.type WHEN 2 THEN aci.is_certify END ) AS email_certify, " +
 		"GROUP_CONCAT( CASE aci.type WHEN 3 THEN aci.NO END ) AS lanxin, " +
 		"GROUP_CONCAT( CASE aci.type WHEN 3 THEN aci.is_certify END ) AS lanxin_certify, " +
-		"ac.description AS description " +
+		"ac.description AS description, " +
+		"acg.group_count AS group_count " +
 		"FROM " +
 		"alert_contact AS ac " +
 		"LEFT JOIN alert_contact_information AS aci ON ac.id = aci.contact_id AND ac.tenant_id = aci.tenant_id " +
-		"LEFT JOIN ( " +
+		"LEFT JOIN " +
+		"( " +
 		"SELECT " +
 		"acgr.contact_id AS contact_id, " +
 		"acgr.tenant_id AS tenant_id, " +
 		"GROUP_CONCAT( acg.id ) AS group_id, " +
-		"GROUP_CONCAT( acg.name ) AS group_name " +
+		"GROUP_CONCAT( acg.name ) AS group_name, " +
+		"COUNT( acgr.contact_id ) AS group_count  " +
 		"FROM " +
 		"alert_contact_group AS acg " +
 		"LEFT JOIN alert_contact_group_rel AS acgr ON acg.id = acgr.group_id AND acg.tenant_id = acgr.tenant_id " +
 		"GROUP BY " +
-		"acgr.contact_id ) " +
+		"acgr.contact_id " +
+		") " +
 		"AS acg ON ac.id = acg.contact_id AND ac.tenant_id = acg.tenant_id " +
 		"WHERE " +
 		"ac.status = 1 " +
@@ -65,10 +68,9 @@ func (d *AlertContactDao) Select(db *gorm.DB, param forms.AlertContactParam) *fo
 	} else {
 		sql = fmt.Sprintf(SelectAlterContact, param.TenantId, "")
 	}
-	var count int64
-	db.Model(&models.AlertContact{}).Where("tenant_id = ?", param.TenantId).Count(&count)
-	total := count
-	sql += "LIMIT " + strconv.Itoa((param.PageCurrent-1)*param.PageSize) + "," + strconv.Itoa(param.PageSize)
+	var total int64
+	db.Model(&models.AlertContact{}).Where("tenant_id = ?", param.TenantId).Count(&total)
+	sql += "LIMIT " + strconv.Itoa((param.PageCurrent - 1) * param.PageSize) + "," + strconv.Itoa(param.PageSize)
 	db.Raw(sql).Find(model)
 	var alertContactFormPage = &forms.AlertContactFormPage{
 		Records: model,
@@ -91,8 +93,8 @@ func (d *AlertContactDao) Delete(db *gorm.DB, entity *models.AlertContact) {
 	db.Where("tenant_id = ? AND id = ?", entity.TenantId, entity.Id).Delete(models.AlertContact{})
 }
 
-func (d *AlertContactDao) CertifyAlertContact(activeCode string) string {
+func (d *AlertContactDao) CertifyAlertContact(db *gorm.DB, activeCode string) string {
 	var model = &models.AlertContactInformation{}
-	global.DB.Model(model).Where("active_code = ?", activeCode).Update("is_certify", 1)
+	db.Model(model).Where("active_code = ?", activeCode).Update("is_certify", 1)
 	return model.TenantId
 }

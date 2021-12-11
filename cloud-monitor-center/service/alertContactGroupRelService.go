@@ -64,14 +64,16 @@ func (s *AlertContactGroupRelService) PersistenceLocal(db *gorm.DB, param interf
 
 func (s *AlertContactGroupRelService) insertAlertContactRel(db *gorm.DB, p forms.AlertContactParam) ([]*models.AlertContactGroupRel, error) {
 	var list []*models.AlertContactGroupRel
-	var count int64
 	if len(p.ContactIdList) > 0 {
 		if len(p.ContactIdList) > constants.MaxContactNum {
 			return nil, errors.NewBusinessError("联系组限制添加" + strconv.Itoa(constants.MaxContactNum) + "个联系人")
 		}
 		for _, contactId := range p.ContactIdList {
-			db.Model(&models.AlertContactGroupRel{}).Where("tenant_id = ? AND contact_id = ?", p.TenantId, contactId).Count(&count)
-			if count >= constants.MaxContactNum {
+			checkList := *s.dao.CheckAlertContact(db, p.TenantId, contactId)
+			if len(checkList) == 0 {
+				return nil, errors.NewBusinessError("该租户无此联系人")
+			}
+			if checkList[0].GroupCount >= constants.MaxContactNum {
 				return nil, errors.NewBusinessError("有联系人已加入" + strconv.Itoa(constants.MaxContactGroup) + "个联系组")
 			}
 			alertContactGroupRel := &models.AlertContactGroupRel{
@@ -88,8 +90,11 @@ func (s *AlertContactGroupRelService) insertAlertContactRel(db *gorm.DB, p forms
 			return nil, errors.NewBusinessError("联系人限制加入" + strconv.Itoa(constants.MaxContactGroup) + "个联系组")
 		}
 		for _, groupId := range p.GroupIdList {
-			db.Model(&models.AlertContactGroupRel{}).Where("tenant_id = ? AND group_id = ?", p.TenantId, groupId).Count(&count)
-			if count >= constants.MaxContactNum {
+			checkList := *s.dao.CheckAlertContactGroup(db, p.TenantId, groupId)
+			if len(checkList) == 0 {
+				return nil, errors.NewBusinessError("该租户无此联系组")
+			}
+			if checkList[0].ContactCount >= constants.MaxContactNum {
 				return nil, errors.NewBusinessError("有联系组已有" + strconv.Itoa(constants.MaxContactNum) + "个联系人")
 			}
 			alertContactGroupRel := &models.AlertContactGroupRel{

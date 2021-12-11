@@ -94,7 +94,7 @@ func (s *AlertContactService) PersistenceLocal(db *gorm.DB, param interface{}) (
 		}
 		return tools.ToString(msg), nil
 	case enums.CertifyAlertContact:
-		s.dao.CertifyAlertContact(p.ActiveCode)
+		s.dao.CertifyAlertContact(db, p.ActiveCode)
 		msg := forms.MqMsg{
 			EventEum: enums.CertifyAlertContact,
 			Data:     p.ActiveCode,
@@ -117,7 +117,6 @@ func (s *AlertContactService) insertAlertContact(db *gorm.DB, p forms.AlertConta
 		return nil, errors.NewBusinessError("联系人限制创建" + strconv.Itoa(constants.MaxContactNum) + "个")
 	}
 	currentTime := tools.GetNowStr()
-	//数据入库
 	alertContact := &models.AlertContact{
 		Id:          strconv.FormatInt(snowflake.GetWorker().NextId(), 10),
 		TenantId:    p.TenantId,
@@ -154,6 +153,9 @@ func (s *AlertContactService) updateAlertContact(db *gorm.DB, p forms.AlertConta
 }
 
 func (s *AlertContactService) deleteAlertContact(db *gorm.DB, p forms.AlertContactParam) (*models.AlertContact, error) {
+	//校验联系人是否为该租户所有
+	var check int64
+	db.Model(&models.AlertContact{}).Where("tenant_id = ? AND contact_id = ?", p.TenantId, p.ContactId).Count(&check)
 	if p.ContactId == "" {
 		return nil, errors.NewBusinessError("联系人ID不能为空")
 	}
@@ -165,17 +167,13 @@ func (s *AlertContactService) deleteAlertContact(db *gorm.DB, p forms.AlertConta
 	return alertContact, nil
 }
 
-func (s *AlertContactService) CertifyAlertContact(activeCode string) string {
-	return s.dao.CertifyAlertContact(activeCode)
-}
-
 func (s *AlertContactService) persistenceInner(db *gorm.DB, p forms.AlertContactParam) error {
-	//联系方式
-	if err := s.alertContactInformationService.PersistenceInner(db, s.alertContactInformationService, sysRocketMq.AlertContactTopic, p); err != nil {
-		return err
-	}
 	//联系人组关联
 	if err := s.alertContactGroupRelService.PersistenceInner(db, s.alertContactGroupRelService, sysRocketMq.AlertContactGroupTopic, p); err != nil {
+		return err
+	}
+	//联系方式
+	if err := s.alertContactInformationService.PersistenceInner(db, s.alertContactInformationService, sysRocketMq.AlertContactTopic, p); err != nil {
 		return err
 	}
 	return nil

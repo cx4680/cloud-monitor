@@ -67,10 +67,18 @@ const (
 		"ac.create_time DESC "
 )
 
-func (d *AlertContactGroupDao) SelectAlertContactGroup(db *gorm.DB, param forms.AlertContactParam) *[]forms.AlertContactGroupForm {
+func (d *AlertContactGroupDao) SelectAlertContactGroup(db *gorm.DB, param forms.AlertContactParam) *forms.AlertContactFormPage {
 	var model = &[]forms.AlertContactGroupForm{}
+	var total int64
+	db.Model(&models.AlertContactGroup{}).Where("tenant_id = ?", param.TenantId).Count(&total)
 	db.Raw(SelectAlterContactGroup, param.TenantId, param.GroupName).Find(model)
-	return model
+	var alertContactFormPage = &forms.AlertContactFormPage{
+		Records: model,
+		Current: param.PageCurrent,
+		Size:    param.PageSize,
+		Total:   total,
+	}
+	return alertContactFormPage
 }
 
 func (d *AlertContactGroupDao) SelectAlertGroupContact(db *gorm.DB, param forms.AlertContactParam) *[]forms.AlertContactForm {

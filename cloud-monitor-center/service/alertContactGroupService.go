@@ -102,10 +102,8 @@ func (s *AlertContactGroupService) PersistenceLocal(db *gorm.DB, param interface
 	}
 }
 
-func (s *AlertContactGroupService) SelectAlertContactGroup(param forms.AlertContactParam) *[]forms.AlertContactGroupForm {
-	param.TenantId = "1"
-	db := global.DB
-	return s.dao.SelectAlertContactGroup(db, param)
+func (s *AlertContactGroupService) SelectAlertContactGroup(param forms.AlertContactParam) *forms.AlertContactFormPage {
+	return s.dao.SelectAlertContactGroup(global.DB, param)
 }
 
 func (s *AlertContactGroupService) SelectAlertGroupContact(param forms.AlertContactParam) *[]forms.AlertContactForm {
