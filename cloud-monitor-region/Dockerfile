@@ -21,6 +21,7 @@ COPY --from=builder /build/*.yml .
 RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime &&\
     echo 'Asia/Shanghai' >/etc/timezone
 
+RUN ls / && ls && ls /data
 # 声明服务端口
 EXPOSE 80
 
