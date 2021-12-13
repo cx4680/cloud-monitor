@@ -42,12 +42,22 @@ func main() {
 			return translate.InitTrans("zh")
 		}).
 		AddStage(func(c *context.Context) error {
-			bt := commonTask.NewBusinessTaskImpl()
-			if err := task.AddSyncJobs(bt); err != nil {
+			var taskChan = make(chan error, 1)
+			go func() {
+				bt := commonTask.NewBusinessTaskImpl()
+				err := task.AddSyncJobs(bt)
+				if err != nil {
+					taskChan <- err
+					return
+				}
+				bt.Start()
+				defer bt.Stop()
+				close(taskChan)
+			}()
+			select {
+			case err := <-taskChan:
 				return err
 			}
-			bt.Start()
-			return nil
 		}).
 		AddStage(func(c *context.Context) error {
 			return k8s.InitK8s()

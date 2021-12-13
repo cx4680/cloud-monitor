@@ -35,7 +35,6 @@ func main() {
 			DB:      global.DB,
 			Fetches: []sysDb.InitializerFetch{new(sysDb.CommonInitializerFetch), new(pipeline.ProjectInitializerFetch)},
 		}
-
 		if err := initializer.Initnitialization(); err != nil {
 			return err
 		}
@@ -47,19 +46,27 @@ func main() {
 	})
 
 	loader.AddStage(func(c *context.Context) error {
-		var err error
+		var taskChan = make(chan error, 1)
 		go func() {
 			bt := task.NewBusinessTaskImpl()
-			err = bt.Add(task.BusinessTaskDTO{
+			err := bt.Add(task.BusinessTaskDTO{
 				Cron: "0 0 0/1 * * ?",
 				Name: "clearAlertRecordJob",
 				Task: task.Clear,
 			})
+			if err != nil {
+				taskChan <- err
+				return
+			}
 
 			bt.Start()
 			defer bt.Stop()
+			close(taskChan)
 		}()
-		return err
+		select {
+		case err := <-taskChan:
+			return err
+		}
 	})
 
 	loader.AddStage(func(c *context.Context) error {
