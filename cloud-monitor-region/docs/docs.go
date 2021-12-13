@@ -23,6 +23,29 @@ var doc = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/hawkeye/instance/page": {
+            "get": {
+                "description": "GetInstanceNumByRegion",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "InstanceCtl"
+                ],
+                "summary": "GetInstanceNumByRegion",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/controllers.AlarmInstanceRegionVO"
+                        }
+                    }
+                }
+            }
+        },
         "/hawkeye/monitorProduct/getById": {
             "get": {
                 "description": "GetById",
@@ -49,7 +72,7 @@ var doc = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/models.MonitorProduct"
+                            "type": "string"
                         }
                     }
                 }
@@ -57,31 +80,54 @@ var doc = `{
         }
     },
     "definitions": {
-        "models.MonitorProduct": {
+        "controllers.AlarmInstanceRegionVO": {
             "type": "object",
             "properties": {
-                "create_time": {
-                    "description": "创建时间",
+                "bindNum": {
+                    "description": "*\n\t * 已绑定实例数",
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "global.Resp": {
+            "type": "object",
+            "properties": {
+                "allowRetry": {
+                    "type": "boolean"
+                },
+                "errorArgs": {
+                    "type": "array",
+                    "items": {}
+                },
+                "errorCode": {
                     "type": "string"
                 },
-                "create_user": {
-                    "description": "创建人",
+                "errorMsg": {
                     "type": "string"
                 },
-                "description": {
-                    "description": "描述",
-                    "type": "string"
+                "module": {},
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "vo.PageVO": {
+            "type": "object",
+            "properties": {
+                "current": {
+                    "type": "integer"
                 },
-                "id": {
-                    "description": "ID",
-                    "type": "string"
+                "records": {
+                    "type": "array",
+                    "items": {}
                 },
-                "name": {
-                    "description": "监控产品名称",
-                    "type": "string"
+                "size": {
+                    "type": "integer"
                 },
-                "status": {
-                    "description": "状态 0:停用 1:启用",
+                "total": {
                     "type": "integer"
                 }
             }
@@ -100,12 +146,12 @@ type swaggerInfo struct {
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = swaggerInfo{
-	Version:     "0.0.1",
+	Version:     "",
 	Host:        "",
-	BasePath:    "/",
+	BasePath:    "",
 	Schemes:     []string{},
-	Title:       "Swagger Example API",
-	Description: "This is a sample server Petstore server.",
+	Title:       "",
+	Description: "",
 }
 
 type s struct{}
@@ -140,5 +186,5 @@ func (s *s) ReadDoc() string {
 }
 
 func init() {
-	swag.Register(swag.Name, &s{})
+	swag.Register("swagger", &s{})
 }

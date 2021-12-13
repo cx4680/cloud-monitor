@@ -26,7 +26,7 @@ func NewMonitorProductCtl(dao *dao.MonitorProductDao) *MonitorProductCtl {
 // @Accept json
 // @Produce json
 // @Param id query  string true "id"
-// @Success 200 {object} models.MonitorProduct
+// @Success 200 {object} string
 // @Router /hawkeye/monitorProduct/getById [get]
 func (mpc *MonitorProductCtl) GetById(c *gin.Context) {
 	id := c.Query("id")

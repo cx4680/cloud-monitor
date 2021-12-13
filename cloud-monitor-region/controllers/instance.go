@@ -21,6 +21,23 @@ func NewInstanceCtl(dao *dao.InstanceDao) *InstanceCtl {
 	return &InstanceCtl{dao}
 }
 
+// GetPage godoc
+// @Summary 产品实例列表
+// @Description 产品实例分页
+// @Tags InstanceCtl
+// @Accept  json
+// @Produce  json
+// @Params product query string false "产品简称"
+// @Params instanceId query string false "实例id"
+// @Params instanceName query string false "实例名称"
+// @Params statusList query []string false "实例状态"
+// @Params extraAttr query map[string]string false "其他参数"
+// @Params current query  int false "当前页"
+// @Params pageSize query int false "页大小"
+// @Success 200 {object} vo.PageVO
+// @Failure 400 {object} global.Resp
+// @Failure 500 {object} global.Resp
+// @Router /hawkeye/instance/page [get]
 func (ctl *InstanceCtl) GetPage(c *gin.Context) {
 	tenantId, _ := c.Get(commonGlobal.TenantId)
 	form := service.InstancePageForm{}
@@ -45,8 +62,14 @@ func (ctl *InstanceCtl) GetPage(c *gin.Context) {
 // @Tags InstanceCtl
 // @Accept json
 // @Produce json
-// @Param id query  string true "id"
-// @Success 200 {object} vo.AlarmInstanceRegionVO
+// @Params product query string false "产品简称"
+// @Params instanceId query string false "实例id"
+// @Params instanceName query string false "实例名称"
+// @Params statusList query []string false "实例状态"
+// @Params extraAttr query map[string]string false "其他参数"
+// @Params current query  int false "当前页"
+// @Params pageSize query int false "页大小"
+// @Success 200 {object} AlarmInstanceRegionVO
 // @Router /hawkeye/instance/page [get]
 func (ctl *InstanceCtl) GetInstanceNumByRegion(c *gin.Context) {
 	tenantId, _ := c.Get(commonGlobal.TenantId)

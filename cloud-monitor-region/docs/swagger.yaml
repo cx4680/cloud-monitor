@@ -1,32 +1,57 @@
-basePath: /
 definitions:
-  models.MonitorProduct:
+  controllers.AlarmInstanceRegionVO:
     properties:
-      create_time:
-        description: 创建时间
+      bindNum:
+        description: "*\n\t * 已绑定实例数"
+        type: integer
+      total:
+        type: integer
+    type: object
+  global.Resp:
+    properties:
+      allowRetry:
+        type: boolean
+      errorArgs:
+        items: {}
+        type: array
+      errorCode:
         type: string
-      create_user:
-        description: 创建人
+      errorMsg:
         type: string
-      description:
-        description: 描述
-        type: string
-      id:
-        description: ID
-        type: string
-      name:
-        description: 监控产品名称
-        type: string
-      status:
-        description: 状态 0:停用 1:启用
+      module: {}
+      success:
+        type: boolean
+    type: object
+  vo.PageVO:
+    properties:
+      current:
+        type: integer
+      records:
+        items: {}
+        type: array
+      size:
+        type: integer
+      total:
         type: integer
     type: object
 info:
   contact: {}
-  description: This is a sample server Petstore server.
-  title: Swagger Example API
-  version: 0.0.1
 paths:
+  /hawkeye/instance/page:
+    get:
+      consumes:
+      - application/json
+      description: GetInstanceNumByRegion
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/controllers.AlarmInstanceRegionVO'
+      summary: GetInstanceNumByRegion
+      tags:
+      - InstanceCtl
   /hawkeye/monitorProduct/getById:
     get:
       consumes:
@@ -44,7 +69,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/models.MonitorProduct'
+            type: string
       summary: GetById
       tags:
       - MonitorProductCtl
