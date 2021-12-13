@@ -20,7 +20,7 @@ COPY --from=builder /build/app .
 RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime &&\
     echo 'Asia/Shanghai' >/etc/timezone && mkdir -p "/data/config"
 
-RUN ls / && ls /data/config
+RUN ls / && && ls /data && ls /data/config
 # 声明服务端口
 EXPOSE 80
 
