@@ -61,7 +61,7 @@ func AlertContactHandler(msgs []*primitive.MessageExt) {
 			dao.AlertContactGroupRel.InsertBatch(global.DB, modelList)
 		case enums.UpdateAlertContactGroupRel:
 			data, _ := json.Marshal(MqMsg.Data)
-			var model updateAlertContactGroupRel
+			var model models.UpdateAlertContactGroupRel
 			MsgErr = json.Unmarshal(data, &model)
 			dao.AlertContactGroupRel.Update(global.DB, model.RelList, model.Param)
 		case enums.DeleteAlertContactGroupRel:
@@ -90,7 +90,7 @@ func AlertContactGroupHandler(msgs []*primitive.MessageExt) {
 			dao.AlertContactGroupRel.InsertBatch(global.DB, modelList)
 		case enums.UpdateAlertContactGroupRel:
 			data, _ := json.Marshal(MqMsg.Data)
-			var model updateAlertContactGroupRel
+			var model models.UpdateAlertContactGroupRel
 			MsgErr = json.Unmarshal(data, &model)
 			dao.AlertContactGroupRel.Update(global.DB, model.RelList, model.Param)
 		case enums.DeleteAlertContactGroupRel:
@@ -118,9 +118,4 @@ func AlertContactGroupHandler(msgs []*primitive.MessageExt) {
 			logger.Logger().Errorf("%v", MsgErr)
 		}
 	}
-}
-
-type updateAlertContactGroupRel struct {
-	RelList []*models.AlertContactGroupRel
-	Param   forms.AlertContactParam
 }

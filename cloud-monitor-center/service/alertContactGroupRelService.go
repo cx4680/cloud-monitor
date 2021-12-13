@@ -44,7 +44,7 @@ func (s *AlertContactGroupRelService) PersistenceLocal(db *gorm.DB, param interf
 		if err != nil {
 			return "", err
 		}
-		var date = updateAlertContactGroupRel{
+		var date = models.UpdateAlertContactGroupRel{
 			RelList: List,
 			Param:   p,
 		}
@@ -143,9 +143,4 @@ func (s *AlertContactGroupRelService) getAlertContactGroupRelList(db *gorm.DB, p
 		}
 	}
 	return list, nil
-}
-
-type updateAlertContactGroupRel struct {
-	RelList []*models.AlertContactGroupRel
-	Param   forms.AlertContactParam
 }
