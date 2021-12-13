@@ -18,10 +18,10 @@ FROM  harbor.ceclouddyn.com/baseos/centos:8.4.2105-0.0.1
 WORKDIR /dist
 COPY --from=builder /build/app .
 RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime &&\
-    echo 'Asia/Shanghai' >/etc/timezone
+    echo 'Asia/Shanghai' >/etc/timezone && mkdir "/data/config"
 
 # 声明服务端口
 EXPOSE 80
 
 # 启动容器时运行的命令
-CMD ["/dist/app -config /data/conf/centerconfigprod.yaml"]
+CMD ["/dist/app -config /data/conf/center.config.prod.yaml"]
