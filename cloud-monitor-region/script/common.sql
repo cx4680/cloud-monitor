@@ -2,10 +2,10 @@
 -- ----------------------------
 -- Records of monitor_product
 -- ----------------------------
-INSERT INTO `monitor_product` (`id`, `name`, `status`, `description`, `create_user`, `create_time`, `route`) VALUES ('1', '云服务器ECS', 1, 'ecs', NULL, NULL, '/productmonitoring/ecs');
-INSERT INTO `monitor_product` (`id`, `name`, `status`, `description`, `create_user`, `create_time`, `route`) VALUES ('2', '弹性公网IP', '1', 'eip', NULL, NULL, '/productmonitoring/eip');
-INSERT INTO `monitor_product` (`id`, `name`, `status`, `description`, `create_user`, `create_time`, `route`) VALUES ('3', '负载均衡SLB', '1', 'slb', NULL, NULL, '/productmonitoring/slb');
+INSERT INTO `monitor_product` (`id`, `name`, `status`, `description`, `create_user`, `create_time`, `route`, `cron`, `host`, `pageUrl`) VALUES ('1', '云服务器ECS', '1', 'ecs', NULL, NULL, '/productmonitoring/ecs', '0 0 0/1 * * ?', 'http://ecs-gateway.inner.dev001.intranet.cecloudcs.com', '/noauth/ecs/PageList');
+INSERT INTO `monitor_product` (`id`, `name`, `status`, `description`, `create_user`, `create_time`, `route`, `cron`, `host`, `pageUrl`) VALUES ('3', '负载均衡SLB', '1', 'slb', NULL, NULL, '/productmonitoring/slb', '0 0 0/1 * * ?', 'http://product-slb-controller-slb-manage.product-slb', '/slb/inner/list');
 
+INSERT INTO `monitor_product` (`id`, `name`, `status`, `description`, `create_user`, `create_time`, `route`) VALUES ('2', '弹性公网IP', '1', 'eip', NULL, NULL, '/productmonitoring/eip');
 INSERT INTO `monitor_product` (`id`, `name`, `status`, `description`, `create_user`, `create_time`, `route`) VALUES ('5', '云备份CBR', '1', 'cbr', NULL, NULL, '/productmonitoring/cbr');
 INSERT INTO `monitor_product` (`id`, `name`, `status`, `description`, `create_user`, `create_time`, `route`) VALUES ('6', 'NAT网关', '1', 'nat', NULL, NULL, '/productmonitoring/nat');
 

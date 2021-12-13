@@ -98,7 +98,7 @@ type SlbInfoBean struct {
 	ZoneCode   interface{} `json:"zoneCode"`
 }
 
-func (slb *SlbInstanceService) convertRealForm(form service.InstancePageForm) interface{} {
+func (slb *SlbInstanceService) ConvertRealForm(form service.InstancePageForm) interface{} {
 	queryParam := SlbQueryParam{
 		Address:   form.ExtraAttr["privateIp"],
 		LbUid:     form.InstanceId,
@@ -113,7 +113,7 @@ func (slb *SlbInstanceService) convertRealForm(form service.InstancePageForm) in
 	}
 }
 
-func (slb *SlbInstanceService) doRequest(url string, form interface{}) (interface{}, error) {
+func (slb *SlbInstanceService) DoRequest(url string, form interface{}) (interface{}, error) {
 	var f = form.(SlbQueryPageRequest)
 	respStr, err := tools.HttpPostJson(url, form, map[string]string{"userCode": f.TenantId})
 	if err != nil {
@@ -124,7 +124,7 @@ func (slb *SlbInstanceService) doRequest(url string, form interface{}) (interfac
 	return resp, nil
 }
 
-func (slb *SlbInstanceService) convertResp(realResp interface{}) (int, []service.InstanceCommonVO) {
+func (slb *SlbInstanceService) ConvertResp(realResp interface{}) (int, []service.InstanceCommonVO) {
 	vo := realResp.(SlbResponse)
 	var list []service.InstanceCommonVO
 	if vo.Data.Total > 0 {

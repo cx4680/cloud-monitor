@@ -30,10 +30,6 @@ func Recovery() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer func() {
 			if err := recover(); err != nil {
-				// 异常处理
-				//switch err.(type) {
-				//// 接管自定义的一些异常抛出
-				//case http.StatusInternalServerError:
 				log.Println(err)
 				c.JSON(http.StatusInternalServerError, global.NewError("系统异常"))
 				return

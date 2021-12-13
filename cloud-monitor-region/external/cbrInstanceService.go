@@ -40,7 +40,7 @@ type CbrInfoBean struct {
 	UpdatedAt    string
 }
 
-func (c *CbrInstanceService) convertRealForm(form service.InstancePageForm) interface{} {
+func (c *CbrInstanceService) ConvertRealForm(form service.InstancePageForm) interface{} {
 	param := CbrQueryParam{
 		TenantId:   form.TenantId,
 		VaultId:    form.InstanceId,
@@ -54,7 +54,7 @@ func (c *CbrInstanceService) convertRealForm(form service.InstancePageForm) inte
 	return param
 }
 
-func (c *CbrInstanceService) doRequest(url string, form interface{}) (interface{}, error) {
+func (c *CbrInstanceService) DoRequest(url string, form interface{}) (interface{}, error) {
 	respStr, err := tools.HttpPostJson(url, form, nil)
 	if err != nil {
 		return nil, err
@@ -64,7 +64,7 @@ func (c *CbrInstanceService) doRequest(url string, form interface{}) (interface{
 	return resp, nil
 }
 
-func (c *CbrInstanceService) convertResp(realResp interface{}) (int, []service.InstanceCommonVO) {
+func (c *CbrInstanceService) ConvertResp(realResp interface{}) (int, []service.InstanceCommonVO) {
 	vo := realResp.(CbrQueryPageVO)
 	var list []service.InstanceCommonVO
 	if vo.Total_count > 0 {

@@ -3,7 +3,6 @@ package controllers
 import (
 	commonGlobal "code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/service"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/tools"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/dao"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/external"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/global"
@@ -27,13 +26,13 @@ func NewInstanceCtl(dao *dao.InstanceDao) *InstanceCtl {
 // @Tags InstanceCtl
 // @Accept  json
 // @Produce  json
-// @Params product query string false "产品简称"
-// @Params instanceId query string false "实例id"
-// @Params instanceName query string false "实例名称"
-// @Params statusList query []string false "实例状态"
-// @Params extraAttr query map[string]string false "其他参数"
-// @Params current query  int false "当前页"
-// @Params pageSize query int false "页大小"
+// @Param product query string false "产品简称"
+// @Param instanceId query string false "实例id"
+// @Param instanceName query string false "实例名称"
+// @Param statusList query []string false "实例状态"
+// @Param extraAttr query string false "其他参数"
+// @Param current query  int false "当前页"
+// @Param pageSize query int false "页大小"
 // @Success 200 {object} vo.PageVO
 // @Failure 400 {object} global.Resp
 // @Failure 500 {object} global.Resp
@@ -41,11 +40,11 @@ func NewInstanceCtl(dao *dao.InstanceDao) *InstanceCtl {
 func (ctl *InstanceCtl) GetPage(c *gin.Context) {
 	tenantId, _ := c.Get(commonGlobal.TenantId)
 	form := service.InstancePageForm{}
-	if err := c.ShouldBindQuery(form); err != nil {
+	if err := c.ShouldBindQuery(&form); err != nil {
 		c.JSON(http.StatusBadRequest, global.NewError(translate.GetErrorMsg(err)))
 		return
 	}
-	form.TenantId = tools.ToString(tenantId)
+	form.TenantId = tenantId.(string)
 	instanceService := external.ProductInstanceServiceMap[form.Product]
 	page, err := instanceService.GetPage(form, instanceService.(service.InstanceStage))
 	if err != nil {
@@ -62,15 +61,15 @@ func (ctl *InstanceCtl) GetPage(c *gin.Context) {
 // @Tags InstanceCtl
 // @Accept json
 // @Produce json
-// @Params product query string false "产品简称"
-// @Params instanceId query string false "实例id"
-// @Params instanceName query string false "实例名称"
-// @Params statusList query []string false "实例状态"
-// @Params extraAttr query map[string]string false "其他参数"
-// @Params current query  int false "当前页"
-// @Params pageSize query int false "页大小"
+// @Param product query string false "产品简称"
+// @Param instanceId query string false "实例id"
+// @Param instanceName query string false "实例名称"
+// @Param statusList query []string false "实例状态"
+// @Param extraAttr query string false "其他参数"
+// @Param current query  int false "当前页"
+// @Param pageSize query int false "页大小"
 // @Success 200 {object} AlarmInstanceRegionVO
-// @Router /hawkeye/instance/page [get]
+// @Router /hawkeye/instance/getInstanceNum [get]
 func (ctl *InstanceCtl) GetInstanceNumByRegion(c *gin.Context) {
 	tenantId, _ := c.Get(commonGlobal.TenantId)
 	form := service.InstancePageForm{}
@@ -78,7 +77,7 @@ func (ctl *InstanceCtl) GetInstanceNumByRegion(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, global.NewError(translate.GetErrorMsg(err)))
 		return
 	}
-	form.TenantId = tools.ToString(tenantId)
+	form.TenantId = tenantId.(string)
 	instanceService := external.ProductInstanceServiceMap[external.ECS]
 	page, err := instanceService.GetPage(form, instanceService.(service.InstanceStage))
 	if err != nil {

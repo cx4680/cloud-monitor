@@ -37,11 +37,42 @@ definitions:
 info:
   contact: {}
 paths:
-  /hawkeye/instance/page:
+  /hawkeye/instance/getInstanceNum:
     get:
       consumes:
       - application/json
       description: GetInstanceNumByRegion
+      parameters:
+      - description: 产品简称
+        in: query
+        name: product
+        type: string
+      - description: 实例id
+        in: query
+        name: instanceId
+        type: string
+      - description: 实例名称
+        in: query
+        name: instanceName
+        type: string
+      - description: 实例状态
+        in: query
+        items:
+          type: string
+        name: statusList
+        type: array
+      - description: 其他参数
+        in: query
+        name: extraAttr
+        type: string
+      - description: 当前页
+        in: query
+        name: current
+        type: integer
+      - description: 页大小
+        in: query
+        name: pageSize
+        type: integer
       produces:
       - application/json
       responses:
@@ -50,6 +81,60 @@ paths:
           schema:
             $ref: '#/definitions/controllers.AlarmInstanceRegionVO'
       summary: GetInstanceNumByRegion
+      tags:
+      - InstanceCtl
+  /hawkeye/instance/page:
+    get:
+      consumes:
+      - application/json
+      description: 产品实例分页
+      parameters:
+      - description: 产品简称
+        in: query
+        name: product
+        type: string
+      - description: 实例id
+        in: query
+        name: instanceId
+        type: string
+      - description: 实例名称
+        in: query
+        name: instanceName
+        type: string
+      - description: 实例状态
+        in: query
+        items:
+          type: string
+        name: statusList
+        type: array
+      - description: 其他参数
+        in: query
+        name: extraAttr
+        type: string
+      - description: 当前页
+        in: query
+        name: current
+        type: integer
+      - description: 页大小
+        in: query
+        name: pageSize
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/vo.PageVO'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/global.Resp'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/global.Resp'
+      summary: 产品实例列表
       tags:
       - InstanceCtl
   /hawkeye/monitorProduct/getById:

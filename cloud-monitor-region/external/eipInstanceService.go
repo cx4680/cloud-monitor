@@ -66,7 +66,7 @@ type EipInfoBean struct {
 	Status        int         `json:"status"`
 }
 
-func (eip *EipInstanceService) convertRealForm(form service.InstancePageForm) interface{} {
+func (eip *EipInstanceService) ConvertRealForm(form service.InstancePageForm) interface{} {
 	queryParam := EipQueryParam{
 		IpAddress: form.ExtraAttr["ip"],
 		Uid:       form.InstanceId,
@@ -90,7 +90,7 @@ func (eip *EipInstanceService) convertRealForm(form service.InstancePageForm) in
 	}
 }
 
-func (eip *EipInstanceService) doRequest(url string, form interface{}) (interface{}, error) {
+func (eip *EipInstanceService) DoRequest(url string, form interface{}) (interface{}, error) {
 	var f = form.(EipQueryPageRequest)
 	respStr, err := tools.HttpPostJson(url, form, map[string]string{"userCode": f.TenantId})
 	if err != nil {
@@ -101,7 +101,7 @@ func (eip *EipInstanceService) doRequest(url string, form interface{}) (interfac
 	return resp, nil
 }
 
-func (eip *EipInstanceService) convertResp(realResp interface{}) (int, []service.InstanceCommonVO) {
+func (eip *EipInstanceService) ConvertResp(realResp interface{}) (int, []service.InstanceCommonVO) {
 	vo := realResp.(EipResponse)
 	var list []service.InstanceCommonVO
 	if vo.Data.Total > 0 {

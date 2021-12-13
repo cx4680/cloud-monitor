@@ -62,7 +62,7 @@ type NatInfoBean struct {
 	Status        string
 }
 
-func (nat *NatInstanceService) convertRealForm(form service.InstancePageForm) interface{} {
+func (nat *NatInstanceService) ConvertRealForm(form service.InstancePageForm) interface{} {
 	queryParam := NatQueryParam{
 		Name: form.InstanceName,
 		Uid:  form.InstanceId,
@@ -75,7 +75,7 @@ func (nat *NatInstanceService) convertRealForm(form service.InstancePageForm) in
 	}
 }
 
-func (nat *NatInstanceService) doRequest(url string, form interface{}) (interface{}, error) {
+func (nat *NatInstanceService) DoRequest(url string, form interface{}) (interface{}, error) {
 	var f = form.(NatQueryPageRequest)
 	respStr, err := tools.HttpPostJson(url, form, map[string]string{"userCode": f.TenantId})
 	if err != nil {
@@ -86,7 +86,7 @@ func (nat *NatInstanceService) doRequest(url string, form interface{}) (interfac
 	return resp, nil
 }
 
-func (nat *NatInstanceService) convertResp(realResp interface{}) (int, []service.InstanceCommonVO) {
+func (nat *NatInstanceService) ConvertResp(realResp interface{}) (int, []service.InstanceCommonVO) {
 	vo := realResp.(NatResponse)
 	var list []service.InstanceCommonVO
 	if vo.Data.Total > 0 {

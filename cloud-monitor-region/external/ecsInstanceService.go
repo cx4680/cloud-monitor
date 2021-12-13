@@ -39,7 +39,7 @@ type ECSVO struct {
 	Status       int    `yaml:"status"`
 }
 
-func (ecs *EcsInstanceService) convertRealForm(form service.InstancePageForm) interface{} {
+func (ecs *EcsInstanceService) ConvertRealForm(form service.InstancePageForm) interface{} {
 	param := EcsQueryPageForm{
 		TenantId:     form.TenantId,
 		Current:      form.Current,
@@ -60,7 +60,7 @@ func (ecs *EcsInstanceService) convertRealForm(form service.InstancePageForm) in
 	return param
 }
 
-func (ecs *EcsInstanceService) doRequest(url string, form interface{}) (interface{}, error) {
+func (ecs *EcsInstanceService) DoRequest(url string, form interface{}) (interface{}, error) {
 	respStr, err := tools.HttpPostJson(url, form, nil)
 	if err != nil {
 		return nil, err
@@ -70,7 +70,7 @@ func (ecs *EcsInstanceService) doRequest(url string, form interface{}) (interfac
 	return resp, nil
 }
 
-func (ecs *EcsInstanceService) convertResp(realResp interface{}) (int, []service.InstanceCommonVO) {
+func (ecs *EcsInstanceService) ConvertResp(realResp interface{}) (int, []service.InstanceCommonVO) {
 	vo := realResp.(EcsQueryPageVO)
 	var list []service.InstanceCommonVO
 	if vo.Data.Total > 0 {

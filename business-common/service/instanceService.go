@@ -27,13 +27,13 @@ type InstancePageForm struct {
 	Current      int      `form:"current,default=1"`
 	PageSize     int      `form:"pageSize,default=10"`
 	Product      string   `form:"product"`
-	ExtraAttr    map[string]string
+	ExtraAttr    map[string]string `form:"extraAttr"`
 }
 
 type InstanceStage interface {
-	convertRealForm(InstancePageForm) interface{}
-	doRequest(string, interface{}) (interface{}, error)
-	convertResp(realResp interface{}) (int, []InstanceCommonVO)
+	ConvertRealForm(InstancePageForm) interface{}
+	DoRequest(string, interface{}) (interface{}, error)
+	ConvertResp(realResp interface{}) (int, []InstanceCommonVO)
 }
 
 type InstanceService interface {
@@ -45,19 +45,19 @@ type InstanceServiceImpl struct {
 
 func (is *InstanceServiceImpl) GetPage(form InstancePageForm, stage InstanceStage) (*vo.PageVO, error) {
 	var err error
-	f := stage.convertRealForm(form)
+	f := stage.ConvertRealForm(form)
 
 	url, err := is.getRequestUrl(form.Product)
 	if err != nil {
 		return nil, err
 	}
 
-	resp, err := stage.doRequest(url, f)
+	resp, err := stage.DoRequest(url, f)
 	if err != nil {
 		return nil, err
 	}
 
-	total, list := stage.convertResp(resp)
+	total, list := stage.ConvertResp(resp)
 	return &vo.PageVO{
 		Records: list,
 		Total:   total,

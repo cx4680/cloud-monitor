@@ -4,7 +4,7 @@
         "contact": {}
     },
     "paths": {
-        "/hawkeye/instance/page": {
+        "/hawkeye/instance/getInstanceNum": {
             "get": {
                 "description": "GetInstanceNumByRegion",
                 "consumes": [
@@ -17,11 +17,140 @@
                     "InstanceCtl"
                 ],
                 "summary": "GetInstanceNumByRegion",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "产品简称",
+                        "name": "product",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "实例id",
+                        "name": "instanceId",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "实例名称",
+                        "name": "instanceName",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "description": "实例状态",
+                        "name": "statusList",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "其他参数",
+                        "name": "extraAttr",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "当前页",
+                        "name": "current",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "页大小",
+                        "name": "pageSize",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/controllers.AlarmInstanceRegionVO"
+                        }
+                    }
+                }
+            }
+        },
+        "/hawkeye/instance/page": {
+            "get": {
+                "description": "产品实例分页",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "InstanceCtl"
+                ],
+                "summary": "产品实例列表",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "产品简称",
+                        "name": "product",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "实例id",
+                        "name": "instanceId",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "实例名称",
+                        "name": "instanceName",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "description": "实例状态",
+                        "name": "statusList",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "其他参数",
+                        "name": "extraAttr",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "当前页",
+                        "name": "current",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "页大小",
+                        "name": "pageSize",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/vo.PageVO"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/global.Resp"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/global.Resp"
                         }
                     }
                 }
