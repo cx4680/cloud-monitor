@@ -12,11 +12,10 @@ import (
 	"github.com/apache/rocketmq-client-go/v2/primitive"
 )
 
-var MqMsg forms.MqMsg
-var MsgErr error
-
 func AlertContactHandler(msgs []*primitive.MessageExt) {
 	for i := range msgs {
+		var MsgErr error
+		var MqMsg forms.MqMsg
 		fmt.Printf("subscribe callback: %v \n", msgs[i])
 		MsgErr = json.Unmarshal(msgs[i].Body, &MqMsg)
 		switch MqMsg.EventEum {
@@ -71,15 +70,17 @@ func AlertContactHandler(msgs []*primitive.MessageExt) {
 			MsgErr = json.Unmarshal(data, &model)
 			dao.AlertContactGroupRel.Delete(global.DB, model)
 		}
-	}
-	if MsgErr != nil {
-		logger.Logger().Errorf("%v", MsgErr)
+		if MsgErr != nil {
+			logger.Logger().Errorf("%v", MsgErr)
+		}
 	}
 }
 
 func AlertContactGroupHandler(msgs []*primitive.MessageExt) {
 	for i := range msgs {
 		fmt.Printf("subscribe callback: %v \n", msgs[i])
+		var MsgErr error
+		var MqMsg forms.MqMsg
 		MsgErr = json.Unmarshal(msgs[i].Body, &MqMsg)
 		switch MqMsg.EventEum {
 		case enums.InsertAlertContactGroupRel:
@@ -113,9 +114,9 @@ func AlertContactGroupHandler(msgs []*primitive.MessageExt) {
 			MsgErr = json.Unmarshal(data, &model)
 			dao.AlertContactGroup.Delete(global.DB, model)
 		}
-	}
-	if MsgErr != nil {
-		logger.Logger().Errorf("%v", MsgErr)
+		if MsgErr != nil {
+			logger.Logger().Errorf("%v", MsgErr)
+		}
 	}
 }
 

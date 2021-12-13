@@ -15,6 +15,7 @@ import (
 func AlarmRuleHandler(msgList []*primitive.MessageExt) {
 	for i := range msgList {
 		fmt.Printf("subscribe callback: %v \n", msgList[i])
+		var MqMsg forms.MqMsg
 		if err := json.Unmarshal(msgList[i].Body, &MqMsg); err != nil {
 			continue
 		}

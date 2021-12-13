@@ -134,7 +134,7 @@ func (s *AlertContactService) insertAlertContact(db *gorm.DB, p forms.AlertConta
 func (s *AlertContactService) updateAlertContact(db *gorm.DB, p forms.AlertContactParam) (*models.AlertContact, error) {
 	//校验联系人是否为该租户所有
 	var check int64
-	db.Model(&models.AlertContact{}).Where("tenant_id = ? AND contact_id = ?", p.TenantId, p.ContactId).Count(&check)
+	db.Model(&models.AlertContact{}).Where("tenant_id = ? AND id = ?", p.TenantId, p.ContactId).Count(&check)
 	if check == 0 {
 		return nil, errors.NewBusinessError("该租户无此联系人")
 	}
