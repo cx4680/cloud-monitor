@@ -3,6 +3,7 @@ package service
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/tools"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
 	"fmt"
 )
 
@@ -19,6 +20,7 @@ func (externService *ExternService) GetRegionList(tenantId string) ([]*ResultBea
 	if err != nil {
 		return nil, err
 	}
+	logger.Logger().Infof("response:%v\n", json)
 	region := &RegionInfoDTO{}
 	tools.ToObject(json, region)
 	return region.Result, nil
