@@ -3,11 +3,11 @@
 -- Records of monitor_product
 -- ----------------------------
 INSERT INTO `monitor_product` (`id`, `name`, `status`, `description`, `create_user`, `create_time`, `route`, `cron`, `host`, `pageUrl`) VALUES ('1', '云服务器ECS', '1', 'ecs', NULL, NULL, '/productmonitoring/ecs', '0 0 0/1 * * ?', 'http://ecs-gateway.inner.dev001.intranet.cecloudcs.com', '/noauth/ecs/PageList');
+INSERT INTO `monitor_product` (`id`, `name`, `status`, `description`, `create_user`, `create_time`, `route`, `cron`, `host`, `pageUrl`) VALUES ('2', '弹性公网IP', '1', 'eip', NULL, NULL, '/productmonitoring/eip', '0 0 0/1 * * ?', 'http://product-eip-eip-manage.product-eip', '/eip/inner/eipInfoList');
 INSERT INTO `monitor_product` (`id`, `name`, `status`, `description`, `create_user`, `create_time`, `route`, `cron`, `host`, `pageUrl`) VALUES ('3', '负载均衡SLB', '1', 'slb', NULL, NULL, '/productmonitoring/slb', '0 0 0/1 * * ?', 'http://product-slb-controller-slb-manage.product-slb', '/slb/inner/list');
-INSERT INTO `monitor_product` (`id`, `name`, `status`, `description`, `create_user`, `create_time`, `route`, `cron`, `host`, `pageUrl`) VALUES ('2', '弹性公网IP', '1', 'eip', NULL, NULL, '/productmonitoring/eip', '0 0 0/1 * * ?', 'http://aopesb.dev001.intranet.cecloudcs.com', '/cestc?appId=600006&format=json&method=CESTC_UNHQ_queryLVSMachineList');
 
 INSERT INTO `monitor_product` (`id`, `name`, `status`, `description`, `create_user`, `create_time`, `route`, `cron`, `host`, `pageUrl`) VALUES ('5', '云备份CBR', '1', 'cbr', NULL, NULL, '/productmonitoring/cbr', '0 0 0/1 * * ?', 'http://product-backup-backup-manage.product-backup', '/noauth/backup/vault/pageList');
-INSERT INTO `monitor_product` (`id`, `name`, `status`, `description`, `create_user`, `create_time`, `route`, `cron`, `host`, `pageUrl`) VALUES ('6', 'NAT网关', '1', 'nat', NULL, NULL, '/productmonitoring/nat', '0 0 0/1 * * ?', 'http://aopesb.dev001.intranet.cecloudcs.com', '/cestc?appId=600006&format=json&method=CESTC_UNHQ_natPage');
+INSERT INTO `monitor_product` (`id`, `name`, `status`, `description`, `create_user`, `create_time`, `route`, `cron`, `host`, `pageUrl`) VALUES ('6', 'NAT网关', '1', 'nat', NULL, NULL, '/productmonitoring/nat', '0 0 0/1 * * ?', 'http://aopesb.dev001.intranet.cecloudcs.com/cestc', '?appId=600006&format=json&method=CESTC_UNHQ_natPage');
 
 -- ----------------------------
 -- Records of monitor_item
