@@ -24,6 +24,7 @@ func (externService *ExternService) GetRegionList(tenantId string) ([]*ResultBea
 	logger.Logger().Infof("response:%v\n", json)
 	region := &RegionInfoDTO{}
 	tools.ToObject(json, region)
+	logger.Logger().Infof("result:%v\n", region)
 	return region.Result, nil
 }
 
