@@ -15,7 +15,7 @@ func NewExternService() *ExternService {
 }
 
 func (externService *ExternService) GetRegionList(tenantId string) ([]*ResultBean, error) {
-	path := fmt.Sprintf("%s?format=json&method=%s&appId=%s", config.GetCommonConfig().Nk, "QUERY_REGION_INFO", "CESTC_UNHQ_queryPoolsByLoginId")
+	path := fmt.Sprintf("%s?format=json&method=%s&appId=%s", config.GetCommonConfig().Nk, "CESTC_UNHQ_queryPoolsByLoginId", "600006")
 	logger.Logger().Infof("response:%v\n", path)
 	json, err := tools.HttpPostJson(path, map[string]string{"loginId": tenantId}, map[string]string{"userCode": tenantId})
 	if err != nil {
