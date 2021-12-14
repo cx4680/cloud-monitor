@@ -47,7 +47,7 @@ github.com/PuerkitoBio/purell
 # github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578
 ## explicit
 github.com/PuerkitoBio/urlesc
-# github.com/apache/rocketmq-client-go/v2 v2.1.0
+# github.com/apache/rocketmq-client-go/v2 v2.1.0 => ../rocketmq-client-go-2.1.0
 ## explicit; go 1.13
 github.com/apache/rocketmq-client-go/v2
 github.com/apache/rocketmq-client-go/v2/admin
