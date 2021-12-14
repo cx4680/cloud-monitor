@@ -7,6 +7,6 @@ const (
 	ErrorServer = "500"
 )
 
-const TenantId = "tenantId"
+const TenantId = "accountId"
 const UserId = "userId"
 const UserType = "userType"
