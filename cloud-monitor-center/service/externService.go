@@ -21,21 +21,21 @@ func (externService *ExternService) GetRegionList(tenantId string) ([]*ResultBea
 	}
 	region := &RegionInfoDTO{}
 	tools.ToObject(json, region)
-	return region.result, nil
+	return region.Result, nil
 }
 
 type RegionInfoDTO struct {
-	respDesc string
-	code     string
-	message  string
-	ok       bool
-	respCode string
-	result   []*ResultBean
+	RespDesc string        `json:"respDesc"`
+	Code     string        `json:"code"`
+	Message  string        `json:"message"`
+	Ok       bool          `json:"ok"`
+	RespCode string        `json:"respCode"`
+	Result   []*ResultBean `json:"result"`
 }
 
 type ResultBean struct {
-	PoolUrl  string
-	AllFlag  bool
-	PoolId   string
-	PoolName string
+	PoolUrl  string `json:"poolUrl"`
+	AllFlag  bool   `json:"allFlag"`
+	PoolId   string `json:"poolId"`
+	PoolName string `json:"poolName"`
 }

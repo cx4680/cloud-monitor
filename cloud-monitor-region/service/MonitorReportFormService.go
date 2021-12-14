@@ -4,9 +4,7 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/dao"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/errors"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/models"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/service"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/constant"
-	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/external"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/forms"
 	"fmt"
 	"strconv"
@@ -20,7 +18,7 @@ func NewMonitorReportFormService() *MonitorReportFormService {
 	return &MonitorReportFormService{}
 }
 
-func (mpd *MonitorReportFormService) GetData(request forms.PrometheusRequest) ([]forms.PrometheusValue, error) {
+func (s *MonitorReportFormService) GetData(request forms.PrometheusRequest) ([]forms.PrometheusValue, error) {
 	if request.Instance == "" {
 		return nil, errors.NewBusinessError("instance为空")
 	}
@@ -38,7 +36,7 @@ func (mpd *MonitorReportFormService) GetData(request forms.PrometheusRequest) ([
 	return []forms.PrometheusValue{prometheusValue}, nil
 }
 
-func (mpd *MonitorReportFormService) GetTop(request forms.PrometheusRequest) ([]forms.PrometheusInstance, error) {
+func (s *MonitorReportFormService) GetTop(request forms.PrometheusRequest) ([]forms.PrometheusInstance, error) {
 	var pql string
 	instances, err := getEcsInstances()
 	if err != nil {
@@ -63,7 +61,7 @@ func (mpd *MonitorReportFormService) GetTop(request forms.PrometheusRequest) ([]
 	return instanceList, nil
 }
 
-func (mpd *MonitorReportFormService) GetAxisData(request forms.PrometheusRequest) (forms.PrometheusAxis, error) {
+func (s *MonitorReportFormService) GetAxisData(request forms.PrometheusRequest) (forms.PrometheusAxis, error) {
 	if request.Instance == "" {
 		return forms.PrometheusAxis{}, errors.NewBusinessError("instance为空")
 	}
@@ -154,27 +152,9 @@ func getMonitorItemByName(name string) models.MonitorItem {
 
 //查询租户的ECS实例列表
 func getEcsInstances() (string, error) {
-	form := service.InstancePageForm{
-		TenantId: "210011082310350",
-		Current:  1,
-		PageSize: 1000,
-		Product:  "ecs",
-	}
-
-	instanceService := external.ProductInstanceServiceMap[external.ECS]
-	page, err := instanceService.GetPage(form, instanceService.(service.InstanceStage))
-
+	list, err := GetInstanceList("1")
 	if err != nil {
 		return "", err
 	}
-	if page.Total <= 0 {
-		return "", nil
-	}
-	var instanceList []string
-	for _, ecsVO := range page.Records.([]service.InstanceCommonVO) {
-		if ecsVO.Id != "" {
-			instanceList = append(instanceList, ecsVO.Id)
-		}
-	}
-	return strings.Join(instanceList, "|"), nil
+	return strings.Join(list, "|"), nil
 }
