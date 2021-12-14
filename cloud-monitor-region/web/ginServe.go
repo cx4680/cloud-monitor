@@ -58,6 +58,6 @@ func loadPlugin(cfg config.Serve) {
 	}
 	//自定义组件
 	router.Use(middleware.Recovery())
-	router.Use(middleware.Cors())
+	//router.Use(middleware.Cors())
 	router.Use(middleware.Auth())
 }
