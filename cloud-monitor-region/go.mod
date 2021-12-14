@@ -85,6 +85,9 @@ require (
 	stathat.com/c/consistent v1.0.0 // indirect
 )
 
-replace code.cestc.cn/ccos-ops/cloud-monitor/common => ../common
 
-replace code.cestc.cn/ccos-ops/cloud-monitor/business-common => ../business-common
+replace (
+	code.cestc.cn/ccos-ops/cloud-monitor/common => ../common
+	code.cestc.cn/ccos-ops/cloud-monitor/business-common => ../business-common
+	github.com/apache/rocketmq-client-go/v2 v2.1.0 => ../rocketmq-client-go-2.1.0
+)

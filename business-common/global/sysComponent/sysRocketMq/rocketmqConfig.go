@@ -10,6 +10,7 @@ import (
 	"github.com/apache/rocketmq-client-go/v2/primitive"
 	"github.com/apache/rocketmq-client-go/v2/producer"
 	"github.com/pkg/errors"
+	"strings"
 	"sync"
 )
 
@@ -44,13 +45,13 @@ type RocketMqMsg struct {
 
 func CreateTopics(topics ...Topic) error {
 	cfg := config.GetRocketmqConfig()
-
+	addrs := strings.Split(cfg.NameServer, ";")
 	brokerAddr, err2 := getBrokerAddr(cfg)
 	if err2 != nil {
 		return err2
 	}
 
-	testAdmin, err := admin.NewAdmin(admin.WithResolver(primitive.NewPassthroughResolver([]string{cfg.NameServer})))
+	testAdmin, err := admin.NewAdmin(admin.WithResolver(primitive.NewPassthroughResolver(addrs)))
 	if err != nil {
 		fmt.Printf("create topic error %+v\n", err)
 		return err
@@ -78,7 +79,7 @@ func getBrokerAddr(cfg config.Rocketmq) (string, error) {
 		connectionLocker: sync.Mutex{},
 		interceptor:      nil,
 	}
-	broker, e := c.GetBrokerDataList(cfg.NameServer)
+	broker, e := c.GetBrokerDataList(strings.Split(cfg.NameServer, ";")[0])
 	if e != nil {
 		return "", e
 	}
@@ -94,9 +95,10 @@ func getBrokerAddr(cfg config.Rocketmq) (string, error) {
 
 func InitProducer() error {
 	cfg := config.GetRocketmqConfig()
+	addrs := strings.Split(cfg.NameServer, ";")
 	var err error
 	p, err = rocketmq.NewProducer(
-		producer.WithNsResolver(primitive.NewPassthroughResolver([]string{cfg.NameServer})),
+		producer.WithNsResolver(primitive.NewPassthroughResolver(addrs)),
 		producer.WithRetry(2),
 	)
 	if err != nil {
@@ -111,9 +113,10 @@ func InitProducer() error {
 }
 
 func StartConsumersScribe(group Group, consumers []*Consumer) error {
+	addrs := strings.Split(config.GetRocketmqConfig().NameServer, ";")
 	c, _ := rocketmq.NewPushConsumer(
 		consumer.WithGroupName(string(group)),
-		consumer.WithNsResolver(primitive.NewPassthroughResolver([]string{config.GetRocketmqConfig().NameServer})),
+		consumer.WithNsResolver(primitive.NewPassthroughResolver(addrs)),
 	)
 	for _, o := range consumers {
 		m := *o

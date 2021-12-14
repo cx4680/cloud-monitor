@@ -1,5 +1,7 @@
 package models
 
+import "code.cestc.cn/ccos-ops/cloud-monitor/business-common/forms"
+
 type AlertContactGroupRel struct {
 	Id         string `orm:"id" json:"id"`                   // ID
 	TenantId   string `orm:"tenant_id" json:"tenant_id"`     // 租户ID
@@ -12,4 +14,9 @@ type AlertContactGroupRel struct {
 
 func (*AlertContactGroupRel) TableName() string {
 	return "alert_contact_group_rel"
+}
+
+type UpdateAlertContactGroupRel struct {
+	RelList []*AlertContactGroupRel
+	Param   forms.AlertContactParam
 }
