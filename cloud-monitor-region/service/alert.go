@@ -139,7 +139,7 @@ func (s *AlertRecordAddService) checkAndBuild(alerts []*forms.AlertRecordAlertsB
 				switch handler.HandleType {
 				case 1:
 				case 2:
-					data = s.buildNoticeData(alert, record, ruleDesc, contactGroups)
+					data = s.buildNoticeData(alert, record, ruleDesc, contactGroups, handler)
 				case 3:
 					data = s.buildAutoScalingData(alert, ruleDesc, handler.HandleParams)
 				}
@@ -209,14 +209,14 @@ func (s *AlertRecordAddService) buildAutoScalingData(alert *forms.AlertRecordAle
 	}
 }
 
-func (s *AlertRecordAddService) buildNoticeData(alert *forms.AlertRecordAlertsBean, record *commonModels.AlertRecord, ruleDesc *commonDtos.RuleDesc, contactGroups []commonDtos.ContactGroupInfo) *service.AlertMsgSendDTO {
+func (s *AlertRecordAddService) buildNoticeData(alert *forms.AlertRecordAlertsBean, record *commonModels.AlertRecord, ruleDesc *commonDtos.RuleDesc, contactGroups []commonDtos.ContactGroupInfo, handler commonModels.AlarmHandler) *service.AlertMsgSendDTO {
 	source := messageCenter.ALERT_OPEN
 	if "resolved" == alert.Status {
 		source = messageCenter.ALERT_CANCEL
 	}
 
-	channel := ruleDesc.NotifyChannel
-	targetList := s.buildTargets(channel, contactGroups)
+	handleType := handler.HandleType
+	targetList := s.buildTargets(handleType, contactGroups)
 	instanceInfo := s.getInstanceInfo(alert.Annotations.Summary)
 
 	objMap := make(map[string]string)
@@ -232,7 +232,7 @@ func (s *AlertRecordAddService) buildNoticeData(alert *forms.AlertRecordAlertsBe
 	cv := fmt.Sprintf("%.2f", f)
 	objMap["currentValue"] = cv + ruleDesc.Unit
 
-	if "mail" == channel {
+	if 1 == handleType {
 		objMap["instanceAmount"] = "1"
 		objMap["period"] = utils.GetDateDiff(ruleDesc.Time)
 		objMap["times"] = "持续" + strconv.Itoa(ruleDesc.Time) + "个周期"
@@ -296,23 +296,16 @@ func (s *AlertRecordAddService) getInstanceInfo(summary string) string {
 	return builder.String()
 }
 
-func (s *AlertRecordAddService) buildTargets(channel string, contactGroups []commonDtos.ContactGroupInfo) []messageCenter.MessageTargetDTO {
+func (s *AlertRecordAddService) buildTargets(channel int, contactGroups []commonDtos.ContactGroupInfo) []messageCenter.MessageTargetDTO {
 	var targetList []messageCenter.MessageTargetDTO
 
 	for _, group := range contactGroups {
 		for _, contact := range group.Contacts {
-			if "all" == channel {
+			if 1 == channel {
 				if mailTargetList := s.buildMailTargets(contact); mailTargetList != nil {
 					targetList = append(targetList, mailTargetList...)
 				}
-				if phoneTargetList := s.buildPhoneTargets(contact); phoneTargetList != nil {
-					targetList = append(targetList, phoneTargetList...)
-				}
-			} else if "email" == channel {
-				if mailTargetList := s.buildMailTargets(contact); mailTargetList != nil {
-					targetList = append(targetList, mailTargetList...)
-				}
-			} else if "phone" == channel {
+			} else if 2 == channel {
 				if phoneTargetList := s.buildPhoneTargets(contact); phoneTargetList != nil {
 					targetList = append(targetList, phoneTargetList...)
 				}
