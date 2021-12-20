@@ -217,16 +217,9 @@ func (s *AlertRecordAddService) buildNoticeData(alert *forms.AlertRecordAlertsBe
 
 	channel := ruleDesc.NotifyChannel
 	targetList := s.buildTargets(channel, contactGroups)
-
-	instance := s.AlertRecordDao.FindFirstInstanceInfo(ruleDesc.InstanceId)
-	if instance == nil {
-		logger.Logger().Info("未查询到实例信息, recordId=%s\n", record.Id)
-		return nil
-	}
-	instanceInfo := s.getInstanceInfo(instance, alert.Annotations.Summary)
+	instanceInfo := s.getInstanceInfo(alert.Annotations.Summary)
 
 	objMap := make(map[string]string)
-
 	objMap["duration"] = record.Duration
 	objMap["instanceInfo"] = instanceInfo
 	objMap["product"] = ruleDesc.Product
@@ -277,8 +270,12 @@ func (s *AlertRecordAddService) buildNoticeData(alert *forms.AlertRecordAlertsBe
 	}
 }
 
-func (s *AlertRecordAddService) getInstanceInfo(instance *commonModels.AlarmInstance, summary string) string {
+func (s *AlertRecordAddService) getInstanceInfo(summary string) string {
 	var builder strings.Builder
+
+	labelMap := s.getLabelMap(summary)
+	instance := s.AlertRecordDao.FindFirstInstanceInfo(labelMap["instance"])
+
 	if tools.IsNotBlank(instance.InstanceName) {
 		builder.WriteString(instance.InstanceName)
 		builder.WriteString("/")
@@ -286,7 +283,7 @@ func (s *AlertRecordAddService) getInstanceInfo(instance *commonModels.AlarmInst
 	if tools.IsNotBlank(instance.Ip) {
 		builder.WriteString(instance.Ip)
 	}
-	labelMap := s.getLabelMap(summary)
+
 	delete(labelMap, "instance")
 	delete(labelMap, "name")
 	delete(labelMap, "currentValue")
