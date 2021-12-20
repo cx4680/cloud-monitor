@@ -36,7 +36,12 @@ func (a *AlertRecordController) GetDetail(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, global.NewError("参数异常"))
 		return
 	}
-	c.JSON(http.StatusOK, dao.AlertRecord.GetById(global.DB, recordId))
+	tenantId, err := tools.GetTenantId(c)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, global.NewError("获取用户信息失败"))
+		return
+	}
+	c.JSON(http.StatusOK, dao.AlertRecord.GetByIdAndTenantId(global.DB, recordId, tenantId))
 }
 
 func (a *AlertRecordController) GetAlertRecordTotal(c *gin.Context) {
