@@ -18,6 +18,7 @@ FROM  harbor.ceclouddyn.com/baseos/centos:8.4.2105-0.0.1
 WORKDIR /dist
 COPY --from=builder /build/app .
 COPY --from=builder /build/script/*.sql ./script/
+COPY --from=builder /build/template/* ./template/
 
 RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime &&\
     echo 'Asia/Shanghai' >/etc/timezone

@@ -139,7 +139,7 @@ func (s *AlertRecordAddService) checkAndBuild(alerts []*forms.AlertRecordAlertsB
 				switch handler.HandleType {
 				case 1:
 				case 2:
-					data = s.buildNoticeData(alert, record, ruleDesc, contactGroups)
+					data = s.buildNoticeData(alert, record, ruleDesc, contactGroups, handler)
 				case 3:
 					data = s.buildAutoScalingData(alert, ruleDesc, handler.HandleParams)
 				}
@@ -209,24 +209,17 @@ func (s *AlertRecordAddService) buildAutoScalingData(alert *forms.AlertRecordAle
 	}
 }
 
-func (s *AlertRecordAddService) buildNoticeData(alert *forms.AlertRecordAlertsBean, record *commonModels.AlertRecord, ruleDesc *commonDtos.RuleDesc, contactGroups []commonDtos.ContactGroupInfo) *service.AlertMsgSendDTO {
+func (s *AlertRecordAddService) buildNoticeData(alert *forms.AlertRecordAlertsBean, record *commonModels.AlertRecord, ruleDesc *commonDtos.RuleDesc, contactGroups []commonDtos.ContactGroupInfo, handler commonModels.AlarmHandler) *service.AlertMsgSendDTO {
 	source := messageCenter.ALERT_OPEN
 	if "resolved" == alert.Status {
 		source = messageCenter.ALERT_CANCEL
 	}
 
-	channel := ruleDesc.NotifyChannel
-	targetList := s.buildTargets(channel, contactGroups)
-
-	instance := s.AlertRecordDao.FindFirstInstanceInfo(ruleDesc.InstanceId)
-	if instance == nil {
-		logger.Logger().Info("未查询到实例信息, recordId=%s\n", record.Id)
-		return nil
-	}
-	instanceInfo := s.getInstanceInfo(instance, alert.Annotations.Summary)
+	handleType := handler.HandleType
+	targetList := s.buildTargets(handleType, contactGroups)
+	instanceInfo := s.getInstanceInfo(alert.Annotations.Summary)
 
 	objMap := make(map[string]string)
-
 	objMap["duration"] = record.Duration
 	objMap["instanceInfo"] = instanceInfo
 	objMap["product"] = ruleDesc.Product
@@ -239,7 +232,7 @@ func (s *AlertRecordAddService) buildNoticeData(alert *forms.AlertRecordAlertsBe
 	cv := fmt.Sprintf("%.2f", f)
 	objMap["currentValue"] = cv + ruleDesc.Unit
 
-	if "mail" == channel {
+	if 1 == handleType {
 		objMap["instanceAmount"] = "1"
 		objMap["period"] = utils.GetDateDiff(ruleDesc.Time)
 		objMap["times"] = "持续" + strconv.Itoa(ruleDesc.Time) + "个周期"
@@ -277,8 +270,12 @@ func (s *AlertRecordAddService) buildNoticeData(alert *forms.AlertRecordAlertsBe
 	}
 }
 
-func (s *AlertRecordAddService) getInstanceInfo(instance *commonModels.AlarmInstance, summary string) string {
+func (s *AlertRecordAddService) getInstanceInfo(summary string) string {
 	var builder strings.Builder
+
+	labelMap := s.getLabelMap(summary)
+	instance := s.AlertRecordDao.FindFirstInstanceInfo(labelMap["instance"])
+
 	if tools.IsNotBlank(instance.InstanceName) {
 		builder.WriteString(instance.InstanceName)
 		builder.WriteString("/")
@@ -286,7 +283,7 @@ func (s *AlertRecordAddService) getInstanceInfo(instance *commonModels.AlarmInst
 	if tools.IsNotBlank(instance.Ip) {
 		builder.WriteString(instance.Ip)
 	}
-	labelMap := s.getLabelMap(summary)
+
 	delete(labelMap, "instance")
 	delete(labelMap, "name")
 	delete(labelMap, "currentValue")
@@ -299,23 +296,16 @@ func (s *AlertRecordAddService) getInstanceInfo(instance *commonModels.AlarmInst
 	return builder.String()
 }
 
-func (s *AlertRecordAddService) buildTargets(channel string, contactGroups []commonDtos.ContactGroupInfo) []messageCenter.MessageTargetDTO {
+func (s *AlertRecordAddService) buildTargets(channel int, contactGroups []commonDtos.ContactGroupInfo) []messageCenter.MessageTargetDTO {
 	var targetList []messageCenter.MessageTargetDTO
 
 	for _, group := range contactGroups {
 		for _, contact := range group.Contacts {
-			if "all" == channel {
+			if 1 == channel {
 				if mailTargetList := s.buildMailTargets(contact); mailTargetList != nil {
 					targetList = append(targetList, mailTargetList...)
 				}
-				if phoneTargetList := s.buildPhoneTargets(contact); phoneTargetList != nil {
-					targetList = append(targetList, phoneTargetList...)
-				}
-			} else if "email" == channel {
-				if mailTargetList := s.buildMailTargets(contact); mailTargetList != nil {
-					targetList = append(targetList, mailTargetList...)
-				}
-			} else if "phone" == channel {
+			} else if 2 == channel {
 				if phoneTargetList := s.buildPhoneTargets(contact); phoneTargetList != nil {
 					targetList = append(targetList, phoneTargetList...)
 				}
