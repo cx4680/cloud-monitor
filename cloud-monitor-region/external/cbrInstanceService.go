@@ -3,6 +3,7 @@ package external
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/service"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/tools"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
 	"strconv"
 )
 
@@ -34,8 +35,8 @@ type CbrInfoBean struct {
 	Status       string
 	Region       string
 	Zone         string
-	Capacity     string
-	UsedCapacity string
+	Capacity     int
+	UsedCapacity int
 	CreatedAt    string
 	UpdatedAt    string
 }
@@ -48,8 +49,8 @@ func (c *CbrInstanceService) ConvertRealForm(form service.InstancePageForm) inte
 		PageNumber: strconv.Itoa(form.Current),
 		PageSize:   strconv.Itoa(form.PageSize),
 	}
-	if form.StatusList != nil {
-		param.Status = form.StatusList[0]
+	if tools.IsNotBlank(form.StatusList) {
+		param.Status = form.StatusList
 	}
 	return param
 }
@@ -57,6 +58,7 @@ func (c *CbrInstanceService) ConvertRealForm(form service.InstancePageForm) inte
 func (c *CbrInstanceService) DoRequest(url string, form interface{}) (interface{}, error) {
 	respStr, err := tools.HttpPostJson(url, form, nil)
 	if err != nil {
+		logger.Logger().Errorf("error:%v, url:%v, request:%v", err, url, form)
 		return nil, err
 	}
 	var resp CbrQueryPageVO
@@ -70,14 +72,14 @@ func (c *CbrInstanceService) ConvertResp(realResp interface{}) (int, []service.I
 	if vo.Total_count > 0 {
 		for _, d := range vo.Data {
 			list = append(list, service.InstanceCommonVO{
-				Id:   d.VaultId,
-				Name: d.Name,
+				InstanceId:   d.VaultId,
+				InstanceName: d.Name,
 				Labels: []service.InstanceLabel{{
 					Name:  "capacity",
-					Value: d.Capacity,
+					Value: strconv.Itoa(d.Capacity),
 				}, {
 					Name:  "usedCapacity",
-					Value: d.UsedCapacity,
+					Value: strconv.Itoa(d.UsedCapacity),
 				}},
 			})
 		}

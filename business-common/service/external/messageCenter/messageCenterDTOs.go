@@ -7,6 +7,16 @@ const (
 	Email
 )
 
+const (
+	SingleResourceThresholdAlarmReminder     = "single_resource_threshold_alarm_reminder"
+	SingleResourceThresholdAlarmReminderMail = "single_resource_threshold_alarm_reminder_mail"
+	SingleResourceRecoveryReminder           = "single_resource_recovery_reminder"
+	SingleResourceRecoveryReminderMail       = "single_resource_recovery_reminder_mail"
+	AddAlarmContact                          = "add_alarm_contact"
+	AddAlarmContactMail                      = "add_alarm_contact_mail"
+	CloudMonitorAlarmSmsLack                 = "cloud_monitor_alarm_sms_lack"
+)
+
 type MsgSource int
 
 const (
@@ -22,29 +32,30 @@ type MessageTargetDTO struct {
 }
 
 type MessageSendDTO struct {
-	SenderId   string
-	Target     []MessageTargetDTO
-	SourceType MsgSource
-	Content    string
+	SenderId     string
+	Target       []MessageTargetDTO
+	SourceType   MsgSource
+	Content      string
+	MsgEventCode string
 }
 
 // SmsMessageReqDTO 消息中心接口入参
 type SmsMessageReqDTO struct {
-	BusinessId string
-	InModeCode string
-	Messages   []MessagesBean
-	ReferTime  string
+	BusinessId string         `json:"businessId"`
+	InModeCode string         `json:"inModeCode"`
+	Messages   []MessagesBean `json:"messages"`
+	ReferTime  string         `json:"referTime"`
 }
 
 // MessagesBean 消息中心接口入参
 type MessagesBean struct {
-	MsgEventCode   string
-	RecvObjectList []RecvObjectBean
+	MsgEventCode   string           `json:"msgEventCode"`
+	RecvObjectList []RecvObjectBean `json:"recvObjectList"`
 }
 
 // RecvObjectBean 消息中心接口入参
 type RecvObjectBean struct {
-	RecvObjectType ReceiveType
-	RecvObject     string
-	NoticeContent  string
+	RecvObjectType ReceiveType `json:"recvObjectType"`
+	RecvObject     string      `json:"recvObject"`
+	NoticeContent  string      `json:"noticeContent"`
 }

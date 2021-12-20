@@ -11,7 +11,7 @@ type EipInstanceService struct {
 }
 type EipQueryPageRequest struct {
 	OrderName string      `json:"orderName,omitempty"`
-	OrderRule string      `json:"OrderRule,omitempty"`
+	OrderRule string      `json:"orderRule,omitempty"`
 	PageIndex int         `json:"pageIndex,omitempty"`
 	PageSize  int         `json:"pageSize,omitempty"`
 	Data      interface{} `json:"data,omitempty"`
@@ -71,15 +71,8 @@ func (eip *EipInstanceService) ConvertRealForm(form service.InstancePageForm) in
 		IpAddress: form.ExtraAttr["ip"],
 		Uid:       form.InstanceId,
 	}
-	if form.StatusList != nil && len(form.StatusList) > 0 {
-		var list []int
-		for _, s := range form.StatusList {
-			i, err := strconv.Atoi(s)
-			if err != nil {
-				list = append(list, i)
-			}
-		}
-		queryParam.StatusList = list
+	if tools.IsNotBlank(form.StatusList) {
+		queryParam.StatusList = toIntList(form.StatusList)
 	}
 
 	return EipQueryPageRequest{
@@ -107,8 +100,8 @@ func (eip *EipInstanceService) ConvertResp(realResp interface{}) (int, []service
 	if vo.Data.Total > 0 {
 		for _, d := range vo.Data.Rows {
 			list = append(list, service.InstanceCommonVO{
-				Id:   d.InstanceUid,
-				Name: d.Name,
+				InstanceId:   d.Uid,
+				InstanceName: d.Name,
 				Labels: []service.InstanceLabel{{
 					Name:  "eipAddress",
 					Value: d.IpAddress,
@@ -120,7 +113,7 @@ func (eip *EipInstanceService) ConvertResp(realResp interface{}) (int, []service
 					Value: strconv.Itoa(d.BandWidth),
 				}, {
 					Name:  "bindInstanceId",
-					Value: d.BandWidthUid,
+					Value: d.InstanceUid,
 				}},
 			})
 		}

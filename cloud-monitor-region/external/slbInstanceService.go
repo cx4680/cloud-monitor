@@ -3,6 +3,8 @@ package external
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/service"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/tools"
+	"strconv"
+	"strings"
 )
 
 type SlbInstanceService struct {
@@ -22,7 +24,7 @@ type SlbQueryParam struct {
 
 type SlbQueryPageRequest struct {
 	OrderName string      `json:"orderName,omitempty"`
-	OrderRule string      `json:"OrderRule,omitempty"`
+	OrderRule string      `json:"orderRule,omitempty"`
 	PageIndex int         `json:"pageIndex,omitempty"`
 	PageSize  int         `json:"pageSize,omitempty"`
 	Data      interface{} `json:"data,omitempty"`
@@ -100,10 +102,12 @@ type SlbInfoBean struct {
 
 func (slb *SlbInstanceService) ConvertRealForm(form service.InstancePageForm) interface{} {
 	queryParam := SlbQueryParam{
-		Address:   form.ExtraAttr["privateIp"],
-		LbUid:     form.InstanceId,
-		Name:      form.InstanceName,
-		StateList: form.StatusList,
+		Address: form.ExtraAttr["privateIp"],
+		LbUid:   form.InstanceId,
+		Name:    form.InstanceName,
+	}
+	if tools.IsNotBlank(form.StatusList) {
+		queryParam.StateList = strings.Split(form.StatusList, ",")
 	}
 	return SlbQueryPageRequest{
 		PageIndex: form.Current,
@@ -130,23 +134,43 @@ func (slb *SlbInstanceService) ConvertResp(realResp interface{}) (int, []service
 	if vo.Data.Total > 0 {
 		for _, d := range vo.Data.Rows {
 			list = append(list, service.InstanceCommonVO{
-				Id:   d.LbUid,
-				Name: d.Name,
+				InstanceId:   d.LbUid,
+				InstanceName: d.Name,
 				Labels: []service.InstanceLabel{{
 					Name:  "eipIp",
 					Value: d.Eip.Ip,
 				}, {
 					Name:  "privateIp",
-					Value: d.Ip,
+					Value: d.Address,
 				}, {
 					Name:  "vpcName",
 					Value: d.NetworkName,
 				}, {
 					Name:  "vpcId",
 					Value: d.NetworkUid,
+				}, {
+					Name:  "state",
+					Value: d.State,
+				}, {
+					Name:  "spec",
+					Value: d.Spec,
+				}, {
+					Name:  "listener",
+					Value: getListenerList(d),
+				}, {
+					Name:  "id",
+					Value: strconv.Itoa(d.Id),
 				}},
 			})
 		}
 	}
 	return vo.Data.Total, list
+}
+
+func getListenerList(slb *SlbInfoBean) string {
+	var listener []string
+	for _, v := range slb.ListenerList {
+		listener = append(listener, v.Name)
+	}
+	return strings.Join(listener, ",")
 }

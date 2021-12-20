@@ -2,8 +2,8 @@ package middleware
 
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/global"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
 	"github.com/gin-gonic/gin"
-	"log"
 	"net/http"
 	"runtime"
 	"strconv"
@@ -30,7 +30,7 @@ func Recovery() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer func() {
 			if err := recover(); err != nil {
-				log.Println(err)
+				logger.Logger().Error(err)
 				c.JSON(http.StatusInternalServerError, global.NewError("系统异常"))
 				return
 				//default:

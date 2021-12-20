@@ -4,12 +4,14 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/constants"
 	commonDao "code.cestc.cn/ccos-ops/cloud-monitor/business-common/dao"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/dtos"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/errors"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/sysComponent/sysRocketMq"
 	commonModels "code.cestc.cn/ccos-ops/cloud-monitor/business-common/models"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/service/external/messageCenter"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/tools"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/utils/snowflake"
 	"log"
 	"strconv"
@@ -46,7 +48,7 @@ func (s *MessageService) TargetFilter(targetList []messageCenter.MessageTargetDT
 			if s.checkSentNum(senderId, num, isCenter) {
 				nt = append(nt, t)
 			} else {
-				log.Printf("too many records have been sent, send refused, sender=%s \n", senderId)
+				logger.Logger().Infof("too many records have been sent, send refused, sender=%s \n", senderId)
 			}
 		}
 	}
@@ -55,7 +57,7 @@ func (s *MessageService) TargetFilter(targetList []messageCenter.MessageTargetDT
 
 func (s *MessageService) SendMsg(msgList []AlertMsgSendDTO, isCenter bool) error {
 	if !config.GetCommonConfig().HasNoticeModel {
-		log.Println("There is no message center for this env")
+		logger.Logger().Info("There is no message center for this env")
 		return nil
 	}
 	if msgList == nil || len(msgList) <= 0 {
@@ -71,7 +73,7 @@ func (s *MessageService) SendMsg(msgList []AlertMsgSendDTO, isCenter bool) error
 
 		//send msg
 		if err := s.MCS.Send(msg); err != nil {
-			log.Printf("message send error, %v\n\n", err)
+			logger.Logger().Errorf("message send error, %v\n\n", err)
 			return err
 		}
 
@@ -161,14 +163,14 @@ func (s *MessageService) SmsMarginReminder(sender string) {
 func (s *MessageService) checkSentNum(tenantId string, num int, isCenter bool) bool {
 	//check local
 	if num > constants.MaxSmsNum {
-		log.Println("user ", tenantId, " already used more", constants.MaxSmsNum, ", send sms refused.")
+		logger.Logger().Info("user ", tenantId, " already used more", constants.MaxSmsNum, ", send sms refused.")
 		return false
 	}
 	//	check remote
 	if !isCenter {
 		num = s.getUserCurrentMonthSmsUsedNum(tenantId)
 		if num > constants.MaxSmsNum {
-			log.Println("user ", tenantId, " already used more", constants.MaxSmsNum, ", send sms refused.")
+			logger.Logger().Info("user ", tenantId, " already used more", constants.MaxSmsNum, ", send sms refused.")
 			return false
 		}
 	}
@@ -252,4 +254,12 @@ func (s *MessageService) getUserCurrentMonthSmsUsedNum(tenantId string) int {
 	var respObj ResultDTO
 	tools.ToObject(resp, &respObj)
 	return respObj.Module
+}
+
+func(s *MessageService) GetTenantCurrentMonthSmsUsedNum(tenantId string) (int, error) {
+	if tenantId == "" {
+		return 0, errors.NewBusinessError("租户不能为空")
+	}
+	num := s.NotificationRecordDao.GetTenantSMSLackRecordNum(tenantId)
+	return num, nil
 }

@@ -14,19 +14,19 @@ type InstanceLabel struct {
 }
 
 type InstanceCommonVO struct {
-	Id     string          `json:"id"`
-	Name   string          `json:"name"`
-	Labels []InstanceLabel `json:"labels"`
+	InstanceId   string          `json:"instanceId"`
+	InstanceName string          `json:"instanceName"`
+	Labels       []InstanceLabel `json:"labels"`
 }
 
 type InstancePageForm struct {
-	TenantId     string   `form:"tenantId"`
-	InstanceId   string   `form:"instanceId"`
-	InstanceName string   `form:"instanceName"`
-	StatusList   []string `form:"statusList"`
-	Current      int      `form:"current,default=1"`
-	PageSize     int      `form:"pageSize,default=10"`
-	Product      string   `form:"product"`
+	TenantId     string            `form:"tenantId"`
+	InstanceId   string            `form:"instanceId"`
+	InstanceName string            `form:"instanceName"`
+	StatusList   string          `form:"statusList"`
+	Current      int               `form:"current,default=1"`
+	PageSize     int               `form:"pageSize,default=10"`
+	Product      string            `form:"product"`
 	ExtraAttr    map[string]string `form:"extraAttr"`
 }
 
@@ -68,7 +68,7 @@ func (is *InstanceServiceImpl) GetPage(form InstancePageForm, stage InstanceStag
 }
 
 func (is *InstanceServiceImpl) getRequestUrl(product string) (string, error) {
-	p := dao.MonitorProduct.GetByDesc(global.DB, product)
+	p := dao.MonitorProduct.GetByAbbreviation(global.DB, product)
 	if p == nil {
 		return "", errors.New("产品配置有误")
 	}

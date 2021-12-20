@@ -5,6 +5,7 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/forms"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/sysComponent/sysRocketMq"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/tools"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/service"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/validator/translate"
 	"github.com/gin-gonic/gin"
@@ -28,6 +29,12 @@ func (acgc *AlertContactGroupCtl) GetAlertContactGroup(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, translate.GetErrorMsg(err))
 		return
 	}
+	tenantId, err := tools.GetTenantId(c)
+	if err != nil {
+		c.JSON(http.StatusOK, global.NewError(err.Error()))
+		return
+	}
+	param.TenantId = tenantId
 	c.JSON(http.StatusOK, global.NewSuccess("查询成功", acgc.service.SelectAlertContactGroup(param)))
 }
 
@@ -38,6 +45,11 @@ func (acgc *AlertContactGroupCtl) GetAlertGroupContact(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, translate.GetErrorMsg(err))
 		return
 	}
+	tenantId, err := tools.GetTenantId(c)
+	if err != nil {
+		c.JSON(http.StatusOK, global.NewError(err.Error()))
+	}
+	param.TenantId = tenantId
 	c.JSON(http.StatusOK, global.NewSuccess("查询成功", acgc.service.SelectAlertGroupContact(param)))
 }
 
@@ -48,6 +60,12 @@ func (acgc *AlertContactGroupCtl) InsertAlertContactGroup(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, translate.GetErrorMsg(err))
 		return
 	}
+	tenantId, err := tools.GetTenantId(c)
+	if err != nil {
+		c.JSON(http.StatusOK, global.NewError(err.Error()))
+		return
+	}
+	param.TenantId = tenantId
 	param.EventEum = enums.InsertAlertContactGroup
 	err = alertContactGroupService.Persistence(alertContactGroupService, sysRocketMq.AlertContactGroupTopic, param)
 	if err != nil {
@@ -64,6 +82,12 @@ func (acgc *AlertContactGroupCtl) UpdateAlertContactGroup(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, translate.GetErrorMsg(err))
 		return
 	}
+	tenantId, err := tools.GetTenantId(c)
+	if err != nil {
+		c.JSON(http.StatusOK, global.NewError(err.Error()))
+		return
+	}
+	param.TenantId = tenantId
 	param.EventEum = enums.UpdateAlertContactGroup
 	err = alertContactGroupService.Persistence(alertContactGroupService, sysRocketMq.AlertContactGroupTopic, param)
 	if err != nil {
@@ -80,6 +104,12 @@ func (acgc *AlertContactGroupCtl) DeleteAlertContactGroup(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, translate.GetErrorMsg(err))
 		return
 	}
+	tenantId, err := tools.GetTenantId(c)
+	if err != nil {
+		c.JSON(http.StatusOK, global.NewError(err.Error()))
+		return
+	}
+	param.TenantId = tenantId
 	param.EventEum = enums.DeleteAlertContactGroup
 	err = alertContactGroupService.Persistence(alertContactGroupService, sysRocketMq.AlertContactGroupTopic, param)
 	if err != nil {

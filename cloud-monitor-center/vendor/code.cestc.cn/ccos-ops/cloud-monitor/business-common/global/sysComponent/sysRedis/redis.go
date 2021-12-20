@@ -2,9 +2,9 @@ package sysRedis
 
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
 	"context"
 	"github.com/go-redis/redis/v8"
-	"log"
 	"sync"
 	"time"
 )
@@ -29,7 +29,7 @@ func InitClient(config config.RedisConfig) error {
 
 	_, err := rdb.Ping(ctx).Result()
 	if err != nil {
-		log.Fatalln("redis connection error", err)
+		logger.Logger().Errorf("redis connection error", err)
 		return err
 	}
 	return nil

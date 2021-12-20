@@ -5,6 +5,8 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/forms"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/sysComponent/sysRocketMq"
+	commonService "code.cestc.cn/ccos-ops/cloud-monitor/business-common/service"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/tools"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/service"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/validator/translate"
 	"github.com/gin-gonic/gin"
@@ -28,6 +30,12 @@ func (acl *AlertContactCtl) GetAlertContact(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, translate.GetErrorMsg(err))
 		return
 	}
+	tenantId, err := tools.GetTenantId(c)
+	if err != nil {
+		c.JSON(http.StatusOK, global.NewError(err.Error()))
+		return
+	}
+	param.TenantId = tenantId
 	c.JSON(http.StatusOK, global.NewSuccess("查询成功", acl.service.SelectAlertContact(param)))
 }
 
@@ -38,6 +46,12 @@ func (acl *AlertContactCtl) InsertAlertContact(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, translate.GetErrorMsg(err))
 		return
 	}
+	tenantId, err := tools.GetTenantId(c)
+	if err != nil {
+		c.JSON(http.StatusOK, global.NewError(err.Error()))
+		return
+	}
+	param.TenantId = tenantId
 	param.EventEum = enums.InsertAlertContact
 	err = alertContactService.Persistence(alertContactService, sysRocketMq.AlertContactTopic, param)
 	if err != nil {
@@ -54,6 +68,12 @@ func (acl *AlertContactCtl) UpdateAlertContact(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, translate.GetErrorMsg(err))
 		return
 	}
+	tenantId, err := tools.GetTenantId(c)
+	if err != nil {
+		c.JSON(http.StatusOK, global.NewError(err.Error()))
+		return
+	}
+	param.TenantId = tenantId
 	param.EventEum = enums.UpdateAlertContact
 	err = alertContactService.Persistence(alertContactService, sysRocketMq.AlertContactTopic, param)
 	if err != nil {
@@ -70,7 +90,12 @@ func (acl *AlertContactCtl) DeleteAlertContact(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, translate.GetErrorMsg(err))
 		return
 	}
-	param.TenantId = "1"
+	tenantId, err := tools.GetTenantId(c)
+	if err != nil {
+		c.JSON(http.StatusOK, global.NewError(err.Error()))
+		return
+	}
+	param.TenantId = tenantId
 	param.EventEum = enums.DeleteAlertContact
 	err = alertContactService.Persistence(alertContactService, sysRocketMq.AlertContactTopic, param)
 	if err != nil {
@@ -82,7 +107,7 @@ func (acl *AlertContactCtl) DeleteAlertContact(c *gin.Context) {
 
 func (acl *AlertContactCtl) CertifyAlertContact(c *gin.Context) {
 	var param forms.AlertContactParam
-	err := c.ShouldBindQuery(param)
+	err := c.ShouldBindQuery(&param)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, translate.GetErrorMsg(err))
 		return
@@ -92,6 +117,15 @@ func (acl *AlertContactCtl) CertifyAlertContact(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusOK, global.NewError(err.Error()))
 	} else {
-		c.JSON(http.StatusOK, global.NewSuccess("删除成功", true))
+		c.JSON(http.StatusOK, global.NewSuccess("激活成功", getTenantName(param.ActiveCode)))
 	}
+}
+
+//获取租户姓名
+func getTenantName(activeCode string) string {
+	tenantName := commonService.NewTenantService().GetTenantInfo(alertContactService.GetTenantId(activeCode)).Name
+	if tenantName == "" {
+		return "未命名"
+	}
+	return tenantName
 }

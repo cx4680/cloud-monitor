@@ -11,7 +11,6 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
 	"encoding/json"
 	"fmt"
-	"log"
 	"strings"
 )
 
@@ -24,12 +23,12 @@ var PrometheusRule = &K8sPrometheusService{AlarmRuleDao: dao2.AlarmRule}
 func (dao *K8sPrometheusService) GenerateUserPrometheusRule(tenantId string) {
 	alertRuleDTO, err := dao.buildPrometheusRule("", "", tenantId)
 	if err != nil {
-		logger.Logger().Infof(err.Error())
+		logger.Logger().Error(err.Error())
 		return
 	}
 	err = k8s.ApplyAlertRule(alertRuleDTO)
 	if err != nil {
-		log.Printf("调用api apply 规格失败 %+v", err)
+		logger.Logger().Infof("调用api apply 规格失败 %+v", err)
 	}
 }
 

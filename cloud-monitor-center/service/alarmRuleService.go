@@ -6,15 +6,17 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/forms"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/sysComponent/sysRocketMq"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/mq"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/utils/snowflake"
 	"gorm.io/gorm"
+	"strconv"
 	"strings"
 )
 
 func CreateRule(tx *gorm.DB, param interface{}) error {
 	ruleDao := dao.AlarmRule
 	dto := param.(*forms.AlarmRuleAddReqDTO)
-	id := ruleDao.SaveRule(tx, dto)
-	dto.Id = id
+	dto.Id = strconv.FormatInt(snowflake.GetWorker().NextId(), 10)
+	ruleDao.SaveRule(tx, dto)
 	return mq.SendMsg(sysRocketMq.RuleTopic, enums.CreateRule, dto)
 }
 

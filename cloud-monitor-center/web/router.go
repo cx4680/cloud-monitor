@@ -3,6 +3,7 @@ package web
 import (
 	commonDao "code.cestc.cn/ccos-ops/cloud-monitor/business-common/dao"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/iam"
+	commonService "code.cestc.cn/ccos-ops/cloud-monitor/business-common/service"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/actuator"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/controllers"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/service"
@@ -21,6 +22,7 @@ func loadRouters() {
 	alertRecordRouters()
 	actuatorMapping()
 	configItemRouters()
+	noticeRouters()
 }
 
 func monitorProductRouters() {
@@ -95,6 +97,8 @@ func alertRecordRouters() {
 	{
 		group.POST("/page", iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetAlertRecordPageList", ResourceType: "*", ResourceId: "*"}), ctl.GetPageList)
 		group.GET("/detail", iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetAlertRecordDetail", ResourceType: "*", ResourceId: "*"}), ctl.GetDetail)
+		group.GET("/total", iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetAlertRecordTotal", ResourceType: "*", ResourceId: "*"}), ctl.GetAlertRecordTotal)
+		group.GET("/recordNumHistory", iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetAlertRecordNumHistory", ResourceType: "*", ResourceId: "*"}), ctl.GetRecordNumHistory)
 	}
 
 }
@@ -129,5 +133,13 @@ func configItemRouters() {
 		group.GET("/getRegionList", ctl.GetRegionList)
 		group.GET("/getMonitorRange", iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetMonitorRangeList", ResourceType: "*", ResourceId: "*"}), ctl.GetMonitorRange)
 		group.GET("/getNoticeChannel", ctl.GetNoticeChannel)
+	}
+}
+
+func noticeRouters() {
+	ctl := controllers.NewNoticeCtl(commonService.MessageService{})
+	group := router.Group("/rest/notice/")
+	{
+		group.GET("/getUsage", iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetNoticeUsage", ResourceType: "*", ResourceId: "*"}), ctl.GetUsage)
 	}
 }

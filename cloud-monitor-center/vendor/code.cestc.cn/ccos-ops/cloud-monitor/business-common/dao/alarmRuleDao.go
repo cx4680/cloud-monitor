@@ -6,7 +6,7 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/models"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/pageUtils"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/vo"
-	"code.cestc.cn/ccos-ops/cloud-monitor/common/utils/snowflake"
+	"fmt"
 	"gorm.io/gorm"
 	"strconv"
 	"strings"
@@ -17,9 +17,33 @@ type AlarmRuleDao struct {
 
 var AlarmRule = new(AlarmRuleDao)
 
+const (
+	selectRule = "SELECT t.name as name, " +
+		"t.monitor_type, " +
+		"t.product_type, " +
+		"t.trigger_condition, " +
+		"t.status, " +
+		"t.metric_name,  " +
+		"t.ruleId, " +
+		"count(instance) as instanceNum, " +
+		"t.update_time " +
+		"FROM ( SELECT t1.name, " +
+		"t1.monitor_type, " +
+		"t1.product_type, " +
+		"t1.metric_name, " +
+		"t1.trigger_condition, " +
+		"t1.enabled AS 'status', " +
+		"t1.id AS ruleId, " +
+		"t2.instance_id AS instance, " +
+		"t1.update_time " +
+		"FROM t_alarm_rule t1 " +
+		"LEFT JOIN t_alarm_instance t2 ON t2.alarm_rule_id = t1.id " +
+		"WHERE t1.tenant_id = ? " +
+		"AND t1.deleted = 0 "
+)
+
 func (dao *AlarmRuleDao) SaveRule(tx *gorm.DB, ruleReqDTO *forms.AlarmRuleAddReqDTO) string {
 	rule := buildAlarmRule(ruleReqDTO)
-	rule.ID = strconv.FormatInt(snowflake.GetWorker().NextId(), 10)
 	rule.MonitorType = ruleReqDTO.MonitorType
 	rule.ProductType = ruleReqDTO.ProductType
 	tx.Create(rule)
@@ -44,24 +68,36 @@ func (dao *AlarmRuleDao) DeleteRule(tx *gorm.DB, ruleReqDTO *forms.RuleReqDTO) {
 
 func (dao *AlarmRuleDao) UpdateRuleState(tx *gorm.DB, ruleReqDTO *forms.RuleReqDTO) {
 	rule := models.AlarmRule{ID: ruleReqDTO.Id}
-	tx.Model(&rule).Update("enabled", GetAlarmStatusTextInt(ruleReqDTO.Status))
+	tx.Model(&rule).Update("enabled", getAlarmStatusTextInt(ruleReqDTO.Status))
 }
 
 func (dao *AlarmRuleDao) SelectRulePageList(param *forms.AlarmPageReqParam) *vo.PageVO {
-	var model []forms.AlarmRulePageDTO
-	selectList := &strings.Builder{}
+	var modelList []forms.AlarmRulePageDTO
+	selectRuleBuilder := &strings.Builder{}
 	var sqlParam = []interface{}{param.TenantId}
-	selectList.WriteString("SELECT name as name,monitor_type, product_type, trigger_condition,  status,  metric_name,  ruleId,  count(instance) as instanceNum, update_time       FROM (  SELECT NAME,   monitor_type,   product_type,  metric_name,  trigger_condition,    enabled AS 'status',      id     AS ruleId,    t2.instance_id AS instance,   t1.update_time   FROM t_alarm_rule t1    LEFT JOIN t_alarm_instance t2 ON t2.alarm_rule_id = t1.id  WHERE t1.tenant_id = ?    AND t1.deleted = 0")
+	selectRuleBuilder.WriteString(selectRule)
 	if len(param.Status) != 0 {
-		selectList.WriteString("t1.enabled = ?")
-		sqlParam = append(sqlParam, param.Status)
+		selectRuleBuilder.WriteString(" AND t1.enabled = ? ")
+		sqlParam = append(sqlParam, getAlarmStatusTextInt(param.Status))
 	}
 	if len(param.RuleName) != 0 {
-		selectList.WriteString("t1.name like concat('%',?,'%')")
+		selectRuleBuilder.WriteString(" AND t1.name like concat('%',?,'%') ")
 		sqlParam = append(sqlParam, param.RuleName)
 	}
-	selectList.WriteString(") t group by t.ruleId order by t.update_time  desc ")
-	return pageUtils.Paginate(param.PageSize, param.Current, selectList.String(), sqlParam, &model)
+	selectRuleBuilder.WriteString(") t group by t.ruleId order by t.update_time  desc ")
+	page := pageUtils.Paginate(param.PageSize, param.Current, selectRuleBuilder.String(), sqlParam, &modelList)
+	for i, v := range modelList {
+		modelList[i].MonitorItem = v.RuleCondition.MonitorItemName
+		modelList[i].Express = getExpress(v.RuleCondition)
+		modelList[i].Status = getAlarmStatusSqlText(v.Status)
+	}
+	return &vo.PageVO{
+		Records: modelList,
+		Current: page.Current,
+		Size:    page.Size,
+		Total:   page.Total,
+		Pages:   page.Pages,
+	}
 
 }
 
@@ -183,13 +219,63 @@ func GetResourceScopeInt(code string) int {
 const (
 	ENABLE  = "enabled"
 	DISABLE = "disabled"
+
+	sqlEnabled  = "1"
+	sqlDisabled = "2"
+
+	Maximum = "Maximum"
+	Minimum = "Minimum"
+	Average = "Average"
+
+	Greater        = "greater"
+	GreaterOrEqual = "greaterOrEqual"
+	Less           = "less"
+	lessOrEqual    = "lessOrEqual"
+	Equal          = "equal"
+	NotEqual       = "notEqual"
 )
 
-var AlarmStatusText = map[string]int{
+var alarmStatusText = map[string]int{
 	ENABLE:  1,
 	DISABLE: 0,
 }
 
-func GetAlarmStatusTextInt(code string) int {
-	return AlarmStatusText[code]
+func getAlarmStatusTextInt(code string) int {
+	return alarmStatusText[code]
+}
+
+var alarmStatusSqlText = map[string]string{
+	sqlEnabled:  "enabled",
+	sqlDisabled: "disabled",
+}
+
+func getAlarmStatusSqlText(code string) string {
+	return alarmStatusSqlText[code]
+}
+
+var alarmStatisticsText = map[string]string{
+	Maximum: "最大值",
+	Minimum: "最小值",
+	Average: "平均值",
+}
+
+func getAlarmStatisticsText(s string) string {
+	return alarmStatisticsText[s]
+}
+
+var comparisonOperatorText = map[string]string{
+	Greater:        ">",
+	GreaterOrEqual: ">=",
+	Less:           "<",
+	lessOrEqual:    "<=",
+	Equal:          "==",
+	NotEqual:       "!=",
+}
+
+func getComparisonOperator(s string) string {
+	return comparisonOperatorText[s]
+}
+
+func getExpress(form *forms.RuleCondition) string {
+	return fmt.Sprintf("%s%s%s%s%s 统计周期%s分钟 持续%s个周期", form.MonitorItemName, getAlarmStatisticsText(form.Statistics), getComparisonOperator(form.ComparisonOperator), strconv.FormatFloat(form.Threshold, 'g', 5, 32), form.Unit, strconv.Itoa(form.Period/60), strconv.Itoa(form.Times))
 }

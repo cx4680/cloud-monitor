@@ -2,7 +2,7 @@ package task
 
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/dao"
-	"log"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
 )
 
 var clearIntervalDay = "180"
@@ -10,8 +10,8 @@ var clearIntervalDay = "180"
 var name = "region-hawkeye-clearAlertRecordJob"
 
 func Clear() {
-	log.Println("clearAlertRecordJob start")
+	logger.Logger().Info("clearAlertRecordJob start")
 	// TODO 锁
 	dao.AlertRecordCommon.DeleteExpired(clearIntervalDay)
-	log.Println("clearAlertRecordJob end")
+	logger.Logger().Info("clearAlertRecordJob end")
 }

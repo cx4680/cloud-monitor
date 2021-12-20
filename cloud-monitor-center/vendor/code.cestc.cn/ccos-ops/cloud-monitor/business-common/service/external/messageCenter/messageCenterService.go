@@ -3,9 +3,8 @@ package messageCenter
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/tools"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
 	"github.com/google/uuid"
-	"log"
-	"strconv"
 	"strings"
 )
 
@@ -29,13 +28,13 @@ func (s *Service) SendBatch(msgList []MessageSendDTO) error {
 
 func (s *Service) buildReq(msgList []MessageSendDTO) (req *SmsMessageReqDTO) {
 	if len(msgList) <= 0 {
-		log.Printf("send msg  is empty, \n")
+		logger.Logger().Infof("send msg  is empty, \n")
 		return nil
 	}
 	var list []MessagesBean
 	for _, msg := range msgList {
 		if msg.Target == nil || len(msg.Target) <= 0 {
-			log.Printf("send msg target is empty, %s\n", tools.ToString(msg))
+			logger.Logger().Infof("send msg target is empty, %s\n", tools.ToString(msg))
 			continue
 		}
 		var recvList []RecvObjectBean
@@ -47,7 +46,7 @@ func (s *Service) buildReq(msgList []MessageSendDTO) (req *SmsMessageReqDTO) {
 			})
 		}
 		list = append(list, MessagesBean{
-			MsgEventCode:   strconv.Itoa(int(msg.SourceType)),
+			MsgEventCode:   msg.MsgEventCode,
 			RecvObjectList: recvList,
 		})
 
@@ -63,14 +62,15 @@ func (s *Service) buildReq(msgList []MessageSendDTO) (req *SmsMessageReqDTO) {
 
 func (s *Service) doSend(smsMessageReqDTO *SmsMessageReqDTO) error {
 	if smsMessageReqDTO == nil {
-		log.Println("send message is empty")
+		logger.Logger().Info("send message is empty")
 		return nil
 	}
 	resp, err := tools.HttpPostJson(config.GetCommonConfig().SmsCenterPath, *smsMessageReqDTO, nil)
 	if err != nil {
-		log.Fatal("send message to msgCenter fail", err)
+		logger.Logger().Errorf("send message to msgCenter fail:%v", err)
 		return err
 	}
-	log.Println("send message to msgCenter resp=" + resp)
+	logger.Logger().Info(smsMessageReqDTO.Messages)
+	logger.Logger().Info("send message to msgCenter resp=" + resp)
 	return nil
 }

@@ -2,8 +2,8 @@ package actuator
 
 import (
 	"bufio"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
 	"encoding/json"
-	"log"
 	"os"
 	"os/exec"
 	"strings"
@@ -18,7 +18,7 @@ func init() {
 		// can't open file or not exists
 		out, err := exec.Command("bash", "-c", "git rev-parse --abbrev-ref HEAD; git show -s --format=\"%h%n%ci\"").Output()
 		if err != nil {
-			log.Println(err)
+			logger.Logger().Error(err)
 		}
 		splitted := strings.Split(string(out), "\n")
 		if len(splitted) > 3 {

@@ -8,11 +8,11 @@ type AlertContactForm struct {
 	GroupId       string `orm:"group_id" json:"groupId"`
 	GroupName     string `orm:"group_name" json:"groupName"`
 	Phone         string `orm:"phone" json:"phone"`
-	PhoneCertify  string `orm:"phone_certify" json:"phoneCertify"`
+	PhoneCertify  int    `orm:"phone_certify" json:"phoneCertify"`
 	Email         string `orm:"email" json:"email"`
-	EmailCertify  string `orm:"email_certify" json:"emailCertify"`
+	EmailCertify  int    `orm:"email_certify" json:"emailCertify"`
 	Lanxin        string `orm:"lanxin" json:"lanxin"`
-	LanxinCertify string `orm:"lanxin_certify" json:"lanxinCertify"`
+	LanxinCertify int    `orm:"lanxin_certify" json:"lanxinCertify"`
 	Description   string `orm:"description" json:"description"`
 	GroupCount    int    `orm:"groupCount" json:"groupCount"`
 }
@@ -51,4 +51,3 @@ type AlertContactParam struct {
 	GroupIdList   []string `form:"groupIdList"`
 	EventEum      enums.EventEum
 }
-

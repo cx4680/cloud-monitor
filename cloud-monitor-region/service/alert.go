@@ -11,10 +11,10 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/forms"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/utils"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/utils/snowflake"
 	"errors"
 	"fmt"
-	"log"
 	"strconv"
 	"strings"
 )
@@ -39,7 +39,7 @@ func NewAlertRecordAddService(AlertRecordSvc *AlertRecordService, MessageSvc *se
 			}
 			//	判断该条告警对应的规则是否删除、禁用、解绑
 			if num := commonDao.AlertRecord.FindAlertRuleBindNum(ruleDesc.InstanceId, ruleDesc.RuleId); num <= 0 {
-				log.Println("此告警规则已删除/禁用/解绑")
+				logger.Logger().Info("此告警规则已删除/禁用/解绑")
 				return false, nil
 			}
 			return true, nil
@@ -53,7 +53,7 @@ func NewAlertRecordAddService(AlertRecordSvc *AlertRecordService, MessageSvc *se
 
 func (s *AlertRecordAddService) Add(f forms.InnerAlertRecordAddForm) error {
 	if len(f.Alerts) == 0 {
-		log.Println("alerts 信息为空")
+		logger.Logger().Info("alerts 信息为空")
 		return nil
 	}
 	list, alertMsgList := s.checkAndBuild(f.Alerts)
@@ -79,16 +79,16 @@ func (s *AlertRecordAddService) checkAndBuild(alerts []*forms.AlertRecordAlertsB
 	for _, alert := range alerts {
 		ret, err := s.predicate(alert)
 		if err != nil {
-			log.Printf("filter check error, alert=%s,  %v\n", tools.ToString(alert), err)
+			logger.Logger().Errorf("filter check error, alert=%s,  %v\n", tools.ToString(alert), err)
 			continue
 		}
 		if !ret {
-			log.Printf("filter check false, alert=%s\n", tools.ToString(alert))
+			logger.Logger().Infof("filter check false, alert=%s\n", tools.ToString(alert))
 			continue
 		}
 		alertAnnotations := tools.ToString(alert.Annotations)
 		if tools.IsBlank(alertAnnotations) {
-			log.Printf("告警数据为空, %s\n", tools.ToString(alert))
+			logger.Logger().Infof("告警数据为空, %s\n", tools.ToString(alert))
 			continue
 		}
 		labelMap := getLabelMap(alertAnnotations)
@@ -100,7 +100,7 @@ func (s *AlertRecordAddService) checkAndBuild(alerts []*forms.AlertRecordAlertsB
 		ruleDesc := &commonDtos.RuleDesc{}
 		tools.ToObject(alert.Annotations.Description, ruleDesc)
 		if ruleDesc == nil {
-			log.Printf("序列化告警数据失败, %s\n", tools.ToString(alert))
+			logger.Logger().Infof("序列化告警数据失败, %s\n", tools.ToString(alert))
 			continue
 		}
 		var contactGroups []commonDtos.ContactGroupInfo
@@ -143,7 +143,7 @@ func (s *AlertRecordAddService) checkAndBuild(alerts []*forms.AlertRecordAlertsB
 
 		instance := s.AlertRecordDao.FindFirstInstanceInfo(ruleDesc.InstanceId)
 		if instance == nil {
-			log.Printf("未查询到实例信息, %s\n", tools.ToString(alert))
+			logger.Logger().Infof("未查询到实例信息, %s\n", tools.ToString(alert))
 			continue
 		}
 		instanceInfo := s.getInstanceInfo(instance, alert.Annotations.Summary)

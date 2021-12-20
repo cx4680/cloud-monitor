@@ -2,8 +2,8 @@ package service
 
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/tools"
+	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/vo"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
-	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
 	"fmt"
 )
 
@@ -14,18 +14,24 @@ func NewExternService() *ExternService {
 	return &ExternService{}
 }
 
-func (externService *ExternService) GetRegionList(tenantId string) ([]*ResultBean, error) {
+func (externService *ExternService) GetRegionList(tenantId string) ([]vo.ConfigItemVO, error) {
 	path := fmt.Sprintf("%s?format=json&method=%s&appId=%s", config.GetCommonConfig().Nk, "CESTC_UNHQ_queryPoolsByLoginId", "600006")
-	logger.Logger().Infof("response:%v\n", path)
 	json, err := tools.HttpPostJson(path, map[string]string{"loginId": tenantId}, map[string]string{"userCode": tenantId})
 	if err != nil {
 		return nil, err
 	}
-	logger.Logger().Infof("response:%v\n", json)
 	region := &RegionInfoDTO{}
 	tools.ToObject(json, region)
-	logger.Logger().Infof("result:%v\n", region)
-	return region.Result, nil
+	var configItemVOList []vo.ConfigItemVO
+	for _, v := range region.Result {
+		configItemVO := vo.ConfigItemVO{
+			Code: v.PoolId,
+			Name: v.PoolName,
+			Data: v.PoolUrl,
+		}
+		configItemVOList = append(configItemVOList, configItemVO)
+	}
+	return configItemVOList, nil
 }
 
 type RegionInfoDTO struct {

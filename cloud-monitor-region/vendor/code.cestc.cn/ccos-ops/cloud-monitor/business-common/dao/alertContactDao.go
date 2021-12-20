@@ -37,7 +37,7 @@ const (
 		"acgr.tenant_id AS tenant_id, " +
 		"GROUP_CONCAT( acg.id ) AS group_id, " +
 		"GROUP_CONCAT( acg.name ) AS group_name, " +
-		"COUNT( acgr.contact_id ) AS group_count  " +
+		"COUNT( acgr.contact_id ) AS group_count " +
 		"FROM " +
 		"alert_contact_group AS acg " +
 		"LEFT JOIN alert_contact_group_rel AS acgr ON acg.id = acgr.group_id AND acg.tenant_id = acgr.tenant_id " +
@@ -52,7 +52,7 @@ const (
 		"GROUP BY " +
 		"ac.id " +
 		"ORDER BY " +
-		"ac.create_time DESC  "
+		"ac.create_time DESC "
 )
 
 func (d *AlertContactDao) Select(db *gorm.DB, param forms.AlertContactParam) *forms.AlertContactFormPage {

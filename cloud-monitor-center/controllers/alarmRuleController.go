@@ -5,6 +5,7 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/dbUtils"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/forms"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/tools"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/service"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/validator/translate"
 	"github.com/gin-gonic/gin"
@@ -25,8 +26,8 @@ func (ctl *AlarmRuleCtl) SelectRulePageList(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, translate.GetErrorMsg(err))
 		return
 	}
-	tenantId, _ := c.Get(global.TenantId)
-	param.TenantId = tenantId.(string)
+	tenantId, _ := tools.GetTenantId(c)
+	param.TenantId = tenantId
 	c.JSON(http.StatusOK, global.NewSuccess("查询成功", ctl.dao.SelectRulePageList(&param)))
 }
 
@@ -36,8 +37,8 @@ func (ctl *AlarmRuleCtl) GetDetail(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, "缺少id")
 		return
 	}
-	tenantId, _ := c.Get(global.TenantId)
-	c.JSON(http.StatusOK, global.NewSuccess("查询成功", ctl.dao.GetDetail(id, tenantId.(string))))
+	tenantId, _ := tools.GetTenantId(c)
+	c.JSON(http.StatusOK, global.NewSuccess("查询成功", ctl.dao.GetDetail(id, tenantId)))
 
 }
 
@@ -67,10 +68,10 @@ func (ctl *AlarmRuleCtl) UpdateRule(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, translate.GetErrorMsg(err))
 		return
 	}
-	tenantId, _ := c.Get(global.TenantId)
-	param.TenantId = tenantId.(string)
-	userId, _ := c.Get(global.UserId)
-	param.UserId = userId.(string)
+	tenantId, _ := tools.GetTenantId(c)
+	param.TenantId = tenantId
+	userId, _ := tools.GetUserId(c)
+	param.UserId = userId
 	addMetricName(&param, ctl)
 	err := dbUtils.Tx(&param, service.UpdateRule)
 	if err != nil {
@@ -86,10 +87,8 @@ func (ctl *AlarmRuleCtl) DeleteRule(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, translate.GetErrorMsg(err))
 		return
 	}
-	tenantId, _ := c.Get(global.TenantId)
-	param.TenantId = tenantId.(string)
-	userId, _ := c.Get(global.UserId)
-	param.TenantId = userId.(string)
+	tenantId, _ := tools.GetTenantId(c)
+	param.TenantId = tenantId
 	err := dbUtils.Tx(&param, service.DeleteRule)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, err.Error())
@@ -104,8 +103,8 @@ func (ctl *AlarmRuleCtl) ChangeRuleStatus(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, translate.GetErrorMsg(err))
 		return
 	}
-	tenantId, _ := c.Get(global.TenantId)
-	param.TenantId = tenantId.(string)
+	tenantId, _ := tools.GetTenantId(c)
+	param.TenantId = tenantId
 	err := dbUtils.Tx(&param, service.ChangeRuleStatus)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, err.Error())

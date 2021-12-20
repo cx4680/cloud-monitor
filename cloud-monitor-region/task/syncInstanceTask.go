@@ -85,7 +85,7 @@ func getRemoteProductInstanceList(productType string) ([]*models.AlarmInstance, 
 		totalPage = page.Total
 		vos := page.Records.([]commonService.InstanceCommonVO)
 		for _, vo := range vos {
-			instances = append(instances, &models.AlarmInstance{InstanceID: vo.Id, InstanceName: vo.Name})
+			instances = append(instances, &models.AlarmInstance{InstanceID: vo.InstanceId, InstanceName: vo.InstanceName})
 		}
 		current++
 	}

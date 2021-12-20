@@ -2,9 +2,9 @@ package pipeline
 
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/tools"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
 	"gorm.io/gorm"
 	"io/ioutil"
-	"log"
 	"strings"
 )
 
@@ -18,7 +18,7 @@ func (p *ProjectInitializerFetch) Fetch(db *gorm.DB) ([]interface{}, []string, e
 	//加载SQL
 	sqlBytes, err := ioutil.ReadFile("script/center.sql")
 	if err != nil {
-		log.Println("load sql file error", err)
+		logger.Logger().Error("load sql file error", err)
 		return nil, nil, err
 	}
 	sql := string(sqlBytes)

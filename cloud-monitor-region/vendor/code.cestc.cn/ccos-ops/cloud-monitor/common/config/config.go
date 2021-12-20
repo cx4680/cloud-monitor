@@ -20,14 +20,15 @@ type Config struct {
 }
 
 type CommonConfig struct {
-	Env               string `yaml:"env"`
-	Nk                string `yaml:"nk"`
-	TenantUrl         string `yaml:"tenantUrl"`
-	SmsCenterPath     string `yaml:"smsCenterPath"`
-	HawkeyeCenterPath string `yaml:"hawkeyeCenterPath"`
-	HasNoticeModel    bool   `yaml:"hasNoticeModel"`
-	RegionName        string `yaml:"regionName"`
-	EcsInnerGateway   string `yaml:"ecs-inner-gateway"`
+	Env                   string `yaml:"env"`
+	Nk                    string `yaml:"nk"`
+	TenantUrl             string `yaml:"tenantUrl"`
+	SmsCenterPath         string `yaml:"smsCenterPath"`
+	CertifyInformationUrl string `yaml:"certifyInformationUrl"`
+	HawkeyeCenterPath     string `yaml:"hawkeyeCenterPath"`
+	HasNoticeModel        bool   `yaml:"hasNoticeModel"`
+	RegionName            string `yaml:"regionName"`
+	EcsInnerGateway       string `yaml:"ecs-inner-gateway"`
 }
 
 type Serve struct {
@@ -102,14 +103,15 @@ func defaultAuthSdkConfig() Config {
 			NameServer: "127.0.0.1:9876",
 		},
 		Common: CommonConfig{
-			Env:               "local",
-			Nk:                "",
-			TenantUrl:         "",
-			SmsCenterPath:     "",
-			HawkeyeCenterPath: "",
-			HasNoticeModel:    false,
-			RegionName:        "local",
-			EcsInnerGateway:   "",
+			Env:                   "local",
+			Nk:                    "",
+			TenantUrl:             "",
+			SmsCenterPath:         "",
+			CertifyInformationUrl: "",
+			HawkeyeCenterPath:     "",
+			HasNoticeModel:        false,
+			RegionName:            "local",
+			EcsInnerGateway:       "",
 		},
 	}
 }

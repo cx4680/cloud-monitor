@@ -7,6 +7,7 @@ import (
 	cvo "code.cestc.cn/ccos-ops/cloud-monitor/business-common/vo"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/forms"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/vo"
+	"fmt"
 	"gorm.io/gorm"
 )
 
@@ -14,6 +15,17 @@ type AlertRecordDao struct {
 }
 
 var AlertRecord = new(AlertRecordDao)
+
+const (
+	recordNumHistory = "SELECT COUNT(t.id) AS number, " +
+		"DATE_FORMAT(t.create_time, '%s') AS DayTime " +
+		"FROM t_alert_record t " +
+		"WHERE t.status = 'firing' " +
+		"AND t.tenant_id = %s " +
+		"AND t.create_time between '%s' AND '%s' " +
+		"%s " +
+		"GROUP BY daytime"
+)
 
 func (a *AlertRecordDao) GetPageList(db *gorm.DB, tenantId string, f forms.AlertRecordPageQueryForm) *cvo.PageVO {
 	var list []vo.AlertRecordPageVO
@@ -81,4 +93,26 @@ func (a *AlertRecordDao) GetById(db *gorm.DB, id string) *vo.AlertRecordDetailVO
 	var vo vo.AlertRecordDetailVO
 	db.Model(commonModels.AlertRecord{}).Find(&vo, id)
 	return &vo
+}
+
+func (a *AlertRecordDao) GetAlertRecordTotal(db *gorm.DB, tenantId string, region string, startTime string, endTime string) int64 {
+	var count int64
+	if region != "" {
+		db.Model(&commonModels.AlertRecord{}).Where("tenant_id = ? AND status = ? AND create_time BETWEEN ? AND ? AND region = ?", tenantId, "firing", startTime, endTime, region).Count(&count)
+	} else {
+		db.Model(&commonModels.AlertRecord{}).Where("tenant_id = ? AND status = ? AND create_time BETWEEN ? AND ?", tenantId, "firing", startTime, endTime).Count(&count)
+	}
+	return count
+}
+
+func (a *AlertRecordDao) GetRecordNumHistory(db *gorm.DB, tenantId string, region string, startTime string, endTime string) []vo.RecordNumHistory {
+	var sql string
+	if region != "" {
+		sql = fmt.Sprintf(recordNumHistory, "%Y-%m-%d", tenantId, startTime, endTime, " AND t.region = "+region)
+	} else {
+		sql = fmt.Sprintf(recordNumHistory, "%Y-%m-%d", tenantId, startTime, endTime, "")
+	}
+	var recordNumHistory []vo.RecordNumHistory
+	db.Raw(sql).Find(&recordNumHistory)
+	return recordNumHistory
 }
