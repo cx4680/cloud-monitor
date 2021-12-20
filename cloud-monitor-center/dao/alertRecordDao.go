@@ -89,9 +89,9 @@ func (a *AlertRecordDao) GetPageList(db *gorm.DB, tenantId string, f forms.Alert
 	}
 }
 
-func (a *AlertRecordDao) GetById(db *gorm.DB, id string) *vo.AlertRecordDetailVO {
+func (a *AlertRecordDao) GetByIdAndTenantId(db *gorm.DB, id, tenantId string) *vo.AlertRecordDetailVO {
 	var detail vo.AlertRecordDetailVO
-	db.Model(commonModels.AlertRecord{}).Find(&detail, id)
+	db.Model(commonModels.AlertRecord{}).Where(&commonModels.AlertRecord{Id: id, TenantId: tenantId}).Find(&detail)
 	return &detail
 }
 
