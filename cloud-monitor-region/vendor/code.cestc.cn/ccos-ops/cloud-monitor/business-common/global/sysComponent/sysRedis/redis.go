@@ -5,14 +5,16 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
 	"context"
 	"github.com/go-redis/redis/v8"
-	"sync"
+	"github.com/pkg/errors"
 	"time"
 )
 
 var (
-	ctx   = context.Background()
-	rdb   *redis.Client
-	mutex sync.Mutex
+	ctx            = context.Background()
+	rdb            *redis.Client
+	MaxRetry       = 200
+	DefaultLease   = 10 * time.Second
+	ErrLockByOther = errors.New("Lock by others")
 )
 
 func InitClient(config config.RedisConfig) error {
@@ -48,16 +50,37 @@ func Get(key string) (string, error) {
 	return cmd.Result()
 }
 
-func Lock(key string) error {
-	mutex.Lock()
-	defer mutex.Unlock()
-	return rdb.SetNX(ctx, key, 1, 10*time.Second).Err()
-}
-
-func UnLock(key string) error {
-	return rdb.Del(ctx, key).Err()
-}
-
 func GetClient() *redis.Client {
 	return rdb
+}
+
+func Lock(ctx context.Context, key string, lease time.Duration, wait bool) error {
+	retry := 0
+	select {
+	case <-ctx.Done():
+		return ErrLockByOther
+	default:
+	BEGIN:
+		isSet, err := rdb.SetNX(ctx, key, 1, lease).Result()
+		if err != nil {
+			return err
+		}
+		if isSet {
+			return nil
+		} else if wait {
+			retry++
+			if retry > MaxRetry {
+				return ErrLockByOther
+			}
+			// max wait 10 seconds
+			time.Sleep(100 * time.Millisecond)
+			goto BEGIN
+		}
+	}
+	return ErrLockByOther
+}
+
+func Unlock(ctx context.Context, key string) error {
+	err := rdb.Del(ctx, key).Err()
+	return err
 }

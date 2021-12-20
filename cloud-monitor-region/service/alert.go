@@ -6,6 +6,7 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/sysComponent/sysRocketMq"
 	commonModels "code.cestc.cn/ccos-ops/cloud-monitor/business-common/models"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/service"
+	commonService "code.cestc.cn/ccos-ops/cloud-monitor/business-common/service"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/service/external/messageCenter"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/tools"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/forms"
@@ -22,14 +23,15 @@ import (
 type filter func(*forms.AlertRecordAlertsBean) (bool, error)
 
 type AlertRecordAddService struct {
-	FilterChain    []filter
-	AlertRecordSvc *AlertRecordService
-	MessageSvc     *service.MessageService
-	TenantSvc      *service.TenantService
-	AlertRecordDao *commonDao.AlertRecordDao
+	FilterChain     []filter
+	AlertRecordSvc  *AlertRecordService
+	AlarmHandlerSvc *commonService.AlarmHandlerService
+	MessageSvc      *service.MessageService
+	TenantSvc       *service.TenantService
+	AlertRecordDao  *commonDao.AlertRecordDao
 }
 
-func NewAlertRecordAddService(AlertRecordSvc *AlertRecordService, MessageSvc *service.MessageService, TenantSvc *service.TenantService) *AlertRecordAddService {
+func NewAlertRecordAddService(AlertRecordSvc *AlertRecordService, AlarmHandlerSvc *commonService.AlarmHandlerService, MessageSvc *service.MessageService, TenantSvc *service.TenantService) *AlertRecordAddService {
 	return &AlertRecordAddService{
 		FilterChain: []filter{func(alert *forms.AlertRecordAlertsBean) (bool, error) {
 			ruleDesc := &commonDtos.RuleDesc{}
@@ -44,10 +46,11 @@ func NewAlertRecordAddService(AlertRecordSvc *AlertRecordService, MessageSvc *se
 			}
 			return true, nil
 		}},
-		AlertRecordSvc: AlertRecordSvc,
-		MessageSvc:     MessageSvc,
-		TenantSvc:      TenantSvc,
-		AlertRecordDao: commonDao.AlertRecord,
+		AlarmHandlerSvc: AlarmHandlerSvc,
+		AlertRecordSvc:  AlertRecordSvc,
+		MessageSvc:      MessageSvc,
+		TenantSvc:       TenantSvc,
+		AlertRecordDao:  commonDao.AlertRecord,
 	}
 }
 
@@ -56,150 +59,222 @@ func (s *AlertRecordAddService) Add(f forms.InnerAlertRecordAddForm) error {
 		logger.Logger().Info("alerts 信息为空")
 		return nil
 	}
-	list, alertMsgList := s.checkAndBuild(f.Alerts)
+	list, handlerMap := s.checkAndBuild(f.Alerts)
 	//持久化
 	if list != nil && len(list) > 0 {
-		if err := s.persistence(list); err != nil {
+		if err := s.AlertRecordSvc.Persistence(s.AlertRecordSvc, sysRocketMq.RecordTopic, list); err != nil {
 			return err
+		}
+	}
+	//告警处置
+	for t, p := range handlerMap {
+		if p == nil || len(p) <= 0 {
+			continue
+		}
+		if t == 1 || t == 2 {
+			if err := s.MessageSvc.SendMsg(p, false); err != nil {
+				return err
+			}
+		} else if t == 3 {
+			//调用弹性伸缩
+			for _, a := range p {
+				data := a.(*commonDtos.AutoScalingData)
+				respJson, err := tools.HttpPostJson(data.Param+"/inner/as/trigger", map[string]string{"ruleId": data.RuleId, "tenantId": data.TenantId}, nil)
+				if err != nil {
+					logger.Logger().Error("autoScaling request fail,", err)
+				} else {
+					logger.Logger().Info("autoScaling request success, resp=", respJson)
+				}
+			}
 		}
 	}
 
-	//发送通知
-	if alertMsgList != nil && len(alertMsgList) > 0 {
-		if err := s.sendNotice(alertMsgList); err != nil {
-			return err
-		}
-	}
 	return nil
 }
 
-func (s *AlertRecordAddService) checkAndBuild(alerts []*forms.AlertRecordAlertsBean) ([]commonModels.AlertRecord, []service.AlertMsgSendDTO) {
+func (s *AlertRecordAddService) checkAndBuild(alerts []*forms.AlertRecordAlertsBean) ([]commonModels.AlertRecord, map[int][]interface{}) {
 	var list []commonModels.AlertRecord
-	var alertMsgList []service.AlertMsgSendDTO
+
+	handlerMap := map[int][]interface{}{}
+
 	for _, alert := range alerts {
 		ret, err := s.predicate(alert)
 		if err != nil {
-			logger.Logger().Errorf("filter check error, alert=%s,  %v\n", tools.ToString(alert), err)
+			logger.Logger().Error("filter check error, alert=", tools.ToString(alert), err)
 			continue
 		}
 		if !ret {
-			logger.Logger().Infof("filter check false, alert=%s\n", tools.ToString(alert))
+			logger.Logger().Info("filter check false, alert=", tools.ToString(alert))
 			continue
 		}
-		alertAnnotations := tools.ToString(alert.Annotations)
-		if tools.IsBlank(alertAnnotations) {
-			logger.Logger().Infof("告警数据为空, %s\n", tools.ToString(alert))
-			continue
-		}
-		labelMap := getLabelMap(alertAnnotations)
-		now := tools.GetNow()
-		startTime := tools.TimeParseForZone(alert.StartsAt)
-		//持续时间，单位秒
-		duration := now.Second() - startTime.Second()
-
+		//获取告警规则信息
 		ruleDesc := &commonDtos.RuleDesc{}
 		tools.ToObject(alert.Annotations.Description, ruleDesc)
 		if ruleDesc == nil {
-			logger.Logger().Infof("序列化告警数据失败, %s\n", tools.ToString(alert))
+			logger.Logger().Error("序列化告警数据失败, ", tools.ToString(alert))
 			continue
 		}
+		//获取告警联系人信息
 		var contactGroups []commonDtos.ContactGroupInfo
 		if ruleDesc.GroupList != nil && len(ruleDesc.GroupList) > 0 {
 			contactGroups = s.AlertRecordDao.FindContactInfoByGroupIds(ruleDesc.GroupList)
 		}
-		record := commonModels.AlertRecord{
-			Id:           strconv.FormatInt(snowflake.GetWorker().NextId(), 10),
-			Status:       alert.Status,
-			TenantId:     ruleDesc.TenantId,
-			RuleId:       ruleDesc.RuleId,
-			RuleName:     ruleDesc.RuleName,
-			MonitorType:  ruleDesc.MonitorType,
-			SourceType:   ruleDesc.Product,
-			SourceId:     ruleDesc.InstanceId,
-			Summary:      alertAnnotations,
-			CurrentValue: labelMap["currentValue"],
-			StartTime:    tools.TimeToStr(startTime, tools.FullTimeFmt),
-			EndTime:      tools.TimeToStr(tools.TimeParseForZone(alert.EndsAt), tools.FullTimeFmt),
-			TargetValue:  strconv.Itoa(ruleDesc.TargetValue),
-			Expression:   ruleDesc.Express,
-			Duration:     strconv.Itoa(duration),
-			Level:        ruleDesc.Level,
-			AlarmKey:     ruleDesc.MetricName,
-			Region:       config.GetCommonConfig().RegionName,
-			NoticeStatus: "success",
-			ContactInfo:  tools.ToString(contactGroups),
-			CreateTime:   tools.TimeToStr(now, tools.FullTimeFmt),
-			UpdateTime:   tools.TimeToStr(now, tools.FullTimeFmt),
-		}
-		list = append(list, record)
 
-		channel := ruleDesc.NotifyChannel
-		targetList := s.buildTargets(channel, contactGroups)
-
-		st := messageCenter.ALERT_OPEN
-		if "resolved" == alert.Status {
-			st = messageCenter.ALERT_CANCEL
-		}
-
-		instance := s.AlertRecordDao.FindFirstInstanceInfo(ruleDesc.InstanceId)
-		if instance == nil {
-			logger.Logger().Infof("未查询到实例信息, %s\n", tools.ToString(alert))
+		record := s.buildAlertRecord(alert, ruleDesc, contactGroups)
+		if record == nil {
 			continue
 		}
-		instanceInfo := s.getInstanceInfo(instance, alert.Annotations.Summary)
+		list = append(list, *record)
+		//告警处理
+		//获取告警处理方式列表
+		handlerList := s.AlarmHandlerSvc.GetAlarmHandlerListByRuleId(ruleDesc.RuleId)
 
-		objMap := make(map[string]string)
-
-		objMap["duration"] = record.Duration
-		objMap["instanceInfo"] = instanceInfo
-		objMap["product"] = ruleDesc.Product
-		objMap["regionName"] = record.Region
-		objMap["metricName"] = ruleDesc.MonitorItem
-		objMap["Name"] = ruleDesc.RuleName
-		objMap["userName"] = s.TenantSvc.GetTenantInfo(ruleDesc.TenantId).Name
-
-		cv := fmt.Sprintf("%.2f", record.CurrentValue)
-		unit := ruleDesc.Unit
-		objMap["currentValue"] = cv + unit
-
-		if "mail" == channel {
-			objMap["instanceAmount"] = "1"
-			objMap["period"] = utils.GetDateDiff(ruleDesc.Time)
-			objMap["times"] = getTime(ruleDesc.Time)
-			objMap["time"] = utils.GetDateDiff(ruleDesc.Period * 1000)
-			objMap["calType"] = ruleDesc.Statistic
-			objMap["expression"] = ruleDesc.ComparisonOperator
-			if st == messageCenter.ALERT_CANCEL {
-				targetValue := ""
-				if tools.IsNotBlank(ruleDesc.Unit) {
-					targetValue = ruleDesc.Unit
+		if handlerList != nil && len(handlerList) > 0 {
+			for _, handler := range handlerList {
+				if handlerMap[handler.HandleType] == nil {
+					var pendingList []interface{}
+					handlerMap[handler.HandleType] = pendingList
 				}
-				targetValue = strconv.Itoa(ruleDesc.TargetValue) + targetValue
-				objMap["targetValue"] = targetValue
-			} else if st == messageCenter.ALERT_OPEN {
-				objMap["targetValue"] = strconv.Itoa(ruleDesc.TargetValue)
-			}
-
-			objMap["evaluationCount"] = getTime(ruleDesc.Time)
-			objMap["InstanceID"] = ruleDesc.InstanceId
-			if tools.IsBlank(ruleDesc.Unit) {
-				objMap["unit"] = ""
-			} else {
-				objMap["unit"] = ruleDesc.Unit
+				var data interface{}
+				switch handler.HandleType {
+				case 1:
+				case 2:
+					data = s.buildNoticeData(alert, record, ruleDesc, contactGroups)
+				case 3:
+					data = s.buildAutoScalingData(alert, ruleDesc, handler.HandleParams)
+				}
+				if data != nil {
+					handlerMap[handler.HandleType] = append(handlerMap[handler.HandleType], data)
+				}
 			}
 		}
-
-		alertMsgList = append(alertMsgList, service.AlertMsgSendDTO{
-			AlertId: record.Id,
-			Msg: messageCenter.MessageSendDTO{
-				SenderId:   ruleDesc.TenantId,
-				Target:     targetList,
-				SourceType: st,
-				Content:    tools.ToString(objMap),
-			},
-		})
 	}
-	return list, alertMsgList
+	return list, handlerMap
+}
+
+func (s *AlertRecordAddService) buildAlertRecord(alert *forms.AlertRecordAlertsBean, ruleDesc *commonDtos.RuleDesc, contactGroups []commonDtos.ContactGroupInfo) *commonModels.AlertRecord {
+	now := tools.GetNow()
+	startTime := tools.TimeParseForZone(alert.StartsAt)
+	//持续时间，单位秒
+	duration := now.Second() - startTime.Second()
+
+	alertAnnotationStr := tools.ToString(alert.Annotations)
+	if tools.IsBlank(alertAnnotationStr) {
+		logger.Logger().Info("告警数据为空, ", tools.ToString(alert))
+		return nil
+	}
+	labelMap := s.getLabelMap(alertAnnotationStr)
+
+	return &commonModels.AlertRecord{
+		Id:           strconv.FormatInt(snowflake.GetWorker().NextId(), 10),
+		Status:       alert.Status,
+		TenantId:     ruleDesc.TenantId,
+		RuleId:       ruleDesc.RuleId,
+		RuleName:     ruleDesc.RuleName,
+		MonitorType:  ruleDesc.MonitorType,
+		SourceType:   ruleDesc.Product,
+		SourceId:     ruleDesc.InstanceId,
+		Summary:      alertAnnotationStr,
+		CurrentValue: labelMap["currentValue"],
+		StartTime:    tools.TimeToStr(startTime, tools.FullTimeFmt),
+		EndTime:      tools.TimeToStr(tools.TimeParseForZone(alert.EndsAt), tools.FullTimeFmt),
+		TargetValue:  strconv.Itoa(ruleDesc.TargetValue),
+		Expression:   ruleDesc.Express,
+		Duration:     strconv.Itoa(duration),
+		Level:        ruleDesc.Level,
+		AlarmKey:     ruleDesc.MetricName,
+		Region:       config.GetCommonConfig().RegionName,
+		NoticeStatus: "success",
+		ContactInfo:  tools.ToString(contactGroups),
+		CreateTime:   tools.TimeToStr(now, tools.FullTimeFmt),
+		UpdateTime:   tools.TimeToStr(now, tools.FullTimeFmt),
+	}
+}
+
+func (s *AlertRecordAddService) buildAutoScalingData(alert *forms.AlertRecordAlertsBean, ruleDesc *commonDtos.RuleDesc, param string) *commonDtos.AutoScalingData {
+	if "resolved" == alert.Status {
+		//告警恢复不需要通知弹性伸缩
+		return nil
+	}
+	if tools.IsBlank(ruleDesc.ResourceGroupId) {
+		//脏数据
+		return nil
+	}
+
+	return &commonDtos.AutoScalingData{
+		TenantId:        ruleDesc.TenantId,
+		RuleId:          ruleDesc.RuleId,
+		ResourceGroupId: ruleDesc.ResourceGroupId,
+		Param:           param,
+	}
+}
+
+func (s *AlertRecordAddService) buildNoticeData(alert *forms.AlertRecordAlertsBean, record *commonModels.AlertRecord, ruleDesc *commonDtos.RuleDesc, contactGroups []commonDtos.ContactGroupInfo) *service.AlertMsgSendDTO {
+	source := messageCenter.ALERT_OPEN
+	if "resolved" == alert.Status {
+		source = messageCenter.ALERT_CANCEL
+	}
+
+	channel := ruleDesc.NotifyChannel
+	targetList := s.buildTargets(channel, contactGroups)
+
+	instance := s.AlertRecordDao.FindFirstInstanceInfo(ruleDesc.InstanceId)
+	if instance == nil {
+		logger.Logger().Info("未查询到实例信息, recordId=%s\n", record.Id)
+		return nil
+	}
+	instanceInfo := s.getInstanceInfo(instance, alert.Annotations.Summary)
+
+	objMap := make(map[string]string)
+
+	objMap["duration"] = record.Duration
+	objMap["instanceInfo"] = instanceInfo
+	objMap["product"] = ruleDesc.Product
+	objMap["regionName"] = record.Region
+	objMap["metricName"] = ruleDesc.MonitorItem
+	objMap["Name"] = ruleDesc.RuleName
+	objMap["userName"] = s.TenantSvc.GetTenantInfo(ruleDesc.TenantId).Name
+
+	f, _ := strconv.ParseFloat(record.CurrentValue, 64)
+	cv := fmt.Sprintf("%.2f", f)
+	objMap["currentValue"] = cv + ruleDesc.Unit
+
+	if "mail" == channel {
+		objMap["instanceAmount"] = "1"
+		objMap["period"] = utils.GetDateDiff(ruleDesc.Time)
+		objMap["times"] = "持续" + strconv.Itoa(ruleDesc.Time) + "个周期"
+		objMap["time"] = utils.GetDateDiff(ruleDesc.Period * 1000)
+		objMap["calType"] = ruleDesc.Statistic
+		objMap["expression"] = ruleDesc.ComparisonOperator
+		if source == messageCenter.ALERT_CANCEL {
+			targetValue := ""
+			if tools.IsNotBlank(ruleDesc.Unit) {
+				targetValue = ruleDesc.Unit
+			}
+			targetValue = strconv.Itoa(ruleDesc.TargetValue) + targetValue
+			objMap["targetValue"] = targetValue
+		} else if source == messageCenter.ALERT_OPEN {
+			objMap["targetValue"] = strconv.Itoa(ruleDesc.TargetValue)
+		}
+
+		objMap["evaluationCount"] = "持续" + strconv.Itoa(ruleDesc.Time) + "个周期"
+		objMap["InstanceID"] = ruleDesc.InstanceId
+		if tools.IsBlank(ruleDesc.Unit) {
+			objMap["unit"] = ""
+		} else {
+			objMap["unit"] = ruleDesc.Unit
+		}
+	}
+
+	return &service.AlertMsgSendDTO{
+		AlertId: record.Id,
+		Msg: messageCenter.MessageSendDTO{
+			SenderId:   ruleDesc.TenantId,
+			Target:     targetList,
+			SourceType: source,
+			Content:    tools.ToString(objMap),
+		},
+	}
 }
 
 func (s *AlertRecordAddService) getInstanceInfo(instance *commonModels.AlarmInstance, summary string) string {
@@ -211,7 +286,7 @@ func (s *AlertRecordAddService) getInstanceInfo(instance *commonModels.AlarmInst
 	if tools.IsNotBlank(instance.Ip) {
 		builder.WriteString(instance.Ip)
 	}
-	labelMap := getLabelMap(summary)
+	labelMap := s.getLabelMap(summary)
 	delete(labelMap, "instance")
 	delete(labelMap, "name")
 	delete(labelMap, "currentValue")
@@ -279,7 +354,7 @@ func (s *AlertRecordAddService) buildPhoneTargets(contact commonDtos.UserContact
 	return list
 }
 
-func getLabelMap(summary string) map[string]string {
+func (s *AlertRecordAddService) getLabelMap(summary string) map[string]string {
 	var labelMap = make(map[string]string)
 	for _, s := range strings.Split(summary, ",") {
 		labels := strings.Split(s, "=")
@@ -288,10 +363,6 @@ func getLabelMap(summary string) map[string]string {
 		}
 	}
 	return labelMap
-}
-
-func getTime(time int) string {
-	return "持续" + strconv.Itoa(time) + "个周期"
 }
 
 func (s *AlertRecordAddService) predicate(alert *forms.AlertRecordAlertsBean) (bool, error) {
@@ -306,12 +377,4 @@ func (s *AlertRecordAddService) predicate(alert *forms.AlertRecordAlertsBean) (b
 
 	}
 	return true, nil
-}
-
-func (s *AlertRecordAddService) persistence(list []commonModels.AlertRecord) error {
-	return s.AlertRecordSvc.Persistence(s.AlertRecordSvc, sysRocketMq.RecordTopic, list)
-}
-
-func (s *AlertRecordAddService) sendNotice(alertMsgList []service.AlertMsgSendDTO) error {
-	return s.MessageSvc.SendMsg(alertMsgList, false)
 }

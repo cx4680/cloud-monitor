@@ -6,6 +6,7 @@ import (
 	commonService "code.cestc.cn/ccos-ops/cloud-monitor/business-common/service"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/actuator"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/controllers"
+	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/inner"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/service"
 	"code.cestc.cn/yyptb-group_tech/iam-sdk-go/pkg/models"
 	"github.com/gin-gonic/gin"
@@ -23,6 +24,7 @@ func loadRouters() {
 	actuatorMapping()
 	configItemRouters()
 	noticeRouters()
+	innerMapping()
 }
 
 func monitorProductRouters() {
@@ -68,7 +70,7 @@ func alertContactGroupRouters() {
 }
 
 func alarmRuleRouters() {
-	ruleCtl := controllers.NewAlarmRuleCtl(commonDao.AlarmRule)
+	ruleCtl := controllers.NewAlarmRuleCtl()
 	group := router.Group("/hawkeye/rule/")
 	{
 		group.POST("/page", iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetAlertRulePageList", ResourceType: "*", ResourceId: "*"}), ruleCtl.SelectRulePageList)
@@ -81,7 +83,7 @@ func alarmRuleRouters() {
 }
 
 func instanceRouters() {
-	ctl := controllers.NewInstanceCtl(commonDao.Instance)
+	ctl := controllers.NewInstanceCtl()
 	group := router.Group("/hawkeye/instance/")
 	{
 		group.POST("/rulePage", iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetInstanceRulePageList", ResourceType: "*", ResourceId: "*"}), ctl.Page)
@@ -141,5 +143,24 @@ func noticeRouters() {
 	group := router.Group("/rest/notice/")
 	{
 		group.GET("/getUsage", iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetNoticeUsage", ResourceType: "*", ResourceId: "*"}), ctl.GetUsage)
+	}
+}
+
+func innerMapping() {
+	configItemController := inner.NewConfigItemController()
+	monitorItemController := inner.NewMonitorItemController()
+	ruleCtl := controllers.NewAlarmRuleCtl()
+	innerRuleCtl := inner.NewAlarmRuleCtl()
+	group := router.Group("/hawkeye/inner/")
+	{
+
+		group.GET("configItem/getItemList", configItemController.GetItemListById)
+		group.GET("monitorItem/getMonitorItemList", monitorItemController.GetMonitorItemsById)
+
+		ruleGroup := group.Group("rule/")
+		ruleGroup.POST("create", innerRuleCtl.CreateRule)
+		ruleGroup.POST("update", innerRuleCtl.UpdateRule)
+		ruleGroup.POST("delete", ruleCtl.DeleteRule)
+		ruleGroup.POST("changeStatus", ruleCtl.ChangeRuleStatus)
 	}
 }

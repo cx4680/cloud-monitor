@@ -21,6 +21,7 @@ type RuleDesc struct {
 	RegionName         string   `json:"region_name"`
 	Statistic          string   `json:"statistic"`
 	GroupList          []string `json:"group_list"`
+	ResourceGroupId    string   `json:"ResourceGroupId"`
 }
 
 type UserContactInfo struct {
@@ -34,4 +35,11 @@ type ContactGroupInfo struct {
 	GroupId,
 	GroupName string
 	Contacts []UserContactInfo
+}
+
+type AutoScalingData struct {
+	TenantId        string
+	RuleId          string
+	ResourceGroupId string
+	Param           string
 }

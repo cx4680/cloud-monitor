@@ -1,76 +1,23 @@
 package actuator
 
 import (
-	"bufio"
-	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
-	"encoding/json"
-	"os"
-	"os/exec"
-	"strings"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/tools"
 )
 
-var gitInfo = make(map[string]string)
-
-func init() {
-	file, err := os.Open("git.properties")
-
-	if err != nil {
-		// can't open file or not exists
-		out, err := exec.Command("bash", "-c", "git rev-parse --abbrev-ref HEAD; git show -s --format=\"%h%n%ci\"").Output()
-		if err != nil {
-			logger.Logger().Error(err)
-		}
-		splitted := strings.Split(string(out), "\n")
-		if len(splitted) > 3 {
-			gitInfo["branch"] = splitted[0]
-			gitInfo["commitid"] = splitted[1]
-			gitInfo["committime"] = splitted[2]
-		}
-
-	} else {
-		defer file.Close()
-		scanner := bufio.NewScanner(file)
-		scanner.Scan()
-		gitInfo["branch"] = scanner.Text()
-		scanner.Scan()
-		gitInfo["commitid"] = scanner.Text()
-		scanner.Scan()
-		gitInfo["committime"] = scanner.Text()
-	}
-
+type info struct {
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	CreateTime  string `json:"createTime"`
+	Author      string `json:"author"`
+	Git         string `json:"git"`
 }
 
 func Info() string {
-	infoJson := generateInfoData()
-	b, err := json.Marshal(infoJson)
-	if err != nil {
-		return err.Error()
-	}
-	return string(b)
-}
-
-func generateInfoData() *infoJson {
-	infoJson := new(infoJson)
-	infoJson.Git = new(git)
-	infoJson.Git.Commit = new(commit)
-
-	infoJson.Git.Branch = gitInfo["branch"]
-	infoJson.Git.Commit.ID = gitInfo["commitid"]
-	infoJson.Git.Commit.Time = gitInfo["committime"]
-
-	return infoJson
-}
-
-type infoJson struct {
-	Git *git `json:"git"`
-}
-
-type git struct {
-	Branch string  `json:"branch"`
-	Commit *commit `json:"commit"`
-}
-
-type commit struct {
-	ID   string `json:"id"`
-	Time string `json:"time"`
+	return tools.ToString(info{
+		Name:        "云监控区域化服务",
+		Description: "区域化的业务程序",
+		CreateTime:  "2021-11-11",
+		Author:      "Jim",
+		Git:         "",
+	})
 }

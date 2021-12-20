@@ -3,6 +3,7 @@ package controllers
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/dao"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/dbUtils"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/enums/sourceType"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/forms"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/tools"
@@ -13,67 +14,82 @@ import (
 )
 
 type AlarmRuleCtl struct {
-	dao *dao.AlarmRuleDao
 }
 
-func NewAlarmRuleCtl(dao *dao.AlarmRuleDao) *AlarmRuleCtl {
-	return &AlarmRuleCtl{dao: dao}
+func NewAlarmRuleCtl() *AlarmRuleCtl {
+	return &AlarmRuleCtl{}
 }
 
 func (ctl *AlarmRuleCtl) SelectRulePageList(c *gin.Context) {
 	var param forms.AlarmPageReqParam
 	if err := c.ShouldBindJSON(&param); err != nil {
-		c.JSON(http.StatusBadRequest, translate.GetErrorMsg(err))
+		c.JSON(http.StatusBadRequest, global.NewError(translate.GetErrorMsg(err)))
 		return
 	}
-	tenantId, _ := tools.GetTenantId(c)
+	tenantId, err := tools.GetTenantId(c)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, global.NewError(err.Error()))
+	}
 	param.TenantId = tenantId
-	c.JSON(http.StatusOK, global.NewSuccess("查询成功", ctl.dao.SelectRulePageList(&param)))
+	c.JSON(http.StatusOK, global.NewSuccess("查询成功", dao.AlarmRule.SelectRulePageList(&param)))
 }
 
 func (ctl *AlarmRuleCtl) GetDetail(c *gin.Context) {
 	id := c.PostForm("id")
 	if len(id) == 0 {
-		c.JSON(http.StatusBadRequest, "缺少id")
+		c.JSON(http.StatusBadRequest, global.NewError("缺少id"))
 		return
 	}
 	tenantId, _ := tools.GetTenantId(c)
-	c.JSON(http.StatusOK, global.NewSuccess("查询成功", ctl.dao.GetDetail(id, tenantId)))
+	c.JSON(http.StatusOK, global.NewSuccess("查询成功", dao.AlarmRule.GetDetail(global.DB, id, tenantId)))
 
 }
 
 func (ctl *AlarmRuleCtl) CreateRule(c *gin.Context) {
-	var param forms.AlarmRuleAddReqDTO
+	var param = forms.AlarmRuleAddReqDTO{
+		SourceType: sourceType.Front,
+	}
 	if err := c.ShouldBindJSON(&param); err != nil {
 		c.JSON(http.StatusBadRequest, translate.GetErrorMsg(err))
 		return
 	}
-	tenantId, _ := c.Get(global.TenantId)
-	param.TenantId = tenantId.(string)
-	userId, _ := c.Get(global.UserId)
-	param.UserId = userId.(string)
-	addMetricName(&param, ctl)
-	err := dbUtils.Tx(&param, service.CreateRule)
-
+	tenantId, err := tools.GetTenantId(c)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, global.NewError(err.Error()))
+	}
+	param.TenantId = tenantId
+	userId, err := tools.GetUserId(c)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, global.NewError(err.Error()))
+	}
+	param.UserId = userId
+	addMetricName(&param)
+	err = dbUtils.Tx(&param, service.CreateRule)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, err.Error())
 		return
 	}
-	c.JSON(http.StatusOK, global.NewSuccess("创建成功", true))
+	c.JSON(http.StatusOK, global.NewSuccess("创建成功", param.Id))
 }
 
 func (ctl *AlarmRuleCtl) UpdateRule(c *gin.Context) {
 	var param forms.AlarmRuleAddReqDTO
 	if err := c.ShouldBindJSON(&param); err != nil {
-		c.JSON(http.StatusBadRequest, translate.GetErrorMsg(err))
+		c.JSON(http.StatusBadRequest, global.NewError(translate.GetErrorMsg(err)))
 		return
 	}
-	tenantId, _ := tools.GetTenantId(c)
+	tenantId, err := tools.GetTenantId(c)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, global.NewError(err.Error()))
+	}
 	param.TenantId = tenantId
-	userId, _ := tools.GetUserId(c)
+	userId, err := tools.GetUserId(c)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, global.NewError(err.Error()))
+	}
 	param.UserId = userId
-	addMetricName(&param, ctl)
-	err := dbUtils.Tx(&param, service.UpdateRule)
+	addMetricName(&param)
+	err = dbUtils.Tx(&param, service.UpdateRule)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, err.Error())
 		return
@@ -84,14 +100,17 @@ func (ctl *AlarmRuleCtl) UpdateRule(c *gin.Context) {
 func (ctl *AlarmRuleCtl) DeleteRule(c *gin.Context) {
 	var param forms.RuleReqDTO
 	if err := c.ShouldBindJSON(&param); err != nil {
-		c.JSON(http.StatusBadRequest, translate.GetErrorMsg(err))
+		c.JSON(http.StatusBadRequest, global.NewError(translate.GetErrorMsg(err)))
 		return
 	}
-	tenantId, _ := tools.GetTenantId(c)
-	param.TenantId = tenantId
-	err := dbUtils.Tx(&param, service.DeleteRule)
+	tenantId, err := tools.GetTenantId(c)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, err.Error())
+		c.JSON(http.StatusBadRequest, global.NewError(err.Error()))
+	}
+	param.TenantId = tenantId
+	err = dbUtils.Tx(&param, service.DeleteRule)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, global.NewError(err.Error()))
 		return
 	}
 	c.JSON(http.StatusOK, global.NewSuccess("更新成功", true))
@@ -100,21 +119,24 @@ func (ctl *AlarmRuleCtl) DeleteRule(c *gin.Context) {
 func (ctl *AlarmRuleCtl) ChangeRuleStatus(c *gin.Context) {
 	var param forms.RuleReqDTO
 	if err := c.ShouldBindJSON(&param); err != nil {
-		c.JSON(http.StatusBadRequest, translate.GetErrorMsg(err))
+		c.JSON(http.StatusBadRequest, global.NewError(translate.GetErrorMsg(err)))
 		return
 	}
-	tenantId, _ := tools.GetTenantId(c)
-	param.TenantId = tenantId
-	err := dbUtils.Tx(&param, service.ChangeRuleStatus)
+	tenantId, err := tools.GetTenantId(c)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, err.Error())
+		c.JSON(http.StatusBadRequest, global.NewError(err.Error()))
+	}
+	param.TenantId = tenantId
+	err = dbUtils.Tx(&param, service.ChangeRuleStatus)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, global.NewError(err.Error()))
 		return
 	}
 	c.JSON(http.StatusOK, global.NewSuccess("更新成功", true))
 }
 
-func addMetricName(param *forms.AlarmRuleAddReqDTO, ctl *AlarmRuleCtl) {
-	item := ctl.dao.GetMonitorItem(param.RuleCondition.MetricName)
+func addMetricName(param *forms.AlarmRuleAddReqDTO) {
+	item := dao.AlarmRule.GetMonitorItem(param.RuleCondition.MetricName)
 	param.RuleCondition.Labels = item.Labels
 	param.RuleCondition.Unit = item.Unit
 	param.RuleCondition.MonitorItemName = item.Name

@@ -16,7 +16,7 @@ type InstanceRuleDTO struct {
 }
 
 type InstanceInfo struct {
-	InstanceId   string `json:"instanceId"`
+	InstanceId   string `json:"instanceId"  binding:"required"`
 	ZoneCode     string `json:"zoneCode"`
 	RegionCode   string `json:"regionCode"`
 	RegionName   string `json:"regionName"`
@@ -42,9 +42,11 @@ type ProductRuleParam struct {
 type ProductRuleListDTO struct {
 	BindRuleList   []InstanceRuleDTO `json:"bindRuleList"`
 	UnbindRuleList []InstanceRuleDTO `json:"unbindRuleList"`
+	TenantId       string
 }
 
 type UnBindRuleParam struct {
 	InstanceId string `json:"instanceId" binding:"required"`
 	RulId      string `json:"rulId" binding:"required"`
+	TenantId   string
 }

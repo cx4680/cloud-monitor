@@ -2,12 +2,11 @@ package tests
 
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/models"
-	"fmt"
-	"github.com/google/uuid"
+	"encoding/base64"
+	"encoding/json"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"log"
-	"strings"
 	"testing"
 )
 
@@ -43,6 +42,10 @@ func TestLogPrint(t *testing.T) {
 }
 
 func TestUUID(t *testing.T) {
-
-	fmt.Println(strings.ReplaceAll(uuid.New().String(), "-", ""))
+	userMap := map[string]string{}
+	userMap["userTypeCode"] = "33"
+	userMap["cloudLoginId"] = "33"
+	userMap["loginId"] = "33"
+	marshal, _ := json.Marshal(userMap)
+	print(base64.StdEncoding.EncodeToString(marshal))
 }

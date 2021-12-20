@@ -55,7 +55,7 @@ func (s *MessageService) TargetFilter(targetList []messageCenter.MessageTargetDT
 	targetList = nt
 }
 
-func (s *MessageService) SendMsg(msgList []AlertMsgSendDTO, isCenter bool) error {
+func (s *MessageService) SendMsg(msgList []interface{}, isCenter bool) error {
 	if !config.GetCommonConfig().HasNoticeModel {
 		logger.Logger().Info("There is no message center for this env")
 		return nil
@@ -66,7 +66,8 @@ func (s *MessageService) SendMsg(msgList []AlertMsgSendDTO, isCenter bool) error
 	var recordList []commonModels.NotificationRecord
 
 	var smsSender []string
-	for _, m := range msgList {
+	for _, o := range msgList {
+		m := o.(AlertMsgSendDTO)
 		msg := m.Msg
 		//TODO 确认切片引用
 		s.TargetFilter(msg.Target, msg.SenderId, isCenter)

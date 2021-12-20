@@ -24,15 +24,6 @@ func Logger() *zap.SugaredLogger {
 	return logger
 }
 func InitLogger(cfg config.LogConfig) {
-	infoLevel := zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
-		return lvl >= zapcore.InfoLevel
-	})
-	errorLevel := zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
-		return lvl >= zapcore.ErrorLevel
-	})
-
-	infoWriter := getLogWriter("info", cfg)
-	errorWriter := getLogWriter("error", cfg)
 
 	encoder := getEncoder()
 
@@ -46,13 +37,15 @@ func InitLogger(cfg config.LogConfig) {
 
 		core = zapcore.NewTee(
 			zapcore.NewCore(encoder, zapcore.NewMultiWriteSyncer(zapcore.AddSync(os.Stdout), zapcore.AddSync(debugWriter)), debugLevel),
-			zapcore.NewCore(encoder, zapcore.NewMultiWriteSyncer(zapcore.AddSync(os.Stdout), zapcore.AddSync(infoWriter)), infoLevel),
-			zapcore.NewCore(encoder, zapcore.NewMultiWriteSyncer(zapcore.AddSync(os.Stdout), zapcore.AddSync(errorWriter)), errorLevel),
 		)
 	} else {
+		infoLevel := zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
+			return lvl >= zapcore.InfoLevel
+		})
+		infoWriter := getLogWriter("info", cfg)
+
 		core = zapcore.NewTee(
 			zapcore.NewCore(encoder, zapcore.NewMultiWriteSyncer(zapcore.AddSync(os.Stdout), zapcore.AddSync(infoWriter)), infoLevel),
-			zapcore.NewCore(encoder, zapcore.NewMultiWriteSyncer(zapcore.AddSync(os.Stdout), zapcore.AddSync(errorWriter)), errorLevel),
 		)
 	}
 
@@ -73,15 +66,15 @@ func getLogWriter(level string, cfg config.LogConfig) zapcore.WriteSyncer {
 		lumberJackLogger := &lumberjack.Logger{
 			MaxSize:    100,          // 每个日志文件保存的最大尺寸 单位：M
 			MaxBackups: 10,           // 日志文件最多保存多少个备份
-			MaxAge:     2,            // 文件最多保存多少天
+			MaxAge:     15,           // 文件最多保存多少天
 			Compress:   cfg.Compress, // 是否压缩
 		}
 
-		if level == "error" {
-			level = "common-error"
-		} else {
-			level = "digest_info"
-		}
+		//if level == "error" {
+		//	level = "common-error"
+		//} else {
+		//	level = "digest_info"
+		//}
 
 		fileName := defaultDataLogPrefix
 		if cfg.DataLogPrefix != "" {

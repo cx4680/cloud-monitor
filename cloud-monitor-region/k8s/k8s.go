@@ -1,7 +1,8 @@
 package k8s
 
 import (
-	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/errors"
+	"bytes"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/errors"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/forms"
 	c "code.cestc.cn/ccos-ops/cloud-monitor/common/config"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
@@ -14,6 +15,7 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	"strings"
+	"text/template"
 )
 
 const (
@@ -25,6 +27,7 @@ const (
 
 var client dynamic.Interface
 var resource *schema.GroupVersionResource
+var alertManagerResource *schema.GroupVersionResource
 
 func InitK8s() error {
 	var config *rest.Config
@@ -52,6 +55,11 @@ func InitK8s() error {
 		Version:  version,
 		Resource: plural,
 	}
+	alertManagerResource = &schema.GroupVersionResource{
+		Group:    group,
+		Version:  "v1alpha1",
+		Resource: "alertmanagerconfigs",
+	}
 	return nil
 }
 
@@ -59,7 +67,7 @@ func DeleteAlertRule(alertRuleId string) error {
 	err := client.Resource(*resource).Namespace(namespace).Delete(context.TODO(), alertRuleId, metav1.DeleteOptions{})
 	if err != nil {
 		logger.Logger().Errorf("调用api删除规则失败")
-		return errors.NewBussinessError(3, "调用api删除规则失败")
+		return errors.NewBusinessErrorCode(errors.DeleteError, "调用api删除规则失败")
 	}
 	return nil
 }
@@ -108,11 +116,44 @@ func ApplyAlertRule(alertRuleDTO *forms.AlertRuleDTO) error {
 	requestObj, err2 := json.Marshal(rules)
 	if err2 != nil {
 		logger.Logger().Errorf("调用api更新规则失败%v", err2)
-		return errors.NewBussinessError(3, "调用api更新规则失败")
+		return errors.NewBusinessErrorCode(errors.ApplyFail, "调用api更新规则失败")
 	}
 	_, err := client.Resource(*resource).Namespace(namespace).Patch(context.TODO(), alertRuleDTO.TenantId, types.ApplyPatchType, requestObj, metav1.ApplyOptions{FieldManager: "application/apply-patch"}.ToPatchOptions())
 	if err != nil {
 		return err
+	}
+	return nil
+}
+
+func ApplyAlertManagerConfig(cfg AlertManagerConfig) error {
+	var buf bytes.Buffer
+	var err error
+	templates, err := template.ParseFiles("template/alertManagerConfig.tpl")
+	if err != nil {
+		logger.Logger().Errorf(err.Error())
+		return err
+	}
+	err = templates.ExecuteTemplate(&buf, "alertManagerConfig", cfg)
+	if err != nil {
+		logger.Logger().Errorf(err.Error())
+		return err
+	}
+	_, err = client.Resource(*alertManagerResource).
+		Namespace(namespace).
+		Patch(context.TODO(), cfg.Name, types.ApplyPatchType,
+			[]byte(buf.String()), metav1.ApplyOptions{FieldManager: "application/apply-patch"}.ToPatchOptions())
+	if err != nil {
+		logger.Logger().Errorf(err.Error())
+		return err
+	}
+	return nil
+}
+
+func DeleteAlertManagerConfig(configName string) error {
+	err := client.Resource(*alertManagerResource).Namespace(namespace).Delete(context.TODO(), configName, metav1.DeleteOptions{})
+	if err != nil {
+		logger.Logger().Errorf("调用api删除AlertManagerConfig失败")
+		return errors.NewBusinessErrorCode(errors.DeleteError, "调用api删除AlertManagerConfig失败")
 	}
 	return nil
 }

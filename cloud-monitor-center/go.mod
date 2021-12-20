@@ -14,6 +14,7 @@ require (
 	github.com/gohouse/converter v0.0.3
 	github.com/google/uuid v1.3.0
 	github.com/pkg/errors v0.9.1
+	gorm.io/driver/mysql v1.1.2
 	gorm.io/gorm v1.22.1
 )
 
@@ -49,7 +50,6 @@ require (
 	google.golang.org/protobuf v1.27.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
-	gorm.io/driver/mysql v1.1.2 // indirect
 	stathat.com/c/consistent v1.0.0 // indirect
 )
 

@@ -9,7 +9,6 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/utils/snowflake"
 	"gorm.io/gorm"
 	"strconv"
-	"strings"
 )
 
 func CreateRule(tx *gorm.DB, param interface{}) error {
@@ -38,9 +37,5 @@ func ChangeRuleStatus(tx *gorm.DB, param interface{}) error {
 	ruleDao := dao.AlarmRule
 	dto := param.(*forms.RuleReqDTO)
 	ruleDao.UpdateRuleState(tx, dto)
-	enum := enums.DisableRule
-	if strings.EqualFold(dto.Status, dao.ENABLE) {
-		enum = enums.EnableRule
-	}
-	return mq.SendMsg(sysRocketMq.RuleTopic, enum, param)
+	return mq.SendMsg(sysRocketMq.RuleTopic, enums.ChangeStatus, param)
 }

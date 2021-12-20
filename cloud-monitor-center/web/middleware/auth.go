@@ -11,7 +11,13 @@ import (
 )
 
 //忽略认证的路径列表
-var ignoreList = []string{"/hawkeye/alertContact/certifyAlertContact?*", "/inner/alertRecord/**", "/actuator/**"}
+var ignoreList = []string{"/hawkeye/alertContact/certifyAlertContact?*", "/inner/alertRecord/**", "/actuator/**",
+	"/hawkeye/inner/configItem/*",
+	"/hawkeye/inner/monitorItem/*",
+	"/hawkeye/inner/rule/*",
+	"/hawkeye/inner/configItem/*",
+	"/hawkeye/inner/monitorItem/*",
+}
 
 func Auth() gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -24,6 +30,10 @@ func Auth() gin.HandlerFunc {
 				c.Abort()
 			}
 			if match {
+				req := c.Request
+				tenantId := req.Header.Get("tenantId")
+				c.Set(global.TenantId, tenantId)
+				c.Set(global.UserId, tenantId)
 				c.Next()
 				return
 			}

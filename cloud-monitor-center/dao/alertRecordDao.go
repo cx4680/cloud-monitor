@@ -90,9 +90,9 @@ func (a *AlertRecordDao) GetPageList(db *gorm.DB, tenantId string, f forms.Alert
 }
 
 func (a *AlertRecordDao) GetById(db *gorm.DB, id string) *vo.AlertRecordDetailVO {
-	var vo vo.AlertRecordDetailVO
-	db.Model(commonModels.AlertRecord{}).Find(&vo, id)
-	return &vo
+	var detail vo.AlertRecordDetailVO
+	db.Model(commonModels.AlertRecord{}).Find(&detail, id)
+	return &detail
 }
 
 func (a *AlertRecordDao) GetAlertRecordTotal(db *gorm.DB, tenantId string, region string, startTime string, endTime string) int64 {

@@ -26,8 +26,7 @@ func (dao *ConfigItemDao) GetConfigItem(code interface{}, pid string, data strin
 	return &item
 }
 
-
-func (dao *ConfigItemDao) GetConfigItemList(pid string) []*models.ConfigItem{
+func (dao *ConfigItemDao) GetConfigItemList(pid string) []*models.ConfigItem {
 	var list []*models.ConfigItem
 	db := global.DB
 	db = db.Where("pid", pid).Order("sort_id ASC")
@@ -44,4 +43,5 @@ const (
 	RegionListPid         = "24" //region列表
 	MonitorRange          = "5"  //监控周期
 	NoticeChannel         = "33" //通知方式
+	AlarmLevel            = "28" //告警级别
 )

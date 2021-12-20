@@ -18,11 +18,10 @@ const (
 	UpdateAlertContactGroup EventEum = "updateAlertContactGroup"
 	DeleteAlertContactGroup EventEum = "deleteAlertContactGroup"
 
-	CreateRule  EventEum = "create"
-	UpdateRule  EventEum = "update"
-	DisableRule EventEum = "disable"
-	EnableRule  EventEum = "enable"
-	DeleteRule  EventEum = "delete"
-	BindRule    EventEum = "bind"
-	UnbindRule  EventEum = "unbind"
+	CreateRule   EventEum = "create"
+	UpdateRule   EventEum = "update"
+	ChangeStatus EventEum = "changeStatus"
+	DeleteRule   EventEum = "delete"
+	BindRule     EventEum = "bind"
+	UnbindRule   EventEum = "unbind"
 )

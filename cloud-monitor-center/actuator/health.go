@@ -1,19 +1,13 @@
 package actuator
 
-import "encoding/json"
+import (
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/tools"
+)
 
-func Health() string {
-	healthJson := new(healthJson)
-
-	healthJson.Status = "UP"
-
-	b, err := json.Marshal(healthJson)
-	if err != nil {
-		return err.Error()
-	}
-	return string(b)
+type health struct {
+	Status string `json:"status"`
 }
 
-type healthJson struct {
-	Status string `json:"status"`
+func Health() string {
+	return tools.ToString(health{Status: "UP"})
 }

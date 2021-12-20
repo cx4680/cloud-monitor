@@ -47,36 +47,34 @@ func handleMsg(MqMsg forms.MqMsg, data []byte) {
 		}
 		ruleDao.UpdateRule(global.DB, &param)
 		tenantId = param.TenantId
-	case enums.EnableRule:
+	case enums.ChangeStatus:
 		var param forms.RuleReqDTO
 		if err := json.Unmarshal(data, &param); err != nil {
 			return
 		}
 		ruleDao.UpdateRuleState(global.DB, &param)
-	case enums.DisableRule:
-		var param forms.RuleReqDTO
-		if err := json.Unmarshal(data, &param); err != nil {
-			return
-		}
-		ruleDao.UpdateRuleState(global.DB, &param)
+		tenantId = param.TenantId
 	case enums.DeleteRule:
 		var param forms.RuleReqDTO
 		if err := json.Unmarshal(data, &param); err != nil {
 			return
 		}
 		ruleDao.DeleteRule(global.DB, &param)
+		tenantId = param.TenantId
 	case enums.UnbindRule:
 		var param forms.UnBindRuleParam
 		if err := json.Unmarshal(data, &param); err != nil {
 			return
 		}
 		instanceDao.UnbindInstance(global.DB, &param)
+		tenantId = param.TenantId
 	case enums.BindRule:
 		var param forms.InstanceBindRuleDTO
 		if err := json.Unmarshal(data, &param); err != nil {
 			return
 		}
 		instanceDao.BindInstance(global.DB, &param)
+		tenantId = param.TenantId
 	default:
 		logger.Logger().Warnf("不支持的消息类型，消息类型：%v,消息%s", MqMsg.EventEum, string(data))
 	}

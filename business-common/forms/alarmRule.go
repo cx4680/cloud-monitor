@@ -28,24 +28,23 @@ type AlarmRulePageDTO struct {
 }
 
 type AlarmRuleDetailDTO struct {
-	MonitorType       string          `json:"monitorType"`
-	ProductType       string          `json:"productType"`
-	Scope             string          `json:"scope"`
-	InstanceList      []*InstanceInfo `json:"instanceList" gorm:"-"`
-	RuleName          string          `json:"ruleName" gorm:"column:ruleName"`
-	SilencesTime      string          `json:"silencesTime"`
-	EffectiveStart    string          `json:"effectiveStart"  gorm:"column:effectiveStart"`
-	EffectiveEnd      string          `json:"effectiveEnd"  gorm:"column:effectiveEnd"`
-	AlarmLevel        int             `json:"alarmLevel" gorm:"column:alarmLevel"`
-	NoticeChannel     string          `json:"noticeChannel" gorm:"column:noticeChannel"`
-	TenantId          string          `json:"tenantId" gorm:"column:tenantId"`
-	UserId            string          `json:"userId"`
-	Id                string          `json:"id"`
-	RuleCondition     *RuleCondition  `json:"ruleCondition" gorm:"column:ruleCondition"`
-	Status            string          `json:"status"`
-	NoticeGroups      []*NoticeGroup  `json:"noticeGroups" gorm:"-"`
-	NoticeChannelDesc string          `json:"noticeChannelDesc" gorm:"column:noticeChannelDesc"`
-	Describe          string          `json:"describe" gorm:"column:describe"`
+	MonitorType      string          `json:"monitorType"`
+	ProductType      string          `json:"productType"`
+	Scope            string          `json:"scope"`
+	InstanceList     []*InstanceInfo `json:"instanceList" gorm:"-"`
+	RuleName         string          `json:"ruleName" gorm:"column:ruleName"`
+	SilencesTime     string          `json:"silencesTime"`
+	EffectiveStart   string          `json:"effectiveStart"  gorm:"column:effectiveStart"`
+	EffectiveEnd     string          `json:"effectiveEnd"  gorm:"column:effectiveEnd"`
+	AlarmLevel       int             `json:"alarmLevel" gorm:"column:alarmLevel"`
+	TenantId         string          `json:"tenantId" gorm:"column:tenantId"`
+	UserId           string          `json:"userId"`
+	Id               string          `json:"id"`
+	RuleCondition    *RuleCondition  `json:"ruleCondition" gorm:"column:ruleCondition"`
+	Status           string          `json:"status"`
+	NoticeGroups     []*NoticeGroup  `json:"noticeGroups" gorm:"-"`
+	Describe         string          `json:"describe" gorm:"column:describe"`
+	AlarmHandlerList []*Handler      `json:"alarmHandlerList" gorm:"-"`
 }
 type NoticeGroup struct {
 	Id       string      `json:"id" gorm:"column:id"`
@@ -59,20 +58,32 @@ type UserInfo struct {
 	UserName string `json:"userName" gorm:"column:userName"`
 }
 
+type ResGroupInfo struct {
+	CalcMode     int             `json:"calcMode"`
+	ResGroupId   string          `json:"resGroupId"`
+	ResGroupName string          `json:"resGroupName"`
+	ResourceList []*InstanceInfo `json:"resourceList"`
+}
+
 type AlarmRuleAddReqDTO struct {
-	MonitorType   string          `json:"monitorType"`
-	ProductType   string          `json:"productType"`
-	Scope         string          `json:"scope"`
-	TenantId      string          `json:"tenantId"`
-	UserId        string          `json:"userId"`
-	InstanceList  []*InstanceInfo `json:"instanceList"`
-	RuleName      string          `json:"ruleName"`
-	RuleCondition *RuleCondition  `json:"triggerCondition"`
-	SilencesTime  string          `json:"silencesTime"`
-	AlarmLevel    int             `json:"alarmLevel"`
-	NoticeChannel string          `json:"noticeChannel"`
-	GroupList     []string        `json:"groupList"`
-	Id            string          `json:"id"`
+	MonitorType       string `json:"monitorType"  binding:"required"`
+	ProductType       string `json:"productType"  binding:"required"`
+	ProductId         int    `json:"productId" `
+	Scope             string `json:"scope"`
+	TenantId          string `json:"tenantId"`
+	UserId            string `json:"userId"`
+	ResourceGroupList []*ResGroupInfo
+	ResourceList      []*InstanceInfo `json:"instanceList"`
+	AlarmHandlerList  []*Handler      `json:"alarmHandlerList"`
+	RuleName          string          `json:"ruleName"`
+	RuleCondition     *RuleCondition  `json:"triggerCondition"`
+	SilencesTime      string          `json:"silencesTime"`
+	AlarmLevel        int             `json:"alarmLevel"`
+	NoticeChannel     string          `json:"noticeChannel"`
+	GroupList         []string        `json:"groupList"`
+	Source            string          `json:"source"`
+	SourceType        int             `json:"sourceType"`
+	Id                string          `json:"id"`
 }
 
 type RuleCondition struct {
@@ -90,6 +101,10 @@ type RuleReqDTO struct {
 	Id       string `json:"id"`
 	Status   string `json:"status"`
 	TenantId string `json:"tenantId"`
+}
+type Handler struct {
+	HandleType   int    `gorm:"column:handle_type"`   // 1邮件；2 短信；3弹性
+	HandleParams string `gorm:"column:handle_params"` //回调地址
 }
 
 func (p *RuleCondition) Value() (driver.Value, error) {
