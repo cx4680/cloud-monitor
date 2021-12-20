@@ -40,7 +40,8 @@ func NewAlertRecordAddService(AlertRecordSvc *AlertRecordService, AlarmHandlerSv
 				return false, errors.New("序列化告警数据失败")
 			}
 			//	判断该条告警对应的规则是否删除、禁用、解绑
-			if num := commonDao.AlertRecord.FindAlertRuleBindNum(ruleDesc.InstanceId, ruleDesc.RuleId); num <= 0 {
+			//TODO
+			if num := commonDao.AlertRecord.FindAlertRuleBindNum("", ruleDesc.RuleId); num <= 0 {
 				logger.Logger().Info("此告警规则已删除/禁用/解绑")
 				return false, nil
 			}
@@ -165,6 +166,8 @@ func (s *AlertRecordAddService) buildAlertRecord(alert *forms.AlertRecordAlertsB
 	}
 	labelMap := s.getLabelMap(alertAnnotationStr)
 
+	val := strconv.FormatFloat(ruleDesc.TargetValue, 'E', -1, 64)
+
 	return &commonModels.AlertRecord{
 		Id:           strconv.FormatInt(snowflake.GetWorker().NextId(), 10),
 		Status:       alert.Status,
@@ -173,12 +176,12 @@ func (s *AlertRecordAddService) buildAlertRecord(alert *forms.AlertRecordAlertsB
 		RuleName:     ruleDesc.RuleName,
 		MonitorType:  ruleDesc.MonitorType,
 		SourceType:   ruleDesc.Product,
-		SourceId:     ruleDesc.InstanceId,
+		SourceId:     labelMap["instance"],
 		Summary:      alertAnnotationStr,
 		CurrentValue: labelMap["currentValue"],
 		StartTime:    tools.TimeToStr(startTime, tools.FullTimeFmt),
 		EndTime:      tools.TimeToStr(tools.TimeParseForZone(alert.EndsAt), tools.FullTimeFmt),
-		TargetValue:  strconv.Itoa(ruleDesc.TargetValue),
+		TargetValue:  val,
 		Expression:   ruleDesc.Express,
 		Duration:     strconv.Itoa(duration),
 		Level:        ruleDesc.Level,
@@ -217,6 +220,9 @@ func (s *AlertRecordAddService) buildNoticeData(alert *forms.AlertRecordAlertsBe
 
 	handleType := handler.HandleType
 	targetList := s.buildTargets(handleType, contactGroups)
+
+	labelMap := s.getLabelMap(alert.Annotations.Summary)
+
 	instanceInfo := s.getInstanceInfo(alert.Annotations.Summary)
 
 	objMap := make(map[string]string)
@@ -232,6 +238,8 @@ func (s *AlertRecordAddService) buildNoticeData(alert *forms.AlertRecordAlertsBe
 	cv := fmt.Sprintf("%.2f", f)
 	objMap["currentValue"] = cv + ruleDesc.Unit
 
+	val := strconv.FormatFloat(ruleDesc.TargetValue, 'E', -1, 64)
+
 	if 1 == handleType {
 		objMap["instanceAmount"] = "1"
 		objMap["period"] = utils.GetDateDiff(ruleDesc.Time)
@@ -244,14 +252,14 @@ func (s *AlertRecordAddService) buildNoticeData(alert *forms.AlertRecordAlertsBe
 			if tools.IsNotBlank(ruleDesc.Unit) {
 				targetValue = ruleDesc.Unit
 			}
-			targetValue = strconv.Itoa(ruleDesc.TargetValue) + targetValue
+			targetValue = val + targetValue
 			objMap["targetValue"] = targetValue
 		} else if source == messageCenter.ALERT_OPEN {
-			objMap["targetValue"] = strconv.Itoa(ruleDesc.TargetValue)
+			objMap["targetValue"] = val
 		}
 
 		objMap["evaluationCount"] = "持续" + strconv.Itoa(ruleDesc.Time) + "个周期"
-		objMap["InstanceID"] = ruleDesc.InstanceId
+		objMap["InstanceID"] = labelMap["instance"]
 		if tools.IsBlank(ruleDesc.Unit) {
 			objMap["unit"] = ""
 		} else {
