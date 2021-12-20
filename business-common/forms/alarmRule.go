@@ -103,8 +103,8 @@ type RuleReqDTO struct {
 	TenantId string `json:"tenantId"`
 }
 type Handler struct {
-	HandleType   int    `gorm:"column:handle_type"`   // 1邮件；2 短信；3弹性
-	HandleParams string `gorm:"column:handle_params"` //回调地址
+	HandleType   int    `json:"handleType" gorm:"column:handle_type"`   // 1邮件；2 短信；3弹性
+	HandleParams string `json:"handleParams" gorm:"column:handle_params"` //回调地址
 }
 
 func (p *RuleCondition) Value() (driver.Value, error) {

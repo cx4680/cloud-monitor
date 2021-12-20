@@ -30,7 +30,7 @@ func (dao *AlarmRuleDao) SaveRule(tx *gorm.DB, ruleReqDTO *forms.AlarmRuleAddReq
 }
 func (dao *AlarmRuleDao) UpdateRule(tx *gorm.DB, ruleReqDTO *forms.AlarmRuleAddReqDTO) {
 	if !dao.checkRuleExists(tx, ruleReqDTO.Id, ruleReqDTO.TenantId) {
-		logger.Logger().Infof("规则不存在 %+v",ruleReqDTO)
+		logger.Logger().Infof("规则不存在 %+v", ruleReqDTO)
 		return
 	}
 	dao.deleteOthers(tx, ruleReqDTO.Id)
@@ -41,7 +41,7 @@ func (dao *AlarmRuleDao) UpdateRule(tx *gorm.DB, ruleReqDTO *forms.AlarmRuleAddR
 
 func (dao *AlarmRuleDao) DeleteRule(tx *gorm.DB, ruleReqDTO *forms.RuleReqDTO) {
 	if !dao.checkRuleExists(tx, ruleReqDTO.Id, ruleReqDTO.TenantId) {
-		logger.Logger().Infof("规则不存在 %+v",ruleReqDTO)
+		logger.Logger().Infof("规则不存在 %+v", ruleReqDTO)
 		return
 	}
 	rule := models.AlarmRule{
@@ -54,7 +54,7 @@ func (dao *AlarmRuleDao) DeleteRule(tx *gorm.DB, ruleReqDTO *forms.RuleReqDTO) {
 
 func (dao *AlarmRuleDao) UpdateRuleState(tx *gorm.DB, ruleReqDTO *forms.RuleReqDTO) {
 	if !dao.checkRuleExists(tx, ruleReqDTO.Id, ruleReqDTO.TenantId) {
-		logger.Logger().Infof("规则不存在 %+v",ruleReqDTO)
+		logger.Logger().Infof("规则不存在 %+v", ruleReqDTO)
 		return
 	}
 	rule := models.AlarmRule{ID: ruleReqDTO.Id}
@@ -74,7 +74,7 @@ func (dao *AlarmRuleDao) SelectRulePageList(param *forms.AlarmPageReqParam) *vo.
 	var modelList []forms.AlarmRulePageDTO
 	selectList := &strings.Builder{}
 	var sqlParam = []interface{}{param.TenantId}
-	selectList.WriteString("select * from ( SELECT    count(DISTINCT(t2.resource_id)) AS instanceNum,    t1. NAME,    t1.monitor_type,    t1.product_type,    t1.metric_name,    t1.trigger_condition,    t1.enabled AS 'status',    t1.id AS ruleId,    t1.update_time  FROM    t_alarm_rule t1  LEFT JOIN t_alarm_rule_resource_rel t2 ON t2.alarm_rule_id = t1.id  WHERE    t1.tenant_id = ?  AND t1.deleted = 0  AND t1.source_type = 1  ")
+	selectList.WriteString("select * from ( SELECT    count(DISTINCT(t2.resource_id)) AS instanceNum,    t1.NAME  as name,    t1.monitor_type,    t1.product_type,    t1.metric_name,    t1.trigger_condition,    t1.enabled AS 'status',    t1.id AS ruleId,    t1.update_time  FROM    t_alarm_rule t1  LEFT JOIN t_alarm_rule_resource_rel t2 ON t2.alarm_rule_id = t1.id  WHERE    t1.tenant_id = ?  AND t1.deleted = 0  AND t1.source_type = 1  ")
 	if len(param.Status) != 0 {
 		selectList.WriteString(" and t1.enabled = ?")
 		sqlParam = append(sqlParam, param.Status)
@@ -87,7 +87,7 @@ func (dao *AlarmRuleDao) SelectRulePageList(param *forms.AlarmPageReqParam) *vo.
 	page := pageUtils.Paginate(param.PageSize, param.Current, selectList.String(), sqlParam, &modelList)
 	for i, v := range modelList {
 		modelList[i].MonitorItem = v.RuleCondition.MonitorItemName
-		modelList[i].Express = getExpress(v.RuleCondition)
+		modelList[i].Express = GetExpress(v.RuleCondition)
 		modelList[i].Status = getAlarmStatusSqlText(v.Status)
 	}
 	return &vo.PageVO{
@@ -380,6 +380,6 @@ func getComparisonOperator(s string) string {
 	return comparisonOperatorText[s]
 }
 
-func getExpress(form *forms.RuleCondition) string {
+func GetExpress(form *forms.RuleCondition) string {
 	return fmt.Sprintf("%s%s%s%s%s 统计周期%s分钟 持续%s个周期", form.MonitorItemName, getAlarmStatisticsText(form.Statistics), getComparisonOperator(form.ComparisonOperator), strconv.FormatFloat(form.Threshold, 'g', 5, 32), form.Unit, strconv.Itoa(form.Period/60), strconv.Itoa(form.Times))
 }

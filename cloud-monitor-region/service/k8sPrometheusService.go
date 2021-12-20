@@ -3,6 +3,7 @@ package service
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/constants"
 	dao2 "code.cestc.cn/ccos-ops/cloud-monitor/business-common/dao"
+	dtos2 "code.cestc.cn/ccos-ops/cloud-monitor/business-common/dtos"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/enums/calcMode"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/errors"
 	forms2 "code.cestc.cn/ccos-ops/cloud-monitor/business-common/forms"
@@ -173,7 +174,30 @@ func (service *K8sPrometheusService) buildAlertRule(ruleExpress *dtos.RuleExpres
 	} else {
 		alert.SilencesTime = utils.SecToTime(silenceTime)
 	}
-	desc, err := json.Marshal(ruleExpress.RuleCondition)
+	noticeGroupIds := make([]string, len(ruleExpress.NoticeGroupIds))
+	for index, noticeGroup := range ruleExpress.NoticeGroupIds {
+		noticeGroupIds[index] = noticeGroup.Id
+	}
+	ruleDesc := dtos2.RuleDesc{
+		RuleName:           ruleExpress.RuleName,
+		Product:            ruleExpress.ProductType,
+		MetricName:         ruleExpress.RuleCondition.MetricName,
+		ComparisonOperator: ruleExpress.RuleCondition.ComparisonOperator,
+		TargetValue:        ruleExpress.RuleCondition.Threshold,
+		Time:               ruleExpress.RuleCondition.Times,
+		Period:             ruleExpress.RuleCondition.Period,
+		Unit:               ruleExpress.RuleCondition.Unit,
+		Express:            dao2.GetExpress(ruleExpress.RuleCondition),
+		Level:              ruleExpress.Level,
+		MonitorItem:        ruleExpress.RuleCondition.MonitorItemName,
+		MonitorType:        ruleExpress.MonitorType,
+		RuleId:             ruleExpress.RuleId,
+		TenantId:           ruleExpress.TenantId,
+		Statistic:          ruleExpress.RuleCondition.Statistics,
+		GroupList:          noticeGroupIds,
+		ResourceGroupId:    ruleExpress.ResGroupId,
+	}
+	desc, err := json.Marshal(ruleDesc)
 	alert.Description = string(desc)
 	return alert, nil
 }
