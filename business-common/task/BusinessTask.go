@@ -2,8 +2,8 @@ package task
 
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/tools"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
 	"github.com/robfig/cron"
-	"log"
 )
 
 type BusinessTask interface {
@@ -31,9 +31,9 @@ func (t *BusinessTaskImpl) Add(bt BusinessTaskDTO) error {
 		err = t.c.AddFunc(bt.Cron, bt.Task)
 	} else {
 		err = t.c.AddFunc(bt.Cron, func() {
-			log.Println(bt.Name + "start running")
+			logger.Logger().Info(bt.Name + "start running")
 			bt.Task()
-			log.Println(bt.Name + "running over")
+			logger.Logger().Info(bt.Name + "running over")
 		})
 	}
 	if err != nil {

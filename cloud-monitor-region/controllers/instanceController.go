@@ -3,11 +3,13 @@ package controllers
 import (
 	commonGlobal "code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/service"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/tools"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/dao"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/external"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/global"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/utils"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/validator/translate"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
@@ -38,13 +40,13 @@ func NewInstanceCtl(dao *dao.InstanceDao) *InstanceCtl {
 // @Failure 500 {object} global.Resp
 // @Router /hawkeye/instance/page [get]
 func (ctl *InstanceCtl) GetPage(c *gin.Context) {
-	tenantId, _ := c.Get(commonGlobal.TenantId)
+	tenantId, _ := tools.GetTenantId(c)
 	form := service.InstancePageForm{}
 	if err := c.ShouldBindQuery(&form); err != nil {
 		c.JSON(http.StatusBadRequest, global.NewError(translate.GetErrorMsg(err)))
 		return
 	}
-	form.TenantId = tenantId.(string)
+	form.TenantId = tenantId
 	instanceService := external.ProductInstanceServiceMap[form.Product]
 	page, err := instanceService.GetPage(form, instanceService.(service.InstanceStage))
 	if err != nil {
@@ -72,15 +74,16 @@ func (ctl *InstanceCtl) GetPage(c *gin.Context) {
 // @Router /hawkeye/instance/getInstanceNum [get]
 func (ctl *InstanceCtl) GetInstanceNumByRegion(c *gin.Context) {
 	tenantId, _ := c.Get(commonGlobal.TenantId)
-	form := service.InstancePageForm{}
-	if err := c.ShouldBindQuery(form); err != nil {
-		c.JSON(http.StatusBadRequest, global.NewError(translate.GetErrorMsg(err)))
-		return
+	form := service.InstancePageForm{
+		TenantId: tenantId.(string),
+		Product:  external.ECS,
+		Current:  1,
+		PageSize: 1000,
 	}
-	form.TenantId = tenantId.(string)
 	instanceService := external.ProductInstanceServiceMap[external.ECS]
 	page, err := instanceService.GetPage(form, instanceService.(service.InstanceStage))
 	if err != nil {
+		logger.Logger().Error(err)
 		c.JSON(http.StatusInternalServerError, global.NewError("查询失败"))
 		return
 	}
@@ -91,10 +94,10 @@ func (ctl *InstanceCtl) GetInstanceNumByRegion(c *gin.Context) {
 }
 
 type AlarmInstanceRegionVO struct {
-	Total int
+	Total int `json:"total"`
 
 	/**
 	 * 已绑定实例数
 	 */
-	BindNum int
+	BindNum int `json:"bindNum"`
 }

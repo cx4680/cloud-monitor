@@ -12,7 +12,7 @@ type NatInstanceService struct {
 
 type NatQueryPageRequest struct {
 	OrderName string      `json:"orderName,omitempty"`
-	OrderRule string      `json:"OrderRule,omitempty"`
+	OrderRule string      `json:"orderRule,omitempty"`
 	PageIndex int         `json:"pageIndex,omitempty"`
 	PageSize  int         `json:"pageSize,omitempty"`
 	Data      interface{} `json:"data,omitempty"`
@@ -92,14 +92,20 @@ func (nat *NatInstanceService) ConvertResp(realResp interface{}) (int, []service
 	if vo.Data.Total > 0 {
 		for _, d := range vo.Data.Rows {
 			list = append(list, service.InstanceCommonVO{
-				Id:   strconv.Itoa(d.Id),
-				Name: d.Name,
+				InstanceId:   strconv.Itoa(d.Id),
+				InstanceName: d.Name,
 				Labels: []service.InstanceLabel{{
 					Name:  "subnetName",
 					Value: d.SubnetName,
 				}, {
 					Name:  "status",
 					Value: d.Status,
+				}, {
+					Name:  "vpcName",
+					Value: d.VpcName,
+				}, {
+					Name:  "specification",
+					Value: d.Specification,
 				}},
 			})
 		}

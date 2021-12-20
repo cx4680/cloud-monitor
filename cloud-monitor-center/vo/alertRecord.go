@@ -53,3 +53,8 @@ type AlertRecordDetailVO struct {
 	CreateTime   global.JsonTime
 	UpdateTime   global.JsonTime
 }
+
+type RecordNumHistory struct {
+	Number  int    `json:"number"`
+	DayTime string `json:"dayTime"`
+}

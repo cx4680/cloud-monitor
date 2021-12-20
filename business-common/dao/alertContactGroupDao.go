@@ -41,7 +41,8 @@ const (
 		"GROUP_CONCAT( CASE aci.type WHEN 2 THEN aci.is_certify END ) AS email_certify, " +
 		"GROUP_CONCAT( CASE aci.type WHEN 3 THEN aci.NO END ) AS lanxin, " +
 		"GROUP_CONCAT( CASE aci.type WHEN 3 THEN aci.is_certify END ) AS lanxin_certify, " +
-		"ac.description AS description " +
+		"ac.description AS description, " +
+		"acg.group_count AS group_count " +
 		"FROM " +
 		"alert_contact AS ac " +
 		"LEFT JOIN alert_contact_information AS aci ON ac.id = aci.contact_id AND ac.tenant_id = aci.tenant_id " +
@@ -50,7 +51,8 @@ const (
 		"acgr.contact_id AS contact_id, " +
 		"acgr.tenant_id AS tenant_id, " +
 		"GROUP_CONCAT( acg.id ) AS group_id, " +
-		"GROUP_CONCAT( acg.name ) AS group_name " +
+		"GROUP_CONCAT( acg.name ) AS group_name, " +
+		"COUNT( acgr.contact_id ) AS group_count " +
 		"FROM " +
 		"alert_contact_group AS acg " +
 		"LEFT JOIN alert_contact_group_rel AS acgr ON acg.id = acgr.group_id AND acg.tenant_id = acgr.tenant_id " +
@@ -68,12 +70,12 @@ const (
 )
 
 func (d *AlertContactGroupDao) SelectAlertContactGroup(db *gorm.DB, param forms.AlertContactParam) *forms.AlertContactFormPage {
-	var model = &[]forms.AlertContactGroupForm{}
+	var modelList = &[]forms.AlertContactGroupForm{}
 	var total int64
 	db.Model(&models.AlertContactGroup{}).Where("tenant_id = ?", param.TenantId).Count(&total)
-	db.Raw(SelectAlterContactGroup, param.TenantId, param.GroupName).Find(model)
+	db.Raw(SelectAlterContactGroup, param.TenantId, param.GroupName).Find(modelList)
 	var alertContactFormPage = &forms.AlertContactFormPage{
-		Records: model,
+		Records: modelList,
 		Current: param.PageCurrent,
 		Size:    param.PageSize,
 		Total:   total,
@@ -81,10 +83,22 @@ func (d *AlertContactGroupDao) SelectAlertContactGroup(db *gorm.DB, param forms.
 	return alertContactFormPage
 }
 
-func (d *AlertContactGroupDao) SelectAlertGroupContact(db *gorm.DB, param forms.AlertContactParam) *[]forms.AlertContactForm {
-	var model = &[]forms.AlertContactForm{}
-	db.Raw(SelectAlterGroupContact, param.TenantId, param.GroupId).Find(model)
-	return model
+func (d *AlertContactGroupDao) SelectAlertGroupContact(db *gorm.DB, param forms.AlertContactParam) *forms.AlertContactFormPage {
+	var modelList = &[]forms.AlertContactForm{}
+	var total int64
+	db.Model(&models.AlertContactGroupRel{}).Where("tenant_id = ? AND group_id = ?", param.TenantId, param.GroupId).Count(&total)
+	var alertContactFormPage = &forms.AlertContactFormPage{
+		Records: modelList,
+		Current: param.PageCurrent,
+		Size:    param.PageSize,
+		Total:   total,
+	}
+	if total == 0 {
+		return alertContactFormPage
+	}
+	db.Raw(SelectAlterGroupContact, param.TenantId, param.GroupId).Find(modelList)
+	alertContactFormPage.Records = modelList
+	return alertContactFormPage
 }
 
 func (d *AlertContactGroupDao) Insert(db *gorm.DB, entity *models.AlertContactGroup) {

@@ -6,8 +6,8 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/sysComponent/sysRedis"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/tools"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
 	"fmt"
-	"log"
 	"time"
 )
 
@@ -26,7 +26,7 @@ func (s *TenantService) GetTenantInfo(tenantId string) dtos.TenantDTO {
 
 	value, err := sysRedis.Get(key)
 	if err != nil {
-		log.Fatalln("获取缓存出错, key=" + key)
+		logger.Logger().Error("获取缓存出错, key=" + key)
 	}
 	if tools.IsNotBlank(value) {
 		tools.ToObject(value, &tenant)
@@ -34,21 +34,22 @@ func (s *TenantService) GetTenantInfo(tenantId string) dtos.TenantDTO {
 	}
 	tenantFromRemote := getTenantFromServer(tenantId)
 	if tenantFromRemote == nil {
-		log.Fatalln("获取租户信息为空")
+		logger.Logger().Info("获取租户信息为空")
 		return tenant
 	}
 	if e := sysRedis.SetByTimeOut(key, tools.ToString(tenantFromRemote), RedisTimeOutOneHour*time.Second); e != nil {
-		log.Fatalln("设置redis出错, key=" + key)
+		logger.Logger().Info("设置redis出错, key=" + key)
 	}
 	return *tenantFromRemote
 }
 
 func getTenantFromServer(tenantId string) *dtos.TenantDTO {
+	logger.Logger().Info("tenantId:", tenantId)
 	m := make(map[string]string, 1)
 	m["loginId"] = tenantId
 	resp, err := tools.HttpPostJson(config.GetCommonConfig().TenantUrl, m, nil)
 	if err != nil {
-		log.Fatalln("查询租户信息失败")
+		logger.Logger().Error("查询租户信息失败:", resp, err)
 		return nil
 	}
 	var result map[string]map[string]map[string]string

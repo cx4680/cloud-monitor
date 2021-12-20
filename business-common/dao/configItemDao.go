@@ -30,7 +30,7 @@ func (dao *ConfigItemDao) GetConfigItem(code interface{}, pid string, data strin
 func (dao *ConfigItemDao) GetConfigItemList(pid string) []*models.ConfigItem{
 	var list []*models.ConfigItem
 	db := global.DB
-	db = db.Where("pid", pid)
+	db = db.Where("pid", pid).Order("sort_id ASC")
 	db.Find(&list)
 	return list
 }

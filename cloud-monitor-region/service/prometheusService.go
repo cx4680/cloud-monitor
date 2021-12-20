@@ -12,6 +12,7 @@ import (
 func Query(pql string, time string) forms.PrometheusResponse {
 	var cfg = config.GetPrometheusConfig()
 	requestUrl := cfg.Url + cfg.Query
+	logger.Logger().Info(requestUrl + pql)
 	pql = url.QueryEscape(pql)
 	if time != "" {
 		pql += "&time=" + time
@@ -22,12 +23,12 @@ func Query(pql string, time string) forms.PrometheusResponse {
 func QueryRange(pql string, start string, end string, step string) forms.PrometheusResponse {
 	var cfg = config.GetPrometheusConfig()
 	requestUrl := cfg.Url + cfg.QueryRange
+	logger.Logger().Info(requestUrl + pql)
 	pql = url.QueryEscape(pql) + "&start=" + start + "&end=" + end + "&step=" + step
 	return sendRequest(requestUrl, pql)
 }
 
 func sendRequest(requestUrl string, pql string) forms.PrometheusResponse {
-	logger.Logger().Infof("url:%v\n", requestUrl+pql)
 	response, err := http.Get(requestUrl + pql)
 	if err != nil {
 		logger.Logger().Errorf("error:%v\n", err)

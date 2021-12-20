@@ -29,20 +29,22 @@ rocketmq:
   alertContactTopic: alertContactTopic
   instanceTopic: hawkeye-instance
   ruleTopic: rule
+
 prometheus:
-  url: http://10.255.191.82:30090/api/v1
+  url: http://10.255.191.82:31028/api/v1
   query: /query?query=
   queryRange: /query_range?query=
 
 common:
   env: local
-  nk: http://aopesb.wh002.test.cecloud.com/cestc
+  nk: http://aopesb.dev001.intranet.cecloudcs.com/cestc
   tenantUrl: ''
   smsCenterPath: ''
   hawkeyeCenterPath: ''
   hasNoticeModel: false
   regionName: 'local'
   ecs-inner-gateway: http://ecs-gateway.inner.dev001.intranet.cecloudcs.com
+
 redis:
   addr: 'localhost:6379'
   password: ''

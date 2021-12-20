@@ -18,27 +18,26 @@ func NewMonitorReportFormService() *MonitorReportFormService {
 	return &MonitorReportFormService{}
 }
 
-func (s *MonitorReportFormService) GetData(request forms.PrometheusRequest) ([]forms.PrometheusValue, error) {
+func (s *MonitorReportFormService) GetData(request forms.PrometheusRequest) (*forms.PrometheusValue, error) {
 	if request.Instance == "" {
 		return nil, errors.NewBusinessError("instance为空")
 	}
 	pql := getPql(request)
 	prometheusResponse := Query(pql, request.Time)
-	var Values []forms.PrometheusValue
 	if len(prometheusResponse.Data.Result) == 0 {
-		return Values, nil
+		return nil, nil
 	}
 	result := prometheusResponse.Data.Result[0].Value
-	prometheusValue := forms.PrometheusValue{
+	prometheusValue := &forms.PrometheusValue{
 		Time:  strconv.Itoa(int(result[0].(float64))),
 		Value: changeDecimal(result[1].(string)),
 	}
-	return []forms.PrometheusValue{prometheusValue}, nil
+	return prometheusValue, nil
 }
 
 func (s *MonitorReportFormService) GetTop(request forms.PrometheusRequest) ([]forms.PrometheusInstance, error) {
 	var pql string
-	instances, err := getEcsInstances()
+	instances, err := getEcsInstances(request.TenantId)
 	if err != nil {
 		return nil, err
 	}
@@ -89,29 +88,28 @@ func (s *MonitorReportFormService) GetAxisData(request forms.PrometheusRequest) 
 
 	prometheusAxis := forms.PrometheusAxis{
 		XAxis: timeList,
-		YAxis: yAxisFillEmptyData(result, timeList, label),
+		YAxis: yAxisFillEmptyData(result, timeList, label, request.Name),
 	}
 	return prometheusAxis, nil
 }
 
-func yAxisFillEmptyData(Result []forms.PrometheusResult, timeList []string, label string) map[string][]string {
+func yAxisFillEmptyData(result []forms.PrometheusResult, timeList []string, label string, metricName string) map[string][]string {
 	resultMap := make(map[string][]string)
-	for i := range Result {
+	for i := range result {
 		timeMap := map[string]string{}
-		for j := range Result[i].Values {
-			key := strconv.Itoa(int(Result[i].Values[j][0].(float64)))
-			timeMap[key] = Result[i].Values[j][1].(string)
+		for j := range result[i].Values {
+			key := strconv.Itoa(int(result[i].Values[j][0].(float64)))
+			timeMap[key] = result[i].Values[j][1].(string)
 		}
 		var key string
 		var arr []string
 		for k := range timeList {
 			arr = append(arr, changeDecimal(timeMap[timeList[k]]))
 		}
-		if Result[i].Metric[label] == "" {
-			key = Result[i].Metric["__name__"]
-
+		if result[i].Metric[label] == "" {
+			key = metricName
 		} else {
-			key = Result[i].Metric[label]
+			key = result[i].Metric[label]
 		}
 		resultMap[key] = arr
 	}
@@ -151,8 +149,8 @@ func getMonitorItemByName(name string) models.MonitorItem {
 }
 
 //查询租户的ECS实例列表
-func getEcsInstances() (string, error) {
-	list, err := GetInstanceList("1")
+func getEcsInstances(tenantId string) (string, error) {
+	list, err := GetInstanceList(constant.Ecs, tenantId)
 	if err != nil {
 		return "", err
 	}

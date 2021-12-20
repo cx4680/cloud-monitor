@@ -4,7 +4,6 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/dao"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/service"
-	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
@@ -35,7 +34,6 @@ func (ctl *ConfigItemCtl) GetOverviewItemList(c *gin.Context) {
 }
 func (ctl *ConfigItemCtl) GetRegionList(c *gin.Context) {
 	tenantId, _ := c.Get(global.TenantId)
-	logger.Logger().Infof("tenantId:%v\n", tenantId)
 	list, err := ctl.service.GetRegionList(tenantId.(string))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, err)

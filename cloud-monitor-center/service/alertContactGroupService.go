@@ -106,7 +106,7 @@ func (s *AlertContactGroupService) SelectAlertContactGroup(param forms.AlertCont
 	return s.dao.SelectAlertContactGroup(global.DB, param)
 }
 
-func (s *AlertContactGroupService) SelectAlertGroupContact(param forms.AlertContactParam) *[]forms.AlertContactForm {
+func (s *AlertContactGroupService) SelectAlertGroupContact(param forms.AlertContactParam) *forms.AlertContactFormPage {
 	return s.dao.SelectAlertGroupContact(global.DB, param)
 }
 

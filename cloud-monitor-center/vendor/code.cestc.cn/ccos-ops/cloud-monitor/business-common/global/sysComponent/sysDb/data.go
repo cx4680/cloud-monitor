@@ -3,9 +3,9 @@ package sysDb
 import (
 	commonModels "code.cestc.cn/ccos-ops/cloud-monitor/business-common/models"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/tools"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
 	"gorm.io/gorm"
 	"io/ioutil"
-	"log"
 	"strings"
 )
 
@@ -68,7 +68,7 @@ func (c *CommonInitializerFetch) Fetch(db *gorm.DB) ([]interface{}, []string, er
 	//加载SQL
 	sqlBytes, err := ioutil.ReadFile("script/common.sql")
 	if err != nil {
-		log.Println("load sql file error", err)
+		logger.Logger().Errorf("load sql file error:%v", err)
 		return nil, nil, err
 	}
 	sql := string(sqlBytes)

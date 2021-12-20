@@ -2,14 +2,15 @@ package service
 
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/dao"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/dtos"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/enums"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/errors"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/forms"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/models"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/service"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/service/external/messageCenter"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/tools"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/utils/snowflake"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -35,10 +36,9 @@ func (s *AlertContactInformationService) PersistenceLocal(db *gorm.DB, param int
 	switch p.EventEum {
 	case enums.InsertAlertContact:
 		list := s.insertAlertContactInformation(db, p)
-		// TODO 激活邮箱
-		//for _, information := range list {
-		//	sendCertifyMsg(information.TenantId, information.ContactId, information.No, information.Type, information.ActiveCode)
-		//}
+		for _, information := range list {
+			sendCertifyMsg(information.TenantId, information.ContactId, information.No, information.Type, information.ActiveCode)
+		}
 		return tools.ToString(forms.MqMsg{
 			EventEum: enums.InsertAlertContactInformation,
 			Data:     list,
@@ -129,30 +129,27 @@ func sendCertifyMsg(tenantId string, contactId string, no string, noType int, ac
 	}
 	params := make(map[string]string)
 	params["userName"] = service.NewTenantService().GetTenantInfo(tenantId).Name
-	params["verifyBtn"] = "/#/alarm/activation?code=" + activeCode
-	params["activationlink"] = "code=" + activeCode
-	var noticeMsgDTO = dtos.NoticeMsgDTO{}
+	params["verifyBtn"] = config.GetCommonConfig().CertifyInformationUrl + activeCode
+	params["activationdomain"] = config.GetCommonConfig().CertifyInformationUrl + activeCode
+	var messageSendDTO = messageCenter.MessageSendDTO{
+		SourceType:   messageCenter.VERIFY,
+		SenderId:     tenantId,
+		Content:      tools.ToString(params),
+		MsgEventCode: messageCenter.AddAlarmContactMail,
+	}
 	if noType == 1 {
-		noticeMsgDTO.MsgEvent = dtos.MsgEvent{
-			Type:   dtos.Phone, //TODO 枚举
-			Source: dtos.VERIFY,
-		}
+		messageSendDTO.Target = []messageCenter.MessageTargetDTO{{
+			Addr: no,
+			Type: messageCenter.Phone,
+		}}
 	} else {
-		noticeMsgDTO.MsgEvent = dtos.MsgEvent{
-			Type:   dtos.Email, //TODO 枚举
-			Source: dtos.VERIFY,
-		}
+		messageSendDTO.Target = []messageCenter.MessageTargetDTO{{
+			Addr: no,
+			Type: messageCenter.Email,
+		}}
 	}
-	noticeMsgDTO.TenantId = tenantId
-	noticeMsgDTO.SourceId = "activation-" + contactId
-	var recvObjectBean = dtos.RecvObjectBean{
-		RecvObject:     no,
-		RecvObjectType: 2,
-		NoticeContent:  tools.ToString(params),
+	err := messageCenter.NewService().Send(messageSendDTO)
+	if err != nil {
+		logger.Logger().Error(err)
 	}
-	noticeMsgDTO.RevObjectBean = recvObjectBean
-	var noticeMsgDTOList []*dtos.NoticeMsgDTO
-	noticeMsgDTOList = append(noticeMsgDTOList, &noticeMsgDTO)
-	//TODO
-	//service.NewMessageService(dao.NotificationRecord).SendMsg(noticeMsgDTOList, true)
 }

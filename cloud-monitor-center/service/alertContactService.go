@@ -178,3 +178,9 @@ func (s *AlertContactService) persistenceInner(db *gorm.DB, p forms.AlertContact
 	}
 	return nil
 }
+
+func (s *AlertContactService) GetTenantId(activeCode string) string {
+	var model = &models.AlertContactInformation{}
+	global.DB.Where("active_code = ?", activeCode).First(model)
+	return model.TenantId
+}

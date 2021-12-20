@@ -31,32 +31,32 @@ type PrometheusRequest struct {
 }
 
 type PrometheusResponse struct {
-	Status string
-	Data   PrometheusData
+	Status string         `json:"status"`
+	Data   PrometheusData `json:"data"`
 }
 
 type PrometheusData struct {
-	ResultType string
-	Result     []PrometheusResult
+	ResultType string             `json:"resultType"`
+	Result     []PrometheusResult `json:"result"`
 }
 
 type PrometheusResult struct {
-	Metric map[string]string
-	Value  []interface{}
-	Values [][]interface{}
+	Metric map[string]string `json:"metric"`
+	Value  []interface{}     `json:"value"`
+	Values [][]interface{}   `json:"values"`
 }
 
 type PrometheusValue struct {
-	Time  string
-	Value string
+	Time  string `json:"time"`
+	Value string `json:"value"`
 }
 
 type PrometheusAxis struct {
-	XAxis []string
-	YAxis map[string][]string
+	XAxis []string            `json:"xaxis"`
+	YAxis map[string][]string `json:"yaxis"`
 }
 
 type PrometheusInstance struct {
-	Instance string
-	Value    string
+	Instance string `json:"instance"`
+	Value    string `json:"value"`
 }

@@ -12,12 +12,12 @@ type MonitorProductDao struct {
 
 var MonitorProduct = new(MonitorProductDao)
 
-func (mpd *MonitorProductDao) GetByDesc(db *gorm.DB, description string) *models.MonitorProduct {
-	if tools.IsBlank(description) {
+func (mpd *MonitorProductDao) GetByAbbreviation(db *gorm.DB, abbreviation string) *models.MonitorProduct {
+	if tools.IsBlank(abbreviation) {
 		return nil
 	}
 	var product models.MonitorProduct
-	db.Where(models.MonitorProduct{Description: description}).First(&product)
+	db.Where(models.MonitorProduct{Abbreviation: abbreviation}).First(&product)
 	return &product
 
 }

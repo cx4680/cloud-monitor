@@ -24,5 +24,9 @@ rocketmq:
   instanceTopic: hawkeye-instance
   ruleTopic: rule
 
-tenantUrl: http://account-cbc.wh001.dev.cecloud-inc.com/api/outer/userinfo/three/info/code
-hasNoticeModel: true
+common:
+  nk: http://aopesb.dev001.intranet.cecloudcs.com/cestc
+  hasNoticeModel: true
+  smsCenterPath: http://aopesb.dev001.intranet.cecloudcs.com/cestc?appId=600006&format=json&method=CESTC_UNHQ_saveMessageOperate
+  certifyInformationUrl: http://monitor.console.dev001.intranet.cecloudcs.com/#/alarm/activation?code=
+  tenantUrl: http://cbcm.dev001.intranet.cecloudcs.com/api/cbcm/IUcaInfosOpenService/queryUcaInfosByUserId

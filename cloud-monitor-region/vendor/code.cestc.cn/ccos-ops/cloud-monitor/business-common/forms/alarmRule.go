@@ -19,6 +19,7 @@ type AlarmRulePageDTO struct {
 	MonitorType   string         `json:"monitorType" gorm:"monitor_type" `
 	ProductType   string         `json:"productType" gorm:"product_type" `
 	MetricName    string         `json:"metricName" gorm:"metric_name" `
+	MonitorItem   string         `json:"monitorItem" gorm:"monitor_item" `
 	Express       string         `json:"express" gorm:"express"`
 	InstanceNum   int            `json:"instanceNum" gorm:"column:instanceNum"`
 	Status        string         `json:"status" gorm:"column:status"`
@@ -75,15 +76,15 @@ type AlarmRuleAddReqDTO struct {
 }
 
 type RuleCondition struct {
-	MetricName         string `json:"metricName"`
-	Period             int    `json:"period"`
-	Times              int    `json:"times"`
-	Statistics         string `json:"statistics"`
-	ComparisonOperator string `json:"comparisonOperator"`
+	MetricName         string  `json:"metricName"`
+	Period             int     `json:"period"`
+	Times              int     `json:"times"`
+	Statistics         string  `json:"statistics"`
+	ComparisonOperator string  `json:"comparisonOperator"`
 	Threshold          float64 `json:"threshold"`
-	Unit               string `json:"unit"`
-	Labels             string `json:"labels"`
-	MonitorItemName    string `json:"monitorItemName"`
+	Unit               string  `json:"unit"`
+	Labels             string  `json:"labels"`
+	MonitorItemName    string  `json:"monitorItemName"`
 }
 type RuleReqDTO struct {
 	Id       string `json:"id"`

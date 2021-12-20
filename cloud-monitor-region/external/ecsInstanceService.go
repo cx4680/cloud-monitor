@@ -1,61 +1,28 @@
 package external
 
 import (
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/service"
+	commonService "code.cestc.cn/ccos-ops/cloud-monitor/business-common/service"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/tools"
+	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/forms"
+	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/service"
 	"strconv"
+	"strings"
 )
 
 type EcsInstanceService struct {
-	service.InstanceServiceImpl
+	commonService.InstanceServiceImpl
 }
 
-type EcsQueryPageForm struct {
-	TenantId     string
-	Current      int
-	PageSize     int
-	InstanceName string
-	InstanceId   string
-	Status       int
-	StatusList   []int
-}
-
-type EcsQueryPageVO struct {
-	Code    string    `json:"code"`
-	Message string    `json:"message"`
-	Data    EcsPageVO `json:"data"`
-}
-
-type EcsPageVO struct {
-	Total int      `json:"total"`
-	Rows  []*ECSVO `json:"rows"`
-}
-
-type ECSVO struct {
-	InstanceId   string `json:"instanceId"`
-	InstanceName string `json:"instanceName"`
-	Region       string `json:"region"`
-	Ip           string `yaml:"ip"`
-	Status       int    `yaml:"status"`
-}
-
-func (ecs *EcsInstanceService) ConvertRealForm(form service.InstancePageForm) interface{} {
-	param := EcsQueryPageForm{
+func (ecs *EcsInstanceService) ConvertRealForm(form commonService.InstancePageForm) interface{} {
+	param := forms.EcsQueryPageForm{
 		TenantId:     form.TenantId,
 		Current:      form.Current,
 		PageSize:     form.PageSize,
 		InstanceName: form.InstanceName,
 		InstanceId:   form.InstanceId,
 	}
-	if form.StatusList != nil && len(form.StatusList) > 0 {
-		var list []int
-		for _, s := range form.StatusList {
-			i, err := strconv.Atoi(s)
-			if err != nil {
-				list = append(list, i)
-			}
-		}
-		param.StatusList = list
+	if tools.IsNotBlank(form.StatusList) {
+		param.StatusList = toIntList(form.StatusList)
 	}
 	return param
 }
@@ -65,25 +32,58 @@ func (ecs *EcsInstanceService) DoRequest(url string, form interface{}) (interfac
 	if err != nil {
 		return nil, err
 	}
-	var resp EcsQueryPageVO
+	var resp forms.EcsQueryPageVO
 	tools.ToObject(respStr, &resp)
 	return resp, nil
 }
 
-func (ecs *EcsInstanceService) ConvertResp(realResp interface{}) (int, []service.InstanceCommonVO) {
-	vo := realResp.(EcsQueryPageVO)
-	var list []service.InstanceCommonVO
+func (ecs *EcsInstanceService) ConvertResp(realResp interface{}) (int, []commonService.InstanceCommonVO) {
+	vo := realResp.(forms.EcsQueryPageVO)
+	var list []commonService.InstanceCommonVO
 	if vo.Data.Total > 0 {
 		for _, d := range vo.Data.Rows {
-			list = append(list, service.InstanceCommonVO{
-				Id:   d.InstanceId,
-				Name: d.InstanceName,
-				Labels: []service.InstanceLabel{{
+			list = append(list, commonService.InstanceCommonVO{
+				InstanceId:   d.InstanceId,
+				InstanceName: d.InstanceName,
+				Labels: []commonService.InstanceLabel{{
 					Name:  "status",
 					Value: strconv.Itoa(d.Status),
+				}, {
+					Name:  "ecsCpuUsage",
+					Value: getMonitorData("ecs_cpu_usage", d.InstanceId),
+				}, {
+					Name:  "ecsMemoryUsage",
+					Value: getMonitorData("ecs_memory_usage", d.InstanceId),
+				}, {
+					Name:  "osType",
+					Value: d.OsType,
 				}},
 			})
 		}
 	}
 	return vo.Data.Total, list
+}
+
+func getMonitorData(metricName string, instanceId string) string {
+	var request = forms.PrometheusRequest{
+		Name:     metricName,
+		Instance: instanceId,
+	}
+	data, err := service.NewMonitorReportFormService().GetData(request)
+	if err != nil || data == nil {
+		return ""
+	}
+	return data.Value
+}
+
+func toIntList(s string) []int {
+	statusList := strings.Split(s, ",")
+	var list []int
+	for _, v := range statusList {
+		i, err := strconv.Atoi(v)
+		if err == nil {
+			list = append(list, i)
+		}
+	}
+	return list
 }
