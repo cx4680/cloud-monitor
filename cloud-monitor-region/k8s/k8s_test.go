@@ -9,6 +9,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/types"
+	"log"
 	"strings"
 	"testing"
 )
@@ -69,4 +70,35 @@ func TestApplyAlertRule(t *testing.T) {
 		logger.Logger().Errorf("调用api更新规则失败%v", err)
 	}
 
+}
+
+func Test_alertManagerConfigAdd(t *testing.T) {
+	config := c.GetCommonConfig()
+	config.Env = "local"
+	InitK8s()
+	param := AlertManagerConfig{
+		Name: "tenant-111",
+		Router: []Router{
+			{
+				Matchers:       map[string]string{"ruleId": "12341111"},
+				RepeatInterval: "10m",
+			},
+			{
+				Matchers:       map[string]string{"ruleId": "abcde"},
+				RepeatInterval: "5m",
+			},
+		},
+	}
+	err := ApplyAlertManagerConfig(param)
+	if err != nil {
+		log.Println(err)
+	}
+
+}
+
+func Test_alertManagerConfigDelete(t *testing.T) {
+	config := c.GetCommonConfig()
+	config.Env = "local"
+	InitK8s()
+	DeleteAlertManagerConfig("tenant-1111")
 }

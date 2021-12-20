@@ -7,7 +7,7 @@ INSERT INTO `monitor_product` (`id`, `name`, `status`, `description`, `create_us
 INSERT INTO `monitor_product` (`id`, `name`, `status`, `description`, `create_user`, `create_time`, `route`, `cron`, `host`, `page_url`, `abbreviation`) VALUES ('3', '负载均衡SLB', '1', 'slb', NULL, NULL, '/productmonitoring/slb', '0 0 0/1 * * ?', 'http://aopesb.dev001.intranet.cecloudcs.com', '/cestc?appId=600006&format=json&method=CESTC_UNHQ_queryLVSMachineList', 'slb');
 
 INSERT INTO `monitor_product` (`id`, `name`, `status`, `description`, `create_user`, `create_time`, `route`, `cron`, `host`, `page_url`, `abbreviation`) VALUES ('5', '云备份CBR', '1', 'cbr', NULL, NULL, '/productmonitoring/cbr', '0 0 0/1 * * ?', 'http://product-backup-backup-manage.product-backup', '/noauth/backup/vault/pageList', 'cbr');
-INSERT INTO `monitor_product` (`id`, `name`, `status`, `description`, `create_user`, `create_time`, `route`, `cron`, `host`, `page_url`, `abbreviation`) VALUES ('6', 'NAT网关', '1', 'nat', NULL, NULL, '/productmonitoring/nat', '0 0 0/1 * * ?', 'http://aopesb.dev001.intranet.cecloudcs.com', '/cestc?appId=600006&format=json&method=CESTC_UNHQ_natPage', 'nat');
+INSERT INTO `monitor_product` (`id`, `name`, `status`, `description`, `create_user`, `create_time`, `route`, `cron`, `host`, `page_url`, `abbreviation`) VALUES ('6', 'NAT网关', '1', 'nat', NULL, NULL, '/productmonitoring/nat', '0 0 0/1 * * ?', 'http://product-nat-controller-nat-manage.product-nat-gw', '/nat-gw/inner/nat/page', 'nat');
 INSERT INTO `monitor_product` (`id`, `name`, `status`, `description`, `create_user`, `create_time`, `route`, `cron`, `host`, `page_url`, `abbreviation`) VALUES ('7', '裸金属', '1', 'bms', NULL, NULL, '/productmonitoring/bms', '', '', '', 'bms');
 
 -- ----------------------------
@@ -96,7 +96,7 @@ INSERT INTO `config_item` (`id`, `pid`, `name`, `code`, `data`, `sort_id`,`remar
 INSERT INTO `config_item` (`id`, `pid`, `name`, `code`, `data`, `sort_id`,`remark`) VALUES ('21', '-1', '概览监控项', NULL, NULL, 0, NULL);
 INSERT INTO `config_item` (`id`, `pid`, `name`, `code`, `data`, `sort_id`,`remark`) VALUES ('22', '21', 'CPU使用率（操作系统）', NULL, 'ecs_cpu_usage', 0, NULL);
 INSERT INTO `config_item` (`id`, `pid`, `name`, `code`, `data`, `sort_id`,`remark`) VALUES ('23', '21', '内存使用率（操作系统）', NULL, 'ecs_memory_usage', 1, NULL);
-INSERT INTO `config_item` (`id`, `pid`, `name`, `code`, `data`, `sort_id`,`remark`) VALUES ('28', '-1', '监控周期', NULL, NULL, 0, NULL);
+INSERT INTO `config_item` (`id`, `pid`, `name`, `code`, `data`, `sort_id`,`remark`) VALUES ('28', '-1', '告警级别', NULL, NULL, 0, NULL);
 INSERT INTO `config_item` (`id`, `pid`, `name`, `code`, `data`, `sort_id`,`remark`) VALUES ('29', '28', '紧急', '1', 'MAIN', 0, NULL);
 INSERT INTO `config_item` (`id`, `pid`, `name`, `code`, `data`, `sort_id`,`remark`) VALUES ('3', '-1', '统计方式', NULL, NULL, 0, NULL);
 INSERT INTO `config_item` (`id`, `pid`, `name`, `code`, `data`, `sort_id`,`remark`) VALUES ('30', '28', '重要', '2', 'MARJOR', 0, NULL);

@@ -1,24 +1,16 @@
 package actuator
 
 import (
-	"encoding/json"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/tools"
 	"runtime"
 )
 
 func Metrics() string {
-
-	values := refillMetricsMap()
-
-	b, err := json.Marshal(values)
-	if err != nil {
-		return err.Error()
-	}
-	return string(b)
+	return tools.ToString(refillMetricsMap())
 }
 
 func refillMetricsMap() runtime.MemStats {
 	var mem runtime.MemStats
 	runtime.ReadMemStats(&mem)
-
 	return mem
 }

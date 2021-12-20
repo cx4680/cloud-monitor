@@ -64,6 +64,7 @@ func (c *CommonInitializerFetch) Fetch(db *gorm.DB) ([]interface{}, []string, er
 	tables = append(tables, &commonModels.AlarmInstance{})
 	tables = append(tables, &commonModels.AlertRecord{})
 	tables = append(tables, &commonModels.NotificationRecord{})
+	tables = append(tables, &commonModels.ResourceGroup{}, &commonModels.ResourceResourceGroupRel{}, &commonModels.AlarmRuleGroupRel{}, &commonModels.AlarmRuleResourceRel{}, &commonModels.AlarmHandler{})
 
 	//加载SQL
 	sqlBytes, err := ioutil.ReadFile("script/common.sql")

@@ -17,7 +17,7 @@ type NatQueryPageRequest struct {
 	PageSize  int         `json:"pageSize,omitempty"`
 	Data      interface{} `json:"data,omitempty"`
 	//临时传递
-	TenantId string
+	UserCode string `json:"userCode,omitempty"`
 }
 
 type NatQueryParam struct {
@@ -71,13 +71,12 @@ func (nat *NatInstanceService) ConvertRealForm(form service.InstancePageForm) in
 		PageIndex: form.Current,
 		PageSize:  form.PageSize,
 		Data:      queryParam,
-		TenantId:  form.TenantId,
+		UserCode:  form.TenantId,
 	}
 }
 
 func (nat *NatInstanceService) DoRequest(url string, form interface{}) (interface{}, error) {
-	var f = form.(NatQueryPageRequest)
-	respStr, err := tools.HttpPostJson(url, form, map[string]string{"userCode": f.TenantId})
+	respStr, err := tools.HttpPostJson(url, form, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -95,11 +94,11 @@ func (nat *NatInstanceService) ConvertResp(realResp interface{}) (int, []service
 				InstanceId:   strconv.Itoa(d.Id),
 				InstanceName: d.Name,
 				Labels: []service.InstanceLabel{{
-					Name:  "subnetName",
-					Value: d.SubnetName,
-				}, {
 					Name:  "status",
 					Value: d.Status,
+				}, {
+					Name:  "specification",
+					Value: d.Specification,
 				}, {
 					Name:  "vpcName",
 					Value: d.VpcName,

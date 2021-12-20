@@ -1,10 +1,15 @@
 package actuator
 
 import (
-	"encoding/json"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/tools"
 	"os"
 	"strings"
 )
+
+type envObject struct {
+	Configuration     map[string]interface{} `json:"configuration"`
+	SystemEnvironment map[string]string      `json:"systemEnvironment"`
+}
 
 func Env() string {
 	env := new(envObject)
@@ -15,14 +20,5 @@ func Env() string {
 		env.SystemEnvironment[pair[0]] = pair[1]
 	}
 
-	b, err := json.Marshal(env)
-	if err != nil {
-		return err.Error()
-	}
-	return string(b)
-}
-
-type envObject struct {
-	Configuration     map[string]interface{} `json:"configuration"`
-	SystemEnvironment map[string]string      `json:"systemEnvironment"`
+	return tools.ToString(env)
 }

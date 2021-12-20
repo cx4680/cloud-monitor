@@ -59,7 +59,7 @@ func instance() {
 }
 
 func innerCtl() {
-	addService := service.NewAlertRecordAddService(service.NewAlertRecordService(), commonService.NewMessageService(messageCenter.NewService()), commonService.NewTenantService())
+	addService := service.NewAlertRecordAddService(service.NewAlertRecordService(), commonService.NewAlarmHandlerService(), commonService.NewMessageService(messageCenter.NewService()), commonService.NewTenantService())
 	ctl := inner.NewAlertRecordCtl(addService)
 	group := router.Group("/hawkeye/inner/")
 	{

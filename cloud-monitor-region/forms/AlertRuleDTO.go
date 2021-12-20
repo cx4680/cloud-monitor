@@ -14,12 +14,13 @@ type SpecGroups struct {
 }
 
 type AlertDTO struct {
-	RuleType    string                 `json:"ruleType"` // alert or record
-	Alert       string                 `json:"alert"`
-	Record      string                 `json:"record"`
-	Expr        string                 `json:"expr"`
-	ForTime     string                 `json:"for_time"` // 3m
-	Summary     string                 `json:"summary"`
-	Description string                 `json:"description"` //告警详情
-	Labels      map[string]interface{} `json:"labels"`
+	RuleType     string                 `json:"ruleType"` // alert or record
+	Alert        string                 `json:"alert"`
+	Record       string                 `json:"record"`
+	Expr         string                 `json:"expr"`
+	ForTime      string                 `json:"for_time"` // 3m
+	Summary      string                 `json:"summary"`
+	Description  string                 `json:"description"` //告警详情
+	Labels       map[string]interface{} `json:"labels"`
+	SilencesTime string                 `json:"silencesTime"`
 }
