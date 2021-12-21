@@ -27,7 +27,7 @@ func (acl *AlertContactCtl) GetAlertContact(c *gin.Context) {
 	var param forms.AlertContactParam
 	err := c.ShouldBindQuery(&param)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, translate.GetErrorMsg(err))
+		c.JSON(http.StatusBadRequest, global.NewError(translate.GetErrorMsg(err)))
 		return
 	}
 	tenantId, err := tools.GetTenantId(c)
@@ -43,7 +43,7 @@ func (acl *AlertContactCtl) InsertAlertContact(c *gin.Context) {
 	var param forms.AlertContactParam
 	err := c.ShouldBindJSON(&param)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, translate.GetErrorMsg(err))
+		c.JSON(http.StatusBadRequest, global.NewError(translate.GetErrorMsg(err)))
 		return
 	}
 	tenantId, err := tools.GetTenantId(c)
@@ -65,7 +65,7 @@ func (acl *AlertContactCtl) UpdateAlertContact(c *gin.Context) {
 	var param forms.AlertContactParam
 	err := c.ShouldBindJSON(&param)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, translate.GetErrorMsg(err))
+		c.JSON(http.StatusBadRequest, global.NewError(translate.GetErrorMsg(err)))
 		return
 	}
 	tenantId, err := tools.GetTenantId(c)
@@ -87,7 +87,7 @@ func (acl *AlertContactCtl) DeleteAlertContact(c *gin.Context) {
 	var param forms.AlertContactParam
 	err := c.ShouldBindJSON(&param)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, translate.GetErrorMsg(err))
+		c.JSON(http.StatusBadRequest, global.NewError(translate.GetErrorMsg(err)))
 		return
 	}
 	tenantId, err := tools.GetTenantId(c)
@@ -109,7 +109,7 @@ func (acl *AlertContactCtl) CertifyAlertContact(c *gin.Context) {
 	var param forms.AlertContactParam
 	err := c.ShouldBindQuery(&param)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, translate.GetErrorMsg(err))
+		c.JSON(http.StatusBadRequest, global.NewError(translate.GetErrorMsg(err)))
 		return
 	}
 	param.EventEum = enums.CertifyAlertContact

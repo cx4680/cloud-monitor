@@ -18,9 +18,10 @@ func NewMonitorItemController() *MonitorItemController {
 
 func (ctl *MonitorItemController) GetMonitorItemsById(c *gin.Context) {
 	productId := c.Query("productId")
+	osType := c.Query("osType")
 	if tools.IsBlank(productId) {
 		c.JSON(http.StatusBadRequest, global.NewError("参数异常"))
 		return
 	}
-	c.JSON(http.StatusOK, global.NewSuccess("查询成功", ctl.dao.SelectMonitorItemsById(productId)))
+	c.JSON(http.StatusOK, global.NewSuccess("查询成功", ctl.dao.SelectMonitorItemsById(productId, osType)))
 }

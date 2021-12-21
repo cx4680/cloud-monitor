@@ -25,7 +25,7 @@ func (a *AlertRecordController) GetPageList(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, global.NewError(translate.GetErrorMsg(err)))
 		return
 	}
-	tenantId := c.GetString(global.TenantId)
+	tenantId, _ := tools.GetTenantId(c)
 	page := dao.AlertRecord.GetPageList(global.DB, tenantId, f)
 	c.JSON(http.StatusOK, global.NewSuccess("查询成功", page))
 }
@@ -50,7 +50,7 @@ func (a *AlertRecordController) GetAlertRecordTotal(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, global.NewError(translate.GetErrorMsg(err)))
 		return
 	}
-	tenantId := c.GetString(global.TenantId)
+	tenantId, _ := tools.GetTenantId(c)
 	d, _ := time.ParseDuration("24h")
 	d7, _ := time.ParseDuration("-168h")
 	var start, end string
@@ -73,7 +73,7 @@ func (a *AlertRecordController) GetRecordNumHistory(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, global.NewError(translate.GetErrorMsg(err)))
 		return
 	}
-	tenantId := c.GetString(global.TenantId)
+	tenantId, _ := tools.GetTenantId(c)
 	d, _ := time.ParseDuration("24h")
 	startDate := tools.StrToTime(tools.FullTimeFmt, f.StartTime)
 	endDate := tools.StrToTime(tools.FullTimeFmt, f.EndTime).Add(d)
