@@ -11,7 +11,7 @@ import (
 )
 
 //忽略认证的路径列表
-var ignoreList = []string{"/hawkeye/alertContact/certifyAlertContact?*", "/hawkeye/inner/alertRecord/**", "/actuator/**", "/hawkeye/swagger/**"}
+var ignoreList = []string{"/hawkeye/alertContact/certifyAlertContact?*", "/inner/alertRecord/**", "/actuator/**", "/hawkeye/swagger/**"}
 
 func Auth() gin.HandlerFunc {
 	return func(c *gin.Context) {
