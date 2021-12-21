@@ -9,9 +9,6 @@
     "spec":{
       "route":{
         "receiver": "webhook-inner-op-{{ .Name }}",
-        "groupBy":[
-          "alertname"
-        ],
         "routes":[
         {{ range .Router}}
           {
@@ -30,15 +27,11 @@
               {{end}}
             ],
             "continue": false,
-            "groupWait": "30s",
-            "groupInterval": "5m",
             "repeatInterval": "{{.RepeatInterval}}"
           },
         {{end}}
         ],
-        "groupWait": "30s",
-        "groupInterval": "5m",
-        "repeatInterval": "2h55m"
+        "repeatInterval": "3h"
       },
       "receivers":[
         {

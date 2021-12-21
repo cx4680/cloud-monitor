@@ -18,6 +18,7 @@ type RuleDesc struct {
 	RegionName         string   `json:"regionName"`
 	Statistic          string   `json:"statistic"`
 	GroupList          []string `json:"groupList"`
+	ResourceId         string   `json:"resourceId"`
 	ResourceGroupId    string   `json:"resourceGroupId"`
 }
 

@@ -16,9 +16,15 @@ func (dao *AlertRecordDao) InsertBatch(db *gorm.DB, records []models.AlertRecord
 	db.Create(&records)
 }
 
-func (dao *AlertRecordDao) FindAlertRuleBindNum(ruleId, instanceId string) int {
+func (dao *AlertRecordDao) FindAlertRuleBindResourceNum(ruleId, resourceId string) int {
 	var num int
-	global.DB.Raw("select count(1) from t_alarm_instance t LEFT JOIN t_alarm_rule t2 ON t2.id = t.alarm_rule_id where t.instance_id = ? and t.alarm_rule_id = ? and t2.enabled = 1 and t2.deleted = 0", instanceId, ruleId).Scan(&num)
+	global.DB.Raw("select count(1) from t_alarm_rule_resource_rel t LEFT JOIN t_alarm_rule t2 ON t2.id = t.alarm_rule_id where t.resource_id = ? and t.alarm_rule_id = ? and t2.enabled = 1 and t2.deleted = 0", resourceId, ruleId).Scan(&num)
+	return num
+}
+
+func (dao *AlertRecordDao) FindAlertRuleBindGroupNum(ruleId, resourceGroupId string) int {
+	var num int
+	global.DB.Raw("select count(1) from t_alarm_rule_group_rel t LEFT JOIN t_alarm_rule t2 ON t2.id = t.alarm_rule_id where t.resource_group_id = ?  and t.alarm_rule_id = ? and t2.enabled = 1 and t2.deleted = 0", resourceGroupId, ruleId).Scan(&num)
 	return num
 }
 
