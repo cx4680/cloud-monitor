@@ -61,7 +61,7 @@ func instance() {
 func innerCtl() {
 	addService := service.NewAlertRecordAddService(service.NewAlertRecordService(), commonService.NewAlarmHandlerService(), commonService.NewMessageService(messageCenter.NewService()), commonService.NewTenantService())
 	ctl := inner.NewAlertRecordCtl(addService)
-	group := router.Group("/hawkeye/inner/")
+	group := router.Group("/inner/")
 	{
 		group.POST("/alertRecord/insert", ctl.AddAlertRecord)
 	}
