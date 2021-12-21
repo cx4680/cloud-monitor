@@ -61,11 +61,11 @@ func (service *K8sPrometheusService) deleteK8sRule(tenantId string, err error, r
 	if businessError != nil && businessError.Code == errors.NoResource {
 		err := k8s.DeleteAlertRule(tenantId)
 		if err != nil {
-			log.Printf("调用rule api delete 规格失败 %+v", err)
+			logger.Logger().Errorf("调用rule api delete 规格失败 %+v", err)
 		}
 		err = k8s.DeleteAlertManagerConfig(router.Name)
 		if err != nil {
-			log.Printf("调用alertmanager api delete 规格失败 %+v", err)
+			logger.Logger().Errorf("调用alertmanager api delete 规格失败 %+v", err)
 		}
 	}
 }
@@ -105,7 +105,7 @@ func (service *K8sPrometheusService) buildAlertRuleListByResource(wg *sync.WaitG
 		ruleExpress.NoticeGroupIds = dao2.AlarmRule.GetNoticeGroupList(global.DB, ruleExpress.RuleId)
 		rule, err := service.buildAlertRule(ruleExpress, ruleExpress.ResourceId)
 		if err != nil {
-			fmt.Printf("build rule err %+v", err)
+			logger.Logger().Errorf("build rule err %+v", err)
 			continue
 		}
 		alertList = append(alertList, rule)
@@ -124,7 +124,7 @@ func (service *K8sPrometheusService) buildAlertRuleListByResourceGroup(wg *sync.
 		if calcMode.ResourceGroup == ruleExpress.CalcMode {
 			rule, err := service.buildAlertRule(ruleExpress, service.joinResourceId(instanceList, "|"))
 			if err != nil {
-				fmt.Printf("build rule err %+v", err)
+				logger.Logger().Errorf("build rule err %+v", err)
 				continue
 			}
 			alertList = append(alertList, rule)
@@ -154,15 +154,17 @@ func (service *K8sPrometheusService) buildAlertRule(ruleExpress *dtos.RuleExpres
 	if err != nil {
 		return nil, err
 	}
+	resourceId := ""
 	if len(ruleExpress.ResGroupId) == 0 {
 		alert.Alert = fmt.Sprintf("%s#%s#%s", ruleExpress.RuleId, instanceId, conditionId)
+		resourceId = instanceId
 	} else {
 		alert.Alert = fmt.Sprintf("%s#group-%s#%s", ruleExpress.RuleId, ruleExpress.ResGroupId, conditionId)
 	}
-	alert.Expr = service.generateExpr(ruleExpress.RuleCondition, instanceId)
+	alert.Expr = service.generateExpr(ruleExpress.RuleCondition, instanceId, ruleExpress.CalcMode)
 	alert.RuleType = "alert"
 	alert.ForTime = utils.SecToTime(ruleExpress.RuleCondition.Times * ruleExpress.RuleCondition.Period)
-	alert.Summary = service.getTemplateLabels(ruleExpress.RuleCondition.Labels)
+	alert.Summary = service.getTemplateLabels(ruleExpress.RuleCondition.Labels, ruleExpress.CalcMode)
 	labelMaps := map[string]interface{}{}
 	labelMaps["severity"] = dao2.ConfigItem.GetConfigItem(ruleExpress.Level, dao2.AlarmLevel, "").Name
 	labelMaps["app"] = ProductLabel
@@ -195,6 +197,7 @@ func (service *K8sPrometheusService) buildAlertRule(ruleExpress *dtos.RuleExpres
 		TenantId:           ruleExpress.TenantId,
 		Statistic:          ruleExpress.RuleCondition.Statistics,
 		GroupList:          noticeGroupIds,
+		ResourceId:         resourceId,
 		ResourceGroupId:    ruleExpress.ResGroupId,
 	}
 	desc, err := json.Marshal(ruleDesc)
@@ -202,11 +205,15 @@ func (service *K8sPrometheusService) buildAlertRule(ruleExpress *dtos.RuleExpres
 	return alert, nil
 }
 
-func (service *K8sPrometheusService) generateExpr(ruleCondition *forms2.RuleCondition, instanceId string) string {
-	return fmt.Sprintf("%s_over_time(%s{%s}[%s])%s%v", dao2.ConfigItem.GetConfigItem(ruleCondition.Statistics, dao2.StatisticalMethodsPid, "").Data,
+func (service *K8sPrometheusService) generateExpr(ruleCondition *forms2.RuleCondition, instanceId string, mode int) string {
+	express := fmt.Sprintf("%s_over_time(%s{%s}[%s])%s%v", dao2.ConfigItem.GetConfigItem(ruleCondition.Statistics, dao2.StatisticalMethodsPid, "").Data,
 		ruleCondition.MetricName, service.getLabels(instanceId, ruleCondition.Labels),
 		utils.SecToTime(ruleCondition.Period), dao2.ConfigItem.GetConfigItem(ruleCondition.ComparisonOperator, dao2.ComparisonMethodPid, "").Data,
 		ruleCondition.Threshold)
+	if calcMode.ResourceGroup == mode {
+		return fmt.Sprintf("%s(%s)", dao2.ConfigItem.GetConfigItem(ruleCondition.Statistics, dao2.StatisticalMethodsPid, "").Data, express)
+	}
+	return express
 }
 
 func (service *K8sPrometheusService) getLabels(instanceId string, labelStr string) string {
@@ -221,16 +228,18 @@ func (service *K8sPrometheusService) getLabels(instanceId string, labelStr strin
 	return builder.String()
 }
 
-func (service *K8sPrometheusService) getTemplateLabels(labelStr string) string {
+func (service *K8sPrometheusService) getTemplateLabels(labelStr string, mode int) string {
 	builder := strings.Builder{}
 	builder.WriteString("currentValue={{$value}},")
-	labels := strings.Split(labelStr, ",")
-	for _, label := range labels {
-		builder.WriteString(label)
-		builder.WriteString("={{$labels.")
-		builder.WriteString(label)
-		builder.WriteString("}}")
-		builder.WriteString(",")
+	if calcMode.ResourceGroup != mode {
+		labels := strings.Split(labelStr, ",")
+		for _, label := range labels {
+			builder.WriteString(label)
+			builder.WriteString("={{$labels.")
+			builder.WriteString(label)
+			builder.WriteString("}}")
+			builder.WriteString(",")
+		}
 	}
 	s := builder.String()
 	return s[0:strings.LastIndex(s, ",")]
@@ -263,7 +272,7 @@ func buildAlertManagerRouter(alertList []*forms.AlertDTO, tenantId string) *k8s.
 	router := make([]k8s.Router, len(alertList))
 	for index, alertDto := range alertList {
 		router[index] = k8s.Router{
-			Matchers:       map[string]string{"ruleId": alertDto.Alert},
+			Matchers:       map[string]string{"alertname": alertDto.Alert},
 			RepeatInterval: alertDto.SilencesTime,
 		}
 	}

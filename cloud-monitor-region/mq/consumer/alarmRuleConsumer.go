@@ -8,13 +8,12 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/service"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
 	"encoding/json"
-	"fmt"
 	"github.com/apache/rocketmq-client-go/v2/primitive"
 )
 
 func AlarmRuleHandler(msgList []*primitive.MessageExt) {
 	for i := range msgList {
-		fmt.Printf("subscribe callback: %v \n", msgList[i])
+		logger.Logger().Infof("subscribe callback: %v \n", msgList[i])
 		var MqMsg forms.MqMsg
 		if err := json.Unmarshal(msgList[i].Body, &MqMsg); err != nil {
 			continue

@@ -3,6 +3,7 @@ package service
 import (
 	commonDao "code.cestc.cn/ccos-ops/cloud-monitor/business-common/dao"
 	commonDtos "code.cestc.cn/ccos-ops/cloud-monitor/business-common/dtos"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/enums/handlerType"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/sysComponent/sysRocketMq"
 	commonModels "code.cestc.cn/ccos-ops/cloud-monitor/business-common/models"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/service"
@@ -39,11 +40,17 @@ func NewAlertRecordAddService(AlertRecordSvc *AlertRecordService, AlarmHandlerSv
 			if ruleDesc == nil {
 				return false, errors.New("序列化告警数据失败")
 			}
-			//	判断该条告警对应的规则是否删除、禁用、解绑
-			//TODO
-			if num := commonDao.AlertRecord.FindAlertRuleBindNum("", ruleDesc.RuleId); num <= 0 {
-				logger.Logger().Info("此告警规则已删除/禁用/解绑")
-				return false, nil
+			// 判断该告警对应的规则是否有变化 资源组
+			if tools.IsNotBlank(ruleDesc.ResourceGroupId) {
+				if num := commonDao.AlertRecord.FindAlertRuleBindGroupNum(ruleDesc.RuleId, ruleDesc.ResourceGroupId); num <= 0 {
+					logger.Logger().Info("此告警规则已删除/禁用/解绑")
+					return false, nil
+				}
+			} else if tools.IsNotBlank(ruleDesc.ResourceId) {
+				if num := commonDao.AlertRecord.FindAlertRuleBindResourceNum(ruleDesc.RuleId, ruleDesc.ResourceId); num <= 0 {
+					logger.Logger().Info("此告警规则已删除/禁用/解绑")
+					return false, nil
+				}
 			}
 			return true, nil
 		}},
@@ -72,11 +79,11 @@ func (s *AlertRecordAddService) Add(f forms.InnerAlertRecordAddForm) error {
 		if p == nil || len(p) <= 0 {
 			continue
 		}
-		if t == 1 || t == 2 {
+		if t == handlerType.Sms || t == handlerType.Email {
 			if err := s.MessageSvc.SendMsg(p, false); err != nil {
-				return err
+				logger.Logger().Error("send alarm message fail,", err)
 			}
-		} else if t == 3 {
+		} else if t == handlerType.Http {
 			//调用弹性伸缩
 			for _, a := range p {
 				data := a.(*commonDtos.AutoScalingData)
@@ -121,7 +128,14 @@ func (s *AlertRecordAddService) checkAndBuild(alerts []*forms.AlertRecordAlertsB
 			contactGroups = s.AlertRecordDao.FindContactInfoByGroupIds(ruleDesc.GroupList)
 		}
 
-		record := s.buildAlertRecord(alert, ruleDesc, contactGroups)
+		alertAnnotationStr := tools.ToString(alert.Annotations)
+		if tools.IsBlank(alertAnnotationStr) {
+			logger.Logger().Info("告警数据为空, ", tools.ToString(alert))
+			continue
+		}
+		labelMap := s.getLabelMap(alertAnnotationStr)
+
+		record := s.buildAlertRecord(alert, ruleDesc, contactGroups, labelMap)
 		if record == nil {
 			continue
 		}
@@ -130,43 +144,46 @@ func (s *AlertRecordAddService) checkAndBuild(alerts []*forms.AlertRecordAlertsB
 		//获取告警处理方式列表
 		handlerList := s.AlarmHandlerSvc.GetAlarmHandlerListByRuleId(ruleDesc.RuleId)
 
-		if handlerList != nil && len(handlerList) > 0 {
-			for _, handler := range handlerList {
-				if handlerMap[handler.HandleType] == nil {
-					var pendingList []interface{}
-					handlerMap[handler.HandleType] = pendingList
-				}
-				var data interface{}
-				switch handler.HandleType {
-				case 1:
-				case 2:
-					data = s.buildNoticeData(alert, record, ruleDesc, contactGroups, handler)
-				case 3:
-					data = s.buildAutoScalingData(alert, ruleDesc, handler.HandleParams)
-				}
-				if data != nil {
-					handlerMap[handler.HandleType] = append(handlerMap[handler.HandleType], data)
-				}
+		if handlerList == nil || len(handlerList) <= 0 {
+			continue
+		}
+
+		for _, handler := range handlerList {
+			if handlerMap[handler.HandleType] == nil {
+				var pendingList []interface{}
+				handlerMap[handler.HandleType] = pendingList
+			}
+			var data interface{}
+			switch handler.HandleType {
+			case handlerType.Email:
+			case handlerType.Sms:
+				data = s.buildNoticeData(alert, record, ruleDesc, contactGroups, handler.HandleType)
+			case handlerType.Http:
+				data = s.buildAutoScalingData(alert, ruleDesc, handler.HandleParams)
+			default:
+
+			}
+			if data != nil {
+				handlerMap[handler.HandleType] = append(handlerMap[handler.HandleType], data)
 			}
 		}
+
 	}
 	return list, handlerMap
 }
 
-func (s *AlertRecordAddService) buildAlertRecord(alert *forms.AlertRecordAlertsBean, ruleDesc *commonDtos.RuleDesc, contactGroups []commonDtos.ContactGroupInfo) *commonModels.AlertRecord {
+func (s *AlertRecordAddService) buildAlertRecord(alert *forms.AlertRecordAlertsBean, ruleDesc *commonDtos.RuleDesc, contactGroups []commonDtos.ContactGroupInfo, labelMap map[string]string) *commonModels.AlertRecord {
 	now := tools.GetNow()
 	startTime := tools.TimeParseForZone(alert.StartsAt)
 	//持续时间，单位秒
 	duration := now.Second() - startTime.Second()
 
-	alertAnnotationStr := tools.ToString(alert.Annotations)
-	if tools.IsBlank(alertAnnotationStr) {
-		logger.Logger().Info("告警数据为空, ", tools.ToString(alert))
-		return nil
-	}
-	labelMap := s.getLabelMap(alertAnnotationStr)
-
 	val := strconv.FormatFloat(ruleDesc.TargetValue, 'E', -1, 64)
+
+	sourceId := ruleDesc.ResourceId
+	if tools.IsBlank(sourceId) {
+		sourceId = ruleDesc.ResourceGroupId
+	}
 
 	return &commonModels.AlertRecord{
 		Id:           strconv.FormatInt(snowflake.GetWorker().NextId(), 10),
@@ -176,8 +193,8 @@ func (s *AlertRecordAddService) buildAlertRecord(alert *forms.AlertRecordAlertsB
 		RuleName:     ruleDesc.RuleName,
 		MonitorType:  ruleDesc.MonitorType,
 		SourceType:   ruleDesc.Product,
-		SourceId:     labelMap["instance"],
-		Summary:      alertAnnotationStr,
+		SourceId:     sourceId,
+		Summary:      alert.Annotations.Summary,
 		CurrentValue: labelMap["currentValue"],
 		StartTime:    tools.TimeToStr(startTime, tools.FullTimeFmt),
 		EndTime:      tools.TimeToStr(tools.TimeParseForZone(alert.EndsAt), tools.FullTimeFmt),
@@ -199,6 +216,7 @@ func (s *AlertRecordAddService) buildAutoScalingData(alert *forms.AlertRecordAle
 		//告警恢复不需要通知弹性伸缩
 		return nil
 	}
+	//弹性伸缩一定有资源组数据
 	if tools.IsBlank(ruleDesc.ResourceGroupId) {
 		//脏数据
 		return nil
@@ -212,18 +230,16 @@ func (s *AlertRecordAddService) buildAutoScalingData(alert *forms.AlertRecordAle
 	}
 }
 
-func (s *AlertRecordAddService) buildNoticeData(alert *forms.AlertRecordAlertsBean, record *commonModels.AlertRecord, ruleDesc *commonDtos.RuleDesc, contactGroups []commonDtos.ContactGroupInfo, handler commonModels.AlarmHandler) *service.AlertMsgSendDTO {
+func (s *AlertRecordAddService) buildNoticeData(alert *forms.AlertRecordAlertsBean, record *commonModels.AlertRecord, ruleDesc *commonDtos.RuleDesc,
+	contactGroups []commonDtos.ContactGroupInfo, ht int) *service.AlertMsgSendDTO {
 	source := messageCenter.ALERT_OPEN
 	if "resolved" == alert.Status {
 		source = messageCenter.ALERT_CANCEL
 	}
 
-	handleType := handler.HandleType
-	targetList := s.buildTargets(handleType, contactGroups)
+	targetList := s.buildTargets(ht, contactGroups)
 
-	labelMap := s.getLabelMap(alert.Annotations.Summary)
-
-	instanceInfo := s.getInstanceInfo(alert.Annotations.Summary)
+	instanceInfo := s.getInstanceInfo(ruleDesc.ResourceId, alert.Annotations.Summary)
 
 	objMap := make(map[string]string)
 	objMap["duration"] = record.Duration
@@ -240,7 +256,7 @@ func (s *AlertRecordAddService) buildNoticeData(alert *forms.AlertRecordAlertsBe
 
 	val := strconv.FormatFloat(ruleDesc.TargetValue, 'E', -1, 64)
 
-	if 1 == handleType {
+	if handlerType.Email == ht {
 		objMap["instanceAmount"] = "1"
 		objMap["period"] = utils.GetDateDiff(ruleDesc.Time)
 		objMap["times"] = "持续" + strconv.Itoa(ruleDesc.Time) + "个周期"
@@ -259,7 +275,8 @@ func (s *AlertRecordAddService) buildNoticeData(alert *forms.AlertRecordAlertsBe
 		}
 
 		objMap["evaluationCount"] = "持续" + strconv.Itoa(ruleDesc.Time) + "个周期"
-		objMap["InstanceID"] = labelMap["instance"]
+		// 暂不支持资源组
+		objMap["InstanceID"] = ruleDesc.ResourceId
 		if tools.IsBlank(ruleDesc.Unit) {
 			objMap["unit"] = ""
 		} else {
@@ -278,11 +295,14 @@ func (s *AlertRecordAddService) buildNoticeData(alert *forms.AlertRecordAlertsBe
 	}
 }
 
-func (s *AlertRecordAddService) getInstanceInfo(summary string) string {
+func (s *AlertRecordAddService) getInstanceInfo(resourceId, summary string) string {
 	var builder strings.Builder
 
 	labelMap := s.getLabelMap(summary)
-	instance := s.AlertRecordDao.FindFirstInstanceInfo(labelMap["instance"])
+	instance := &commonModels.AlarmInstance{}
+	if tools.IsNotBlank(resourceId) {
+		instance = s.AlertRecordDao.FindFirstInstanceInfo(resourceId)
+	}
 
 	if tools.IsNotBlank(instance.InstanceName) {
 		builder.WriteString(instance.InstanceName)

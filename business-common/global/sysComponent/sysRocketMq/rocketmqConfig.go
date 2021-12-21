@@ -2,6 +2,7 @@ package sysRocketMq
 
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
 	"context"
 	"fmt"
 	"github.com/apache/rocketmq-client-go/v2"
@@ -53,7 +54,7 @@ func CreateTopics(topics ...Topic) error {
 
 	testAdmin, err := admin.NewAdmin(admin.WithResolver(primitive.NewPassthroughResolver(addrs)))
 	if err != nil {
-		fmt.Printf("create topic error %+v\n", err)
+		logger.Logger().Infof("create topic error %+v\n", err)
 		return err
 	}
 	for _, topic := range topics {
@@ -63,7 +64,7 @@ func CreateTopics(topics ...Topic) error {
 			admin.WithBrokerAddrCreate(brokerAddr),
 		)
 		if err != nil {
-			fmt.Printf("create topic error %+v", err)
+			logger.Logger().Infof("create topic error %+v", err)
 			return err
 		}
 	}
