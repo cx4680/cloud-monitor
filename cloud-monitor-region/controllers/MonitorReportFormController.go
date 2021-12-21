@@ -23,7 +23,7 @@ func (mpc *MonitorReportFormCtl) GetData(c *gin.Context) {
 	var param forms.PrometheusRequest
 	err := c.ShouldBindQuery(&param)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, translate.GetErrorMsg(err))
+		c.JSON(http.StatusBadRequest, global.NewError(translate.GetErrorMsg(err)))
 		return
 	}
 	tenantId, err := tools.GetTenantId(c)
@@ -46,7 +46,7 @@ func (mpc *MonitorReportFormCtl) GetAxisData(c *gin.Context) {
 	var param forms.PrometheusRequest
 	err := c.ShouldBindQuery(&param)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, translate.GetErrorMsg(err))
+		c.JSON(http.StatusBadRequest, global.NewError(translate.GetErrorMsg(err)))
 		return
 	}
 	tenantId, err := tools.GetTenantId(c)
@@ -67,7 +67,7 @@ func (mpc *MonitorReportFormCtl) GetTop(c *gin.Context) {
 	var param forms.PrometheusRequest
 	err := c.ShouldBindQuery(&param)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, translate.GetErrorMsg(err))
+		c.JSON(http.StatusBadRequest, global.NewError(translate.GetErrorMsg(err)))
 		return
 	}
 	tenantId, err := tools.GetTenantId(c)

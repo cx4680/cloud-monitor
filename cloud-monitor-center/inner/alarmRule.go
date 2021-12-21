@@ -52,7 +52,7 @@ func (ctl *AlarmRuleCtl) UpdateRule(c *gin.Context) {
 		SourceType: sourceType.AutoScaling,
 	}
 	if err := c.ShouldBindJSON(&param); err != nil {
-		c.JSON(http.StatusBadRequest, translate.GetErrorMsg(err))
+		c.JSON(http.StatusBadRequest, global.NewError(translate.GetErrorMsg(err)))
 		return
 	}
 	tenantId, err := tools.GetTenantId(c)

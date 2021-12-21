@@ -50,7 +50,7 @@ func (ctl *AlarmRuleCtl) CreateRule(c *gin.Context) {
 		SourceType: sourceType.Front,
 	}
 	if err := c.ShouldBindJSON(&param); err != nil {
-		c.JSON(http.StatusBadRequest, translate.GetErrorMsg(err))
+		c.JSON(http.StatusBadRequest, global.NewError(translate.GetErrorMsg(err)))
 		return
 	}
 	tenantId, err := tools.GetTenantId(c)

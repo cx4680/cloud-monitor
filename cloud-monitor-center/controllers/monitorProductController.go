@@ -40,7 +40,7 @@ func (mpc *MonitorProductCtl) GetAllMonitorProducts(c *gin.Context) {
 func (mpc *MonitorProductCtl) UpdateById(c *gin.Context) {
 	var f forms.MonitorProductUpdateForm
 	if err := c.ShouldBindJSON(&f); err != nil {
-		c.JSON(http.StatusBadRequest, translate.GetErrorMsg(err))
+		c.JSON(http.StatusBadRequest, global.NewError(translate.GetErrorMsg(err)))
 		return
 	}
 
