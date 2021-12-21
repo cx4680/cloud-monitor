@@ -16,19 +16,19 @@ type MonitorItemDao struct {
 var MonitorItem = new(MonitorItemDao)
 
 func (d *MonitorItemDao) SelectMonitorItemsById(productId string, osType string) []models.MonitorItem {
-	var productList []models.MonitorItem
-	global.DB.Where("status = ?", "1").Where("is_display = ?", "1").Where("product_id = ?", productId).Find(&productList)
+	var monitorItemList []models.MonitorItem
+	global.DB.Where("status = ?", "1").Where("is_display = ?", "1").Where("product_id = ?", productId).Find(&monitorItemList)
 	if tools.IsBlank(osType) {
-		return productList
+		return monitorItemList
 	}
-	var newProductList []models.MonitorItem
-	for _, v := range productList {
+	var newMonitorItemList []models.MonitorItem
+	for _, v := range monitorItemList {
 		if tools.IsNotBlank(v.ShowExpression) && !isShow(v.ShowExpression, osType) {
 			continue
 		}
-		newProductList = append(newProductList, v)
+		newMonitorItemList = append(newMonitorItemList, v)
 	}
-	return newProductList
+	return newMonitorItemList
 }
 
 func (d *MonitorItemDao) GetMonitorItemByName(name string) models.MonitorItem {
@@ -42,7 +42,8 @@ func isShow(exp string, os string) bool {
 	var buf bytes.Buffer
 	temp, _ := template.New("exp").Parse(exp)
 	if err := temp.Execute(&buf, m); err != nil {
-		logger.Logger().Error(err)
+		logger.Logger().Errorf("展示表达式解析失败：%v", err)
+		return true
 	}
 	isShowBool, err := strconv.ParseBool(buf.String())
 	if err != nil {

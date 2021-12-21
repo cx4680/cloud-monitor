@@ -9,6 +9,7 @@ import (
 	forms2 "code.cestc.cn/ccos-ops/cloud-monitor/business-common/forms"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/sysComponent/sysRedis"
+	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/constant"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/dtos"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/forms"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/k8s"
@@ -206,9 +207,10 @@ func (service *K8sPrometheusService) buildAlertRule(ruleExpress *dtos.RuleExpres
 }
 
 func (service *K8sPrometheusService) generateExpr(ruleCondition *forms2.RuleCondition, instanceId string, mode int) string {
-	express := fmt.Sprintf("%s_over_time(%s{%s}[%s])%s%v", dao2.ConfigItem.GetConfigItem(ruleCondition.Statistics, dao2.StatisticalMethodsPid, "").Data,
-		ruleCondition.MetricName, service.getLabels(instanceId, ruleCondition.Labels),
-		utils.SecToTime(ruleCondition.Period), dao2.ConfigItem.GetConfigItem(ruleCondition.ComparisonOperator, dao2.ComparisonMethodPid, "").Data,
+	monitorItem := dao2.MonitorItem.GetMonitorItemByName(ruleCondition.MetricName)
+	metric:=strings.ReplaceAll(monitorItem.MetricsLinux, constant.MetricLabel, service.getLabels(instanceId, monitorItem.Labels))
+	express := fmt.Sprintf("%s_over_time((%s)[%s:1m])%s%v", dao2.ConfigItem.GetConfigItem(ruleCondition.Statistics, dao2.StatisticalMethodsPid, "").Data,
+		metric, utils.SecToTime(ruleCondition.Period), dao2.ConfigItem.GetConfigItem(ruleCondition.ComparisonOperator, dao2.ComparisonMethodPid, "").Data,
 		ruleCondition.Threshold)
 	if calcMode.ResourceGroup == mode {
 		return fmt.Sprintf("%s(%s)", dao2.ConfigItem.GetConfigItem(ruleCondition.Statistics, dao2.StatisticalMethodsPid, "").Data, express)
