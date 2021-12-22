@@ -264,7 +264,7 @@ func (r *remoteBrokerOffsetStore) persist(mqs []*primitive.MessageQueue) {
 				"offset":                 off,
 			})
 		} else {
-			rlog.Info("update offset to broker success", map[string]interface{}{
+			rlog.Debug("update offset to broker success", map[string]interface{}{
 				rlog.LogKeyConsumerGroup: r.group,
 				rlog.LogKeyMessageQueue:  mq.String(),
 				"offset":                 off,

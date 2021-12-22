@@ -18,4 +18,5 @@ type RuleExpress struct {
 	SilencesTime   string               `gorm:"column:silences_time"`
 	ResourceId     string               `gorm:"column:resource_id"`
 	TenantId       string
+	SourceType     int
 }

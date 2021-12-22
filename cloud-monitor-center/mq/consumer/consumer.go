@@ -3,9 +3,11 @@ package consumer
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/dao"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/dtos"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/models"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/service"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/service/external/messageCenter"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/tools"
 	"encoding/json"
 	"fmt"
 	"github.com/apache/rocketmq-client-go/v2/primitive"
@@ -42,5 +44,15 @@ func DeleteInstanceHandler(msgs []*primitive.MessageExt) {
 			continue
 		}
 		alarmInstanceDao.DeleteInstanceList(instance.TenantId, instance.List)
+	}
+}
+
+func AlertRecordAddHandler(msgs []*primitive.MessageExt) {
+	for _, msg := range msgs {
+		var list []models.AlertRecord
+		tools.ToObject(string(msg.Body), &list)
+		if list != nil && len(list) > 0 {
+			dao.AlertRecord.InsertBatch(global.DB, list)
+		}
 	}
 }

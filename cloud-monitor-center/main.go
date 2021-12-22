@@ -60,7 +60,6 @@ func main() {
 			}
 
 			bt.Start()
-			defer bt.Stop()
 			close(taskChan)
 		}()
 		select {
@@ -79,6 +78,9 @@ func main() {
 		}, {
 			Topic:   sysRocketMq.DeleteInstanceTopic,
 			Handler: consumer.DeleteInstanceHandler,
+		}, {
+			Topic:   sysRocketMq.RecordTopic,
+			Handler: consumer.AlertRecordAddHandler,
 		}})
 	})
 

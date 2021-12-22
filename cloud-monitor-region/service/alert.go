@@ -123,7 +123,7 @@ func (s *AlertRecordAddService) checkAndBuild(alerts []*forms.AlertRecordAlertsB
 			continue
 		}
 		//获取告警联系人信息
-		var contactGroups []commonDtos.ContactGroupInfo
+		var contactGroups []*commonDtos.ContactGroupInfo
 		if ruleDesc.GroupList != nil && len(ruleDesc.GroupList) > 0 {
 			contactGroups = s.AlertRecordDao.FindContactInfoByGroupIds(ruleDesc.GroupList)
 		}
@@ -172,7 +172,7 @@ func (s *AlertRecordAddService) checkAndBuild(alerts []*forms.AlertRecordAlertsB
 	return list, handlerMap
 }
 
-func (s *AlertRecordAddService) buildAlertRecord(alert *forms.AlertRecordAlertsBean, ruleDesc *commonDtos.RuleDesc, contactGroups []commonDtos.ContactGroupInfo, labelMap map[string]string) *commonModels.AlertRecord {
+func (s *AlertRecordAddService) buildAlertRecord(alert *forms.AlertRecordAlertsBean, ruleDesc *commonDtos.RuleDesc, contactGroups []*commonDtos.ContactGroupInfo, labelMap map[string]string) *commonModels.AlertRecord {
 	now := tools.GetNow()
 	startTime := tools.TimeParseForZone(alert.StartsAt)
 	//持续时间，单位秒
@@ -231,7 +231,7 @@ func (s *AlertRecordAddService) buildAutoScalingData(alert *forms.AlertRecordAle
 }
 
 func (s *AlertRecordAddService) buildNoticeData(alert *forms.AlertRecordAlertsBean, record *commonModels.AlertRecord, ruleDesc *commonDtos.RuleDesc,
-	contactGroups []commonDtos.ContactGroupInfo, ht int) *service.AlertMsgSendDTO {
+	contactGroups []*commonDtos.ContactGroupInfo, ht int) *service.AlertMsgSendDTO {
 	source := messageCenter.ALERT_OPEN
 	if "resolved" == alert.Status {
 		source = messageCenter.ALERT_CANCEL
@@ -324,7 +324,7 @@ func (s *AlertRecordAddService) getInstanceInfo(resourceId, summary string) stri
 	return builder.String()
 }
 
-func (s *AlertRecordAddService) buildTargets(channel int, contactGroups []commonDtos.ContactGroupInfo) []messageCenter.MessageTargetDTO {
+func (s *AlertRecordAddService) buildTargets(channel int, contactGroups []*commonDtos.ContactGroupInfo) []messageCenter.MessageTargetDTO {
 	var targetList []messageCenter.MessageTargetDTO
 
 	for _, group := range contactGroups {

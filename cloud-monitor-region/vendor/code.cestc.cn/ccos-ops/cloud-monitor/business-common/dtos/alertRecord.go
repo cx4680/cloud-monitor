@@ -23,16 +23,16 @@ type RuleDesc struct {
 }
 
 type UserContactInfo struct {
-	ContactId   string
-	ContactName string
-	Phone       string
-	Mail        string
+	ContactId   string `gorm:"COLUMN:contactId"`
+	ContactName string `gorm:"COLUMN:contactName"`
+	Phone       string `gorm:"COLUMN:phone"`
+	Mail        string `gorm:"COLUMN:mail"`
 }
 
 type ContactGroupInfo struct {
-	GroupId,
-	GroupName string
-	Contacts []UserContactInfo
+	GroupId   string            `gorm:"COLUMN:groupId"`
+	GroupName string            `gorm:"COLUMN:groupName"`
+	Contacts  []UserContactInfo `gorm:"-"`
 }
 
 type AutoScalingData struct {

@@ -28,8 +28,8 @@ func (dao *AlertRecordDao) FindAlertRuleBindGroupNum(ruleId, resourceGroupId str
 	return num
 }
 
-func (dao *AlertRecordDao) FindContactInfoByGroupIds(groupIds []string) []dtos.ContactGroupInfo {
-	var groupList []dtos.ContactGroupInfo
+func (dao *AlertRecordDao) FindContactInfoByGroupIds(groupIds []string) []*dtos.ContactGroupInfo {
+	var groupList []*dtos.ContactGroupInfo
 	global.DB.Raw("SELECT g.id as groupId, g.name as groupName FROM alert_contact_group g WHERE id IN(?)", groupIds).Scan(&groupList)
 	for _, group := range groupList {
 		var contacts []dtos.UserContactInfo

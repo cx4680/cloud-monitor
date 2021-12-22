@@ -18,11 +18,12 @@ func AddSyncJobs(bt *task.BusinessTaskImpl) error {
 	list := dao.MonitorProduct.SelectMonitorProductList()
 	for _, product := range *list {
 		if tools.IsNotBlank(product.Cron) {
+			abbreviation := product.Abbreviation
 			err := bt.Add(task.BusinessTaskDTO{
 				Cron: product.Cron,
 				Name: product.Name,
 				Task: func() {
-					_ = Run(product.Description)
+					_ = Run(abbreviation)
 				},
 			})
 			if err != nil {

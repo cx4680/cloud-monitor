@@ -108,6 +108,8 @@ func (dao *AlarmRuleDao) GetDetail(tx *gorm.DB, id string, tenantId string) *for
 	model.AlarmHandlerList = dao.GetHandlerList(tx, id)
 	model.Status = getAlarmStatusSqlText(model.Status)
 	model.Describe = GetExpress(model.RuleCondition)
+	scope, _ := strconv.Atoi(model.Scope)
+	model.Scope = getResourceScopeText(scope)
 	return model
 }
 
@@ -304,7 +306,7 @@ func (dao *AlarmRuleDao) GetHandlerList(tx *gorm.DB, ruleId string) []*forms.Han
 
 func (dao *AlarmRuleDao) GetResourceListByGroup(tx *gorm.DB, resGroup string) []*forms.InstanceInfo {
 	var model []*forms.InstanceInfo
-	tx.Raw(" SELECT  DISTINCT(t2.instance_id),   t2.region_code,   t2.zone_code,   t2.zone_name,   t2.region_name,   t2.ip,   t2.instance_name FROM   t_alarm_instance t2,   t_resource_resource_group_rel t1 WHERE   t1.resource_group_id = ? AND t1.resource_id = t2.instance_id", resGroup).Scan(&model)
+	tx.Raw(" SELECT  DISTINCT t2.instance_id  FROM   t_alarm_instance t2,   t_resource_resource_group_rel t1 WHERE   t1.resource_group_id = ? AND t1.resource_id = t2.instance_id", resGroup).Scan(&model)
 	return model
 }
 
@@ -381,4 +383,13 @@ func getComparisonOperator(s string) string {
 
 func GetExpress(form *forms.RuleCondition) string {
 	return fmt.Sprintf("%s%s%s%s%s 统计周期%s分钟 持续%s个周期", form.MonitorItemName, getAlarmStatisticsText(form.Statistics), getComparisonOperator(form.ComparisonOperator), strconv.FormatFloat(form.Threshold, 'g', 5, 32), form.Unit, strconv.Itoa(form.Period/60), strconv.Itoa(form.Times))
+}
+
+var ResourceScopeInt = map[int]string{
+	1: ALL,
+	2: INSTANCE,
+}
+
+func getResourceScopeText(code int) string {
+	return ResourceScopeInt[code]
 }

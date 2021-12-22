@@ -23,4 +23,5 @@ type AlertDTO struct {
 	Description  string                 `json:"description"` //告警详情
 	Labels       map[string]interface{} `json:"labels"`
 	SilencesTime string                 `json:"silencesTime"`
+	SourceType   int                    `json:"sourceType"`
 }
