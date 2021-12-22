@@ -5,53 +5,53 @@ import (
 )
 
 type AlertRecordPageVO struct {
-	ID           string
-	Status       string
-	TenantID     string
-	RuleID       string
-	RuleName     string
-	MonitorType  string
-	SourceType   string
-	SourceID     string
-	Summary      string
-	CurrentValue string
-	StartTime    global.JsonTime
-	EndTime      global.JsonTime
-	TargetValue  string
-	Expression   string
-	Duration     string
-	Level        int
-	NoticeStatus string
-	AlarmKey     string
-	ContactInfo  string
-	Region       string
-	CreateTime   global.JsonTime
-	UpdateTime   global.JsonTime
+	ID           string          `json:"id"`
+	Status       string          `json:"status"`
+	TenantID     string          `json:"tenantId"`
+	RuleID       string          `json:"ruleId"`
+	RuleName     string          `json:"ruleName"`
+	MonitorType  string          `json:"monitorType"`
+	SourceType   string          `json:"sourceType"`
+	SourceID     string          `json:"sourceId"`
+	Summary      string          `json:"summary"`
+	CurrentValue string          `json:"currentValue"`
+	StartTime    global.JsonTime `json:"startTime"`
+	EndTime      global.JsonTime `json:"endTime"`
+	TargetValue  string          `json:"targetValue"`
+	Expression   string          `json:"expression"`
+	Duration     string          `json:"duration"`
+	Level        int             `json:"level"`
+	NoticeStatus string          `json:"noticeStatus"`
+	AlarmKey     string          `json:"alarmKey"`
+	ContactInfo  string          `json:"contactInfo"`
+	Region       string          `json:"region"`
+	CreateTime   global.JsonTime `json:"createTime"`
+	UpdateTime   global.JsonTime `json:"updateTime"`
 }
 
 type AlertRecordDetailVO struct {
-	ID           string
-	Status       string
-	TenantID     string
-	RuleID       string
-	RuleName     string
-	MonitorType  string
-	SourceType   string
-	SourceID     string
-	Summary      string
-	CurrentValue string
-	StartTime    global.JsonTime
-	EndTime      global.JsonTime
-	TargetValue  string
-	Expression   string
-	Duration     string
-	Level        int
-	NoticeStatus string
-	AlarmKey     string
-	ContactInfo  string
-	Region       string
-	CreateTime   global.JsonTime
-	UpdateTime   global.JsonTime
+	ID           string          `json:"id"`
+	Status       string          `json:"status"`
+	TenantID     string          `json:"tenantId"`
+	RuleID       string          `json:"ruleId"`
+	RuleName     string          `json:"ruleName"`
+	MonitorType  string          `json:"monitorType"`
+	SourceType   string          `json:"sourceType"`
+	SourceID     string          `json:"sourceId"`
+	Summary      string          `json:"summary"`
+	CurrentValue string          `json:"currentValue"`
+	StartTime    global.JsonTime `json:"startTime"`
+	EndTime      global.JsonTime `json:"endTime"`
+	TargetValue  string          `json:"targetValue"`
+	Expression   string          `json:"expression"`
+	Duration     string          `json:"duration"`
+	Level        int             `json:"level"`
+	NoticeStatus string          `json:"noticeStatus"`
+	AlarmKey     string          `json:"alarmKey"`
+	ContactInfo  string          `json:"contactInfo"`
+	Region       string          `json:"region"`
+	CreateTime   global.JsonTime `json:"createTime"`
+	UpdateTime   global.JsonTime `json:"updateTime"`
 }
 
 type RecordNumHistory struct {

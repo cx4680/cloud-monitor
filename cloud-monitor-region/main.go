@@ -51,7 +51,6 @@ func main() {
 					return
 				}
 				bt.Start()
-				defer bt.Stop()
 				close(taskChan)
 			}()
 			select {
