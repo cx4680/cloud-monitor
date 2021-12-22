@@ -3,6 +3,7 @@ package dao
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/forms"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/models"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/tools"
 	"fmt"
 	"gorm.io/gorm"
 	"strconv"
@@ -58,16 +59,16 @@ const (
 func (d *AlertContactDao) Select(db *gorm.DB, param forms.AlertContactParam) *forms.AlertContactFormPage {
 	var model = &[]forms.AlertContactForm{}
 	var sql string
-	if param.ContactName != "" {
-		sql = fmt.Sprintf(SelectAlterContact, param.TenantId, "AND ac.name LIKE CONCAT('%',"+param.ContactName+",'%')")
+	if tools.IsNotBlank(param.ContactName) {
+		sql += " AND ac.name LIKE CONCAT('%','"+param.ContactName+"','%') "
 	}
-	if param.Phone != "" {
-		sql = fmt.Sprintf(SelectAlterContact, param.TenantId, "AND ac.id = ANY(SELECT contact_id FROM alert_contact_information WHERE type = 1 AND no LIKE CONCAT('%',"+param.Phone+",'%')) ")
-	} else if param.Email != "" {
-		sql = fmt.Sprintf(SelectAlterContact, param.TenantId, "AND ac.id = ANY(SELECT contact_id FROM alert_contact_information WHERE type = 1 AND no LIKE CONCAT('%',"+param.Email+",'%')) ")
-	} else {
-		sql = fmt.Sprintf(SelectAlterContact, param.TenantId, "")
+	if tools.IsNotBlank(param.Phone) {
+		sql += " AND ac.id = ANY(SELECT contact_id FROM alert_contact_information WHERE type = 1 AND no LIKE CONCAT('%','"+param.Phone+"','%')) "
 	}
+	if tools.IsNotBlank(param.Email) {
+		sql += " AND ac.id = ANY(SELECT contact_id FROM alert_contact_information WHERE type = 2 AND no LIKE CONCAT('%','"+param.Email+"','%')) "
+	}
+	sql = fmt.Sprintf(SelectAlterContact, param.TenantId, sql)
 	var total int64
 	db.Model(&models.AlertContact{}).Where("tenant_id = ?", param.TenantId).Count(&total)
 	sql += "LIMIT " + strconv.Itoa((param.PageCurrent - 1) * param.PageSize) + "," + strconv.Itoa(param.PageSize)

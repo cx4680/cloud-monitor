@@ -135,6 +135,8 @@ func (s *AlertContactGroupService) insertAlertContactGroup(db *gorm.DB, p forms.
 }
 
 func (s *AlertContactGroupService) updateAlertContactGroup(db *gorm.DB, p forms.AlertContactParam) (*models.AlertContactGroup, error) {
+	var oldAlertContactGroup = models.AlertContactGroup{}
+	global.DB.Model(&oldAlertContactGroup).Where("tenant_id = ? AND group_id = ?", p.TenantId, p.GroupId)
 	currentTime := tools.GetNowStr()
 	var alertContactGroup = &models.AlertContactGroup{
 		Id:          p.GroupId,
@@ -142,8 +144,8 @@ func (s *AlertContactGroupService) updateAlertContactGroup(db *gorm.DB, p forms.
 		Name:        p.GroupName,
 		Description: p.Description,
 		UpdateTime:  currentTime,
-		CreateTime:  currentTime,
-		CreateUser:  p.CreateUser,
+		CreateTime:  oldAlertContactGroup.CreateTime,
+		CreateUser:  oldAlertContactGroup.CreateUser,
 	}
 	s.dao.Update(db, alertContactGroup)
 	return alertContactGroup, nil
