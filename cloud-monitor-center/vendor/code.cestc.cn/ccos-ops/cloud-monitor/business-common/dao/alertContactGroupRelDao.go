@@ -31,6 +31,7 @@ const (
 		"FROM " +
 		"alert_contact_group AS acg " +
 		"LEFT JOIN alert_contact_group_rel AS acgr ON acg.id = acgr.group_id AND acg.tenant_id = acgr.tenant_id " +
+		"WHERE acg.id != ? " +
 		"GROUP BY " +
 		"acgr.contact_id " +
 		") " +
@@ -69,7 +70,6 @@ func (d *AlertContactGroupRelDao) InsertBatch(db *gorm.DB, list []*models.AlertC
 	if len(list) == 0 {
 		return
 	}
-
 	currentTime := tools.GetNowStr()
 	for _, v := range list {
 		v.CreateTime = currentTime
@@ -79,9 +79,6 @@ func (d *AlertContactGroupRelDao) InsertBatch(db *gorm.DB, list []*models.AlertC
 }
 
 func (d *AlertContactGroupRelDao) Update(db *gorm.DB, list []*models.AlertContactGroupRel, param forms.AlertContactParam) {
-	if len(list) == 0 {
-		return
-	}
 	if param.ContactId != "" {
 		db.Where("tenant_id = ? AND contact_id = ?", param.TenantId, param.ContactId).Delete(models.AlertContactGroupRel{})
 	} else {
@@ -98,13 +95,13 @@ func (d *AlertContactGroupRelDao) Delete(db *gorm.DB, entity *models.AlertContac
 	}
 }
 
-func (d *AlertContactGroupRelDao) CheckAlertContact(db *gorm.DB, tenantId string, contactId string) *[]forms.AlertContactForm {
+func (d *AlertContactGroupRelDao) GetAlertContact(db *gorm.DB, tenantId string, contactId string, groupId string) *[]forms.AlertContactForm {
 	var model = &[]forms.AlertContactForm{}
-	db.Raw(checkAlertContact, tenantId, contactId).Find(model)
+	db.Raw(checkAlertContact, groupId, tenantId, contactId).Find(model)
 	return model
 }
 
-func (d *AlertContactGroupRelDao) CheckAlertContactGroup(db *gorm.DB, tenantId string, groupId string) *[]forms.AlertContactGroupForm {
+func (d *AlertContactGroupRelDao) GetAlertContactGroup(db *gorm.DB, tenantId string, groupId string) *[]forms.AlertContactGroupForm {
 	var model = &[]forms.AlertContactGroupForm{}
 	db.Raw(checkAlertContactGroup, tenantId, groupId).Find(model)
 	return model

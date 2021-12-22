@@ -67,7 +67,7 @@ func (s *AlertContactGroupRelService) PersistenceLocal(db *gorm.DB, param interf
 }
 
 func (s *AlertContactGroupRelService) insertAlertContactRel(db *gorm.DB, p forms.AlertContactParam) ([]*models.AlertContactGroupRel, error) {
-	list, err := s.getAlertContactGroupRelList(db, p)
+	list, err := s.buildRelList(db, p)
 	if err != nil {
 		return nil, err
 	}
@@ -76,7 +76,7 @@ func (s *AlertContactGroupRelService) insertAlertContactRel(db *gorm.DB, p forms
 }
 
 func (s *AlertContactGroupRelService) updateAlertContactGroupRel(db *gorm.DB, p forms.AlertContactParam) ([]*models.AlertContactGroupRel, error) {
-	list, err := s.getAlertContactGroupRelList(db, p)
+	list, err := s.buildRelList(db, p)
 	if err != nil {
 		return nil, err
 	}
@@ -97,50 +97,72 @@ func (s *AlertContactGroupRelService) deleteAlertContactGroupRel(db *gorm.DB, p 
 	return alertContactGroupRel, nil
 }
 
-func (s *AlertContactGroupRelService) getAlertContactGroupRelList(db *gorm.DB, p forms.AlertContactParam) ([]*models.AlertContactGroupRel, error) {
-	var list []*models.AlertContactGroupRel
+//构建组关联关系
+func (s *AlertContactGroupRelService) buildRelList(db *gorm.DB, p forms.AlertContactParam) ([]*models.AlertContactGroupRel, error) {
+	var relList []*models.AlertContactGroupRel
+	var err error
 	if len(p.ContactIdList) > 0 {
-		if len(p.ContactIdList) > constants.MaxContactNum {
-			return nil, errors.NewBusinessError("联系组限制添加" + strconv.Itoa(constants.MaxContactNum) + "个联系人")
-		}
-		for _, contactId := range p.ContactIdList {
-			checkList := *s.dao.CheckAlertContact(db, p.TenantId, contactId)
-			if len(checkList) == 0 {
-				return nil, errors.NewBusinessError("该租户无此联系人")
-			}
-			if checkList[0].GroupCount >= constants.MaxContactNum {
-				return nil, errors.NewBusinessError("有联系人已加入" + strconv.Itoa(constants.MaxContactGroup) + "个联系组")
-			}
-			alertContactGroupRel := &models.AlertContactGroupRel{
-				Id:         strconv.FormatInt(snowflake.GetWorker().NextId(), 10),
-				TenantId:   p.TenantId,
-				ContactId:  contactId,
-				GroupId:    p.GroupId,
-				CreateUser: p.CreateUser,
-			}
-			list = append(list, alertContactGroupRel)
-		}
+		relList, err = s.buildContactRelList(db, p)
 	} else if len(p.GroupIdList) > 0 {
-		if len(p.GroupIdList) > constants.MaxContactGroup {
-			return nil, errors.NewBusinessError("联系人限制加入" + strconv.Itoa(constants.MaxContactGroup) + "个联系组")
+		relList, err = s.buildGroupRelList(db, p)
+	} else {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return relList, nil
+}
+
+func (s *AlertContactGroupRelService) buildContactRelList(db *gorm.DB, p forms.AlertContactParam) ([]*models.AlertContactGroupRel, error) {
+	if len(p.ContactIdList) > constants.MaxContactNum {
+		return nil, errors.NewBusinessError("联系组限制添加" + strconv.Itoa(constants.MaxContactNum) + "个联系人")
+	}
+	var list []*models.AlertContactGroupRel
+	for _, contactId := range p.ContactIdList {
+		if tools.IsBlank(contactId) {
+			continue
 		}
-		for _, groupId := range p.GroupIdList {
-			checkList := *s.dao.CheckAlertContactGroup(db, p.TenantId, groupId)
-			if len(checkList) == 0 {
-				return nil, errors.NewBusinessError("该租户无此联系组")
-			}
-			if checkList[0].ContactCount >= constants.MaxContactNum {
-				return nil, errors.NewBusinessError("有联系组已有" + strconv.Itoa(constants.MaxContactNum) + "个联系人")
-			}
-			alertContactGroupRel := &models.AlertContactGroupRel{
-				Id:         strconv.FormatInt(snowflake.GetWorker().NextId(), 10),
-				TenantId:   p.TenantId,
-				ContactId:  p.ContactId,
-				GroupId:    groupId,
-				CreateUser: p.CreateUser,
-			}
-			list = append(list, alertContactGroupRel)
+		alertContactList := *s.dao.GetAlertContact(db, p.TenantId, contactId, p.GroupId)
+		if len(alertContactList) == 0 {
+			return nil, errors.NewBusinessError("该租户无此联系人")
 		}
+		if alertContactList[0].GroupCount >= constants.MaxContactGroup {
+			return nil, errors.NewBusinessError("有联系人已加入" + strconv.Itoa(constants.MaxContactGroup) + "个联系组")
+		}
+		alertContactGroupRel := &models.AlertContactGroupRel{
+			Id:         strconv.FormatInt(snowflake.GetWorker().NextId(), 10),
+			TenantId:   p.TenantId,
+			ContactId:  contactId,
+			GroupId:    p.GroupId,
+			CreateUser: p.CreateUser,
+		}
+		list = append(list, alertContactGroupRel)
+	}
+	return list, nil
+}
+
+func (s *AlertContactGroupRelService) buildGroupRelList(db *gorm.DB, p forms.AlertContactParam) ([]*models.AlertContactGroupRel, error) {
+	if len(p.GroupIdList) > constants.MaxContactGroup {
+		return nil, errors.NewBusinessError("联系人限制加入" + strconv.Itoa(constants.MaxContactGroup) + "个联系组")
+	}
+	var list []*models.AlertContactGroupRel
+	for _, groupId := range p.GroupIdList {
+		contactGroupList := *s.dao.GetAlertContactGroup(db, p.TenantId, groupId)
+		if len(contactGroupList) == 0 {
+			return nil, errors.NewBusinessError("该租户无此联系组")
+		}
+		if contactGroupList[0].ContactCount >= constants.MaxContactNum {
+			return nil, errors.NewBusinessError("有联系组已有" + strconv.Itoa(constants.MaxContactNum) + "个联系人")
+		}
+		alertContactGroupRel := &models.AlertContactGroupRel{
+			Id:         strconv.FormatInt(snowflake.GetWorker().NextId(), 10),
+			TenantId:   p.TenantId,
+			ContactId:  p.ContactId,
+			GroupId:    groupId,
+			CreateUser: p.CreateUser,
+		}
+		list = append(list, alertContactGroupRel)
 	}
 	return list, nil
 }

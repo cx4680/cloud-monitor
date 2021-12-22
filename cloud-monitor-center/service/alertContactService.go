@@ -37,7 +37,7 @@ func NewAlertContactService(alertContactGroupService *AlertContactGroupService, 
 func (s *AlertContactService) PersistenceLocal(db *gorm.DB, param interface{}) (string, error) {
 	p := param.(forms.AlertContactParam)
 	//每个联系人最多加入5个联系组
-	if len(p.GroupIdList) >= constants.MaxContactGroup {
+	if len(p.GroupIdList) > constants.MaxContactGroup {
 		return "", errors.NewBusinessError("每个联系人最多加入" + strconv.Itoa(constants.MaxContactGroup) + "个联系组")
 	}
 	switch p.EventEum {
