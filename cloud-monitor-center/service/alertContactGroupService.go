@@ -34,13 +34,22 @@ func (s *AlertContactGroupService) PersistenceLocal(db *gorm.DB, param interface
 	p := param.(forms.AlertContactParam)
 	//每个联系人最多加入5个联系组
 	if len(p.GroupIdList) >= constants.MaxContactGroup {
-		return "", errors.NewBusinessError("每个联系组最多加入" + strconv.Itoa(constants.MaxGroupNum) + "个联系组")
+		return "", errors.NewBusinessError("每个联系人最多加入" + strconv.Itoa(constants.MaxContactGroup) + "个联系组")
 	}
 	switch p.EventEum {
 	case enums.InsertAlertContactGroup:
 		//参数校验
 		if p.GroupName == "" {
 			return "", errors.NewBusinessError("联系组名字不能为空")
+		}
+		if len(p.ContactIdList) == 0 {
+			return "", errors.NewBusinessError("请至少选择一位联系人")
+		}
+		//联系组限制创建10个
+		var groupCount int64
+		global.DB.Model(&models.AlertContactGroup{}).Where("tenant_id = ?", p.TenantId).Count(&groupCount)
+		if groupCount >= constants.MaxGroupNum {
+			return "", errors.NewBusinessError("联系组限制创建" + strconv.Itoa(constants.MaxGroupNum) + "个")
 		}
 		//联系组名不可重复
 		var count int64
@@ -133,6 +142,8 @@ func (s *AlertContactGroupService) updateAlertContactGroup(db *gorm.DB, p forms.
 		Name:        p.GroupName,
 		Description: p.Description,
 		UpdateTime:  currentTime,
+		CreateTime:  currentTime,
+		CreateUser:  p.CreateUser,
 	}
 	s.dao.Update(db, alertContactGroup)
 	return alertContactGroup, nil

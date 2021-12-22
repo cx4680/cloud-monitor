@@ -5,6 +5,7 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/enums"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/errors"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/forms"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/models"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/service"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/service/external/messageCenter"
@@ -44,10 +45,13 @@ func (s *AlertContactInformationService) PersistenceLocal(db *gorm.DB, param int
 			Data:     list,
 		}), nil
 	case enums.UpdateAlertContact:
-		List := s.updateAlertContactInformation(db, p)
+		list := s.updateAlertContactInformation(db, p)
+		for _, information := range list {
+			sendCertifyMsg(information.TenantId, information.ContactId, information.No, information.Type, information.ActiveCode)
+		}
 		return tools.ToString(forms.MqMsg{
 			EventEum: enums.UpdateAlertContactInformation,
-			Data:     List,
+			Data:     list,
 		}), nil
 	case enums.DeleteAlertContact:
 		alertContactInformation := s.deleteAlertContactInformation(db, p)
@@ -91,33 +95,16 @@ func (s *AlertContactInformationService) deleteAlertContactInformation(db *gorm.
 }
 
 func (s *AlertContactInformationService) getInformationList(p forms.AlertContactParam) []*models.AlertContactInformation {
-	activeCode, isCertify := s.getActiveCode()
 	var infoList []*models.AlertContactInformation
-	if p.Phone != "" {
-		alertContactInformationPhone := &models.AlertContactInformation{
-			Id:         strconv.FormatInt(snowflake.GetWorker().NextId(), 10),
-			TenantId:   p.TenantId,
-			ContactId:  p.ContactId,
-			No:         p.Phone,
-			Type:       1,
-			IsCertify:  isCertify,
-			ActiveCode: activeCode,
-			CreateUser: p.CreateUser,
+	if tools.IsNotBlank(p.Phone) {
+		if information := s.buildInformation(p, p.Phone, 1); information != nil {
+			infoList = append(infoList, information)
 		}
-		infoList = append(infoList, alertContactInformationPhone)
 	}
-	if p.Email != "" {
-		alertContactInformationEmail := &models.AlertContactInformation{
-			Id:         strconv.FormatInt(snowflake.GetWorker().NextId(), 10),
-			TenantId:   p.TenantId,
-			ContactId:  p.ContactId,
-			No:         p.Email,
-			Type:       2,
-			IsCertify:  isCertify,
-			ActiveCode: activeCode,
-			CreateUser: p.CreateUser,
+	if tools.IsNotBlank(p.Email) {
+		if information := s.buildInformation(p, p.Email, 2); information != nil {
+			infoList = append(infoList, information)
 		}
-		infoList = append(infoList, alertContactInformationEmail)
 	}
 	return infoList
 }
@@ -152,4 +139,26 @@ func sendCertifyMsg(tenantId string, contactId string, no string, noType int, ac
 	if err != nil {
 		logger.Logger().Error(err)
 	}
+}
+
+func (s *AlertContactInformationService) buildInformation(p forms.AlertContactParam, no string, noType int) *models.AlertContactInformation {
+	activeCode, isCertify := s.getActiveCode()
+	var information = &models.AlertContactInformation{}
+	//判断新增的联系方式是否已存在，若存在则不修改，若不存在，则删除旧号码，添加新号码
+	var count int64
+	global.DB.Model(&models.AlertContactInformation{}).Where("tenant_id = ? AND contact_id = ? AND no = ? AND type = ?", p.TenantId, p.ContactId, no, noType).Count(&count)
+	if count == 0 {
+		information = &models.AlertContactInformation{
+			Id:         strconv.FormatInt(snowflake.GetWorker().NextId(), 10),
+			TenantId:   p.TenantId,
+			ContactId:  p.ContactId,
+			No:         no,
+			Type:       noType,
+			IsCertify:  isCertify,
+			ActiveCode: activeCode,
+			CreateUser: p.CreateUser,
+		}
+		return information
+	}
+	return nil
 }

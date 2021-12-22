@@ -56,6 +56,7 @@ const (
 		"FROM " +
 		"alert_contact_group AS acg " +
 		"LEFT JOIN alert_contact_group_rel AS acgr ON acg.id = acgr.group_id AND acg.tenant_id = acgr.tenant_id " +
+		"WHERE acg.id = ? " +
 		"GROUP BY " +
 		"acgr.contact_id ) " +
 		"AS acg ON ac.id = acg.contact_id AND ac.tenant_id = acg.tenant_id " +
@@ -96,7 +97,7 @@ func (d *AlertContactGroupDao) SelectAlertGroupContact(db *gorm.DB, param forms.
 	if total == 0 {
 		return alertContactFormPage
 	}
-	db.Raw(SelectAlterGroupContact, param.TenantId, param.GroupId).Find(modelList)
+	db.Raw(SelectAlterGroupContact, param.GroupId, param.TenantId, param.GroupId).Find(modelList)
 	alertContactFormPage.Records = modelList
 	return alertContactFormPage
 }
@@ -106,7 +107,7 @@ func (d *AlertContactGroupDao) Insert(db *gorm.DB, entity *models.AlertContactGr
 }
 
 func (d *AlertContactGroupDao) Update(db *gorm.DB, entity *models.AlertContactGroup) {
-	db.Updates(entity)
+	db.Save(entity)
 }
 
 func (d *AlertContactGroupDao) Delete(db *gorm.DB, entity *models.AlertContactGroup) {
