@@ -4,6 +4,7 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/dao"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/errors"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/models"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/tools"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/constant"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/forms"
 	"fmt"
@@ -138,6 +139,9 @@ func getTimeList(start int, end int, step int, firstTime int) []string {
 }
 
 func changeDecimal(value string) string {
+	if tools.IsBlank(value) {
+		return ""
+	}
 	v, _ := strconv.ParseFloat(value, 64)
 	return fmt.Sprintf("%.2f", v)
 }
