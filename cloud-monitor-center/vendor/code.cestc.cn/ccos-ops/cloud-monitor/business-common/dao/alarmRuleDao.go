@@ -326,9 +326,6 @@ const (
 	ENABLE  = "enabled"
 	DISABLE = "disabled"
 
-	sqlEnabled  = "1"
-	sqlDisabled = "2"
-
 	Maximum = "Maximum"
 	Minimum = "Minimum"
 	Average = "Average"
@@ -351,8 +348,8 @@ func getAlarmStatusTextInt(code string) int {
 }
 
 var alarmStatusSqlText = map[string]string{
-	sqlEnabled:  "enabled",
-	sqlDisabled: "disabled",
+	"1": "enabled",
+	"0": "disabled",
 }
 
 func getAlarmStatusSqlText(code string) string {
