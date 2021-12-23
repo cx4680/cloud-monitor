@@ -74,7 +74,7 @@ func (dao *AlarmRuleDao) SelectRulePageList(param *forms.AlarmPageReqParam) *vo.
 	var modelList []forms.AlarmRulePageDTO
 	selectList := &strings.Builder{}
 	var sqlParam = []interface{}{param.TenantId}
-	selectList.WriteString("select * from ( SELECT    count(DISTINCT(t2.resource_id)) AS instanceNum,    t1.NAME  as name,    t1.monitor_type,    t1.product_type,    t1.metric_name,    t1.trigger_condition,    t1.enabled AS 'status',    t1.id AS ruleId,    t1.update_time  FROM    t_alarm_rule t1  LEFT JOIN t_alarm_rule_resource_rel t2 ON t2.alarm_rule_id = t1.id  WHERE    t1.tenant_id = ?  AND t1.deleted = 0  AND t1.source_type = 1  ")
+	selectList.WriteString("select * from ( SELECT    count(DISTINCT(t2.resource_id)) AS instanceNum,    t1.NAME  as name,    t1.monitor_type,    t1.product_type,    t1.metric_name,    t1.trigger_condition,    t1.enabled AS 'status',    t1.id AS ruleId,    t1.create_time  FROM    t_alarm_rule t1  LEFT JOIN t_alarm_rule_resource_rel t2 ON t2.alarm_rule_id = t1.id  WHERE    t1.tenant_id = ?  AND t1.deleted = 0  AND t1.source_type = 1  ")
 	if len(param.Status) != 0 {
 		selectList.WriteString(" and t1.enabled = ?")
 		sqlParam = append(sqlParam, param.Status)
@@ -83,7 +83,7 @@ func (dao *AlarmRuleDao) SelectRulePageList(param *forms.AlarmPageReqParam) *vo.
 		selectList.WriteString(" and t1.name like concat('%',?,'%')")
 		sqlParam = append(sqlParam, param.RuleName)
 	}
-	selectList.WriteString(" group by ruleId ) t order by t.update_time  desc ")
+	selectList.WriteString(" group by ruleId ) t order by t.create_time  desc ")
 	page := pageUtils.Paginate(param.PageSize, param.Current, selectList.String(), sqlParam, &modelList)
 	for i, v := range modelList {
 		modelList[i].MonitorItem = v.RuleCondition.MonitorItemName
@@ -220,14 +220,14 @@ func (dao *AlarmRuleDao) saveAlarmRuleResGroup(tx *gorm.DB, ruleReqDTO *forms.Al
 			CalcMode:        info.CalcMode,
 			TenantId:        ruleReqDTO.TenantId,
 		}
-		dao.saveResource(tx, ruleReqDTO.TenantId, info,ruleReqDTO.ProductType)
+		dao.saveResource(tx, ruleReqDTO.TenantId, info, ruleReqDTO.ProductType)
 		tx.Create(&groups)
 		tx.Create(&groupRelList)
 	}
 }
 
 // saveResource 保存资源 、资源与组的关系
-func (dao *AlarmRuleDao) saveResource(tx *gorm.DB, tenantID string, info *forms.ResGroupInfo,productType string) {
+func (dao *AlarmRuleDao) saveResource(tx *gorm.DB, tenantID string, info *forms.ResGroupInfo, productType string) {
 	resSize := len(info.ResourceList)
 	if resSize == 0 {
 		return
@@ -235,7 +235,7 @@ func (dao *AlarmRuleDao) saveResource(tx *gorm.DB, tenantID string, info *forms.
 	resourceList := make([]*models.AlarmInstance, resSize)
 	resourceRelList := make([]*models.ResourceResourceGroupRel, resSize)
 	for index, resInfo := range info.ResourceList {
-		resourceList[index] = dao.buildResource(resInfo, tenantID,productType)
+		resourceList[index] = dao.buildResource(resInfo, tenantID, productType)
 		resourceRelList[index] = &models.ResourceResourceGroupRel{
 			ResourceGroupId: info.ResGroupId,
 			ResourceId:      resInfo.InstanceId,
@@ -260,7 +260,7 @@ func (dao *AlarmRuleDao) saveAlarmRuleResource(tx *gorm.DB, ruleReqDTO *forms.Al
 			ResourceId:  info.InstanceId,
 			TenantId:    ruleReqDTO.TenantId,
 		}
-		resourceList[index] = dao.buildResource(info, ruleReqDTO.TenantId,ruleReqDTO.ProductType)
+		resourceList[index] = dao.buildResource(info, ruleReqDTO.TenantId, ruleReqDTO.ProductType)
 	}
 	tx.Clauses(clause.OnConflict{DoNothing: false}).Create(&resourceList)
 	tx.Create(&resourceRelList)
@@ -285,7 +285,7 @@ func (dao *AlarmRuleDao) saveAlarmHandler(tx *gorm.DB, ruleReqDTO *forms.AlarmRu
 	tx.Create(&handlers)
 }
 
-func (dao *AlarmRuleDao) buildResource(info *forms.InstanceInfo, tenantId string,productType string) *models.AlarmInstance {
+func (dao *AlarmRuleDao) buildResource(info *forms.InstanceInfo, tenantId string, productType string) *models.AlarmInstance {
 	return &models.AlarmInstance{
 		Ip:           info.Ip,
 		InstanceID:   info.InstanceId,
@@ -295,7 +295,7 @@ func (dao *AlarmRuleDao) buildResource(info *forms.InstanceInfo, tenantId string
 		RegionName:   info.RegionName,
 		InstanceName: info.InstanceName,
 		TenantID:     tenantId,
-		ProductType:   productType,
+		ProductType:  productType,
 	}
 }
 
