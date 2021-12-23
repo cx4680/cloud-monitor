@@ -1,5 +1,9 @@
 package messageCenter
 
+import (
+	"strconv"
+)
+
 type ReceiveType int
 
 const (
@@ -17,6 +21,19 @@ const (
 	CloudMonitorAlarmSmsLack                 = "cloud_monitor_alarm_sms_lack"
 )
 
+func GetTemplateMapKey(rt ReceiveType, ms MsgSource) string {
+	return strconv.Itoa(int(rt)) + "-" + strconv.Itoa(int(ms))
+}
+
+// AlarmNoticeTemplateMap 告警处置通知模板配置
+var AlarmNoticeTemplateMap = map[string]string{
+	GetTemplateMapKey(Phone, ALERT_OPEN):     SingleResourceThresholdAlarmReminder,
+	GetTemplateMapKey(Email, ALERT_OPEN):   SingleResourceThresholdAlarmReminderMail,
+	GetTemplateMapKey(Phone, ALERT_CANCEL):   SingleResourceRecoveryReminder,
+	GetTemplateMapKey(Email, ALERT_CANCEL): SingleResourceRecoveryReminderMail,
+	//TODO 联系人相关
+}
+
 type MsgSource int
 
 const (
@@ -31,12 +48,13 @@ type MessageTargetDTO struct {
 	Type ReceiveType
 }
 
+// MessageSendDTO 发送消息的入口参数
 type MessageSendDTO struct {
-	SenderId     string
-	Target       []MessageTargetDTO
-	SourceType   MsgSource
-	Content      string
-	MsgEventCode string
+	SenderId   string
+	Type       ReceiveType
+	SourceType MsgSource
+	Targets    []string
+	Content    string
 }
 
 // SmsMessageReqDTO 消息中心接口入参

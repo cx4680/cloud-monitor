@@ -54,6 +54,7 @@ func Run(productType string) error {
 			remoteInstanceList, err := getRemoteProductInstanceList(productType)
 			logger.Logger().Infof(" sync list ,db: %+v,remote:%+v", dbInstanceList, remoteInstanceList)
 			if err != nil {
+				logger.Logger().Error("查询出错", err)
 				continue
 			}
 			sync(tenantId, dbInstanceList, remoteInstanceList)

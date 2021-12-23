@@ -24,8 +24,16 @@ type MessageService struct {
 }
 
 type AlertMsgSendDTO struct {
-	AlertId string
-	Msg     messageCenter.MessageSendDTO
+	AlertId    string
+	SenderId   string
+	SourceType messageCenter.MsgSource
+	Msgs       []AlertMsgDTO
+}
+
+type AlertMsgDTO struct {
+	Type    messageCenter.ReceiveType
+	Targets []string
+	Content string
 }
 
 func NewMessageService(messageCenterService *messageCenter.Service) *MessageService {
@@ -35,27 +43,28 @@ func NewMessageService(messageCenterService *messageCenter.Service) *MessageServ
 	}
 }
 
-func (s *MessageService) TargetFilter(targetList []messageCenter.MessageTargetDTO, senderId string, isCenter bool) {
+func (s *MessageService) TargetFilter(targetList []string, rt messageCenter.ReceiveType, senderId string, isCenter bool) []string {
 	if targetList == nil || len(targetList) <= 0 {
-		return
+		return nil
 	}
-	var nt []messageCenter.MessageTargetDTO
+	var addrs []string
 	for _, t := range targetList {
-		if messageCenter.Email == t.Type {
-			nt = append(nt, t)
+		if messageCenter.Email == rt {
+			addrs = append(addrs, t)
+			continue
+		}
+		//短信需要验证是否超限
+		num := s.NotificationRecordDao.GetTenantPhoneCurrentMonthRecordNum(senderId)
+		if s.checkSentNum(senderId, num, isCenter) {
+			addrs = append(addrs, t)
 		} else {
-			num := s.NotificationRecordDao.GetTenantPhoneCurrentMonthRecordNum(senderId)
-			if s.checkSentNum(senderId, num, isCenter) {
-				nt = append(nt, t)
-			} else {
-				logger.Logger().Infof("too many records have been sent, send refused, sender=%s \n", senderId)
-			}
+			logger.Logger().Infof("too many records have been sent, send refused, sender=%s \n", senderId)
 		}
 	}
-	targetList = nt
+	return addrs
 }
 
-func (s *MessageService) SendMsg(msgList []interface{}, isCenter bool) error {
+func (s *MessageService) SendAlarmNotice(msgList []interface{}) error {
 	if !config.GetCommonConfig().HasNoticeModel {
 		logger.Logger().Info("There is no message center for this env")
 		return nil
@@ -63,57 +72,61 @@ func (s *MessageService) SendMsg(msgList []interface{}, isCenter bool) error {
 	if msgList == nil || len(msgList) <= 0 {
 		return nil
 	}
+
 	var recordList []commonModels.NotificationRecord
-
+	var sendMsgList []messageCenter.MessageSendDTO
+	//统计短信数量
 	var smsSender []string
-	for _, o := range msgList {
-		m := o.(*AlertMsgSendDTO)
-		msg := m.Msg
-		//TODO 确认切片引用
-		s.TargetFilter(msg.Target, msg.SenderId, isCenter)
-
+	for _, alertMsg := range msgList {
+		am := alertMsg.(*AlertMsgSendDTO)
+		for _, msg := range am.Msgs {
+			newTargets := s.TargetFilter(msg.Targets, msg.Type, am.SenderId, false)
+			sendMsgList = append(sendMsgList, messageCenter.MessageSendDTO{
+				SenderId:   am.SenderId,
+				Type:       msg.Type,
+				SourceType: am.SourceType,
+				Targets:    newTargets,
+				Content:    msg.Content,
+			})
+			if msg.Type == messageCenter.Phone {
+				smsSender = append(smsSender, msg.Targets...)
+			}
+			for _, addr := range newTargets {
+				recordList = append(recordList, commonModels.NotificationRecord{
+					SenderId:         am.SenderId,
+					SourceId:         am.AlertId,
+					SourceType:       int(am.SourceType),
+					TargetAddress:    addr,
+					NotificationType: int(msg.Type),
+					Result:           1,
+				})
+			}
+		}
 		//send msg
-		if err := s.MCS.Send(msg); err != nil {
+		if err := s.MCS.SendBatch(sendMsgList); err != nil {
 			logger.Logger().Errorf("message send error, %v\n\n", err)
 			return err
 		}
+		//save record local
+		s.NotificationRecordDao.InsertBatch(global.DB, recordList)
 
-		for _, t := range msg.Target {
-			recordList = append(recordList, commonModels.NotificationRecord{
-				SenderId:         msg.SenderId,
-				SourceId:         m.AlertId,
-				SourceType:       int(msg.SourceType),
-				TargetAddress:    t.Addr,
-				NotificationType: int(t.Type),
-				Result:           1,
-			})
-			if t.Type == messageCenter.Phone {
-				smsSender = append(smsSender, msg.SenderId)
-			}
-		}
-	}
-	//save record local
-	s.NotificationRecordDao.InsertBatch(global.DB, recordList)
-
-	//	sync record to center
-	if !isCenter {
+		//	sync record to center
 		_ = sysRocketMq.SendRocketMqMsg(sysRocketMq.RocketMqMsg{
 			Topic:   sysRocketMq.NotificationSyncTopic,
 			Content: tools.ToString(recordList),
 		})
+		// 发送短信余量不足提醒
+		if len(smsSender) > 0 {
+			smsSender = tools.RemoveDuplicateElement(smsSender)
+			//通过MQ异步解耦
+			_ = sysRocketMq.SendRocketMqMsg(sysRocketMq.RocketMqMsg{
+				Topic:   sysRocketMq.SmsMarginReminderTopic,
+				Content: tools.ToString(smsSender),
+			})
+		}
 	}
 
-	// 发送短信余量不足提醒
-	if len(smsSender) > 0 {
-		smsSender = tools.RemoveDuplicateElement(smsSender)
-		//通过MQ异步解耦
-		_ = sysRocketMq.SendRocketMqMsg(sysRocketMq.RocketMqMsg{
-			Topic:   sysRocketMq.SmsMarginReminderTopic,
-			Content: tools.ToString(smsSender),
-		})
-	}
 	return nil
-
 }
 
 // SmsMarginReminder 短信余量提醒
@@ -139,11 +152,9 @@ func (s *MessageService) SmsMarginReminder(sender string) {
 	params["msgInitial"] = strconv.Itoa(constants.MaxSmsNum)
 
 	remainderMsg := messageCenter.MessageSendDTO{
-		SenderId: sender,
-		Target: []messageCenter.MessageTargetDTO{{
-			Addr: serialNumber,
-			Type: messageCenter.Phone,
-		}},
+		SenderId:   sender,
+		Type:       messageCenter.Phone,
+		Targets:    []string{serialNumber},
 		SourceType: messageCenter.SMS_LACK,
 		Content:    tools.ToString(params),
 	}
