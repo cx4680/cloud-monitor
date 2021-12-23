@@ -220,14 +220,14 @@ func (dao *AlarmRuleDao) saveAlarmRuleResGroup(tx *gorm.DB, ruleReqDTO *forms.Al
 			CalcMode:        info.CalcMode,
 			TenantId:        ruleReqDTO.TenantId,
 		}
-		dao.saveResource(tx, ruleReqDTO.TenantId, info)
+		dao.saveResource(tx, ruleReqDTO.TenantId, info,ruleReqDTO.ProductType)
 		tx.Create(&groups)
 		tx.Create(&groupRelList)
 	}
 }
 
 // saveResource 保存资源 、资源与组的关系
-func (dao *AlarmRuleDao) saveResource(tx *gorm.DB, tenantID string, info *forms.ResGroupInfo) {
+func (dao *AlarmRuleDao) saveResource(tx *gorm.DB, tenantID string, info *forms.ResGroupInfo,productType string) {
 	resSize := len(info.ResourceList)
 	if resSize == 0 {
 		return
@@ -235,7 +235,7 @@ func (dao *AlarmRuleDao) saveResource(tx *gorm.DB, tenantID string, info *forms.
 	resourceList := make([]*models.AlarmInstance, resSize)
 	resourceRelList := make([]*models.ResourceResourceGroupRel, resSize)
 	for index, resInfo := range info.ResourceList {
-		resourceList[index] = dao.buildResource(resInfo, tenantID)
+		resourceList[index] = dao.buildResource(resInfo, tenantID,productType)
 		resourceRelList[index] = &models.ResourceResourceGroupRel{
 			ResourceGroupId: info.ResGroupId,
 			ResourceId:      resInfo.InstanceId,
@@ -260,7 +260,7 @@ func (dao *AlarmRuleDao) saveAlarmRuleResource(tx *gorm.DB, ruleReqDTO *forms.Al
 			ResourceId:  info.InstanceId,
 			TenantId:    ruleReqDTO.TenantId,
 		}
-		resourceList[index] = dao.buildResource(info, ruleReqDTO.TenantId)
+		resourceList[index] = dao.buildResource(info, ruleReqDTO.TenantId,ruleReqDTO.ProductType)
 	}
 	tx.Clauses(clause.OnConflict{DoNothing: false}).Create(&resourceList)
 	tx.Create(&resourceRelList)
@@ -285,7 +285,7 @@ func (dao *AlarmRuleDao) saveAlarmHandler(tx *gorm.DB, ruleReqDTO *forms.AlarmRu
 	tx.Create(&handlers)
 }
 
-func (dao *AlarmRuleDao) buildResource(info *forms.InstanceInfo, tenantId string) *models.AlarmInstance {
+func (dao *AlarmRuleDao) buildResource(info *forms.InstanceInfo, tenantId string,productType string) *models.AlarmInstance {
 	return &models.AlarmInstance{
 		Ip:           info.Ip,
 		InstanceID:   info.InstanceId,
@@ -295,6 +295,7 @@ func (dao *AlarmRuleDao) buildResource(info *forms.InstanceInfo, tenantId string
 		RegionName:   info.RegionName,
 		InstanceName: info.InstanceName,
 		TenantID:     tenantId,
+		ProductType:   productType,
 	}
 }
 
