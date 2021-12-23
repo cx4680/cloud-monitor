@@ -11,6 +11,7 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/external"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/mq/producer"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/service"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
 	"github.com/pkg/errors"
 )
 
@@ -51,6 +52,7 @@ func Run(productType string) error {
 		for _, tenantId := range *tenantIds {
 			dbInstanceList := dao.AlarmInstance.SelectInstanceList(tenantId, productType)
 			remoteInstanceList, err := getRemoteProductInstanceList(productType)
+			logger.Logger().Infof(" sync list ,db: %+v,remote:%+v", dbInstanceList, remoteInstanceList)
 			if err != nil {
 				continue
 			}
@@ -119,6 +121,7 @@ func deleteNotExistsInstances(tenantId string, dbInstanceList []*models.AlarmIns
 			deletedList = append(deletedList, oldInstance)
 		}
 	}
+	logger.Logger().Infof(" delete list :%+v", deletedList)
 	if len(deletedList) != 0 {
 		dao.AlarmInstance.DeleteInstanceList(tenantId, deletedList)
 		instance := &dtos.Instance{
@@ -133,13 +136,8 @@ func deleteNotExistsInstances(tenantId string, dbInstanceList []*models.AlarmIns
 func IsEqual(A, B interface{}) bool {
 	if _, ok := A.(*models.AlarmInstance); ok {
 		if _, ok := B.(*models.AlarmInstance); ok {
-			if A.(*models.AlarmInstance).InstanceID == B.(*models.AlarmInstance).InstanceID {
-				return A.(*models.AlarmInstance).InstanceName == B.(*models.AlarmInstance).InstanceName
-			} else {
-				return false
-			}
+			return A.(*models.AlarmInstance).InstanceID == B.(*models.AlarmInstance).InstanceID
 		}
-		return false
 	}
 	return false
 }
