@@ -12,6 +12,7 @@ type AlarmInstance struct {
 	ZoneName     string    `gorm:"column:zone_name"`
 	InstanceName string    `gorm:"column:instance_name"`
 	TenantID     string    `gorm:"column:tenant_id"` // 租户id
+	ProductType  string    `gorm:"column:product_type"`
 }
 
 func (*AlarmInstance) TableName() string {
