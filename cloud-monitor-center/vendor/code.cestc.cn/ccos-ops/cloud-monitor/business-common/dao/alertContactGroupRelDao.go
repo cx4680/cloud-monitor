@@ -14,9 +14,9 @@ const (
 	checkAlertContact = "SELECT " +
 		"ac.id AS contact_id, " +
 		"ac.name AS contact_name, " +
-		"acg.group_id AS group_id, " +
-		"acg.group_name AS group_name, " +
-		"acg.group_count AS group_count " +
+		"ANY_VALUE( acg.group_id ) AS group_id, " +
+		"ANY_VALUE( acg.group_name ) AS group_name, " +
+		"ANY_VALUE( acg.group_count ) AS group_count " +
 		"FROM " +
 		"alert_contact AS ac " +
 		"LEFT JOIN alert_contact_information AS aci ON ac.id = aci.contact_id AND ac.tenant_id = aci.tenant_id " +
@@ -24,7 +24,7 @@ const (
 		"( " +
 		"SELECT " +
 		"acgr.contact_id AS contact_id, " +
-		"acgr.tenant_id AS tenant_id, " +
+		"ANY_VALUE( acgr.tenant_id ) AS tenant_id, " +
 		"GROUP_CONCAT( acg.id ) AS group_id, " +
 		"GROUP_CONCAT( acg.name ) AS group_name, " +
 		"COUNT( acgr.contact_id ) AS group_count  " +

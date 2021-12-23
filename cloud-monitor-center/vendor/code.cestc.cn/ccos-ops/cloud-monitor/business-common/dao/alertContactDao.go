@@ -18,8 +18,8 @@ const (
 	SelectAlterContact = "SELECT " +
 		"ac.id AS contact_id, " +
 		"ac.name AS contact_name, " +
-		"acg.group_id AS group_id, " +
-		"acg.group_name AS group_name, " +
+		"ANY_VALUE( acg.group_id ) AS group_id, " +
+		"ANY_VALUE( acg.group_name ) AS group_name, " +
 		"GROUP_CONCAT( CASE aci.type WHEN 1 THEN aci.NO END ) AS phone, " +
 		"GROUP_CONCAT( CASE aci.type WHEN 1 THEN aci.is_certify END ) AS phone_certify, " +
 		"GROUP_CONCAT( CASE aci.type WHEN 2 THEN aci.NO END ) AS email, " +
@@ -27,7 +27,7 @@ const (
 		"GROUP_CONCAT( CASE aci.type WHEN 3 THEN aci.NO END ) AS lanxin, " +
 		"GROUP_CONCAT( CASE aci.type WHEN 3 THEN aci.is_certify END ) AS lanxin_certify, " +
 		"ac.description AS description, " +
-		"acg.group_count AS group_count " +
+		"ANY_VALUE( acg.group_count ) AS group_count " +
 		"FROM " +
 		"alert_contact AS ac " +
 		"LEFT JOIN alert_contact_information AS aci ON ac.id = aci.contact_id AND ac.tenant_id = aci.tenant_id " +
@@ -35,7 +35,7 @@ const (
 		"( " +
 		"SELECT " +
 		"acgr.contact_id AS contact_id, " +
-		"acgr.tenant_id AS tenant_id, " +
+		"ANY_VALUE( acgr.tenant_id ) AS tenant_id, " +
 		"GROUP_CONCAT( acg.id ) AS group_id, " +
 		"GROUP_CONCAT( acg.name ) AS group_name, " +
 		"COUNT( acgr.contact_id ) AS group_count " +
@@ -60,18 +60,18 @@ func (d *AlertContactDao) Select(db *gorm.DB, param forms.AlertContactParam) *fo
 	var model = &[]forms.AlertContactForm{}
 	var sql string
 	if tools.IsNotBlank(param.ContactName) {
-		sql += " AND ac.name LIKE CONCAT('%','"+param.ContactName+"','%') "
+		sql += " AND ac.name LIKE CONCAT('%','" + param.ContactName + "','%') "
 	}
 	if tools.IsNotBlank(param.Phone) {
-		sql += " AND ac.id = ANY(SELECT contact_id FROM alert_contact_information WHERE type = 1 AND no LIKE CONCAT('%','"+param.Phone+"','%')) "
+		sql += " AND ac.id = ANY(SELECT contact_id FROM alert_contact_information WHERE type = 1 AND no LIKE CONCAT('%','" + param.Phone + "','%')) "
 	}
 	if tools.IsNotBlank(param.Email) {
-		sql += " AND ac.id = ANY(SELECT contact_id FROM alert_contact_information WHERE type = 2 AND no LIKE CONCAT('%','"+param.Email+"','%')) "
+		sql += " AND ac.id = ANY(SELECT contact_id FROM alert_contact_information WHERE type = 2 AND no LIKE CONCAT('%','" + param.Email + "','%')) "
 	}
 	sql = fmt.Sprintf(SelectAlterContact, param.TenantId, sql)
 	var total int64
-	db.Model(&models.AlertContact{}).Where("tenant_id = ?", param.TenantId).Count(&total)
-	sql += "LIMIT " + strconv.Itoa((param.PageCurrent - 1) * param.PageSize) + "," + strconv.Itoa(param.PageSize)
+	db.Raw("select count(1) from ( " + sql + ") t ").Scan(&total)
+	sql += "LIMIT " + strconv.Itoa((param.PageCurrent-1)*param.PageSize) + "," + strconv.Itoa(param.PageSize)
 	db.Raw(sql).Find(model)
 	var alertContactFormPage = &forms.AlertContactFormPage{
 		Records: model,
