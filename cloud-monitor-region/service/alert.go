@@ -81,7 +81,7 @@ func (s *AlertRecordAddService) Add(f forms.InnerAlertRecordAddForm) error {
 			continue
 		}
 		if t == handlerType.Sms || t == handlerType.Email {
-			if err := s.MessageSvc.SendMsg(p, false); err != nil {
+			if err := s.MessageSvc.SendAlarmNotice(p); err != nil {
 				logger.Logger().Error("send alarm message fail,", err)
 			}
 		} else if t == handlerType.Http {
@@ -134,7 +134,7 @@ func (s *AlertRecordAddService) checkAndBuild(alerts []*forms.AlertRecordAlertsB
 			logger.Logger().Info("告警数据为空, ", tools.ToString(alert))
 			continue
 		}
-		labelMap := s.getLabelMap(tools.ToString(alert.Annotations.Summary))
+		labelMap := s.getLabelMap(alert.Annotations.Summary)
 
 		record := s.buildAlertRecord(alert, ruleDesc, contactGroups, labelMap)
 		if record == nil {
@@ -237,8 +237,6 @@ func (s *AlertRecordAddService) buildNoticeData(alert *forms.AlertRecordAlertsBe
 		source = messageCenter.ALERT_CANCEL
 	}
 
-	targetList := s.buildTargets(ht, contactGroups)
-
 	instanceInfo := s.getInstanceInfo(ruleDesc.ResourceId, alert.Annotations.Summary)
 
 	objMap := make(map[string]string)
@@ -254,7 +252,7 @@ func (s *AlertRecordAddService) buildNoticeData(alert *forms.AlertRecordAlertsBe
 	cv := fmt.Sprintf("%.2f", f)
 	objMap["currentValue"] = cv + ruleDesc.Unit
 
-	val := strconv.FormatFloat(ruleDesc.TargetValue, 'E', -1, 64)
+	val := strconv.FormatFloat(ruleDesc.TargetValue, 'f', 2, 64)
 
 	if handlerType.Email == ht {
 		objMap["instanceAmount"] = "1"
@@ -284,14 +282,36 @@ func (s *AlertRecordAddService) buildNoticeData(alert *forms.AlertRecordAlertsBe
 		}
 	}
 
+	var msgList []service.AlertMsgDTO
+
+	//TODO
+	if ht == handlerType.Sms {
+		for _, group := range contactGroups {
+			for _, contact := range group.Contacts {
+				msgList = append(msgList, service.AlertMsgDTO{
+					Type:    messageCenter.Phone,
+					Targets: s.buildPhoneTargets(contact),
+					Content: tools.ToString(objMap),
+				})
+			}
+		}
+	} else if ht == handlerType.Email {
+		for _, group := range contactGroups {
+			for _, contact := range group.Contacts {
+				msgList = append(msgList, service.AlertMsgDTO{
+					Type:    messageCenter.Email,
+					Targets: s.buildMailTargets(contact),
+					Content: tools.ToString(objMap),
+				})
+			}
+		}
+	}
+
 	return &service.AlertMsgSendDTO{
-		AlertId: record.Id,
-		Msg: messageCenter.MessageSendDTO{
-			SenderId:   ruleDesc.TenantId,
-			Target:     targetList,
-			SourceType: source,
-			Content:    tools.ToString(objMap),
-		},
+		AlertId:    record.Id,
+		SenderId:   ruleDesc.TenantId,
+		SourceType: source,
+		Msgs:       msgList,
 	}
 }
 
@@ -324,50 +344,24 @@ func (s *AlertRecordAddService) getInstanceInfo(resourceId, summary string) stri
 	return builder.String()
 }
 
-func (s *AlertRecordAddService) buildTargets(channel int, contactGroups []*commonDtos.ContactGroupInfo) []messageCenter.MessageTargetDTO {
-	var targetList []messageCenter.MessageTargetDTO
-
-	for _, group := range contactGroups {
-		for _, contact := range group.Contacts {
-			if 1 == channel {
-				if mailTargetList := s.buildMailTargets(contact); mailTargetList != nil {
-					targetList = append(targetList, mailTargetList...)
-				}
-			} else if 2 == channel {
-				if phoneTargetList := s.buildPhoneTargets(contact); phoneTargetList != nil {
-					targetList = append(targetList, phoneTargetList...)
-				}
-			}
-
-		}
-	}
-	return targetList
-}
-
-func (s *AlertRecordAddService) buildMailTargets(contact commonDtos.UserContactInfo) []messageCenter.MessageTargetDTO {
+func (s *AlertRecordAddService) buildMailTargets(contact commonDtos.UserContactInfo) []string {
 	if tools.IsBlank(contact.Mail) {
 		return nil
 	}
-	var list []messageCenter.MessageTargetDTO
+	var list []string
 	for _, m := range strings.Split(contact.Mail, ",") {
-		list = append(list, messageCenter.MessageTargetDTO{
-			Addr: m,
-			Type: messageCenter.Email,
-		})
+		list = append(list, m)
 	}
 	return list
 }
 
-func (s *AlertRecordAddService) buildPhoneTargets(contact commonDtos.UserContactInfo) []messageCenter.MessageTargetDTO {
+func (s *AlertRecordAddService) buildPhoneTargets(contact commonDtos.UserContactInfo) []string {
 	if tools.IsBlank(contact.Phone) {
 		return nil
 	}
-	var list []messageCenter.MessageTargetDTO
+	var list []string
 	for _, m := range strings.Split(contact.Phone, ",") {
-		list = append(list, messageCenter.MessageTargetDTO{
-			Addr: m,
-			Type: messageCenter.Phone,
-		})
+		list = append(list, m)
 	}
 	return list
 }

@@ -39,9 +39,9 @@ common:
   env: local
   nk: http://aopesb.dev001.intranet.cecloudcs.com/cestc
   tenantUrl: ''
-  smsCenterPath: ''
+  smsCenterPath: http://aopesb.dev001.intranet.cecloudcs.com/cestc?appId=600006&format=json&method=CESTC_UNHQ_saveMessageOperate
   hawkeyeCenterPath: ''
-  hasNoticeModel: false
+  hasNoticeModel: true
   regionName: 'local'
   ecs-inner-gateway: http://ecs-gateway.inner.dev001.intranet.cecloudcs.com
 

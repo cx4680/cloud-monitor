@@ -32,21 +32,23 @@ func (s *Service) buildReq(msgList []MessageSendDTO) (req *SmsMessageReqDTO) {
 		return nil
 	}
 	var list []MessagesBean
+	//获取消息模板
+	eventCode := AlarmNoticeTemplateMap[GetTemplateMapKey(msgList[0].Type, msgList[0].SourceType)]
 	for _, msg := range msgList {
-		if msg.Target == nil || len(msg.Target) <= 0 {
+		if msg.Targets == nil || len(msg.Targets) <= 0 {
 			logger.Logger().Infof("send msg target is empty, %s\n", tools.ToString(msg))
 			continue
 		}
-		var recvList []RecvObjectBean
-		for _, t := range msg.Target {
-			recvList = append(recvList, RecvObjectBean{
-				RecvObjectType: t.Type,
-				RecvObject:     t.Addr,
+		var recvList = make([]RecvObjectBean, len(msg.Targets))
+		for i, addr := range msg.Targets {
+			recvList[i] = RecvObjectBean{
+				RecvObjectType: msg.Type,
+				RecvObject:     addr,
 				NoticeContent:  msg.Content,
-			})
+			}
 		}
 		list = append(list, MessagesBean{
-			MsgEventCode:   msg.MsgEventCode,
+			MsgEventCode:   eventCode,
 			RecvObjectList: recvList,
 		})
 
