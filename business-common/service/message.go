@@ -67,7 +67,7 @@ func (s *MessageService) SendMsg(msgList []interface{}, isCenter bool) error {
 
 	var smsSender []string
 	for _, o := range msgList {
-		m := o.(AlertMsgSendDTO)
+		m := o.(*AlertMsgSendDTO)
 		msg := m.Msg
 		//TODO 确认切片引用
 		s.TargetFilter(msg.Target, msg.SenderId, isCenter)
@@ -257,7 +257,7 @@ func (s *MessageService) getUserCurrentMonthSmsUsedNum(tenantId string) int {
 	return respObj.Module
 }
 
-func(s *MessageService) GetTenantCurrentMonthSmsUsedNum(tenantId string) (int, error) {
+func (s *MessageService) GetTenantCurrentMonthSmsUsedNum(tenantId string) (int, error) {
 	if tenantId == "" {
 		return 0, errors.NewBusinessError("租户不能为空")
 	}

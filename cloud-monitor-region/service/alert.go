@@ -134,7 +134,7 @@ func (s *AlertRecordAddService) checkAndBuild(alerts []*forms.AlertRecordAlertsB
 			logger.Logger().Info("告警数据为空, ", tools.ToString(alert))
 			continue
 		}
-		labelMap := s.getLabelMap(alertAnnotationStr)
+		labelMap := s.getLabelMap(tools.ToString(alert.Annotations.Summary))
 
 		record := s.buildAlertRecord(alert, ruleDesc, contactGroups, labelMap)
 		if record == nil {
@@ -176,9 +176,9 @@ func (s *AlertRecordAddService) buildAlertRecord(alert *forms.AlertRecordAlertsB
 	now := tools.GetNow()
 	startTime := tools.TimeParseForZone(alert.StartsAt)
 	//持续时间，单位秒
-	duration := now.Second() - startTime.Second()
+	sub := now.Sub(startTime)
 
-	val := strconv.FormatFloat(ruleDesc.TargetValue, 'E', -1, 64)
+	val := strconv.FormatFloat(ruleDesc.TargetValue, 'f', 2, 64)
 
 	sourceId := ruleDesc.ResourceId
 	if tools.IsBlank(sourceId) {
@@ -200,7 +200,7 @@ func (s *AlertRecordAddService) buildAlertRecord(alert *forms.AlertRecordAlertsB
 		EndTime:      tools.TimeToStr(tools.TimeParseForZone(alert.EndsAt), tools.FullTimeFmt),
 		TargetValue:  val,
 		Expression:   ruleDesc.Express,
-		Duration:     strconv.Itoa(duration),
+		Duration:     strconv.FormatFloat(sub.Seconds(), 'f', 0, 64),
 		Level:        ruleDesc.Level,
 		AlarmKey:     ruleDesc.MetricName,
 		Region:       config.GetCommonConfig().RegionName,
