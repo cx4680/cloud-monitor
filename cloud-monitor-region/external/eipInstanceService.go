@@ -16,7 +16,7 @@ type EipQueryPageRequest struct {
 	PageSize  int         `json:"pageSize,omitempty"`
 	Data      interface{} `json:"data,omitempty"`
 	//临时传递
-	TenantId string
+	UserCode string `json:"userCode,omitempty"`
 }
 
 type EipQueryParam struct {
@@ -79,13 +79,12 @@ func (eip *EipInstanceService) ConvertRealForm(form service.InstancePageForm) in
 		PageIndex: form.Current,
 		PageSize:  form.PageSize,
 		Data:      queryParam,
-		TenantId:  form.TenantId,
+		UserCode:  form.TenantId,
 	}
 }
 
 func (eip *EipInstanceService) DoRequest(url string, form interface{}) (interface{}, error) {
-	var f = form.(EipQueryPageRequest)
-	respStr, err := tools.HttpPostJson(url, form, map[string]string{"userCode": f.TenantId})
+	respStr, err := tools.HttpPostJson(url, form, nil)
 	if err != nil {
 		return nil, err
 	}
