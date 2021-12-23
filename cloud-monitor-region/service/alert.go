@@ -68,6 +68,7 @@ func (s *AlertRecordAddService) Add(f forms.InnerAlertRecordAddForm) error {
 		return nil
 	}
 	list, handlerMap := s.checkAndBuild(f.Alerts)
+	logger.Logger().Info("alarm data:", tools.ToString(list), " || ", tools.ToString(handlerMap))
 	//持久化
 	if list != nil && len(list) > 0 {
 		if err := s.AlertRecordSvc.Persistence(s.AlertRecordSvc, sysRocketMq.RecordTopic, list); err != nil {
@@ -155,8 +156,7 @@ func (s *AlertRecordAddService) checkAndBuild(alerts []*forms.AlertRecordAlertsB
 			}
 			var data interface{}
 			switch handler.HandleType {
-			case handlerType.Email:
-			case handlerType.Sms:
+			case handlerType.Email, handlerType.Sms:
 				data = s.buildNoticeData(alert, record, ruleDesc, contactGroups, handler.HandleType)
 			case handlerType.Http:
 				data = s.buildAutoScalingData(alert, ruleDesc, handler.HandleParams)
