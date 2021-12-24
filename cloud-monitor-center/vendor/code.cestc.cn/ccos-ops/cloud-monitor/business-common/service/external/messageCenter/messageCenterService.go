@@ -33,7 +33,7 @@ func (s *Service) buildReq(msgList []MessageSendDTO) (req *SmsMessageReqDTO) {
 	}
 	var list []MessagesBean
 	//获取消息模板
-	eventCode := AlarmNoticeTemplateMap[GetTemplateMapKey(msgList[0].Type, msgList[0].SourceType)]
+	eventCode := NoticeTemplateMap[GetTemplateMapKey(msgList[0].Type, msgList[0].SourceType)]
 	for _, msg := range msgList {
 		if msg.Targets == nil || len(msg.Targets) <= 0 {
 			logger.Logger().Infof("send msg target is empty, %s\n", tools.ToString(msg))

@@ -25,13 +25,15 @@ func GetTemplateMapKey(rt ReceiveType, ms MsgSource) string {
 	return strconv.Itoa(int(rt)) + "-" + strconv.Itoa(int(ms))
 }
 
-// AlarmNoticeTemplateMap 告警处置通知模板配置
-var AlarmNoticeTemplateMap = map[string]string{
+// NoticeTemplateMap 告警处置通知模板配置
+var NoticeTemplateMap = map[string]string{
 	GetTemplateMapKey(Phone, ALERT_OPEN):   SingleResourceThresholdAlarmReminder,
 	GetTemplateMapKey(Email, ALERT_OPEN):   SingleResourceThresholdAlarmReminderMail,
 	GetTemplateMapKey(Phone, ALERT_CANCEL): SingleResourceRecoveryReminder,
 	GetTemplateMapKey(Email, ALERT_CANCEL): SingleResourceRecoveryReminderMail,
-	//TODO 联系人相关
+	GetTemplateMapKey(Phone, VERIFY):       AddAlarmContact,
+	GetTemplateMapKey(Email, VERIFY):       AddAlarmContactMail,
+	GetTemplateMapKey(Phone, SMS_LACK):     CloudMonitorAlarmSmsLack,
 }
 
 type MsgSource int
