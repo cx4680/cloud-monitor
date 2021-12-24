@@ -63,10 +63,10 @@ func (d *AlertContactDao) Select(db *gorm.DB, param forms.AlertContactParam) *fo
 		sql += " AND ac.name LIKE CONCAT('%','" + param.ContactName + "','%') "
 	}
 	if tools.IsNotBlank(param.Phone) {
-		sql += " AND ac.id = ANY(SELECT contact_id FROM alert_contact_information WHERE type = 1 AND no LIKE CONCAT('%','" + param.Phone + "','%')) "
+		sql += " AND ac.id = ANY(SELECT contact_id FROM alert_contact_information WHERE type = 1 AND is_certify = 1 AND no LIKE CONCAT('%','" + param.Phone + "','%')) "
 	}
 	if tools.IsNotBlank(param.Email) {
-		sql += " AND ac.id = ANY(SELECT contact_id FROM alert_contact_information WHERE type = 2 AND no LIKE CONCAT('%','" + param.Email + "','%')) "
+		sql += " AND ac.id = ANY(SELECT contact_id FROM alert_contact_information WHERE type = 2 AND is_certify = 1 AND no LIKE CONCAT('%','" + param.Email + "','%')) "
 	}
 	sql = fmt.Sprintf(SelectAlterContact, param.TenantId, sql)
 	var total int64
