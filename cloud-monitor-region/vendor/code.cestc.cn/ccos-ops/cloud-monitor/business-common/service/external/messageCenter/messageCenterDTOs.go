@@ -27,9 +27,9 @@ func GetTemplateMapKey(rt ReceiveType, ms MsgSource) string {
 
 // AlarmNoticeTemplateMap 告警处置通知模板配置
 var AlarmNoticeTemplateMap = map[string]string{
-	GetTemplateMapKey(Phone, ALERT_OPEN):     SingleResourceThresholdAlarmReminder,
+	GetTemplateMapKey(Phone, ALERT_OPEN):   SingleResourceThresholdAlarmReminder,
 	GetTemplateMapKey(Email, ALERT_OPEN):   SingleResourceThresholdAlarmReminderMail,
-	GetTemplateMapKey(Phone, ALERT_CANCEL):   SingleResourceRecoveryReminder,
+	GetTemplateMapKey(Phone, ALERT_CANCEL): SingleResourceRecoveryReminder,
 	GetTemplateMapKey(Email, ALERT_CANCEL): SingleResourceRecoveryReminderMail,
 	//TODO 联系人相关
 }

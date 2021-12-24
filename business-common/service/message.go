@@ -93,12 +93,14 @@ func (s *MessageService) SendAlarmNotice(msgList []interface{}) error {
 			}
 			for _, addr := range newTargets {
 				recordList = append(recordList, commonModels.NotificationRecord{
+					Id:               strconv.FormatInt(snowflake.GetWorker().NextId(), 10),
 					SenderId:         am.SenderId,
 					SourceId:         am.AlertId,
 					SourceType:       int(am.SourceType),
 					TargetAddress:    addr,
 					NotificationType: int(msg.Type),
 					Result:           1,
+					CreateTime:       tools.GetNowStr(),
 				})
 			}
 		}
