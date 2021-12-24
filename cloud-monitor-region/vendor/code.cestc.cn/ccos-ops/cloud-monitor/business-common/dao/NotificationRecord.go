@@ -18,14 +18,6 @@ var NotificationRecord = new(NotificationRecordDao)
 
 func (dao *NotificationRecordDao) InsertBatch(db *gorm.DB, recordList []models.NotificationRecord) {
 	if len(recordList) > 0 {
-		for _, record := range recordList {
-			if tools.IsBlank(record.Id) {
-				record.Id = strconv.FormatInt(snowflake.GetWorker().NextId(), 10)
-			}
-			if tools.IsBlank(record.CreateTime) {
-				record.CreateTime = tools.GetNowStr()
-			}
-		}
 		db.Create(&recordList)
 	}
 }

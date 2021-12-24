@@ -212,6 +212,11 @@ func (c *Client) GetBrokerDataList(nameServerAddress string) (*TopicRouteData, e
 	}
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 	response, err = c.InvokeSync(ctx, nameServerAddress, cmd)
+	if err != nil {
+		rlog.Error("get broker list error", map[string]interface{}{
+			rlog.LogKeyBroker: err,
+		})
+	}
 	switch response.Code {
 	case int16(0):
 		if response.Body == nil {
