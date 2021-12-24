@@ -118,22 +118,20 @@ func sendCertifyMsg(tenantId string, contactId string, no string, noType int, ac
 	params["userName"] = service.NewTenantService().GetTenantInfo(tenantId).Name
 	params["verifyBtn"] = config.GetCommonConfig().CertifyInformationUrl + activeCode
 	params["activationdomain"] = config.GetCommonConfig().CertifyInformationUrl + activeCode
-	var messageSendDTO = messageCenter.MessageSendDTO{
-		SourceType:   messageCenter.VERIFY,
-		SenderId:     tenantId,
-		Content:      tools.ToString(params),
-		MsgEventCode: messageCenter.AddAlarmContactMail,
-	}
+
+	var t messageCenter.ReceiveType
 	if noType == 1 {
-		messageSendDTO.Target = []messageCenter.MessageTargetDTO{{
-			Addr: no,
-			Type: messageCenter.Phone,
-		}}
+		t = messageCenter.Phone
 	} else {
-		messageSendDTO.Target = []messageCenter.MessageTargetDTO{{
-			Addr: no,
-			Type: messageCenter.Email,
-		}}
+		t = messageCenter.Email
+	}
+
+	messageSendDTO := messageCenter.MessageSendDTO{
+		SenderId:   tenantId,
+		Type:       t,
+		SourceType: messageCenter.VERIFY,
+		Targets:    []string{no},
+		Content:    tools.ToString(params),
 	}
 	err := messageCenter.NewService().Send(messageSendDTO)
 	if err != nil {
