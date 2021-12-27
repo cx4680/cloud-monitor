@@ -9,6 +9,7 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/vo"
 	"fmt"
 	"gorm.io/gorm"
+	"strings"
 )
 
 type AlertRecordDao struct {
@@ -37,7 +38,7 @@ func (a *AlertRecordDao) GetPageList(db *gorm.DB, tenantId string, f forms.Alert
 
 	if tools.IsNotBlank(f.Level) {
 		c.WriteString(" and level in (?) ")
-		cv = append(cv, f.Level)
+		cv = append(cv, strings.Split(f.Level, ","))
 	}
 	if tools.IsNotBlank(f.Region) {
 		c.WriteString(" and region=? ")

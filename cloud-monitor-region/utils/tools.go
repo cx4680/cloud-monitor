@@ -33,22 +33,22 @@ func GetDateDiff(diff int) string {
 	builder := strings.Builder{}
 
 	if day > 0 {
-		builder.WriteString(string(day))
+		builder.WriteString(strconv.Itoa(day))
 		builder.WriteString("天")
 	}
 
 	if hour > 0 {
-		builder.WriteString(string(hour))
+		builder.WriteString(strconv.Itoa(hour))
 		builder.WriteString("小时")
 	}
 
 	if min > 0 {
-		builder.WriteString(string(min))
+		builder.WriteString(strconv.Itoa(min))
 		builder.WriteString("分钟")
 	}
 
 	if sec > 0 {
-		builder.WriteString(string(sec))
+		builder.WriteString(strconv.Itoa(sec))
 		builder.WriteString("秒")
 	}
 	str := builder.String()
