@@ -21,11 +21,12 @@ type EipQueryPageRequest struct {
 
 type EipQueryParam struct {
 	IpAddress    string `json:"ipAddress,omitempty"`
-	Status       int    `json:"status,omitempty"`
+	Status       []int  `json:"status,omitempty"`
 	InstanceType int    `json:"instanceType,omitempty"`
 	Uid          string `json:"uid,omitempty"`
+	InstanceUid  string `json:"instanceUid,omitempty"`
 	RegionCode   string `json:"regionCode,omitempty"`
-	StatusList   []int  `json:"statusList,omitempty"`
+	UserCode     string `json:"userCode,omitempty"`
 }
 
 type EipResponse struct {
@@ -68,11 +69,12 @@ type EipInfoBean struct {
 
 func (eip *EipInstanceService) ConvertRealForm(form service.InstancePageForm) interface{} {
 	queryParam := EipQueryParam{
-		IpAddress: form.ExtraAttr["ip"],
-		Uid:       form.InstanceId,
+		IpAddress:   form.ExtraAttr["ip"],
+		InstanceUid: form.InstanceId,
+		UserCode:    form.TenantId,
 	}
 	if tools.IsNotBlank(form.StatusList) {
-		queryParam.StatusList = toIntList(form.StatusList)
+		queryParam.Status = toIntList(form.StatusList)
 	}
 
 	return EipQueryPageRequest{
