@@ -7,16 +7,16 @@ import (
 )
 
 type Config struct {
-	App        string       `yaml:"app"`
-	Serve      Serve        `yaml:"serve"`
-	DB         DB           `yaml:"db"`
-	Logger     LogConfig    `yaml:"logger"`
-	HttpConfig HttpConfig   `yaml:"http"`
-	Rocketmq   Rocketmq     `yaml:"rocketmq"`
-	Prometheus Prometheus   `yaml:"prometheus"`
-	Common     CommonConfig `yaml:"common"`
-	Redis      RedisConfig  `yaml:"redis"`
-	Iam        IamConfig    `yaml:"iam"`
+	app        string       `yaml:"app"`
+	serve      Serve        `yaml:"serve"`
+	db         DB           `yaml:"db"`
+	logger     LogConfig    `yaml:"logger"`
+	httpConfig HttpConfig   `yaml:"http"`
+	rocketmq   Rocketmq     `yaml:"rocketmq"`
+	prometheus Prometheus   `yaml:"prometheus"`
+	common     CommonConfig `yaml:"common"`
+	redis      RedisConfig  `yaml:"redis"`
+	iam        IamConfig    `yaml:"iam"`
 }
 
 type CommonConfig struct {
@@ -26,7 +26,8 @@ type CommonConfig struct {
 	SmsCenterPath         string `yaml:"smsCenterPath"`
 	CertifyInformationUrl string `yaml:"certifyInformationUrl"`
 	HawkeyeCenterPath     string `yaml:"hawkeyeCenterPath"`
-	HasNoticeModel        bool   `yaml:"hasNoticeModel"`
+	MsgIsOpen             string `yaml:"msgIsOpen"`
+	MsgChannel            string `yaml:"msgChannel"`
 	RegionName            string `yaml:"regionName"`
 	EcsInnerGateway       string `yaml:"ecs-inner-gateway"`
 }
@@ -89,27 +90,28 @@ var cfg = defaultAuthSdkConfig()
 
 func defaultAuthSdkConfig() Config {
 	return Config{
-		HttpConfig: HttpConfig{
+		httpConfig: HttpConfig{
 			ConnectionTimeOut: 3,
 			ReadTimeOut:       3,
 			WriteTimeOut:      3,
 		},
-		Logger: LogConfig{
+		logger: LogConfig{
 			DataLogPrefix: "../logs/",
 			//TODO group
 			Group: "cloud-monitor-region",
 		},
-		Rocketmq: Rocketmq{
+		rocketmq: Rocketmq{
 			NameServer: "127.0.0.1:9876",
 		},
-		Common: CommonConfig{
+		common: CommonConfig{
 			Env:                   "local",
 			Nk:                    "",
 			TenantUrl:             "",
 			SmsCenterPath:         "",
 			CertifyInformationUrl: "",
 			HawkeyeCenterPath:     "",
-			HasNoticeModel:        false,
+			MsgIsOpen:             MsgOpen,
+			MsgChannel:            MsgChannelEmail,
 			RegionName:            "local",
 			EcsInnerGateway:       "",
 		},
@@ -121,46 +123,39 @@ func InitConfig(file string) error {
 	if err != nil {
 		return err
 	}
-
-	err = yaml.Unmarshal(data, &cfg)
-	if err != nil {
-		return err
-	}
-	//TODO Read from envs
-
-	return nil
+	return yaml.Unmarshal(data, &cfg)
 }
 
 func GetCommonConfig() CommonConfig {
-	return cfg.Common
+	return cfg.common
 }
 func GetServeConfig() Serve {
-	return cfg.Serve
+	return cfg.serve
 }
 func GetDbConfig() DB {
-	return cfg.DB
+	return cfg.db
 }
 func GetLogConfig() LogConfig {
-	return cfg.Logger
+	return cfg.logger
 }
 
 func GetRedisConfig() RedisConfig {
-	return cfg.Redis
+	return cfg.redis
 }
 
 //TODO 写在tools中
 func GetHttpConfig() HttpConfig {
-	return cfg.HttpConfig
+	return cfg.httpConfig
 }
 
 func GetRocketmqConfig() Rocketmq {
-	return cfg.Rocketmq
+	return cfg.rocketmq
 }
 
 func GetPrometheusConfig() Prometheus {
-	return cfg.Prometheus
+	return cfg.prometheus
 }
 
 func GetIamConfig() IamConfig {
-	return cfg.Iam
+	return cfg.iam
 }

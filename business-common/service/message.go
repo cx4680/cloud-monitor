@@ -65,7 +65,7 @@ func (s *MessageService) TargetFilter(targetList []string, rt messageCenter.Rece
 }
 
 func (s *MessageService) SendAlarmNotice(msgList []interface{}) error {
-	if !config.GetCommonConfig().HasNoticeModel {
+	if config.MsgOpen != config.GetCommonConfig().MsgIsOpen {
 		logger.Logger().Info("There is no message center for this env")
 		return nil
 	}
@@ -127,8 +127,28 @@ func (s *MessageService) SendAlarmNotice(msgList []interface{}) error {
 			})
 		}
 	}
-
 	return nil
+}
+
+// SendCertifyMsg 发送激活信息
+func (s *MessageService) SendCertifyMsg(msg messageCenter.MessageSendDTO, contactId string) {
+	//send msg
+	ret := 1
+	if err := s.MCS.Send(msg); err != nil {
+		logger.Logger().Errorf("message send error, %v\n\n", err)
+		ret = 0
+	}
+	record := commonModels.NotificationRecord{
+		Id:               strconv.FormatInt(snowflake.GetWorker().NextId(), 10),
+		SenderId:         msg.SenderId,
+		SourceId:         contactId,
+		SourceType:       int(messageCenter.VERIFY),
+		TargetAddress:    msg.Targets[0],
+		NotificationType: int(msg.Type),
+		Result:           ret,
+		CreateTime:       tools.GetNowStr(),
+	}
+	s.NotificationRecordDao.Insert(global.DB, record)
 }
 
 // SmsMarginReminder 短信余量提醒
