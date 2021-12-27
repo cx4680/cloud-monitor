@@ -7,16 +7,16 @@ import (
 )
 
 type Config struct {
-	app        string       `yaml:"app"`
-	serve      Serve        `yaml:"serve"`
-	db         DB           `yaml:"db"`
-	logger     LogConfig    `yaml:"logger"`
-	httpConfig HttpConfig   `yaml:"http"`
-	rocketmq   Rocketmq     `yaml:"rocketmq"`
-	prometheus Prometheus   `yaml:"prometheus"`
-	common     CommonConfig `yaml:"common"`
-	redis      RedisConfig  `yaml:"redis"`
-	iam        IamConfig    `yaml:"iam"`
+	App        string       `yaml:"app"`
+	Serve      Serve        `yaml:"serve"`
+	Db         DB           `yaml:"db"`
+	Logger     LogConfig    `yaml:"logger"`
+	HttpConfig HttpConfig   `yaml:"http"`
+	Rocketmq   Rocketmq     `yaml:"rocketmq"`
+	Prometheus Prometheus   `yaml:"prometheus"`
+	Common     CommonConfig `yaml:"common"`
+	Redis      RedisConfig  `yaml:"redis"`
+	Iam        IamConfig    `yaml:"iam"`
 }
 
 type CommonConfig struct {
@@ -90,28 +90,28 @@ var cfg = defaultAuthSdkConfig()
 
 func defaultAuthSdkConfig() Config {
 	return Config{
-		httpConfig: HttpConfig{
+		HttpConfig: HttpConfig{
 			ConnectionTimeOut: 3,
 			ReadTimeOut:       3,
 			WriteTimeOut:      3,
 		},
-		logger: LogConfig{
+		Logger: LogConfig{
 			DataLogPrefix: "../logs/",
 			//TODO group
 			Group: "cloud-monitor-region",
 		},
-		rocketmq: Rocketmq{
+		Rocketmq: Rocketmq{
 			NameServer: "127.0.0.1:9876",
 		},
-		common: CommonConfig{
+		Common: CommonConfig{
 			Env:                   "local",
 			Nk:                    "",
 			TenantUrl:             "",
 			SmsCenterPath:         "",
 			CertifyInformationUrl: "",
 			HawkeyeCenterPath:     "",
-			MsgIsOpen: MsgOpen,
-			MsgChannel: MsgChannelEmail,
+			MsgIsOpen:             MsgOpen,
+			MsgChannel:            MsgChannelEmail,
 			RegionName:            "local",
 			EcsInnerGateway:       "",
 		},
@@ -127,35 +127,35 @@ func InitConfig(file string) error {
 }
 
 func GetCommonConfig() CommonConfig {
-	return cfg.common
+	return cfg.Common
 }
 func GetServeConfig() Serve {
-	return cfg.serve
+	return cfg.Serve
 }
 func GetDbConfig() DB {
-	return cfg.db
+	return cfg.Db
 }
 func GetLogConfig() LogConfig {
-	return cfg.logger
+	return cfg.Logger
 }
 
 func GetRedisConfig() RedisConfig {
-	return cfg.redis
+	return cfg.Redis
 }
 
 //TODO 写在tools中
 func GetHttpConfig() HttpConfig {
-	return cfg.httpConfig
+	return cfg.HttpConfig
 }
 
 func GetRocketmqConfig() Rocketmq {
-	return cfg.rocketmq
+	return cfg.Rocketmq
 }
 
 func GetPrometheusConfig() Prometheus {
-	return cfg.prometheus
+	return cfg.Prometheus
 }
 
 func GetIamConfig() IamConfig {
-	return cfg.iam
+	return cfg.Iam
 }

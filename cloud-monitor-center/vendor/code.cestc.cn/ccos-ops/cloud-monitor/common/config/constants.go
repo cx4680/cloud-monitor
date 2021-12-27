@@ -2,7 +2,7 @@ package config
 
 //消息中心是否开启配置常量
 const (
-	MsgOpen = "open"
+	MsgOpen  = "open"
 	MsgClose = "close"
 )
 
