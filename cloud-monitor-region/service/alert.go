@@ -176,7 +176,7 @@ func (s *AlertRecordAddService) checkAndBuild(alerts []*forms.AlertRecordAlertsB
 func (s *AlertRecordAddService) getDurationTime(now, startTime time.Time) string {
 	//持续时间，单位秒
 	sub := now.Sub(startTime)
-	return sub.String()
+	return utils.GetDateDiff(int(sub.Round(time.Second).Seconds()))
 }
 
 func (s *AlertRecordAddService) buildAlertRecord(alert *forms.AlertRecordAlertsBean, ruleDesc *commonDtos.RuleDesc, contactGroups []*commonDtos.ContactGroupInfo, labelMap map[string]string) *commonModels.AlertRecord {
@@ -261,11 +261,11 @@ func (s *AlertRecordAddService) buildNoticeData(alert *forms.AlertRecordAlertsBe
 
 	if handlerType.Email == ht {
 		objMap["instanceAmount"] = "1"
-		objMap["period"] = utils.GetDateDiff(ruleDesc.Time)
+		objMap["period"] = utils.GetDateDiff(ruleDesc.Period * 1000)
 		objMap["times"] = "持续" + strconv.Itoa(ruleDesc.Time) + "个周期"
 		objMap["time"] = utils.GetDateDiff(ruleDesc.Period * 1000)
-		objMap["calType"] = ruleDesc.Statistic
-		objMap["expression"] = ruleDesc.ComparisonOperator
+		objMap["calType"] = commonDao.GetAlarmStatisticsText(ruleDesc.Statistic)
+		objMap["expression"] = commonDao.GetComparisonOperator(ruleDesc.ComparisonOperator)
 		if source == messageCenter.ALERT_CANCEL {
 			targetValue := ""
 			if tools.IsNotBlank(ruleDesc.Unit) {

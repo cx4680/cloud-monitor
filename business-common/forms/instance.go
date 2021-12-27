@@ -7,12 +7,13 @@ type InstanceRulePageReqParam struct {
 }
 
 type InstanceRuleDTO struct {
-	Id          string `json:"id"`
-	Name        string `json:"name"`
-	ProductType string `json:"productType"`
-	MonitorType string `json:"monitorType"`
-	MonitorItem string `json:"monitorItem" gorm:"column:monitorItem"`
-	Condition   string `json:"condition" gorm:"column:ruleCondition"`
+	Id            string         `json:"id"`
+	Name          string         `json:"name"`
+	ProductType   string         `json:"productType"`
+	MonitorType   string         `json:"monitorType"`
+	MonitorItem   string         `json:"monitorItem" gorm:"column:monitorItem"`
+	Condition     string         `json:"condition"`
+	RuleCondition *RuleCondition `json:"-" gorm:"column:ruleCondition"`
 }
 
 type InstanceInfo struct {
@@ -40,13 +41,13 @@ type ProductRuleParam struct {
 }
 
 type ProductRuleListDTO struct {
-	BindRuleList   []InstanceRuleDTO `json:"bindRuleList"`
-	UnbindRuleList []InstanceRuleDTO `json:"unbindRuleList"`
+	BindRuleList   []*InstanceRuleDTO `json:"bindRuleList"`
+	UnbindRuleList []*InstanceRuleDTO `json:"unbindRuleList"`
 	TenantId       string
 }
 
 type UnBindRuleParam struct {
 	InstanceId string `json:"instanceId" binding:"required"`
-	RulId      string `json:"rulId" binding:"required"`
+	RuleId     string `json:"ruleId" binding:"required"`
 	TenantId   string
 }

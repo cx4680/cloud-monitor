@@ -77,7 +77,7 @@ func (dao *AlarmRuleDao) SelectRulePageList(param *forms.AlarmPageReqParam) *vo.
 	selectList.WriteString("select * from ( SELECT    count(DISTINCT(t2.resource_id)) AS instanceNum,    t1.NAME  as name,    t1.monitor_type,    t1.product_type,    t1.metric_name,    t1.trigger_condition,    t1.enabled AS 'status',    t1.id AS ruleId,    t1.create_time  FROM    t_alarm_rule t1  LEFT JOIN t_alarm_rule_resource_rel t2 ON t2.alarm_rule_id = t1.id  WHERE    t1.tenant_id = ?  AND t1.deleted = 0  AND t1.source_type = 1  ")
 	if len(param.Status) != 0 {
 		selectList.WriteString(" and t1.enabled = ?")
-		sqlParam = append(sqlParam, param.Status)
+		sqlParam = append(sqlParam, getAlarmStatusTextInt(param.Status))
 	}
 	if len(param.RuleName) != 0 {
 		selectList.WriteString(" and t1.name like concat('%',?,'%')")
@@ -365,7 +365,7 @@ var alarmStatisticsText = map[string]string{
 	Average: "平均值",
 }
 
-func getAlarmStatisticsText(s string) string {
+func GetAlarmStatisticsText(s string) string {
 	return alarmStatisticsText[s]
 }
 
@@ -378,12 +378,12 @@ var comparisonOperatorText = map[string]string{
 	NotEqual:       "!=",
 }
 
-func getComparisonOperator(s string) string {
+func GetComparisonOperator(s string) string {
 	return comparisonOperatorText[s]
 }
 
 func GetExpress(form *forms.RuleCondition) string {
-	return fmt.Sprintf("%s%s%s%s%s 统计周期%s分钟 持续%s个周期", form.MonitorItemName, getAlarmStatisticsText(form.Statistics), getComparisonOperator(form.ComparisonOperator), strconv.FormatFloat(form.Threshold, 'g', 5, 32), form.Unit, strconv.Itoa(form.Period/60), strconv.Itoa(form.Times))
+	return fmt.Sprintf("%s%s%s%s%s 统计周期%s分钟 持续%s个周期", form.MonitorItemName, GetAlarmStatisticsText(form.Statistics), GetComparisonOperator(form.ComparisonOperator), fmt.Sprintf("%.f", form.Threshold), form.Unit, strconv.Itoa(form.Period/60), strconv.Itoa(form.Times))
 }
 
 var ResourceScopeInt = map[int]string{
