@@ -79,7 +79,7 @@ func getRemoteProductInstanceList(productType string) ([]*models.AlarmInstance, 
 	stage := is.(commonService.InstanceStage)
 	var instances []*models.AlarmInstance
 	for current <= totalPage {
-		page, err := is.GetPage(commonService.InstancePageForm{Current: current, PageSize: size}, stage)
+		page, err := is.GetPage(commonService.InstancePageForm{Current: current, PageSize: size, Product: productType}, stage)
 		if err != nil {
 			return nil, err
 		}

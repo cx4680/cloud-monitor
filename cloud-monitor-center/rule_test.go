@@ -4,42 +4,35 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/dao"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/enums/handlerType"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/forms"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/models"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/tools"
 	"fmt"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 	"gorm.io/gorm/logger"
 	"testing"
 )
 
 func TestDD(t *testing.T) {
-	/*	db, err := gorm.Open(mysql.Open("root:123456@(127.0.0.1:3306)/hawkeye?charset=utf8mb4&parseTime=True&loc=Local"), &gorm.Config{Logger: logger.Default.LogMode(logger.Info)})
-		if err != nil {
-			panic("failed to connect database")
-		}*/
-	/*
-		rule := AlarmRule{
-			ID:          "29",
-			Resources:[]*AlarmInstance{{
-				InstanceID:   "2",
-				InstanceName: "ecs-1",
-					}},
-			ResourceGroups:[]*ResourceGroup{{
-				Id:   "1",
-				Name: "RES-GROUP-1",
-				ResourceList:[]*AlarmInstance{{
-					InstanceID:   "5",
-					InstanceName: "ecs-5",
-				}},
-			}},
-			RuleHandler: []*AlarmHandler{{
-				Id: "8",
-				HandleType:4,
-				HandleParams: "3",
-			}},
-		}
+	db, err := gorm.Open(mysql.Open("root:123456@(127.0.0.1:3306)/hawkeye?charset=utf8mb4&parseTime=True&loc=Local"), &gorm.Config{Logger: logger.Default.LogMode(logger.Info)})
+	if err != nil {
+		panic("failed to connect database")
+	}
 
-		db.Create(&rule)*/
+	rule := []*models.AlarmInstance{{
+		InstanceID:   "2",
+		InstanceName: "ecs-1",
+		RegionName: "A",
+	},
+		{
+			InstanceID:   "2",
+			InstanceName: "ecs-3",
+			RegionName: "B",
+		},
+	}
+
+	db.Clauses(clause.OnConflict{DoNothing: false}).Create(&rule)
 }
 
 func TestRuleAdd(t *testing.T) {

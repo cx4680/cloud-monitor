@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type filter func(*forms.AlertRecordAlertsBean) (bool, error)
@@ -172,11 +173,15 @@ func (s *AlertRecordAddService) checkAndBuild(alerts []*forms.AlertRecordAlertsB
 	return list, handlerMap
 }
 
+func (s *AlertRecordAddService) getDurationTime(now, startTime time.Time) string {
+	//持续时间，单位秒
+	sub := now.Sub(startTime)
+	return sub.String()
+}
+
 func (s *AlertRecordAddService) buildAlertRecord(alert *forms.AlertRecordAlertsBean, ruleDesc *commonDtos.RuleDesc, contactGroups []*commonDtos.ContactGroupInfo, labelMap map[string]string) *commonModels.AlertRecord {
 	now := tools.GetNow()
 	startTime := tools.TimeParseForZone(alert.StartsAt)
-	//持续时间，单位秒
-	sub := now.Sub(startTime)
 
 	val := strconv.FormatFloat(ruleDesc.TargetValue, 'f', 2, 64)
 
@@ -200,7 +205,7 @@ func (s *AlertRecordAddService) buildAlertRecord(alert *forms.AlertRecordAlertsB
 		EndTime:      tools.TimeToStr(tools.TimeParseForZone(alert.EndsAt), tools.FullTimeFmt),
 		TargetValue:  val,
 		Expression:   ruleDesc.Express,
-		Duration:     strconv.FormatFloat(sub.Seconds(), 'f', 0, 64),
+		Duration:     s.getDurationTime(now, startTime),
 		Level:        ruleDesc.Level,
 		AlarmKey:     ruleDesc.MetricName,
 		Region:       config.GetCommonConfig().RegionName,
