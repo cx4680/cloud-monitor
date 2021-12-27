@@ -6,6 +6,7 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/sysComponent/sysRocketMq"
 	commonService "code.cestc.cn/ccos-ops/cloud-monitor/business-common/service"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/service/external/messageCenter"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/tools"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/service"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/validator/translate"
@@ -21,7 +22,8 @@ func NewAlertContactCtl(service service.AlertContactService) *AlertContactCtl {
 	return &AlertContactCtl{service}
 }
 
-var alertContactService = service.NewAlertContactService(service.NewAlertContactGroupService(service.NewAlertContactGroupRelService()), service.NewAlertContactInformationService(), service.NewAlertContactGroupRelService())
+var alertContactService = service.NewAlertContactService(service.NewAlertContactGroupService(service.NewAlertContactGroupRelService()),
+	service.NewAlertContactInformationService(commonService.NewMessageService(messageCenter.NewService())), service.NewAlertContactGroupRelService())
 
 func (acl *AlertContactCtl) GetAlertContact(c *gin.Context) {
 	var param forms.AlertContactParam

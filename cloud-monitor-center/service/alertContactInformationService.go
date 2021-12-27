@@ -11,7 +11,6 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/service/external/messageCenter"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/tools"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
-	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/utils/snowflake"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -21,12 +20,14 @@ import (
 
 type AlertContactInformationService struct {
 	service.AbstractSyncServiceImpl
-	dao *dao.AlertContactInformationDao
+	messageSvc *service.MessageService
+	dao        *dao.AlertContactInformationDao
 }
 
-func NewAlertContactInformationService() *AlertContactInformationService {
+func NewAlertContactInformationService(messageSvc *service.MessageService) *AlertContactInformationService {
 	return &AlertContactInformationService{
 		AbstractSyncServiceImpl: service.AbstractSyncServiceImpl{},
+		messageSvc:              messageSvc,
 		dao:                     dao.AlertContactInformation,
 	}
 }
@@ -38,7 +39,7 @@ func (s *AlertContactInformationService) PersistenceLocal(db *gorm.DB, param int
 	case enums.InsertAlertContact:
 		list := s.insertAlertContactInformation(db, p)
 		for _, information := range list {
-			sendCertifyMsg(information.TenantId, information.ContactId, information.No, information.Type, information.ActiveCode)
+			s.sendCertifyMsg(information.TenantId, information.No, information.Type, information.ActiveCode, information.ContactId)
 		}
 		return tools.ToString(forms.MqMsg{
 			EventEum: enums.InsertAlertContactInformation,
@@ -47,7 +48,7 @@ func (s *AlertContactInformationService) PersistenceLocal(db *gorm.DB, param int
 	case enums.UpdateAlertContact:
 		list := s.updateAlertContactInformation(db, p)
 		for _, information := range list {
-			sendCertifyMsg(information.TenantId, information.ContactId, information.No, information.Type, information.ActiveCode)
+			s.sendCertifyMsg(information.TenantId, information.No, information.Type, information.ActiveCode, information.ContactId)
 		}
 		return tools.ToString(forms.MqMsg{
 			EventEum: enums.UpdateAlertContactInformation,
@@ -67,7 +68,7 @@ func (s *AlertContactInformationService) PersistenceLocal(db *gorm.DB, param int
 }
 
 func (s *AlertContactInformationService) getActiveCode() (string, int) {
-	if !config.GetCommonConfig().HasNoticeModel {
+	if config.GetCommonConfig().MsgIsOpen != config.MsgOpen {
 		return "", 1
 	}
 	return strings.ReplaceAll(uuid.New().String(), "-", ""), 0
@@ -110,7 +111,7 @@ func (s *AlertContactInformationService) getInformationList(p forms.AlertContact
 }
 
 //发送激活信息
-func sendCertifyMsg(tenantId string, contactId string, no string, noType int, activeCode string) {
+func (s *AlertContactInformationService) sendCertifyMsg(tenantId string, no string, noType int, activeCode string, contactId string) {
 	if no == "" {
 		return
 	}
@@ -125,18 +126,14 @@ func sendCertifyMsg(tenantId string, contactId string, no string, noType int, ac
 	} else {
 		t = messageCenter.Email
 	}
-
-	messageSendDTO := messageCenter.MessageSendDTO{
+	s.messageSvc.SendCertifyMsg(messageCenter.MessageSendDTO{
 		SenderId:   tenantId,
 		Type:       t,
 		SourceType: messageCenter.VERIFY,
 		Targets:    []string{no},
 		Content:    tools.ToString(params),
-	}
-	err := messageCenter.NewService().Send(messageSendDTO)
-	if err != nil {
-		logger.Logger().Error(err)
-	}
+	}, contactId)
+
 }
 
 func (s *AlertContactInformationService) buildInformation(p forms.AlertContactParam, no string, noType int) *models.AlertContactInformation {
