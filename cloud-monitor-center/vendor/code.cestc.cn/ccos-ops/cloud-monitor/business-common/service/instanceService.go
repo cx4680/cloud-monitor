@@ -5,6 +5,7 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/tools"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/vo"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
 	"github.com/pkg/errors"
 )
 
@@ -23,7 +24,7 @@ type InstancePageForm struct {
 	TenantId     string            `form:"tenantId"`
 	InstanceId   string            `form:"instanceId"`
 	InstanceName string            `form:"instanceName"`
-	StatusList   string          `form:"statusList"`
+	StatusList   string            `form:"statusList"`
 	Current      int               `form:"current,default=1"`
 	PageSize     int               `form:"pageSize,default=10"`
 	Product      string            `form:"product"`
@@ -51,12 +52,12 @@ func (is *InstanceServiceImpl) GetPage(form InstancePageForm, stage InstanceStag
 	if err != nil {
 		return nil, err
 	}
-
+	logger.Logger().Infof(" request  %+v ,%s", form, url)
 	resp, err := stage.DoRequest(url, f)
 	if err != nil {
 		return nil, err
 	}
-
+	logger.Logger().Infof(" resp:%+v", resp)
 	total, list := stage.ConvertResp(resp)
 	return &vo.PageVO{
 		Records: list,

@@ -49,12 +49,14 @@ func (mpd *AlarmInstanceDao) DeleteInstanceList(tenantId string, models []*model
 	if len(models) == 0 {
 		return
 	}
-	sql := "DELETE FROM t_alarm_instance WHERE tenant_id = %s and instance_id IN ('%s')"
-	var arr []string
+	sql := "DELETE FROM t_alarm_instance WHERE tenant_id = ? and instance_id IN (?)"
+	var ids []string
 	for _, v := range models {
-		arr = append(arr, v.InstanceID)
+		ids = append(ids, v.InstanceID)
 	}
-	sql1 := strings.Join(arr, "','")
 	var i int
-	global.DB.Raw(fmt.Sprintf(sql, tenantId, sql1)).Find(&i)
+	db := global.DB
+	db.Raw(sql, tenantId, ids).Find(&i)
+	deleteRel := "delete FROM t_alarm_rule_resource_rel where tenant_id= ? and resource_id in (?)"
+	db.Raw(deleteRel, tenantId, ids).Find(&i)
 }

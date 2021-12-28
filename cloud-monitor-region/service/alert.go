@@ -104,7 +104,6 @@ func (s *AlertRecordAddService) Add(f forms.InnerAlertRecordAddForm) error {
 
 func (s *AlertRecordAddService) checkAndBuild(alerts []*forms.AlertRecordAlertsBean) ([]commonModels.AlertRecord, map[int][]interface{}) {
 	var list []commonModels.AlertRecord
-
 	handlerMap := map[int][]interface{}{}
 
 	for _, alert := range alerts {
@@ -137,7 +136,7 @@ func (s *AlertRecordAddService) checkAndBuild(alerts []*forms.AlertRecordAlertsB
 		}
 		labelMap := s.getLabelMap(alert.Annotations.Summary)
 
-		record := s.buildAlertRecord(alert, ruleDesc, contactGroups, labelMap)
+		record := s.buildAlertRecord(alert, ruleDesc, contactGroups, labelMap["currentValue"])
 		if record == nil {
 			continue
 		}
@@ -173,13 +172,26 @@ func (s *AlertRecordAddService) checkAndBuild(alerts []*forms.AlertRecordAlertsB
 	return list, handlerMap
 }
 
-func (s *AlertRecordAddService) getDurationTime(now, startTime time.Time) string {
+func (s *AlertRecordAddService) getDurationTime(now, startTime time.Time, period int) string {
 	//持续时间，单位秒
 	sub := now.Sub(startTime)
-	return utils.GetDateDiff(int(sub.Round(time.Second).Seconds()))
+	return utils.GetDateDiff(int(sub.Round(time.Second).Milliseconds()) + period*1000)
 }
 
-func (s *AlertRecordAddService) buildAlertRecord(alert *forms.AlertRecordAlertsBean, ruleDesc *commonDtos.RuleDesc, contactGroups []*commonDtos.ContactGroupInfo, labelMap map[string]string) *commonModels.AlertRecord {
+//截取联系人字符串，防止联系人太多导致数据保存失败
+func sub(list []*commonDtos.ContactGroupInfo, num int) string {
+	str := tools.ToString(list)
+	if num > 5 {
+		logger.Logger().Info("contact str too long, set it empty")
+		return ""
+	}
+	if len(str) > 1000 {
+		return sub(list[0:len(list)/2], num+1)
+	}
+	return str
+}
+
+func (s *AlertRecordAddService) buildAlertRecord(alert *forms.AlertRecordAlertsBean, ruleDesc *commonDtos.RuleDesc, contactGroups []*commonDtos.ContactGroupInfo, cv string) *commonModels.AlertRecord {
 	now := tools.GetNow()
 	startTime := tools.TimeParseForZone(alert.StartsAt)
 
@@ -189,6 +201,7 @@ func (s *AlertRecordAddService) buildAlertRecord(alert *forms.AlertRecordAlertsB
 	if tools.IsBlank(sourceId) {
 		sourceId = ruleDesc.ResourceGroupId
 	}
+	contactStr := sub(contactGroups, 1)
 
 	return &commonModels.AlertRecord{
 		Id:           strconv.FormatInt(snowflake.GetWorker().NextId(), 10),
@@ -200,17 +213,17 @@ func (s *AlertRecordAddService) buildAlertRecord(alert *forms.AlertRecordAlertsB
 		SourceType:   ruleDesc.Product,
 		SourceId:     sourceId,
 		Summary:      alert.Annotations.Summary,
-		CurrentValue: labelMap["currentValue"],
+		CurrentValue: cv,
 		StartTime:    tools.TimeToStr(startTime, tools.FullTimeFmt),
 		EndTime:      tools.TimeToStr(tools.TimeParseForZone(alert.EndsAt), tools.FullTimeFmt),
 		TargetValue:  val,
 		Expression:   ruleDesc.Express,
-		Duration:     s.getDurationTime(now, startTime),
+		Duration:     s.getDurationTime(now, startTime, ruleDesc.Period),
 		Level:        ruleDesc.Level,
 		AlarmKey:     ruleDesc.MetricName,
 		Region:       config.GetCommonConfig().RegionName,
 		NoticeStatus: "success",
-		ContactInfo:  tools.ToString(contactGroups),
+		ContactInfo:  contactStr,
 		CreateTime:   tools.TimeToStr(now, tools.FullTimeFmt),
 		UpdateTime:   tools.TimeToStr(now, tools.FullTimeFmt),
 	}
@@ -242,7 +255,8 @@ func (s *AlertRecordAddService) buildNoticeData(alert *forms.AlertRecordAlertsBe
 		source = messageCenter.ALERT_CANCEL
 	}
 
-	instanceInfo := s.getInstanceInfo(ruleDesc.ResourceId, alert.Annotations.Summary)
+	instanceInfo := s.getInstanceInfo(ruleDesc.ResourceId)
+	logger.Logger().Info("instanceId=", ruleDesc.ResourceId, ", get instanceInfo=", tools.ToString(instanceInfo))
 
 	objMap := make(map[string]string)
 	objMap["duration"] = record.Duration
@@ -320,33 +334,22 @@ func (s *AlertRecordAddService) buildNoticeData(alert *forms.AlertRecordAlertsBe
 	}
 }
 
-func (s *AlertRecordAddService) getInstanceInfo(resourceId, summary string) string {
-	var builder strings.Builder
-
-	labelMap := s.getLabelMap(summary)
-	instance := &commonModels.AlarmInstance{}
-	if tools.IsNotBlank(resourceId) {
-		instance = s.AlertRecordDao.FindFirstInstanceInfo(resourceId)
+func (s *AlertRecordAddService) getInstanceInfo(resourceId string) string {
+	if tools.IsBlank(resourceId) {
+		return ""
 	}
-
+	instance := s.AlertRecordDao.FindFirstInstanceInfo(resourceId)
+	if instance == nil {
+		return ""
+	}
+	var ss []string
 	if tools.IsNotBlank(instance.InstanceName) {
-		builder.WriteString(instance.InstanceName)
-		builder.WriteString("/")
+		ss = append(ss, instance.InstanceName)
 	}
 	if tools.IsNotBlank(instance.Ip) {
-		builder.WriteString(instance.Ip)
+		ss = append(ss, instance.Ip)
 	}
-
-	delete(labelMap, "instance")
-	delete(labelMap, "name")
-	delete(labelMap, "currentValue")
-
-	for _, value := range labelMap {
-		builder.WriteString("/")
-		builder.WriteString(value)
-	}
-
-	return builder.String()
+	return strings.Join(ss, "/")
 }
 
 func (s *AlertRecordAddService) buildMailTargets(contact commonDtos.UserContactInfo) []string {

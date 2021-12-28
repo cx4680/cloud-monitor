@@ -51,7 +51,7 @@ func Run(productType string) error {
 		tenantIds := tenantPage.Records.(*[]string)
 		for _, tenantId := range *tenantIds {
 			dbInstanceList := dao.AlarmInstance.SelectInstanceList(tenantId, productType)
-			remoteInstanceList, err := getRemoteProductInstanceList(productType)
+			remoteInstanceList, err := GetRemoteProductInstanceList(productType, tenantId)
 			logger.Logger().Infof(" sync list ,db: %+v,remote:%+v", dbInstanceList, remoteInstanceList)
 			if err != nil {
 				logger.Logger().Error("查询出错", err)
@@ -65,7 +65,7 @@ func Run(productType string) error {
 
 }
 
-func getRemoteProductInstanceList(productType string) ([]*models.AlarmInstance, error) {
+func GetRemoteProductInstanceList(productType string, tenantId string) ([]*models.AlarmInstance, error) {
 	var is = external.ProductInstanceServiceMap[productType]
 	if is == nil {
 		return nil, errors.New("未配置instanceService")
@@ -79,14 +79,14 @@ func getRemoteProductInstanceList(productType string) ([]*models.AlarmInstance, 
 	stage := is.(commonService.InstanceStage)
 	var instances []*models.AlarmInstance
 	for current <= totalPage {
-		page, err := is.GetPage(commonService.InstancePageForm{Current: current, PageSize: size, Product: productType}, stage)
+		page, err := is.GetPage(commonService.InstancePageForm{Current: current, PageSize: size, Product: productType, TenantId: tenantId}, stage)
 		if err != nil {
 			return nil, err
 		}
 		if page.Total <= 0 {
 			break
 		}
-		totalPage = page.Total
+		totalPage = page.Pages
 		vos := page.Records.([]commonService.InstanceCommonVO)
 		for _, vo := range vos {
 			instances = append(instances, &models.AlarmInstance{InstanceID: vo.InstanceId, InstanceName: vo.InstanceName})

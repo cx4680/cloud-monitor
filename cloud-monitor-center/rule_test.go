@@ -23,12 +23,12 @@ func TestDD(t *testing.T) {
 	rule := []*models.AlarmInstance{{
 		InstanceID:   "2",
 		InstanceName: "ecs-1",
-		RegionName: "A",
+		RegionName:   "A",
 	},
 		{
 			InstanceID:   "2",
 			InstanceName: "ecs-3",
-			RegionName: "B",
+			RegionName:   "B",
 		},
 	}
 
@@ -94,4 +94,14 @@ func TestRuleUpdate(t *testing.T) {
 	dto.Id = "920729272954388480"
 	dto.TenantId = "1"
 	dao.AlarmRule.UpdateRule(db, dto)
+}
+
+func TestDeleteInstances(t *testing.T) {
+	db, err := gorm.Open(mysql.Open("root:123456@(127.0.0.1:3306)/hawkeye?charset=utf8mb4&parseTime=True&loc=Local"), &gorm.Config{Logger: logger.Default.LogMode(logger.Info)})
+	if err != nil {
+		panic("failed to connect database")
+	}
+	var i int
+	db.Raw("delete FROM t_alarm_rule_resource_rel where tenant_id= ? and resource_id in (?)", "xx", []string{"1", "2", "3"}).Find(&i)
+
 }
