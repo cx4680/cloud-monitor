@@ -10,6 +10,7 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/docs"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/inner"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/service"
+	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/task"
 	"github.com/gin-gonic/gin"
 	gs "github.com/swaggo/gin-swagger"
 	"github.com/swaggo/gin-swagger/swaggerFiles"
@@ -23,6 +24,7 @@ func loadRouters() {
 	MonitorReportForm()
 	innerCtl()
 	actuatorMapping()
+	remote()
 }
 
 func MonitorReportForm() {
@@ -83,4 +85,11 @@ func actuatorMapping() {
 			c.JSON(http.StatusOK, actuator.Metrics())
 		})
 	}
+}
+
+func remote() {
+	router.GET("/inner/remote/:productType", func(context *gin.Context) {
+		productType := context.Param("productType")
+		task.Run(productType)
+	})
 }

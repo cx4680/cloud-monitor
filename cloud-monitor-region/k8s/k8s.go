@@ -66,7 +66,7 @@ func InitK8s() error {
 func DeleteAlertRule(alertRuleId string) error {
 	err := client.Resource(*resource).Namespace(namespace).Delete(context.TODO(), alertRuleId, metav1.DeleteOptions{})
 	if err != nil {
-		logger.Logger().Errorf("调用api删除规则失败")
+		logger.Logger().Error("调用api删除规则失败", err)
 		return errors.NewBusinessErrorCode(errors.DeleteError, "调用api删除规则失败")
 	}
 	return nil
@@ -118,7 +118,7 @@ func ApplyAlertRule(alertRuleDTO *forms.AlertRuleDTO) error {
 		logger.Logger().Errorf("调用api更新规则失败%v", err2)
 		return errors.NewBusinessErrorCode(errors.ApplyFail, "调用api更新规则失败")
 	}
-	_, err := client.Resource(*resource).Namespace(namespace).Patch(context.TODO(), alertRuleDTO.TenantId, types.ApplyPatchType, requestObj, metav1.ApplyOptions{FieldManager: "application/apply-patch"}.ToPatchOptions())
+	_, err := client.Resource(*resource).Namespace(namespace).Patch(context.TODO(), alertRuleDTO.TenantId, types.ApplyPatchType, requestObj, metav1.ApplyOptions{FieldManager: "application/apply-patch", Force: true}.ToPatchOptions())
 	if err != nil {
 		return err
 	}
@@ -128,6 +128,7 @@ func ApplyAlertRule(alertRuleDTO *forms.AlertRuleDTO) error {
 func ApplyAlertManagerConfig(cfg AlertManagerConfig) error {
 	var buf bytes.Buffer
 	var err error
+	logger.Logger().Infof("alertmanagercfg : %+v", cfg)
 	templates, err := template.ParseFiles("template/alertManagerConfig.tpl")
 	if err != nil {
 		logger.Logger().Errorf(err.Error())
@@ -141,7 +142,7 @@ func ApplyAlertManagerConfig(cfg AlertManagerConfig) error {
 	_, err = client.Resource(*alertManagerResource).
 		Namespace(namespace).
 		Patch(context.TODO(), cfg.Name, types.ApplyPatchType,
-			[]byte(buf.String()), metav1.ApplyOptions{FieldManager: "application/apply-patch"}.ToPatchOptions())
+			[]byte(buf.String()), metav1.ApplyOptions{FieldManager: "application/apply-patch", Force: true}.ToPatchOptions())
 	if err != nil {
 		logger.Logger().Errorf(err.Error())
 		return err
@@ -152,7 +153,7 @@ func ApplyAlertManagerConfig(cfg AlertManagerConfig) error {
 func DeleteAlertManagerConfig(configName string) error {
 	err := client.Resource(*alertManagerResource).Namespace(namespace).Delete(context.TODO(), configName, metav1.DeleteOptions{})
 	if err != nil {
-		logger.Logger().Errorf("调用api删除AlertManagerConfig失败")
+		logger.Logger().Error("调用api删除AlertManagerConfig失败, ", err)
 		return errors.NewBusinessErrorCode(errors.DeleteError, "调用api删除AlertManagerConfig失败")
 	}
 	return nil
