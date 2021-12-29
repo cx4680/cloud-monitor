@@ -41,6 +41,8 @@ type Serve struct {
 
 type DB struct {
 	Dialect       string        `yaml:"dialect"`
+	Username      string        `yaml:"username"`
+	Password      string        `yaml:"password"`
 	Url           string        `yaml:"url"`
 	MaxIdleConnes int           `yaml:"max_idle_connes"`
 	MaxOpenConnes int           `yaml:"max_open_connes"`

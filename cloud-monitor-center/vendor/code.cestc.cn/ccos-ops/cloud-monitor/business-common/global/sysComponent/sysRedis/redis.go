@@ -6,6 +6,7 @@ import (
 	"context"
 	"github.com/go-redis/redis/v8"
 	"github.com/pkg/errors"
+	"os"
 	"time"
 )
 
@@ -18,9 +19,11 @@ var (
 )
 
 func InitClient(config config.RedisConfig) error {
+	redisPwd := os.Getenv("REDIS_PWD")
+	logger.Logger().Info("redis init pwd:", redisPwd)
 	rdb = redis.NewClient(&redis.Options{
 		Addr:         config.Addr,
-		Password:     config.Password,
+		Password:     redisPwd,
 		DialTimeout:  10 * time.Second,
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 10 * time.Second,

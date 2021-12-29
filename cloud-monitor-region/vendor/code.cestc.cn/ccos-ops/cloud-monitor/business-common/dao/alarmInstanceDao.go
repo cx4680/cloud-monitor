@@ -56,7 +56,7 @@ func (mpd *AlarmInstanceDao) DeleteInstanceList(tenantId string, models []*model
 	}
 	var i int
 	db := global.DB
-	db.Raw(sql,tenantId,ids).Find(&i)
+	db.Raw(sql, tenantId, ids).Find(&i)
 	deleteRel := "delete FROM t_alarm_rule_resource_rel where tenant_id= ? and resource_id in (?)"
-	db.Raw(deleteRel,tenantId,ids).Find(&i)
+	db.Raw(deleteRel, tenantId, ids).Find(&i)
 }
