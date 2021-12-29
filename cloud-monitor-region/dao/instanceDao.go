@@ -11,6 +11,6 @@ var Instance = new(InstanceDao)
 
 func (dao *InstanceDao) GetInstanceNum(tenantId string) int {
 	var result int
-	global.DB.Raw(" SELECT count(DISTINCT arr.resource_id) num from t_alarm_rule_resource_rel arr  join t_alarm_rule ar on ar.id = arr.alarm_rule_id  where ar.tenant_id=?", tenantId).Scan(&result)
+	global.DB.Raw(" SELECT COUNT(DISTINCT arr.resource_id) num FROM t_alarm_rule_resource_rel arr  JOIN t_alarm_rule ar ON ar.id = arr.alarm_rule_id  WHERE product_type = '云服务器ECS' AND ar.tenant_id = ?", tenantId).Scan(&result)
 	return result
 }
