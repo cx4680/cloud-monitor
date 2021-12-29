@@ -1,7 +1,7 @@
 package models
 
 type MonitorProduct struct {
-	Id           string `gorm:"column:id;primary_key" json:"id"`       // ID
+	Id           uint64  `gorm:"column:id;primary_key;autoIncrement" json:"id"`       // ID
 	Name         string `gorm:"column:name" json:"name"`               // 监控产品名称
 	Status       int    `gorm:"column:status" json:"status"`           // 状态 0:停用 1:启用
 	Description  string `gorm:"column:description" json:"description"` // 描述

@@ -18,6 +18,7 @@ func (m *ResourceGroup) TableName() string {
 }
 
 type AlarmRuleGroupRel struct {
+	Id              uint64    `gorm:"column:id;primary_key;autoIncrement"`
 	AlarmRuleId     string    `gorm:"column:alarm_rule_id"`
 	ResourceGroupId string    `gorm:"column:resource_group_id"`
 	CalcMode        int       `gorm:"column:calc_mode"` // 计算模式：1 单个实例 2 按组
@@ -31,6 +32,7 @@ func (m *AlarmRuleGroupRel) TableName() string {
 }
 
 type AlarmRuleResourceRel struct {
+	Id          uint64    `gorm:"column:id;primary_key;autoIncrement"`
 	AlarmRuleId string    `gorm:"column:alarm_rule_id;"`
 	ResourceId  string    `gorm:"column:resource_id;"`
 	TenantId    string    `gorm:"column:tenant_id"`
@@ -43,6 +45,7 @@ func (m *AlarmRuleResourceRel) TableName() string {
 }
 
 type ResourceResourceGroupRel struct {
+	Id              uint64    `gorm:"column:id;primary_key;autoIncrement"`
 	ResourceGroupId string    `gorm:"column:resource_group_id;"`
 	ResourceId      string    `gorm:"column:resource_id;"`
 	TenantId        string    `gorm:"column:tenant_id"`

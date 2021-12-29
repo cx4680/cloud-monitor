@@ -78,7 +78,7 @@ INSERT INTO `monitor_item` (`id`, `product_id`, `name`, `metric_name`, `labels`,
 -- ----------------------------
 -- Records of config_item
 -- ----------------------------
-INSERT INTO `config_item` (`id`, `pid`, `name`, `code`, `data`, `sort_id`,`remark`) VALUES ('', '-1', '监控周期', NULL, '', 0, NULL);
+INSERT INTO `config_item` (`id`, `pid`, `name`, `code`, `data`, `sort_id`,`remark`) VALUES ('55', '-1', '监控周期', NULL, '', 0, NULL);
 INSERT INTO `config_item` (`id`, `pid`, `name`, `code`, `data`, `sort_id`,`remark`) VALUES ('1', '-1', '统计周期', NULL, NULL, 0, NULL);
 INSERT INTO `config_item` (`id`, `pid`, `name`, `code`, `data`, `sort_id`,`remark`) VALUES ('9', '2', '持续1个周期', '1', '1', 0, NULL);
 INSERT INTO `config_item` (`id`, `pid`, `name`, `code`, `data`, `sort_id`,`remark`) VALUES ('10', '2', '持续3个周期', '3', '3', 1, NULL);
