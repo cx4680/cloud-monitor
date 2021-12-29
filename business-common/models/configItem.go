@@ -1,7 +1,7 @@
 package models
 
 type ConfigItem struct {
-	Id     string `gorm:"column:id" json:"id"`
+	Id     uint64 `gorm:"column:id;primary_key;autoIncrement" json:"id"`
 	Pid    string `gorm:"column:pid" json:"pid"`        //上级Id
 	Name   string `gorm:"column:name" json:"name"`      //配置名称
 	Code   string `gorm:"column:code" json:"code"`      //配置编码

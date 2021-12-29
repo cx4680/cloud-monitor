@@ -5,10 +5,11 @@ serve:
 #  read_timeout:
 #  write_timeout:
 db:
-  url: root:123456@(127.0.0.1:3306)/hawkeye?charset=utf8mb4&parseTime=True&loc=Local
+  url: (127.0.0.1:3306)/hawkeye?charset=utf8mb4&parseTime=True&loc=Local
   dialect: mysql
   max_idle_connes: 10
   max_open_connes: 100
+  username: root
 
 logger:
   data_log_prefix: ../logs/
