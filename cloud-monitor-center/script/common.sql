@@ -90,7 +90,7 @@ INSERT INTO `config_item` (`id`, `pid`, `name`, `code`, `data`, `sort_id`,`remar
 INSERT INTO `config_item` (`id`, `pid`, `name`, `code`, `data`, `sort_id`,`remark`) VALUES ('16', '4', '大于等于', 'greaterOrEqual', '>=', 1, NULL);
 INSERT INTO `config_item` (`id`, `pid`, `name`, `code`, `data`, `sort_id`,`remark`) VALUES ('17', '4', '小于', 'less', '<', 2, NULL);
 INSERT INTO `config_item` (`id`, `pid`, `name`, `code`, `data`, `sort_id`,`remark`) VALUES ('18', '4', '小于等于', 'lessOrEqual', '<=', 3, NULL);
-INSERT INTO `config_item` (`id`, `pid`, `name`, `code`, `data`, `sort_id`,`remark`) VALUES ('19', '4', '等于', 'equal', '=', 4, NULL);
+INSERT INTO `config_item` (`id`, `pid`, `name`, `code`, `data`, `sort_id`,`remark`) VALUES ('19', '4', '等于', 'equal', '==', 4, NULL);
 INSERT INTO `config_item` (`id`, `pid`, `name`, `code`, `data`, `sort_id`,`remark`) VALUES ('2', '-1', '持续周期', NULL, NULL, 0, NULL);
 INSERT INTO `config_item` (`id`, `pid`, `name`, `code`, `data`, `sort_id`,`remark`) VALUES ('20', '4', '不等于', 'notEqual', '!=', 5, NULL);
 INSERT INTO `config_item` (`id`, `pid`, `name`, `code`, `data`, `sort_id`,`remark`) VALUES ('21', '-1', '概览监控项', NULL, NULL, 0, NULL);
@@ -103,9 +103,8 @@ INSERT INTO `config_item` (`id`, `pid`, `name`, `code`, `data`, `sort_id`,`remar
 INSERT INTO `config_item` (`id`, `pid`, `name`, `code`, `data`, `sort_id`,`remark`) VALUES ('31', '28', '次要', '3', 'MINOR', 0, NULL);
 INSERT INTO `config_item` (`id`, `pid`, `name`, `code`, `data`, `sort_id`,`remark`) VALUES ('32', '28', '提醒', '4', 'WARN', 0, NULL);
 INSERT INTO `config_item` (`id`, `pid`, `name`, `code`, `data`, `sort_id`,`remark`) VALUES ('33', '-1', '通知方式', NULL, NULL, 0, NULL);
-INSERT INTO `config_item` (`id`, `pid`, `name`, `code`, `data`, `sort_id`,`remark`) VALUES ('34', '33', '全部', '1', 'all', 0, NULL);
-INSERT INTO `config_item` (`id`, `pid`, `name`, `code`, `data`, `sort_id`,`remark`) VALUES ('35', '33', '邮件', '2', 'email', 0, NULL);
-INSERT INTO `config_item` (`id`, `pid`, `name`, `code`, `data`, `sort_id`,`remark`) VALUES ('36', '33', '短信', '3', 'sms', 0, NULL);
+INSERT INTO `config_item` (`id`, `pid`, `name`, `code`, `data`, `sort_id`,`remark`) VALUES ('35', '33', '邮件', '1', 'email', 0, NULL);
+INSERT INTO `config_item` (`id`, `pid`, `name`, `code`, `data`, `sort_id`,`remark`) VALUES ('36', '33', '短信', '2', 'sms', 0, NULL);
 INSERT INTO `config_item` (`id`, `pid`, `name`, `code`, `data`, `sort_id`,`remark`) VALUES ('4', '-1', '对比方式', NULL, NULL, 0, NULL);
 INSERT INTO `config_item` (`id`, `pid`, `name`, `code`, `data`, `sort_id`,`remark`) VALUES ('5', '-1', '监控数据', NULL, NULL, 0, NULL);
 INSERT INTO `config_item` (`id`, `pid`, `name`, `code`, `data`, `sort_id`,`remark`) VALUES ('51', '5', '0-3H', '0,3', '60', 1, NULL);
