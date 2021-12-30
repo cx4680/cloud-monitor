@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	commonGlobal "code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/service"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/tools"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/dao"
@@ -73,9 +72,9 @@ func (ctl *InstanceCtl) GetPage(c *gin.Context) {
 // @Success 200 {object} AlarmInstanceRegionVO
 // @Router /hawkeye/instance/getInstanceNum [get]
 func (ctl *InstanceCtl) GetInstanceNumByRegion(c *gin.Context) {
-	tenantId, _ := c.Get(commonGlobal.TenantId)
+	tenantId, _ := tools.GetTenantId(c)
 	form := service.InstancePageForm{
-		TenantId: tenantId.(string),
+		TenantId: tenantId,
 		Product:  external.ECS,
 		Current:  1,
 		PageSize: 1000,
@@ -87,7 +86,7 @@ func (ctl *InstanceCtl) GetInstanceNumByRegion(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, global.NewError("查询失败"))
 		return
 	}
-	bindNum := ctl.dao.GetInstanceNum(tenantId.(string))
+	bindNum := ctl.dao.GetInstanceNum(tenantId)
 	total := utils.If(bindNum > page.Total, bindNum, page.Total)
 	vo := &AlarmInstanceRegionVO{Total: total.(int), BindNum: bindNum}
 	c.JSON(http.StatusOK, global.NewSuccess("查询成功", vo))
