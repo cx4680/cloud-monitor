@@ -9,6 +9,7 @@ const (
 	EIP = "eip"
 	NAT = "nat"
 	SLB = "slb"
+	BMS = "bms"
 )
 
 var ProductInstanceServiceMap = map[string]commonService.InstanceService{
@@ -25,6 +26,9 @@ var ProductInstanceServiceMap = map[string]commonService.InstanceService{
 		InstanceServiceImpl: commonService.InstanceServiceImpl{},
 	},
 	SLB: &SlbInstanceService{
+		InstanceServiceImpl: commonService.InstanceServiceImpl{},
+	},
+	BMS: &BmsInstanceService{
 		InstanceServiceImpl: commonService.InstanceServiceImpl{},
 	},
 }

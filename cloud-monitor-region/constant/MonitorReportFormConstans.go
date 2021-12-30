@@ -13,6 +13,7 @@ const (
 	MySql = "mysql"
 	Cbr   = "cbr"
 	Nat   = "nat"
+	Bms   = "bms"
 
 	TenantId = "accountId"
 )

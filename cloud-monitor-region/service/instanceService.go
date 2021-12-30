@@ -17,7 +17,7 @@ func GetInstanceList(productId string, tenantId string) ([]string, error) {
 			Current:  1,
 			PageSize: 10000,
 		}
-		url := getRequestUrl("ecs")
+		url := getRequestUrl(constant.Ecs)
 		respStr, err := tools.HttpPostJson(url, form, nil)
 		if err != nil {
 			return nil, err
@@ -75,6 +75,26 @@ func GetInstanceList(productId string, tenantId string) ([]string, error) {
 	//		}
 	//	}
 	//	return instanceList, nil
+	case constant.Bms:
+		param := tenantId + "/servers?pageNumber=1&pageSize=10000"
+		url := getRequestUrl(constant.Bms)
+		respStr, err := tools.HttpGet(url + param)
+		if err != nil {
+			return nil, err
+		}
+		var resp forms.BmsResponse
+		tools.ToObject(respStr, &resp)
+
+		if resp.Data.TotalCount <= 0 {
+			return nil, nil
+		}
+		var instanceList []string
+		for _, bmsVO := range resp.Data.Servers {
+			if bmsVO.Id != "" {
+				instanceList = append(instanceList, bmsVO.Id)
+			}
+		}
+		return instanceList, nil
 	default:
 		return nil, errors.NewBusinessError("产品错误")
 	}
