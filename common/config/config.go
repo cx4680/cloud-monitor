@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-type Config struct {
+type AppConfig struct {
 	App        string       `yaml:"app"`
 	Serve      Serve        `yaml:"serve"`
 	Db         DB           `yaml:"db"`
@@ -88,17 +88,17 @@ type IamConfig struct {
 	Log    string
 }
 
-var cfg = defaultAuthSdkConfig()
+var Cfg = defaultAppConfig()
 
-func defaultAuthSdkConfig() Config {
-	return Config{
+func defaultAppConfig() AppConfig {
+	return AppConfig{
 		HttpConfig: HttpConfig{
 			ConnectionTimeOut: 3,
 			ReadTimeOut:       3,
 			WriteTimeOut:      3,
 		},
 		Logger: LogConfig{
-			DataLogPrefix: "../logs/",
+			DataLogPrefix: "./logs/",
 			//TODO group
 			Group: "cloud-monitor-region",
 		},
@@ -125,39 +125,5 @@ func InitConfig(file string) error {
 	if err != nil {
 		return err
 	}
-	return yaml.Unmarshal(data, &cfg)
-}
-
-func GetCommonConfig() CommonConfig {
-	return cfg.Common
-}
-func GetServeConfig() Serve {
-	return cfg.Serve
-}
-func GetDbConfig() DB {
-	return cfg.Db
-}
-func GetLogConfig() LogConfig {
-	return cfg.Logger
-}
-
-func GetRedisConfig() RedisConfig {
-	return cfg.Redis
-}
-
-//TODO 写在tools中
-func GetHttpConfig() HttpConfig {
-	return cfg.HttpConfig
-}
-
-func GetRocketmqConfig() Rocketmq {
-	return cfg.Rocketmq
-}
-
-func GetPrometheusConfig() Prometheus {
-	return cfg.Prometheus
-}
-
-func GetIamConfig() IamConfig {
-	return cfg.Iam
+	return yaml.Unmarshal(data, &Cfg)
 }

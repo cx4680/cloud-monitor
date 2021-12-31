@@ -19,7 +19,7 @@ var (
 
 func Logger() *zap.SugaredLogger {
 	once.Do(func() {
-		InitLogger(config.GetLogConfig())
+		InitLogger(config.Cfg.Logger)
 	})
 	return logger
 }

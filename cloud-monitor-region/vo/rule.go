@@ -1,7 +1,7 @@
 package vo
 
 import (
-	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/utils"
+	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/util"
 	"fmt"
 	"strings"
 )
@@ -28,6 +28,6 @@ type RuleCondition struct {
 }
 
 func (ruleCondition *RuleCondition) GetExpress() string {
-	uni := utils.If(ruleCondition.Unit == "" || strings.EqualFold(ruleCondition.Unit, "null"), "", ruleCondition.Unit)
+	uni := util.If(ruleCondition.Unit == "" || strings.EqualFold(ruleCondition.Unit, "null"), "", ruleCondition.Unit)
 	return fmt.Sprintf("%s%s%s%s%s 统计周期%s 持续%s个周期", ruleCondition.MonitorItemName, ruleCondition.Statistics, ruleCondition.ComparisonOperator, ruleCondition.Threshold, uni, ruleCondition.Period, ruleCondition.Times)
 }

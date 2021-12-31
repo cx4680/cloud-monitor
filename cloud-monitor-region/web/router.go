@@ -3,12 +3,12 @@ package web
 import (
 	commonDao "code.cestc.cn/ccos-ops/cloud-monitor/business-common/dao"
 	commonService "code.cestc.cn/ccos-ops/cloud-monitor/business-common/service"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/service/external/messageCenter"
-	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/actuator"
-	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/controllers"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/service/external/message_center"
+	actuator2 "code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/api/actuator"
+	controller2 "code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/api/controller"
+	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/api/inner"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/dao"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/docs"
-	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/inner"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/service"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/task"
 	"github.com/gin-gonic/gin"
@@ -28,7 +28,7 @@ func loadRouters() {
 }
 
 func MonitorReportForm() {
-	monitorReportFormCtl := controllers.NewMonitorReportFormController(service.NewMonitorReportFormService())
+	monitorReportFormCtl := controller2.NewMonitorReportFormController(service.NewMonitorReportFormService())
 	group := router.Group("/hawkeye/MonitorReportForm/")
 	{
 		group.GET("/getData", monitorReportFormCtl.GetData)
@@ -38,7 +38,7 @@ func MonitorReportForm() {
 }
 
 func monitorProductRouters() {
-	monitorProductCtl := controllers.NewMonitorProductCtl(commonDao.MonitorProduct)
+	monitorProductCtl := controller2.NewMonitorProductCtl(commonDao.MonitorProduct)
 	group := router.Group("/hawkeye/monitorProduct/")
 	{
 		group.GET("/getById", monitorProductCtl.GetById)
@@ -52,7 +52,7 @@ func swagger() {
 }
 
 func instance() {
-	instanceCtl := controllers.NewInstanceCtl(dao.Instance)
+	instanceCtl := controller2.NewInstanceCtl(dao.Instance)
 	group := router.Group("/hawkeye/instance/")
 	{
 		group.GET("/page", instanceCtl.GetPage)
@@ -61,7 +61,7 @@ func instance() {
 }
 
 func innerCtl() {
-	addService := service.NewAlertRecordAddService(service.NewAlertRecordService(), commonService.NewAlarmHandlerService(), commonService.NewMessageService(messageCenter.NewService()), commonService.NewTenantService())
+	addService := service.NewAlertRecordAddService(service.NewAlertRecordService(), commonService.NewAlarmHandlerService(), commonService.NewMessageService(message_center.NewService()), commonService.NewTenantService())
 	ctl := inner.NewAlertRecordCtl(addService)
 	group := router.Group("/inner/")
 	{
@@ -73,16 +73,16 @@ func actuatorMapping() {
 	group := router.Group("/actuator")
 	{
 		group.GET("/env", func(c *gin.Context) {
-			c.JSON(http.StatusOK, actuator.Env())
+			c.JSON(http.StatusOK, actuator2.Env())
 		})
 		group.GET("/info", func(c *gin.Context) {
-			c.JSON(http.StatusOK, actuator.Info())
+			c.JSON(http.StatusOK, actuator2.Info())
 		})
 		group.GET("/health", func(c *gin.Context) {
-			c.JSON(http.StatusOK, actuator.Health())
+			c.JSON(http.StatusOK, actuator2.Health())
 		})
 		group.GET("/metrics", func(c *gin.Context) {
-			c.JSON(http.StatusOK, actuator.Metrics())
+			c.JSON(http.StatusOK, actuator2.Metrics())
 		})
 	}
 }

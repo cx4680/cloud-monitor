@@ -1,0 +1,41 @@
+package service
+
+import (
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/dao"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/enum"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/form"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/sys_component/sys_rocketmq"
+	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/mq"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/snowflake"
+	"gorm.io/gorm"
+	"strconv"
+)
+
+func CreateRule(tx *gorm.DB, param interface{}) error {
+	ruleDao := dao.AlarmRule
+	dto := param.(*form.AlarmRuleAddReqDTO)
+	dto.Id = strconv.FormatInt(snowflake.GetWorker().NextId(), 10)
+	ruleDao.SaveRule(tx, dto)
+	return mq.SendMsg(sys_rocketmq.RuleTopic, enum.CreateRule, dto)
+}
+
+func UpdateRule(tx *gorm.DB, param interface{}) error {
+	ruleDao := dao.AlarmRule
+	dto := param.(*form.AlarmRuleAddReqDTO)
+	ruleDao.UpdateRule(tx, dto)
+	return mq.SendMsg(sys_rocketmq.RuleTopic, enum.UpdateRule, dto)
+}
+
+func DeleteRule(tx *gorm.DB, param interface{}) error {
+	ruleDao := dao.AlarmRule
+	dto := param.(*form.RuleReqDTO)
+	ruleDao.DeleteRule(tx, dto)
+	return mq.SendMsg(sys_rocketmq.RuleTopic, enum.DeleteRule, param)
+}
+
+func ChangeRuleStatus(tx *gorm.DB, param interface{}) error {
+	ruleDao := dao.AlarmRule
+	dto := param.(*form.RuleReqDTO)
+	ruleDao.UpdateRuleState(tx, dto)
+	return mq.SendMsg(sys_rocketmq.RuleTopic, enum.ChangeStatus, param)
+}

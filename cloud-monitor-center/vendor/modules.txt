@@ -1,33 +1,34 @@
 # code.cestc.cn/ccos-ops/cloud-monitor/business-common v0.0.0-00010101000000-000000000000 => ../business-common
 ## explicit; go 1.17
-code.cestc.cn/ccos-ops/cloud-monitor/business-common/constants
+code.cestc.cn/ccos-ops/cloud-monitor/business-common/constant
 code.cestc.cn/ccos-ops/cloud-monitor/business-common/dao
-code.cestc.cn/ccos-ops/cloud-monitor/business-common/dbUtils
-code.cestc.cn/ccos-ops/cloud-monitor/business-common/dtos
-code.cestc.cn/ccos-ops/cloud-monitor/business-common/enums
-code.cestc.cn/ccos-ops/cloud-monitor/business-common/enums/handlerType
-code.cestc.cn/ccos-ops/cloud-monitor/business-common/enums/sourceType
+code.cestc.cn/ccos-ops/cloud-monitor/business-common/dto
+code.cestc.cn/ccos-ops/cloud-monitor/business-common/enum
+code.cestc.cn/ccos-ops/cloud-monitor/business-common/enum/handler_type
+code.cestc.cn/ccos-ops/cloud-monitor/business-common/enum/source_type
 code.cestc.cn/ccos-ops/cloud-monitor/business-common/errors
-code.cestc.cn/ccos-ops/cloud-monitor/business-common/forms
+code.cestc.cn/ccos-ops/cloud-monitor/business-common/form
 code.cestc.cn/ccos-ops/cloud-monitor/business-common/global
 code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/iam
 code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/pipeline
-code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/sysComponent
-code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/sysComponent/sysDb
-code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/sysComponent/sysRedis
-code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/sysComponent/sysRocketMq
-code.cestc.cn/ccos-ops/cloud-monitor/business-common/models
-code.cestc.cn/ccos-ops/cloud-monitor/business-common/pageUtils
+code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/sys_component
+code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/sys_component/sys_db
+code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/sys_component/sys_redis
+code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/sys_component/sys_rocketmq
+code.cestc.cn/ccos-ops/cloud-monitor/business-common/model
 code.cestc.cn/ccos-ops/cloud-monitor/business-common/service
-code.cestc.cn/ccos-ops/cloud-monitor/business-common/service/external/messageCenter
+code.cestc.cn/ccos-ops/cloud-monitor/business-common/service/external/message_center
 code.cestc.cn/ccos-ops/cloud-monitor/business-common/task
-code.cestc.cn/ccos-ops/cloud-monitor/business-common/tools
+code.cestc.cn/ccos-ops/cloud-monitor/business-common/util
 code.cestc.cn/ccos-ops/cloud-monitor/business-common/vo
 # code.cestc.cn/ccos-ops/cloud-monitor/common v0.0.0-20211028062752-e559c17fe0f2 => ../common
 ## explicit; go 1.15
 code.cestc.cn/ccos-ops/cloud-monitor/common/config
 code.cestc.cn/ccos-ops/cloud-monitor/common/logger
-code.cestc.cn/ccos-ops/cloud-monitor/common/utils/snowflake
+code.cestc.cn/ccos-ops/cloud-monitor/common/util/httputil
+code.cestc.cn/ccos-ops/cloud-monitor/common/util/jsonutil
+code.cestc.cn/ccos-ops/cloud-monitor/common/util/snowflake
+code.cestc.cn/ccos-ops/cloud-monitor/common/util/strutil
 # code.cestc.cn/yyptb-group_tech/iam-sdk-go v1.0.3
 ## explicit; go 1.16
 code.cestc.cn/yyptb-group_tech/iam-sdk-go/internal/config

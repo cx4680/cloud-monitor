@@ -1,7 +1,7 @@
 package pipeline
 
 import (
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/sysComponent"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/sys_component"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
 	"context"
 	"flag"
@@ -23,7 +23,7 @@ func NewMainLoader() *MainLoader {
 		return config.InitConfig(*cf)
 	},
 	).Then(func(c *context.Context) error {
-		return sysComponent.InitSys()
+		return sys_component.InitSys()
 	})
 	return &MainLoader{Pipeline: pipeline}
 }

@@ -1,7 +1,7 @@
 package tests
 
 import (
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/models"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/model"
 	"encoding/base64"
 	"encoding/json"
 	"gorm.io/driver/mysql"
@@ -16,7 +16,7 @@ func TestMonitorProductDaoTest(t *testing.T) {
 		panic("failed to connect database")
 	}
 
-	var list = []models.MonitorProduct{
+	var list = []model.MonitorProduct{
 		{
 
 			Name:        "1",

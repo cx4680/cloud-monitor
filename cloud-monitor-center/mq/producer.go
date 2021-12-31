@@ -1,17 +1,17 @@
 package mq
 
 import (
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/enums"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/forms"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/sysComponent/sysRocketMq"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/tools"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/enum"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/form"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/sys_component/sys_rocketmq"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/jsonutil"
 )
 
-func SendMsg(topic sysRocketMq.Topic, eventEum enums.EventEum, module interface{}) error {
-	var mqMsg = forms.MqMsg{
+func SendMsg(topic sys_rocketmq.Topic, eventEum enum.EventEum, module interface{}) error {
+	var mqMsg = form.MqMsg{
 		EventEum: eventEum,
 		Data:     module,
 	}
-	str := tools.ToString(mqMsg)
-	return sysRocketMq.SendMsg(topic, str)
+	str := jsonutil.ToString(mqMsg)
+	return sys_rocketmq.SendMsg(topic, str)
 }
