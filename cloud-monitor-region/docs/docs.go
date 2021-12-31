@@ -87,7 +87,7 @@ var doc = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/controllers.AlarmInstanceRegionVO"
+                            "$ref": "#/definitions/controller.AlarmInstanceRegionVO"
                         }
                     }
                 }
@@ -209,7 +209,7 @@ var doc = `{
         }
     },
     "definitions": {
-        "controllers.AlarmInstanceRegionVO": {
+        "controller.AlarmInstanceRegionVO": {
             "type": "object",
             "properties": {
                 "bindNum": {

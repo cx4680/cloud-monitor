@@ -3,7 +3,7 @@ package k8s
 import (
 	"bytes"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/errors"
-	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/forms"
+	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/form"
 	c "code.cestc.cn/ccos-ops/cloud-monitor/common/config"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
 	"context"
@@ -31,7 +31,7 @@ var alertManagerResource *schema.GroupVersionResource
 
 func InitK8s() error {
 	var config *rest.Config
-	if strings.EqualFold(c.GetCommonConfig().Env, "local") {
+	if strings.EqualFold(c.Cfg.Common.Env, "local") {
 		cfg, err := clientcmd.BuildConfigFromFlags("", "k8s-config-local.yml")
 		if err != nil {
 			return err
@@ -72,7 +72,7 @@ func DeleteAlertRule(alertRuleId string) error {
 	return nil
 }
 
-func alertRuleToObject(alertRuleDTO *forms.AlertRuleDTO) *map[string]interface{} {
+func alertRuleToObject(alertRuleDTO *form.AlertRuleDTO) *map[string]interface{} {
 	result := map[string]interface{}{}
 	result["apiVersion"] = "monitoring.coreos.com/v1"
 	result["kind"] = "PrometheusRule"
@@ -111,7 +111,7 @@ func alertRuleToObject(alertRuleDTO *forms.AlertRuleDTO) *map[string]interface{}
 	return &result
 }
 
-func ApplyAlertRule(alertRuleDTO *forms.AlertRuleDTO) error {
+func ApplyAlertRule(alertRuleDTO *form.AlertRuleDTO) error {
 	rules := alertRuleToObject(alertRuleDTO)
 	requestObj, err2 := json.Marshal(rules)
 	if err2 != nil {
@@ -129,7 +129,7 @@ func ApplyAlertManagerConfig(cfg AlertManagerConfig) error {
 	var buf bytes.Buffer
 	var err error
 	logger.Logger().Infof("alertmanagercfg : %+v", cfg)
-	templates, err := template.ParseFiles("template/alertManagerConfig.tpl")
+	templates, err := template.ParseFiles("templates/alert_manager_config.tpl")
 	if err != nil {
 		logger.Logger().Errorf(err.Error())
 		return err

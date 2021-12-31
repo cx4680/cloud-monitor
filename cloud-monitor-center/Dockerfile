@@ -17,7 +17,7 @@ FROM  harbor.ceclouddyn.com/baseos/centos:8.4.2105-0.0.1
 # 移动到用于存放生成的二进制文件的 /dist 目录
 WORKDIR /dist
 COPY --from=builder /build/app .
-COPY --from=builder /build/script/*.sql ./script/
+COPY --from=builder /build/scripts/*.sql ./scripts/
 
 RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime &&\
     echo 'Asia/Shanghai' >/etc/timezone

@@ -1,18 +1,20 @@
 package service
 
 import (
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/constants"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/constant"
 	commonDao "code.cestc.cn/ccos-ops/cloud-monitor/business-common/dao"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/dtos"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/dto"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/errors"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/sysComponent/sysRocketMq"
-	commonModels "code.cestc.cn/ccos-ops/cloud-monitor/business-common/models"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/service/external/messageCenter"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/tools"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/sys_component/sys_rocketmq"
+	commonModels "code.cestc.cn/ccos-ops/cloud-monitor/business-common/model"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/service/external/message_center"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/util"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
-	"code.cestc.cn/ccos-ops/cloud-monitor/common/utils/snowflake"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/httputil"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/jsonutil"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/snowflake"
 	"log"
 	"strconv"
 	"time"
@@ -20,36 +22,36 @@ import (
 
 type MessageService struct {
 	NotificationRecordDao *commonDao.NotificationRecordDao
-	MCS                   *messageCenter.Service
+	MCS                   *message_center.Service
 }
 
 type AlertMsgSendDTO struct {
 	AlertId    string
 	SenderId   string
-	SourceType messageCenter.MsgSource
+	SourceType message_center.MsgSource
 	Msgs       []AlertMsgDTO
 }
 
 type AlertMsgDTO struct {
-	Type    messageCenter.ReceiveType
+	Type    message_center.ReceiveType
 	Targets []string
 	Content string
 }
 
-func NewMessageService(messageCenterService *messageCenter.Service) *MessageService {
+func NewMessageService(messageCenterService *message_center.Service) *MessageService {
 	return &MessageService{
 		NotificationRecordDao: commonDao.NotificationRecord,
 		MCS:                   messageCenterService,
 	}
 }
 
-func (s *MessageService) TargetFilter(targetList []string, rt messageCenter.ReceiveType, senderId string, isCenter bool) []string {
+func (s *MessageService) TargetFilter(targetList []string, rt message_center.ReceiveType, senderId string, isCenter bool) []string {
 	if targetList == nil || len(targetList) <= 0 {
 		return nil
 	}
 	var addrs []string
 	for _, t := range targetList {
-		if messageCenter.Email == rt {
+		if message_center.Email == rt {
 			addrs = append(addrs, t)
 			continue
 		}
@@ -65,7 +67,7 @@ func (s *MessageService) TargetFilter(targetList []string, rt messageCenter.Rece
 }
 
 func (s *MessageService) SendAlarmNotice(msgList []interface{}) error {
-	if config.MsgOpen != config.GetCommonConfig().MsgIsOpen {
+	if config.MsgOpen != config.Cfg.Common.MsgIsOpen {
 		logger.Logger().Info("There is no message center for this env")
 		return nil
 	}
@@ -74,21 +76,21 @@ func (s *MessageService) SendAlarmNotice(msgList []interface{}) error {
 	}
 
 	var recordList []commonModels.NotificationRecord
-	var sendMsgList []messageCenter.MessageSendDTO
+	var sendMsgList []message_center.MessageSendDTO
 	//统计短信数量
 	var smsSender []string
 	for _, alertMsg := range msgList {
 		am := alertMsg.(*AlertMsgSendDTO)
 		for _, msg := range am.Msgs {
 			newTargets := s.TargetFilter(msg.Targets, msg.Type, am.SenderId, false)
-			sendMsgList = append(sendMsgList, messageCenter.MessageSendDTO{
+			sendMsgList = append(sendMsgList, message_center.MessageSendDTO{
 				SenderId:   am.SenderId,
 				Type:       msg.Type,
 				SourceType: am.SourceType,
 				Targets:    newTargets,
 				Content:    msg.Content,
 			})
-			if msg.Type == messageCenter.Phone {
+			if msg.Type == message_center.Phone {
 				smsSender = append(smsSender, msg.Targets...)
 			}
 			for _, addr := range newTargets {
@@ -100,7 +102,7 @@ func (s *MessageService) SendAlarmNotice(msgList []interface{}) error {
 					TargetAddress:    addr,
 					NotificationType: int(msg.Type),
 					Result:           1,
-					CreateTime:       tools.GetNowStr(),
+					CreateTime:       util.GetNowStr(),
 				})
 			}
 		}
@@ -113,17 +115,17 @@ func (s *MessageService) SendAlarmNotice(msgList []interface{}) error {
 		s.NotificationRecordDao.InsertBatch(global.DB, recordList)
 
 		//	sync record to center
-		_ = sysRocketMq.SendRocketMqMsg(sysRocketMq.RocketMqMsg{
-			Topic:   sysRocketMq.NotificationSyncTopic,
-			Content: tools.ToString(recordList),
+		_ = sys_rocketmq.SendRocketMqMsg(sys_rocketmq.RocketMqMsg{
+			Topic:   sys_rocketmq.NotificationSyncTopic,
+			Content: jsonutil.ToString(recordList),
 		})
 		// 发送短信余量不足提醒
 		if len(smsSender) > 0 {
-			smsSender = tools.RemoveDuplicateElement(smsSender)
+			smsSender = util.RemoveDuplicateElement(smsSender)
 			//通过MQ异步解耦
-			_ = sysRocketMq.SendRocketMqMsg(sysRocketMq.RocketMqMsg{
-				Topic:   sysRocketMq.SmsMarginReminderTopic,
-				Content: tools.ToString(smsSender),
+			_ = sys_rocketmq.SendRocketMqMsg(sys_rocketmq.RocketMqMsg{
+				Topic:   sys_rocketmq.SmsMarginReminderTopic,
+				Content: jsonutil.ToString(smsSender),
 			})
 		}
 	}
@@ -131,7 +133,7 @@ func (s *MessageService) SendAlarmNotice(msgList []interface{}) error {
 }
 
 // SendCertifyMsg 发送激活信息
-func (s *MessageService) SendCertifyMsg(msg messageCenter.MessageSendDTO, contactId string) {
+func (s *MessageService) SendCertifyMsg(msg message_center.MessageSendDTO, contactId string) {
 	//send msg
 	ret := 1
 	if err := s.MCS.Send(msg); err != nil {
@@ -142,11 +144,11 @@ func (s *MessageService) SendCertifyMsg(msg messageCenter.MessageSendDTO, contac
 		Id:               strconv.FormatInt(snowflake.GetWorker().NextId(), 10),
 		SenderId:         msg.SenderId,
 		SourceId:         contactId,
-		SourceType:       int(messageCenter.VERIFY),
+		SourceType:       int(message_center.VERIFY),
 		TargetAddress:    msg.Targets[0],
 		NotificationType: int(msg.Type),
 		Result:           ret,
-		CreateTime:       tools.GetNowStr(),
+		CreateTime:       util.GetNowStr(),
 	}
 	s.NotificationRecordDao.Insert(global.DB, record)
 }
@@ -159,26 +161,26 @@ func (s *MessageService) SmsMarginReminder(sender string) {
 		return
 	}
 	alreadySendNum := s.getUserCurrentMonthSmsUsedNum(sender)
-	if alreadySendNum < constants.ThresholdSmsNum {
+	if alreadySendNum < constant.ThresholdSmsNum {
 		//未达到提醒阈值
 		return
 	}
-	tenantDTO := dtos.TenantDTO{}
+	tenantDTO := dto.TenantDTO{}
 	loginName := tenantDTO.Name
 	serialNumber := tenantDTO.Phone
 
 	params := make(map[string]string)
 	params["userName"] = loginName
 	params["msgUsed"] = strconv.Itoa(alreadySendNum)
-	params["msgLeft"] = strconv.Itoa(constants.MaxSmsNum - alreadySendNum)
-	params["msgInitial"] = strconv.Itoa(constants.MaxSmsNum)
+	params["msgLeft"] = strconv.Itoa(constant.MaxSmsNum - alreadySendNum)
+	params["msgInitial"] = strconv.Itoa(constant.MaxSmsNum)
 
-	remainderMsg := messageCenter.MessageSendDTO{
+	remainderMsg := message_center.MessageSendDTO{
 		SenderId:   sender,
-		Type:       messageCenter.Phone,
+		Type:       message_center.Phone,
 		Targets:    []string{serialNumber},
-		SourceType: messageCenter.SMS_LACK,
-		Content:    tools.ToString(params),
+		SourceType: message_center.SMS_LACK,
+		Content:    jsonutil.ToString(params),
 	}
 	if err := s.MCS.Send(remainderMsg); err != nil {
 		return
@@ -187,24 +189,24 @@ func (s *MessageService) SmsMarginReminder(sender string) {
 	s.NotificationRecordDao.Insert(global.DB, commonModels.NotificationRecord{
 		SenderId:         sender,
 		SourceId:         "sms-lack-" + sender,
-		SourceType:       int(messageCenter.SMS_LACK),
+		SourceType:       int(message_center.SMS_LACK),
 		TargetAddress:    serialNumber,
-		NotificationType: int(messageCenter.Phone),
+		NotificationType: int(message_center.Phone),
 		Result:           1,
 	})
 }
 
 func (s *MessageService) checkSentNum(tenantId string, num int, isCenter bool) bool {
 	//check local
-	if num > constants.MaxSmsNum {
-		logger.Logger().Info("user ", tenantId, " already used more", constants.MaxSmsNum, ", send sms refused.")
+	if num > constant.MaxSmsNum {
+		logger.Logger().Info("user ", tenantId, " already used more", constant.MaxSmsNum, ", send sms refused.")
 		return false
 	}
 	//	check remote
 	if !isCenter {
 		num = s.getUserCurrentMonthSmsUsedNum(tenantId)
-		if num > constants.MaxSmsNum {
-			logger.Logger().Info("user ", tenantId, " already used more", constants.MaxSmsNum, ", send sms refused.")
+		if num > constant.MaxSmsNum {
+			logger.Logger().Info("user ", tenantId, " already used more", constant.MaxSmsNum, ", send sms refused.")
 			return false
 		}
 	}
@@ -216,31 +218,31 @@ func (s *MessageService) sendNotification(sender string, num int) []commonModels
 	if count > 0 {
 		return nil
 	}
-	if num < constants.ThresholdSmsNum {
+	if num < constant.ThresholdSmsNum {
 		return nil
 	}
-	tenantDTO := dtos.TenantDTO{}
+	tenantDTO := dto.TenantDTO{}
 	logingName := tenantDTO.Name
 	serialNumber := tenantDTO.Phone
 
 	params := make(map[string]string)
 	params["userName"] = logingName
 	params["msgUsed"] = strconv.Itoa(num)
-	params["msgLeft"] = strconv.Itoa(constants.MaxSmsNum - num)
-	params["msgInitial"] = strconv.Itoa(constants.MaxSmsNum)
+	params["msgLeft"] = strconv.Itoa(constant.MaxSmsNum - num)
+	params["msgInitial"] = strconv.Itoa(constant.MaxSmsNum)
 
-	var noticeMsgDTOList []*dtos.NoticeMsgDTO
-	noticeMsgDTO := dtos.NoticeMsgDTO{
+	var noticeMsgDTOList []*dto.NoticeMsgDTO
+	noticeMsgDTO := dto.NoticeMsgDTO{
 		SourceId: "sms-lack-" + sender,
 		TenantId: sender,
-		MsgEvent: dtos.MsgEvent{
+		MsgEvent: dto.MsgEvent{
 			Type:   1, //TODO 枚举
-			Source: dtos.SMS_LACK,
+			Source: dto.SMS_LACK,
 		},
-		RevObjectBean: dtos.RecvObjectBean{
+		RevObjectBean: dto.RecvObjectBean{
 			RecvObjectType: 1, //TODO 枚举
 			RecvObject:     serialNumber,
-			NoticeContent:  tools.ToString(params),
+			NoticeContent:  jsonutil.ToString(params),
 		},
 	}
 	noticeMsgDTOList = append(noticeMsgDTOList, &noticeMsgDTO)
@@ -251,7 +253,7 @@ func (s *MessageService) sendNotification(sender string, num int) []commonModels
 
 }
 
-func (s *MessageService) saveNotificationRecords(noticeMsgDTOS []*dtos.NoticeMsgDTO) []commonModels.NotificationRecord {
+func (s *MessageService) saveNotificationRecords(noticeMsgDTOS []*dto.NoticeMsgDTO) []commonModels.NotificationRecord {
 	var recordList []commonModels.NotificationRecord
 	now := time.Now().Format("2006-01-02 15:04:05")
 	for _, noticeMsgDTO := range noticeMsgDTOS {
@@ -280,13 +282,13 @@ type ResultDTO struct {
 }
 
 func (s *MessageService) getUserCurrentMonthSmsUsedNum(tenantId string) int {
-	resp, err := tools.HttpGet(config.GetCommonConfig().HawkeyeCenterPath + "/inner/getUsage?tenantId=" + tenantId)
+	resp, err := httputil.HttpGet(config.Cfg.Common.HawkeyeCenterPath + "/inner/getUsage?tenantId=" + tenantId)
 	if err != nil {
 		log.Fatal("获取用户短信月使用量出错, tenantId=" + tenantId)
 		return 0
 	}
 	var respObj ResultDTO
-	tools.ToObject(resp, &respObj)
+	jsonutil.ToObject(resp, &respObj)
 	return respObj.Module
 }
 

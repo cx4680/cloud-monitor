@@ -1,7 +1,7 @@
 package service
 
 import (
-	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/forms"
+	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/form"
 	"fmt"
 	"log"
 	"sync"
@@ -11,7 +11,7 @@ import (
 
 func TestChan(t *testing.T) {
 	var waitGroup = &sync.WaitGroup{}
-	alertListChan := make(chan []*forms.AlertDTO, 1)
+	alertListChan := make(chan []*form.AlertDTO, 1)
 	waitGroup.Add(2)
 	go fun1(waitGroup, alertListChan)
 	go fun2(waitGroup, alertListChan)
@@ -22,7 +22,7 @@ func TestChan(t *testing.T) {
 		log.Println("-------------close ")
 	}()
 	log.Println("ing ")
-	var alertList []*forms.AlertDTO
+	var alertList []*form.AlertDTO
 	for list := range alertListChan {
 		log.Printf("apend----")
 		alertList = append(alertList, list...)
@@ -30,9 +30,9 @@ func TestChan(t *testing.T) {
 	log.Printf("%+v", alertList)
 }
 
-func fun1(wg *sync.WaitGroup, alertListChan chan []*forms.AlertDTO) {
+func fun1(wg *sync.WaitGroup, alertListChan chan []*form.AlertDTO) {
 	defer wg.Done()
-	dtos := []*forms.AlertDTO{
+	dtos := []*form.AlertDTO{
 		{RuleType: "11"},
 		{RuleType: "22"},
 	}
@@ -40,9 +40,9 @@ func fun1(wg *sync.WaitGroup, alertListChan chan []*forms.AlertDTO) {
 	log.Println("1-------------end ")
 }
 
-func fun2(wg *sync.WaitGroup, alertListChan chan []*forms.AlertDTO) {
+func fun2(wg *sync.WaitGroup, alertListChan chan []*form.AlertDTO) {
 	defer wg.Done()
-	dtos := []*forms.AlertDTO{
+	dtos := []*form.AlertDTO{
 		{RuleType: "33"},
 		{RuleType: "44"},
 	}

@@ -3,8 +3,8 @@ package main
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
 	cp "code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/pipeline"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/sysComponent/sysDb"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/sysComponent/sysRocketMq"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/sys_component/sys_db"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/sys_component/sys_rocketmq"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/task"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/mq/consumer"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/pipeline"
@@ -25,15 +25,15 @@ func main() {
 
 	loader := cp.NewMainLoader()
 	loader.AddStage(func(c *context.Context) error {
-		cfg := config.GetIamConfig()
+		cfg := config.Cfg.Iam
 		middleware.InitIamConfig(cfg.Site, cfg.Region, cfg.Log)
 		return nil
 	})
 
 	loader.AddStage(func(c *context.Context) error {
-		initializer := sysDb.DBInitializer{
+		initializer := sys_db.DBInitializer{
 			DB:      global.DB,
-			Fetches: []sysDb.InitializerFetch{new(sysDb.CommonInitializerFetch), new(pipeline.ProjectInitializerFetch)},
+			Fetches: []sys_db.InitializerFetch{new(sys_db.CommonInitializerFetch), new(pipeline.ProjectInitializerFetch)},
 		}
 		if err := initializer.Initnitialization(); err != nil {
 			return err
@@ -46,46 +46,34 @@ func main() {
 	})
 
 	loader.AddStage(func(c *context.Context) error {
-		var taskChan = make(chan error, 1)
-		go func() {
-			bt := task.NewBusinessTaskImpl()
-			err := bt.Add(task.BusinessTaskDTO{
-				Cron: "0 0 0/1 * * ?",
-				Name: "clearAlertRecordJob",
-				Task: task.Clear,
-			})
-			if err != nil {
-				taskChan <- err
-				return
-			}
-
-			bt.Start()
-			close(taskChan)
-		}()
-		select {
-		case err := <-taskChan:
-			return err
-		}
+		bt := task.NewBusinessTaskImpl()
+		err := bt.Add(task.BusinessTaskDTO{
+			Cron: "0 0 0/1 * * ?",
+			Name: "clearAlertRecordJob",
+			Task: task.Clear,
+		})
+		bt.Start()
+		return err
 	})
 
 	loader.AddStage(func(c *context.Context) error {
-		return sysRocketMq.StartConsumersScribe("cloud-monitor-center", []*sysRocketMq.Consumer{{
-			Topic:   sysRocketMq.InstanceTopic,
+		return sys_rocketmq.StartConsumersScribe("cloud-monitor-center", []*sys_rocketmq.Consumer{{
+			Topic:   sys_rocketmq.InstanceTopic,
 			Handler: consumer.InstanceHandler,
 		}, {
-			Topic:   sysRocketMq.SmsMarginReminderTopic,
+			Topic:   sys_rocketmq.SmsMarginReminderTopic,
 			Handler: consumer.SmsMarginReminderConsumer,
 		}, {
-			Topic:   sysRocketMq.DeleteInstanceTopic,
+			Topic:   sys_rocketmq.DeleteInstanceTopic,
 			Handler: consumer.DeleteInstanceHandler,
 		}, {
-			Topic:   sysRocketMq.RecordTopic,
+			Topic:   sys_rocketmq.RecordTopic,
 			Handler: consumer.AlertRecordAddHandler,
 		}})
 	})
 
 	loader.AddStage(func(c *context.Context) error {
-		return web.Start(config.GetServeConfig())
+		return web.Start(config.Cfg.Serve)
 	})
 
 	_, err := loader.Start()

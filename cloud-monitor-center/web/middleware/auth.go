@@ -2,7 +2,8 @@ package middleware
 
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/tools"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/jsonutil"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/strutil"
 	"encoding/base64"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
@@ -54,11 +55,11 @@ func ParsingAndSetUserInfo(c *gin.Context) error {
 	if err != nil {
 		return err
 	}
-	if tools.IsBlank(string(userInfoDecode)) {
+	if strutil.IsBlank(string(userInfoDecode)) {
 		return errors.New("解析用户信息出错")
 	}
 	var userMap map[string]string
-	tools.ToObject(string(userInfoDecode), &userMap)
+	jsonutil.ToObject(string(userInfoDecode), &userMap)
 	c.Set(global.UserType, userMap["userTypeCode"])
 	c.Set(global.TenantId, userMap["cloudLoginId"])
 	c.Set(global.UserId, userMap["loginId"])

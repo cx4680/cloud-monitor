@@ -1,22 +1,22 @@
 package producer
 
 import (
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/sysComponent/sysRocketMq"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/models"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/tools"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/sys_component/sys_rocketmq"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/model"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/jsonutil"
 )
 
-func SendNotificationRecordMsg(msg []models.NotificationRecord) {
+func SendNotificationRecordMsg(msg []model.NotificationRecord) {
 	if msg == nil || len(msg) <= 0 {
 		return
 	}
-	sysRocketMq.SendMsg("notification_sync", tools.ToString(msg))
+	sys_rocketmq.SendMsg("notification_sync", jsonutil.ToString(msg))
 }
 
-func SendAlertRecordMsg(msg []*models.AlertRecord) {
-	sysRocketMq.SendMsg(sysRocketMq.RecordTopic, tools.ToString(msg))
+func SendAlertRecordMsg(msg []*model.AlertRecord) {
+	sys_rocketmq.SendMsg(sys_rocketmq.RecordTopic, jsonutil.ToString(msg))
 }
 
-func SendInstanceJobMsg(topic sysRocketMq.Topic, msg interface{}) {
-	sysRocketMq.SendMsg(topic, tools.ToString(msg))
+func SendInstanceJobMsg(topic sys_rocketmq.Topic, msg interface{}) {
+	sys_rocketmq.SendMsg(topic, jsonutil.ToString(msg))
 }

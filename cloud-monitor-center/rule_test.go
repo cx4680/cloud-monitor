@@ -2,10 +2,10 @@ package main
 
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/dao"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/enums/handlerType"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/forms"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/models"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/tools"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/enum/handler_type"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/form"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/model"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/jsonutil"
 	"fmt"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -20,7 +20,7 @@ func TestDD(t *testing.T) {
 		panic("failed to connect database")
 	}
 
-	rule := []*models.AlarmInstance{{
+	rule := []*model.AlarmInstance{{
 		InstanceID:   "2",
 		InstanceName: "ecs-1",
 		RegionName:   "A",
@@ -37,20 +37,20 @@ func TestDD(t *testing.T) {
 
 func TestRuleAdd(t *testing.T) {
 	str := "\t{\n\t\t\"alarmLevel\": 1,\n\t\t\"groupList\": [\n\t\"1\"\n\t],\n\t\"instanceList\": [\n\t{\n\t\"instanceId\": \"123\",\n\t\"zoneCode\": \"11\",\n\t\"regionCode\": \"wh\",\n\t\"regionName\": \"wuhan\",\n\t\"zoneName\": \"a\",\n\t\"ip\": \"192.10.11.123\",\n\t\"instanceName\": \"实例名称111\"\n\t}\n\t],\n\t\"monitorType\": \"云产品监控\",\n\t\"noticeChannel\": \"all\",\n\t\"productType\": \"云服务器ECS\",\n\t\"ruleName\": \"string\",\n\t\"scope\": \"ALL\",\n\t\"silencesTime\": \"3小时\",\n\t\"triggerCondition\": {\n\t\"comparisonOperator\": \"greater\",\n\t\"metricName\": \"ecs_cpu_base_usage\",\n\t\"period\": 10,\n\t\"statistics\": \"Maximum\",\n\t\"threshold\": 10,\n\t\"times\": 10\n\t}\n}"
-	dto := &forms.AlarmRuleAddReqDTO{}
-	tools.ToObject(str, dto)
-	dto.AlarmHandlerList = []*forms.Handler{
+	dto := &form.AlarmRuleAddReqDTO{}
+	jsonutil.ToObject(str, dto)
+	dto.AlarmHandlerList = []*form.Handler{
 		{
-			HandleType: handlerType.Email,
+			HandleType: handler_type.Email,
 		}, {
-			HandleType:   handlerType.Http,
+			HandleType:   handler_type.Http,
 			HandleParams: "http://127.0.0.1:9876/1",
 		},
 	}
-	dto.ResourceGroupList = []*forms.ResGroupInfo{
+	dto.ResourceGroupList = []*form.ResGroupInfo{
 		{
 			ResGroupName: "fex-1",
-			ResourceList: []*forms.InstanceInfo{
+			ResourceList: []*form.InstanceInfo{
 				{
 					InstanceId:   "ecs-1",
 					InstanceName: "CES-1",
@@ -77,13 +77,13 @@ func TestRuleGet(t *testing.T) {
 
 func TestRuleUpdate(t *testing.T) {
 	str := "\t{\n\t\t\"alarmLevel\": 2,\n\t\t\"groupList\": [\n\t\"1\"\n\t],\n\t\"instanceList\": [\n\t{\n\t\"instanceId\": \"2222222\",\n\t\"zoneCode\": \"11\",\n\t\"regionCode\": \"wh\",\n\t\"regionName\": \"wuhan\",\n\t\"zoneName\": \"a\",\n\t\"ip\": \"192.10.11.123\",\n\t\"instanceName\": \"实例名称111\"\n\t}\n\t],\n\t\"monitorType\": \"云产品监控\",\n\t\"noticeChannel\": \"all\",\n\t\"productType\": \"云服务器ECS\",\n\t\"ruleName\": \"string\",\n\t\"scope\": \"ALL\",\n\t\"silencesTime\": \"3小时\",\n\t\"triggerCondition\": {\n\t\"comparisonOperator\": \"greater\",\n\t\"metricName\": \"ecs_cpu_base_usage\",\n\t\"period\": 10,\n\t\"statistics\": \"Maximum\",\n\t\"threshold\": 10,\n\t\"times\": 10\n\t}\n}"
-	dto := &forms.AlarmRuleAddReqDTO{}
-	tools.ToObject(str, dto)
-	dto.AlarmHandlerList = []*forms.Handler{
+	dto := &form.AlarmRuleAddReqDTO{}
+	jsonutil.ToObject(str, dto)
+	dto.AlarmHandlerList = []*form.Handler{
 		{
-			HandleType: handlerType.Email,
+			HandleType: handler_type.Email,
 		}, {
-			HandleType:   handlerType.Http,
+			HandleType:   handler_type.Http,
 			HandleParams: "http://127.0.0.1:9876/1",
 		},
 	}

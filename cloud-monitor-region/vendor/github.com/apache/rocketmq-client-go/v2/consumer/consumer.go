@@ -76,7 +76,7 @@ var (
 // Message model defines the way how messages are delivered to each consumer clients.
 // </p>
 //
-// RocketMQ supports two message models: clustering and broadcasting. If clustering is set, consumer clients with
+// RocketMQ supports two message model: clustering and broadcasting. If clustering is set, consumer clients with
 // the same {@link #ConsumerGroup} would only consume shards of the messages subscribed, which achieves load
 // balances; Conversely, if the broadcasting is set, each consumer client will consume all subscribed messages
 // separately.
