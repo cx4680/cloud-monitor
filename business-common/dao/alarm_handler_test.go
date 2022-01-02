@@ -11,7 +11,7 @@ import (
 
 func TestAlarmHandlerDao_GetHandlerListByRuleId(t *testing.T) {
 	config.InitConfig("config.local.yml")
-	sys_db.InitDb(config.GetDbConfig())
+	sys_db.InitDb(config.Cfg.Db)
 	ruleId := "1"
 	list := AlarmHandler.GetHandlerListByRuleId(global.DB, ruleId)
 	for _, handler := range list {

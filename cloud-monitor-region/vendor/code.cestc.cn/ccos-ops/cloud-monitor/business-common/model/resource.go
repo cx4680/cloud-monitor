@@ -7,7 +7,7 @@ type ResourceGroup struct {
 	Name         string           `gorm:"column:name"`
 	TenantId     string           `gorm:"column:tenant_id"`
 	ProductId    int              `gorm:"column:product_id"`
-	SourceType   int              `gorm:"column:source"` // 来源:1 用户 2 弹性伸缩
+	SourceType   uint8            `gorm:"column:source"` // 来源:1 用户 2 弹性伸缩
 	CreateTime   time.Time        `gorm:"column:create_time;autoCreateTime;type:datetime"`
 	UpdateTime   time.Time        `gorm:"column:update_time;autoUpdateTime;type:datetime"`
 	ResourceList []*AlarmInstance `gorm:"many2many:t_resource_resource_group_rel;joinForeignKey:ResourceGroupId;joinReferences:ResourceId"`
@@ -58,7 +58,7 @@ func (m *ResourceResourceGroupRel) TableName() string {
 }
 
 type AlarmHandler struct {
-	Id           string    `gorm:"column:id;primary_key"`
+	Id           uint64    `gorm:"column:id;primary_key;autoIncrement"`
 	AlarmRuleId  string    `gorm:"column:alarm_rule_id;"`
 	HandleType   int       `gorm:"column:handle_type"`   // 1邮件；2 短信；3弹性
 	HandleParams string    `gorm:"column:handle_params"` //回调地址

@@ -121,7 +121,7 @@ func (s *AlertContactGroupService) SelectAlertGroupContact(param form.AlertConta
 }
 
 func (s *AlertContactGroupService) insertAlertContactGroup(db *gorm.DB, p form.AlertContactParam) (*model.AlertContactGroup, error) {
-	currentTime := util.GetNowStr()
+	currentTime := util.GetNow()
 	alertContactGroup := &model.AlertContactGroup{
 		Id:          strconv.FormatInt(snowflake.GetWorker().NextId(), 10),
 		TenantId:    p.TenantId,
@@ -138,7 +138,7 @@ func (s *AlertContactGroupService) insertAlertContactGroup(db *gorm.DB, p form.A
 func (s *AlertContactGroupService) updateAlertContactGroup(db *gorm.DB, p form.AlertContactParam) (*model.AlertContactGroup, error) {
 	var oldAlertContactGroup = &model.AlertContactGroup{}
 	global.DB.Where("tenant_id = ? AND id = ?", p.TenantId, p.GroupId).First(oldAlertContactGroup)
-	currentTime := util.GetNowStr()
+	currentTime := util.GetNow()
 	var alertContactGroup = &model.AlertContactGroup{
 		Id:          p.GroupId,
 		TenantId:    p.TenantId,

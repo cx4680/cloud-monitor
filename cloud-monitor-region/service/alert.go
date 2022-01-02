@@ -57,6 +57,19 @@ func NewAlertRecordAddService(AlertRecordSvc *AlertRecordService, AlarmHandlerSv
 					return false, nil
 				}
 			}
+
+			rule := commonDao.AlarmRule.GetById(global.DB, ruleDesc.RuleId)
+			cond := rule.RuleCondition
+			if !(cond.MetricName == ruleDesc.MetricName &&
+				cond.Period == ruleDesc.Period &&
+				cond.Times == ruleDesc.Time &&
+				cond.Statistics == ruleDesc.Statistic &&
+				cond.ComparisonOperator == ruleDesc.ComparisonOperator &&
+				cond.Threshold == ruleDesc.TargetValue) {
+				logger.Logger().Info("此告警触发条件改变")
+				return false, nil
+			}
+
 			return true, nil
 		}},
 		AlarmHandlerSvc: AlarmHandlerSvc,
@@ -228,8 +241,8 @@ func (s *AlertRecordAddService) buildAlertRecord(alert *form.AlertRecordAlertsBe
 		Region:       config.Cfg.Common.RegionName,
 		NoticeStatus: "success",
 		ContactInfo:  contactStr,
-		CreateTime:   global.JsonTime{Time: now},
-		UpdateTime:   global.JsonTime{Time: now},
+		CreateTime:   now,
+		UpdateTime:   now,
 	}
 }
 

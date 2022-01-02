@@ -1,6 +1,6 @@
 package constant
 
 const (
-	TenantInfoKey = "userInfo:%s" //缓存租户信息
-	TenantRuleKey = "rule:%s"     //租户获取规则锁key
+	TenantInfoKey = "cec-hawkeye:userInfo:%s" //缓存租户信息
+	TenantRuleKey = "cec-hawkeye:rule:%s"     //租户获取规则锁key
 )

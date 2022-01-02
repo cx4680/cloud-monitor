@@ -113,6 +113,12 @@ func (dao *AlarmRuleDao) GetDetail(tx *gorm.DB, id string, tenantId string) *for
 	return model
 }
 
+func (dao *AlarmRuleDao) GetById(db *gorm.DB, id string) *model.AlarmRule {
+	var alarmRule = &model.AlarmRule{}
+	db.Find(alarmRule, id)
+	return alarmRule
+}
+
 func (dao *AlarmRuleDao) GetInstanceList(tx *gorm.DB, ruleId string) []*form.InstanceInfo {
 	var model []*form.InstanceInfo
 	tx.Raw("SELECT DISTINCT t2.instance_id, t2.region_code, t2.region_name, t2.instance_name  FROM t_alarm_rule_resource_rel t1, t_alarm_instance t2  WHERE t1.alarm_rule_id = ?  AND t1.resource_id = t2.instance_id", ruleId).Scan(&model)
@@ -275,7 +281,6 @@ func (dao *AlarmRuleDao) saveAlarmHandler(tx *gorm.DB, ruleReqDTO *form.AlarmRul
 	handlers := make([]*model.AlarmHandler, handlerSize)
 	for index, info := range ruleReqDTO.AlarmHandlerList {
 		handlers[index] = &model.AlarmHandler{
-			Id:           strconv.FormatInt(snowflake.GetWorker().NextId(), 10),
 			AlarmRuleId:  ruleReqDTO.Id,
 			HandleType:   info.HandleType,
 			HandleParams: info.HandleParams,
@@ -316,12 +321,12 @@ const (
 	INSTANCE = "INSTANCE"
 )
 
-var ResourceScopeText = map[string]int{
+var ResourceScopeText = map[string]uint8{
 	ALL:      1,
 	INSTANCE: 2,
 }
 
-func GetResourceScopeInt(code string) int {
+func GetResourceScopeInt(code string) uint8 {
 	return ResourceScopeText[code]
 }
 

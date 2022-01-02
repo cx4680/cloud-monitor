@@ -76,5 +76,17 @@ func (c *CommonInitializerFetch) Fetch(db *gorm.DB) ([]interface{}, []string, er
 	if strutil.IsNotBlank(sql) {
 		sqls = append(sqls, strings.Split(sql, ";")...)
 	}
+	if !db.Migrator().HasTable(&commonModels.AlarmHandler{}) {
+		//升级sql
+		updateSqlBytes, err := ioutil.ReadFile("scripts/upgrade.sql")
+		if err != nil {
+			logger.Logger().Errorf("load update sql file error:%v", err)
+			return nil, nil, err
+		}
+		updateSql := string(updateSqlBytes)
+		if strutil.IsNotBlank(updateSql) {
+			sqls = append(sqls, strings.Split(updateSql, ";")...)
+		}
+	}
 	return tables, sqls, nil
 }

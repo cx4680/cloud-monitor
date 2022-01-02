@@ -6,6 +6,7 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/strutil"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"strconv"
 )
 
 type ConfigItemController struct {
@@ -16,8 +17,13 @@ func NewConfigItemController() *ConfigItemController {
 }
 
 func (ctl *ConfigItemController) GetItemListById(c *gin.Context) {
-	id := c.Query("id")
-	if strutil.IsBlank(id) {
+	idstr := c.Query("id")
+	if strutil.IsBlank(idstr) {
+		c.JSON(http.StatusBadRequest, global.NewError("参数异常"))
+		return
+	}
+	id, err := strconv.ParseInt(idstr, 0, 0)
+	if err != nil {
 		c.JSON(http.StatusBadRequest, global.NewError("参数异常"))
 		return
 	}

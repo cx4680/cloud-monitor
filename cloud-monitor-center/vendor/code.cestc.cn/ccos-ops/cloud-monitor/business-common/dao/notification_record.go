@@ -27,9 +27,6 @@ func (dao *NotificationRecordDao) Insert(db *gorm.DB, record model.NotificationR
 	if strutil.IsBlank(record.Id) {
 		record.Id = strconv.FormatInt(snowflake.GetWorker().NextId(), 10)
 	}
-	if strutil.IsBlank(record.CreateTime) {
-		record.CreateTime = util.GetNowStr()
-	}
 	db.Create(&record)
 }
 

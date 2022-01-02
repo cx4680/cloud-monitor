@@ -9,8 +9,8 @@ type RuleExpress struct {
 	RuleName       string `gorm:"column:ruleName"`
 	ProductType    string
 	MonitorType    string
-	Level          int                 `gorm:"column:level"`
-	NoticeChannel  int                 `gorm:"column:noticeChannel"`
+	Level          uint8               `gorm:"column:level"`
+	NoticeChannel  uint8               `gorm:"column:noticeChannel"`
 	RuleCondition  *form.RuleCondition `gorm:"column:ruleCondition"`
 	NoticeGroupIds []*form.NoticeGroup `gorm:"-"`
 	ResGroupId     string              `gorm:"column:resource_group_id"`
@@ -18,5 +18,5 @@ type RuleExpress struct {
 	SilencesTime   string              `gorm:"column:silences_time"`
 	ResourceId     string              `gorm:"column:resource_id"`
 	TenantId       string
-	SourceType     int
+	SourceType     uint8
 }

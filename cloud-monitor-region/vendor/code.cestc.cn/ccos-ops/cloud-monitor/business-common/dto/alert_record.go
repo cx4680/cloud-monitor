@@ -10,7 +10,7 @@ type RuleDesc struct {
 	Period             int      `json:"period"`
 	Unit               string   `json:"unit"`
 	Express            string   `json:"express"`
-	Level              int      `json:"level"`
+	Level              uint8    `json:"level"`
 	MonitorItem        string   `json:"monitorItem"`
 	MonitorType        string   `json:"monitorType"`
 	RuleId             string   `json:"ruleId"`
