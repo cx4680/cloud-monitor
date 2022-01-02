@@ -7,13 +7,15 @@ const (
 	EcsCpuUsage        = "ecs_cpu_usage"
 	EcsCpuUsageTopExpr = "topk(5,(100 - (100 * (sum by(instance) (irate(ecs_cpu_seconds_total{mode='idle',$INSTANCE}[3m])) / sum by(instance) (irate(ecs_cpu_seconds_total{$INSTANCE}[3m]))))))"
 
-	Ecs   = "ecs"
-	Eip   = "eip"
-	Slb   = "slb"
-	MySql = "mysql"
-	Cbr   = "cbr"
-	Nat   = "nat"
-	Bms   = "bms"
-
 	TenantId = "accountId"
 )
+
+var ProductMap = map[string]string{
+	"1": "ecs",
+	"2": "eip",
+	"3": "slb",
+	"4": "mysql",
+	"5": "cbr",
+	"6": "nat",
+	"7": "bms",
+}

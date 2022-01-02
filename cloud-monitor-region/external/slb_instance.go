@@ -22,6 +22,7 @@ type SlbQueryParam struct {
 	NetworkName string   `json:"networkName,omitempty"`
 	NetworkUid  string   `json:"networkUid,omitempty"`
 	StateList   []string `json:"stateList,omitempty"`
+	TenantId    string   `json:"tenantId,omitempty"`
 }
 
 type SlbQueryPageRequest struct {
@@ -104,9 +105,10 @@ type SlbInfoBean struct {
 
 func (slb *SlbInstanceService) ConvertRealForm(form service.InstancePageForm) interface{} {
 	queryParam := SlbQueryParam{
-		Address: form.ExtraAttr["privateIp"],
-		LbUid:   form.InstanceId,
-		Name:    form.InstanceName,
+		Address:  form.ExtraAttr["privateIp"],
+		LbUid:    form.InstanceId,
+		Name:     form.InstanceName,
+		TenantId: form.TenantId,
 	}
 	if strutil.IsNotBlank(form.StatusList) {
 		queryParam.StateList = strings.Split(form.StatusList, ",")
