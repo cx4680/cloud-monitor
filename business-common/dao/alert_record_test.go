@@ -10,7 +10,7 @@ import (
 
 func TestAlertRecordDao_FindContactInfoByGroupIds(t *testing.T) {
 	config.InitConfig("config.local.yml")
-	sys_db.InitDb(config.GetDbConfig())
+	sys_db.InitDb(config.Cfg.Db)
 	list := AlertRecord.FindContactInfoByGroupIds([]string{"1"})
 	for _, info := range list {
 		log.Println(info)

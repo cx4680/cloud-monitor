@@ -60,7 +60,7 @@ const (
 var AlertContactGroupRel = new(AlertContactGroupRelDao)
 
 func (d *AlertContactGroupRelDao) Insert(db *gorm.DB, entity *model.AlertContactGroupRel) {
-	currentTime := util.GetNowStr()
+	currentTime := util.GetNow()
 	entity.CreateTime = currentTime
 	entity.UpdateTime = currentTime
 	db.Create(entity)
@@ -70,7 +70,7 @@ func (d *AlertContactGroupRelDao) InsertBatch(db *gorm.DB, list []*model.AlertCo
 	if len(list) == 0 {
 		return
 	}
-	currentTime := util.GetNowStr()
+	currentTime := util.GetNow()
 	for _, v := range list {
 		v.CreateTime = currentTime
 		v.UpdateTime = currentTime

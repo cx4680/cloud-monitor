@@ -68,7 +68,7 @@ func (s *AlertContactInformationService) PersistenceLocal(db *gorm.DB, param int
 
 }
 
-func (s *AlertContactInformationService) getActiveCode() (string, int) {
+func (s *AlertContactInformationService) getActiveCode() (string, uint8) {
 	if config.Cfg.Common.MsgIsOpen != config.MsgOpen {
 		return "", 1
 	}
@@ -112,7 +112,7 @@ func (s *AlertContactInformationService) getInformationList(p form.AlertContactP
 }
 
 //发送激活信息
-func (s *AlertContactInformationService) sendCertifyMsg(tenantId string, no string, noType int, activeCode string, contactId string) {
+func (s *AlertContactInformationService) sendCertifyMsg(tenantId string, no string, noType uint8, activeCode string, contactId string) {
 	if no == "" {
 		return
 	}
@@ -137,7 +137,7 @@ func (s *AlertContactInformationService) sendCertifyMsg(tenantId string, no stri
 
 }
 
-func (s *AlertContactInformationService) buildInformation(p form.AlertContactParam, no string, noType int) *model.AlertContactInformation {
+func (s *AlertContactInformationService) buildInformation(p form.AlertContactParam, no string, noType uint8) *model.AlertContactInformation {
 	activeCode, isCertify := s.getActiveCode()
 	var information = &model.AlertContactInformation{}
 	//判断新增的联系方式是否已存在，若存在则不修改，若不存在，则删除旧号码，添加新号码

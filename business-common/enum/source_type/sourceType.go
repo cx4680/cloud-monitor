@@ -1,6 +1,6 @@
 package source_type
 
 const (
-	Front       int = 1 //前端页面
-	AutoScaling int = 2 //弹性伸缩服务
+	Front       uint8 = 1 //前端页面
+	AutoScaling uint8 = 2 //弹性伸缩服务
 )

@@ -14,7 +14,7 @@ type AlertContactInformationDao struct {
 var AlertContactInformation = new(AlertContactInformationDao)
 
 func (d *AlertContactInformationDao) Insert(db *gorm.DB, entity *model.AlertContactInformation) {
-	currentTime := util.GetNowStr()
+	currentTime := util.GetNow()
 	entity.Id = strconv.FormatInt(snowflake.GetWorker().NextId(), 10)
 	entity.CreateTime = currentTime
 	entity.UpdateTime = currentTime
@@ -25,7 +25,7 @@ func (d *AlertContactInformationDao) InsertBatch(db *gorm.DB, list []*model.Aler
 	if len(list) == 0 {
 		return
 	}
-	currentTime := util.GetNowStr()
+	currentTime := util.GetNow()
 	for _, v := range list {
 		v.CreateTime = currentTime
 		v.UpdateTime = currentTime

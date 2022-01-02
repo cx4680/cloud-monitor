@@ -117,7 +117,7 @@ func (s *AlertContactService) insertAlertContact(db *gorm.DB, p form.AlertContac
 	if count >= constant.MaxContactNum {
 		return nil, errors.NewBusinessError("联系人限制创建" + strconv.Itoa(constant.MaxContactNum) + "个")
 	}
-	currentTime := util.GetNowStr()
+	currentTime := util.GetNow()
 	alertContact := &model.AlertContact{
 		Id:          strconv.FormatInt(snowflake.GetWorker().NextId(), 10),
 		TenantId:    p.TenantId,
@@ -140,7 +140,7 @@ func (s *AlertContactService) updateAlertContact(db *gorm.DB, p form.AlertContac
 		return nil, errors.NewBusinessError("该租户无此联系人")
 	}
 
-	currentTime := util.GetNowStr()
+	currentTime := util.GetNow()
 	var alertContact = &model.AlertContact{
 		Id:          p.ContactId,
 		TenantId:    p.TenantId,

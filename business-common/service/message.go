@@ -17,7 +17,6 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/snowflake"
 	"log"
 	"strconv"
-	"time"
 )
 
 type MessageService struct {
@@ -98,11 +97,11 @@ func (s *MessageService) SendAlarmNotice(msgList []interface{}) error {
 					Id:               strconv.FormatInt(snowflake.GetWorker().NextId(), 10),
 					SenderId:         am.SenderId,
 					SourceId:         am.AlertId,
-					SourceType:       int(am.SourceType),
+					SourceType:       uint8(am.SourceType),
 					TargetAddress:    addr,
-					NotificationType: int(msg.Type),
+					NotificationType: uint8(msg.Type),
 					Result:           1,
-					CreateTime:       util.GetNowStr(),
+					CreateTime:       util.GetNow(),
 				})
 			}
 		}
@@ -135,7 +134,7 @@ func (s *MessageService) SendAlarmNotice(msgList []interface{}) error {
 // SendCertifyMsg 发送激活信息
 func (s *MessageService) SendCertifyMsg(msg message_center.MessageSendDTO, contactId string) {
 	//send msg
-	ret := 1
+	var ret uint8 = 1
 	if err := s.MCS.Send(msg); err != nil {
 		logger.Logger().Errorf("message send error, %v\n\n", err)
 		ret = 0
@@ -144,11 +143,11 @@ func (s *MessageService) SendCertifyMsg(msg message_center.MessageSendDTO, conta
 		Id:               strconv.FormatInt(snowflake.GetWorker().NextId(), 10),
 		SenderId:         msg.SenderId,
 		SourceId:         contactId,
-		SourceType:       int(message_center.VERIFY),
+		SourceType:       uint8(message_center.VERIFY),
 		TargetAddress:    msg.Targets[0],
-		NotificationType: int(msg.Type),
+		NotificationType: uint8(msg.Type),
 		Result:           ret,
-		CreateTime:       util.GetNowStr(),
+		CreateTime:       util.GetNow(),
 	}
 	s.NotificationRecordDao.Insert(global.DB, record)
 }
@@ -189,10 +188,11 @@ func (s *MessageService) SmsMarginReminder(sender string) {
 	s.NotificationRecordDao.Insert(global.DB, commonModels.NotificationRecord{
 		SenderId:         sender,
 		SourceId:         "sms-lack-" + sender,
-		SourceType:       int(message_center.SMS_LACK),
+		SourceType:       uint8(message_center.SMS_LACK),
 		TargetAddress:    serialNumber,
-		NotificationType: int(message_center.Phone),
+		NotificationType: uint8(message_center.Phone),
 		Result:           1,
+		CreateTime:       util.GetNow(),
 	})
 }
 
@@ -255,17 +255,16 @@ func (s *MessageService) sendNotification(sender string, num int) []commonModels
 
 func (s *MessageService) saveNotificationRecords(noticeMsgDTOS []*dto.NoticeMsgDTO) []commonModels.NotificationRecord {
 	var recordList []commonModels.NotificationRecord
-	now := time.Now().Format("2006-01-02 15:04:05")
 	for _, noticeMsgDTO := range noticeMsgDTOS {
 		recordList = append(recordList, commonModels.NotificationRecord{
 			Id:               strconv.FormatInt(snowflake.GetWorker().NextId(), 10),
 			SenderId:         noticeMsgDTO.TenantId,
 			SourceId:         noticeMsgDTO.SourceId,
-			SourceType:       int(noticeMsgDTO.MsgEvent.Source),
+			SourceType:       uint8(noticeMsgDTO.MsgEvent.Source),
 			TargetAddress:    noticeMsgDTO.RevObjectBean.RecvObject,
-			NotificationType: int(noticeMsgDTO.MsgEvent.Type),
+			NotificationType: uint8(noticeMsgDTO.MsgEvent.Type),
 			Result:           1,
-			CreateTime:       now,
+			CreateTime:       util.GetNow(),
 		})
 	}
 	s.NotificationRecordDao.InsertBatch(global.DB, recordList)

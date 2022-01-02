@@ -40,8 +40,8 @@ type AlertRecordDetailVO struct {
 	SourceID     string          `json:"sourceId"`
 	Summary      string          `json:"summary"`
 	CurrentValue string          `json:"currentValue"`
-	StartTime    global.JsonTime `json:"startTime"`
-	EndTime      global.JsonTime `json:"endTime"`
+	StartTime    string          `json:"startTime"`
+	EndTime      string          `json:"endTime"`
 	TargetValue  string          `json:"targetValue"`
 	Expression   string          `json:"expression"`
 	Duration     string          `json:"duration"`

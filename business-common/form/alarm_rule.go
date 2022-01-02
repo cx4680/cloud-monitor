@@ -78,11 +78,11 @@ type AlarmRuleAddReqDTO struct {
 	RuleName          string          `json:"ruleName"`
 	RuleCondition     *RuleCondition  `json:"triggerCondition"`
 	SilencesTime      string          `json:"silencesTime"`
-	AlarmLevel        int             `json:"alarmLevel"  binding:"required"`
+	AlarmLevel        uint8           `json:"alarmLevel"  binding:"required"`
 	NoticeChannel     string          `json:"noticeChannel"`
 	GroupList         []string        `json:"groupList"`
 	Source            string          `json:"source"`
-	SourceType        int             `json:"source_type"`
+	SourceType        uint8           `json:"source_type"`
 	Id                string          `json:"id"`
 }
 
@@ -92,7 +92,7 @@ type RuleCondition struct {
 	Times              int     `json:"times"  binding:"required"`
 	Statistics         string  `json:"statistics"  binding:"required"`
 	ComparisonOperator string  `json:"comparisonOperator"  binding:"required"`
-	Threshold          float64 `json:"threshold"  binding:"required"`
+	Threshold          float64 `json:"threshold"`
 	Unit               string  `json:"unit"`
 	Labels             string  `json:"labels"`
 	MonitorItemName    string  `json:"monitorItemName"`

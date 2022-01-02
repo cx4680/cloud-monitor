@@ -58,11 +58,6 @@ func (dao *AlarmRuleDao) UpdateRuleState(tx *gorm.DB, ruleReqDTO *form.RuleReqDT
 		return
 	}
 	rule := model.AlarmRule{ID: ruleReqDTO.Id}
-	status := getAlarmStatusTextInt(ruleReqDTO.Status)
-	if status == 0 {
-		logger.Logger().Infof("状态值不正确 %+v", ruleReqDTO)
-		return
-	}
 	tx.Model(&rule).Update("enabled", getAlarmStatusTextInt(ruleReqDTO.Status))
 }
 
@@ -116,6 +111,12 @@ func (dao *AlarmRuleDao) GetDetail(tx *gorm.DB, id string, tenantId string) *for
 	scope, _ := strconv.Atoi(model.Scope)
 	model.Scope = getResourceScopeText(scope)
 	return model
+}
+
+func (dao *AlarmRuleDao) GetById(db *gorm.DB, id string) *model.AlarmRule {
+	var alarmRule = &model.AlarmRule{}
+	db.Find(alarmRule, id)
+	return alarmRule
 }
 
 func (dao *AlarmRuleDao) GetInstanceList(tx *gorm.DB, ruleId string) []*form.InstanceInfo {
@@ -280,7 +281,6 @@ func (dao *AlarmRuleDao) saveAlarmHandler(tx *gorm.DB, ruleReqDTO *form.AlarmRul
 	handlers := make([]*model.AlarmHandler, handlerSize)
 	for index, info := range ruleReqDTO.AlarmHandlerList {
 		handlers[index] = &model.AlarmHandler{
-			Id:           strconv.FormatInt(snowflake.GetWorker().NextId(), 10),
 			AlarmRuleId:  ruleReqDTO.Id,
 			HandleType:   info.HandleType,
 			HandleParams: info.HandleParams,
@@ -321,12 +321,12 @@ const (
 	INSTANCE = "INSTANCE"
 )
 
-var ResourceScopeText = map[string]int{
+var ResourceScopeText = map[string]uint8{
 	ALL:      1,
 	INSTANCE: 2,
 }
 
-func GetResourceScopeInt(code string) int {
+func GetResourceScopeInt(code string) uint8 {
 	return ResourceScopeText[code]
 }
 
