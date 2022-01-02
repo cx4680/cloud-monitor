@@ -27,21 +27,8 @@ func (mpd *MonitorProductDao) SelectMonitorProductList() *[]model.MonitorProduct
 	return product
 }
 
-func (mpd *MonitorProductDao) Create(product *model.MonitorProduct) {
-	global.DB.Create(product)
-}
-
 func (mpd *MonitorProductDao) GetById(id string) *model.MonitorProduct {
 	var product model.MonitorProduct
 	global.DB.First(&product, id)
 	return &product
-}
-
-func (mpd *MonitorProductDao) UpdateById(product *model.MonitorProduct) {
-	global.DB.Model(product).Updates(*product)
-}
-
-func (mpd *MonitorProductDao) DeleteById(id string) {
-	var product model.MonitorProduct
-	global.DB.Delete(&product, id)
 }
