@@ -1,11 +1,9 @@
 package external
 
 import (
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/dao"
+	commonDao "code.cestc.cn/ccos-ops/cloud-monitor/business-common/dao"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/service"
-	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/constant"
-	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/form"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/httputil"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/jsonutil"
@@ -16,6 +14,73 @@ import (
 
 type BmsInstanceService struct {
 	service.InstanceServiceImpl
+}
+
+type BmsQueryPageRequest struct {
+	PageNumber       int    `json:"pageNumber,omitempty"`
+	PageSize         int    `json:"pageSize,omitempty"`
+	TenantId         string `json:"tenantId,omitempty"`
+	AllTenants       string `json:"all_tenants,omitempty"`
+	Id               string `json:"id,omitempty"`
+	AvailabilityZone string `json:"availability_zone,omitempty"`
+}
+
+type BmsResponse struct {
+	Code    string             `json:"code"`
+	Message string             `json:"message"`
+	Data    BmsQueryPageResult `json:"data"`
+}
+
+type BmsQueryPageResult struct {
+	Servers    []BmsServers `json:"servers"`
+	TotalCount int          `json:"total_count"`
+}
+
+type BmsServers struct {
+	FlavorId string `json:"flavor_id"`
+	Name     string `json:"name"`
+	Status   string `json:"status"`
+	Id       string `json:"id"`
+}
+
+type SerialResponse struct {
+	Code    string                `json:"code"`
+	Message string                `json:"message"`
+	Data    SerialQueryPageResult `json:"data"`
+}
+
+type SerialQueryPageResult struct {
+	Bmcnodes   []Bmcnodes `json:"bmcnodes"`
+	TotalCount int        `json:"total_count"`
+}
+
+type Bmcnodes struct {
+	SerialNumber      string `json:"serial_number"`
+	EcsId             string `json:"ecs_id"`
+	Manufactory       string `json:"manufactory"`
+	Productor         string `json:"productor"`
+	Cpu               int    `json:"cpu"`
+	CpuManufactory    string `json:"cpu_manufactory"`
+	CpuProductor      string `json:"cpu_productor"`
+	CpuArch           string `json:"cpu_arch"`
+	Memory            int    `json:"memory"`
+	SystemDisk        int    `json:"system_disk"`
+	DataDisk          int    `json:"data_disk"`
+	Nic               string `json:"nic"`
+	GpuType           string `json:"gpu_type"`
+	FirmwareVersion   string `json:"firmware_version"`
+	IdcRoom           string `json:"idc_room"`
+	CabinetNum        string `json:"cabinet_num"`
+	RankNum           string `json:"rank_num"`
+	AvailabilityZone  string `json:"availability_zone"`
+	IpmiBmcIp         string `json:"ipmi_bmc_ip"`
+	IpmiBmcUsername   string `json:"ipmi_bmc_username"`
+	IpmiBmcPassword   string `json:"ipmi_bmc_password"`
+	SmartnicManagerIp string `json:"smartnic_manager_ip"`
+	Smartniciqn       string `json:"smartniciqn"`
+	HealthyStatus     bool   `json:"healthy_status"`
+	UnhealthyReason   string `json:"unhealthy_reason"`
+	UserSystemStatus  string `json:"user_system_status"`
 }
 
 func (bms *BmsInstanceService) ConvertRealForm(form service.InstancePageForm) interface{} {
@@ -43,13 +108,13 @@ func (bms *BmsInstanceService) DoRequest(url string, f interface{}) (interface{}
 	if err != nil {
 		return nil, err
 	}
-	var resp form.BmsResponse
+	var resp BmsResponse
 	jsonutil.ToObject(respStr, &resp)
 	return resp, nil
 }
 
 func (bms *BmsInstanceService) ConvertResp(realResp interface{}) (int, []service.InstanceCommonVO) {
-	vo := realResp.(form.BmsResponse)
+	vo := realResp.(BmsResponse)
 	var list []service.InstanceCommonVO
 	if vo.Data.TotalCount > 0 {
 		for _, d := range vo.Data.Servers {
@@ -60,11 +125,8 @@ func (bms *BmsInstanceService) ConvertResp(realResp interface{}) (int, []service
 					Name:  "status",
 					Value: d.Status,
 				}, {
-					Name:  "bmsCpuUsage",
-					Value: getMonitorData("bms_cpu_usage", getSerialNumber(d.Id)),
-				}, {
-					Name:  "bmsMemoryUsage",
-					Value: getMonitorData("bms_memory_usage", getSerialNumber(d.Id)),
+					Name:  "serialNumber",
+					Value: getSerialNumber(d.Status),
 				}},
 			})
 		}
@@ -72,15 +134,16 @@ func (bms *BmsInstanceService) ConvertResp(realResp interface{}) (int, []service
 	return vo.Data.TotalCount, list
 }
 
+//获取机器SN号
 func getSerialNumber(bmsId string) string {
-	p := dao.MonitorProduct.GetByAbbreviation(global.DB, constant.Bms)
+	p := commonDao.MonitorProduct.GetByAbbreviation(global.DB, BMS)
 	url := p.Host + p.PageUrl + "/bmcnodes?filter=ecs_id:eq:" + bmsId
 	respStr, err := httputil.HttpGet(url)
 	if err != nil {
 		logger.Logger().Error("BMS error", err)
 		return ""
 	}
-	var resp form.SerialResponse
+	var resp SerialResponse
 	jsonutil.ToObject(respStr, &resp)
 	if resp.Data.TotalCount <= 0 {
 		logger.Logger().Error("Not found BMS_ID")

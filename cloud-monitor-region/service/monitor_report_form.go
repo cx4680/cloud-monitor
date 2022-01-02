@@ -4,8 +4,11 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/dao"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/errors"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/model"
+	commonService "code.cestc.cn/ccos-ops/cloud-monitor/business-common/service"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/constant"
+	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/external"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/form"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/strutil"
 	"fmt"
 	"strconv"
@@ -20,8 +23,11 @@ func NewMonitorReportFormService() *MonitorReportFormService {
 }
 
 func (s *MonitorReportFormService) GetData(request form.PrometheusRequest) (*form.PrometheusValue, error) {
-	if request.Instance == "" {
+	if strutil.IsBlank(request.Instance) {
 		return nil, errors.NewBusinessError("instance为空")
+	}
+	if !checkUserInstanceIdentity(request.TenantId, request.ProductId, request.Instance) {
+		return nil, errors.NewBusinessError("该租户无此实例")
 	}
 	pql := getPql(request)
 	prometheusResponse := Query(pql, request.Time)
@@ -61,9 +67,12 @@ func (s *MonitorReportFormService) GetTop(request form.PrometheusRequest) ([]for
 	return instanceList, nil
 }
 
-func (s *MonitorReportFormService) GetAxisData(request form.PrometheusRequest) (form.PrometheusAxis, error) {
-	if request.Instance == "" {
-		return form.PrometheusAxis{}, errors.NewBusinessError("instance为空")
+func (s *MonitorReportFormService) GetAxisData(request form.PrometheusRequest) (*form.PrometheusAxis, error) {
+	if strutil.IsBlank(request.Instance) {
+		return nil, errors.NewBusinessError("instance为空")
+	}
+	if !checkUserInstanceIdentity(request.TenantId, request.ProductId, request.Instance) {
+		return nil, errors.NewBusinessError("该租户无此实例")
 	}
 	pql := getPql(request)
 	prometheusResponse := QueryRange(pql, strconv.Itoa(request.Start), strconv.Itoa(request.End), strconv.Itoa(request.Step))
@@ -76,7 +85,6 @@ func (s *MonitorReportFormService) GetAxisData(request form.PrometheusRequest) (
 			label = labels[i]
 		}
 	}
-
 	start := request.Start
 	end := request.End
 	step := request.Step
@@ -87,7 +95,7 @@ func (s *MonitorReportFormService) GetAxisData(request form.PrometheusRequest) (
 		timeList = getTimeList(start, end, step, int(result[0].Values[0][0].(float64)))
 	}
 
-	prometheusAxis := form.PrometheusAxis{
+	prometheusAxis := &form.PrometheusAxis{
 		XAxis: timeList,
 		YAxis: yAxisFillEmptyData(result, timeList, label, request.Name),
 	}
@@ -107,7 +115,7 @@ func yAxisFillEmptyData(result []form.PrometheusResult, timeList []string, label
 		for k := range timeList {
 			arr = append(arr, changeDecimal(timeMap[timeList[k]]))
 		}
-		if result[i].Metric[label] == "" {
+		if strutil.IsBlank(result[i].Metric[label]) {
 			key = metricName
 		} else {
 			key = result[i].Metric[label]
@@ -154,9 +162,44 @@ func getMonitorItemByName(name string) model.MonitorItem {
 
 //查询租户的ECS实例列表
 func getEcsInstances(tenantId string) (string, error) {
-	list, err := GetInstanceList(constant.Ecs, tenantId)
+	list, err := GetInstanceList("1", tenantId)
 	if err != nil {
 		return "", err
 	}
 	return strings.Join(list, "|"), nil
+}
+
+//校验该租户下是否拥有该实例
+func checkUserInstanceIdentity(tenantId, productId, instanceId string) bool {
+	list, err := GetInstanceList(productId, tenantId)
+	if err != nil {
+		logger.Logger().Error("获取实例列表失败")
+		return false
+	}
+	for _, v := range list {
+		if instanceId == v {
+			return true
+		}
+	}
+	return false
+}
+
+//获取实例ID列表
+func GetInstanceList(productId string, tenantId string) ([]string, error) {
+	f := commonService.InstancePageForm{
+		TenantId: tenantId,
+		Product:  constant.ProductMap[productId],
+		Current:  1,
+		PageSize: 10000,
+	}
+	instanceService := external.ProductInstanceServiceMap[f.Product]
+	page, err := instanceService.GetPage(f, instanceService.(commonService.InstanceStage))
+	if err != nil {
+		return nil, errors.NewBusinessError(err.Error())
+	}
+	var instanceList []string
+	for _, v := range page.Records.([]commonService.InstanceCommonVO) {
+		instanceList = append(instanceList, v.InstanceId)
+	}
+	return instanceList, nil
 }

@@ -2,7 +2,7 @@ package controller
 
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/service"
+	commonService "code.cestc.cn/ccos-ops/cloud-monitor/business-common/service"
 	commonUtil "code.cestc.cn/ccos-ops/cloud-monitor/business-common/util"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/dao"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/external"
@@ -40,14 +40,14 @@ func NewInstanceCtl(dao *dao.InstanceDao) *InstanceCtl {
 // @Router /hawkeye/instance/page [get]
 func (ctl *InstanceCtl) GetPage(c *gin.Context) {
 	tenantId, _ := commonUtil.GetTenantId(c)
-	form := service.InstancePageForm{}
-	if err := c.ShouldBindQuery(&form); err != nil {
+	f := commonService.InstancePageForm{}
+	if err := c.ShouldBindQuery(&f); err != nil {
 		c.JSON(http.StatusBadRequest, global.NewError(translate.GetErrorMsg(err)))
 		return
 	}
-	form.TenantId = tenantId
-	instanceService := external.ProductInstanceServiceMap[form.Product]
-	page, err := instanceService.GetPage(form, instanceService.(service.InstanceStage))
+	f.TenantId = tenantId
+	instanceService := external.ProductInstanceServiceMap[f.Product]
+	page, err := instanceService.GetPage(f, instanceService.(commonService.InstanceStage))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, global.NewError("查询失败"))
 		return
@@ -73,14 +73,14 @@ func (ctl *InstanceCtl) GetPage(c *gin.Context) {
 // @Router /hawkeye/instance/getInstanceNum [get]
 func (ctl *InstanceCtl) GetInstanceNumByRegion(c *gin.Context) {
 	tenantId, _ := commonUtil.GetTenantId(c)
-	form := service.InstancePageForm{
+	f := commonService.InstancePageForm{
 		TenantId: tenantId,
 		Product:  external.ECS,
 		Current:  1,
 		PageSize: 1000,
 	}
 	instanceService := external.ProductInstanceServiceMap[external.ECS]
-	page, err := instanceService.GetPage(form, instanceService.(service.InstanceStage))
+	page, err := instanceService.GetPage(f, instanceService.(commonService.InstanceStage))
 	if err != nil {
 		logger.Logger().Error(err)
 		c.JSON(http.StatusInternalServerError, global.NewError("查询失败"))
