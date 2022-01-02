@@ -78,7 +78,7 @@ type AlarmRuleAddReqDTO struct {
 	RuleName          string          `json:"ruleName"`
 	RuleCondition     *RuleCondition  `json:"triggerCondition"`
 	SilencesTime      string          `json:"silencesTime"`
-	AlarmLevel        int             `json:"alarmLevel"`
+	AlarmLevel        int             `json:"alarmLevel"  binding:"required"`
 	NoticeChannel     string          `json:"noticeChannel"`
 	GroupList         []string        `json:"groupList"`
 	Source            string          `json:"source"`
@@ -87,18 +87,18 @@ type AlarmRuleAddReqDTO struct {
 }
 
 type RuleCondition struct {
-	MetricName         string  `json:"metricName"`
-	Period             int     `json:"period"`
-	Times              int     `json:"times"`
-	Statistics         string  `json:"statistics"`
-	ComparisonOperator string  `json:"comparisonOperator"`
-	Threshold          float64 `json:"threshold"`
+	MetricName         string  `json:"metricName"  binding:"required"`
+	Period             int     `json:"period"  binding:"required"`
+	Times              int     `json:"times"  binding:"required"`
+	Statistics         string  `json:"statistics"  binding:"required"`
+	ComparisonOperator string  `json:"comparisonOperator"  binding:"required"`
+	Threshold          float64 `json:"threshold"  binding:"required"`
 	Unit               string  `json:"unit"`
 	Labels             string  `json:"labels"`
 	MonitorItemName    string  `json:"monitorItemName"`
 }
 type RuleReqDTO struct {
-	Id       string `json:"id"`
+	Id       string `json:"id"  binding:"required"`
 	Status   string `json:"status"`
 	TenantId string `json:"tenantId"`
 }

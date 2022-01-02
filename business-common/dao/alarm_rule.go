@@ -58,6 +58,11 @@ func (dao *AlarmRuleDao) UpdateRuleState(tx *gorm.DB, ruleReqDTO *form.RuleReqDT
 		return
 	}
 	rule := model.AlarmRule{ID: ruleReqDTO.Id}
+	status := getAlarmStatusTextInt(ruleReqDTO.Status)
+	if status == 0 {
+		logger.Logger().Infof("状态值不正确 %+v", ruleReqDTO)
+		return
+	}
 	tx.Model(&rule).Update("enabled", getAlarmStatusTextInt(ruleReqDTO.Status))
 }
 

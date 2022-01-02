@@ -9,6 +9,7 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/service"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/validator/translate"
 	"github.com/gin-gonic/gin"
+	"github.com/pkg/errors"
 	"net/http"
 )
 
@@ -48,6 +49,10 @@ func (ctl *AlarmRuleCtl) CreateRule(c *gin.Context) {
 	var param = form.AlarmRuleAddReqDTO{
 		SourceType: source_type.Front,
 	}
+	CreateRule(c, param)
+}
+
+func CreateRule(c *gin.Context, param form.AlarmRuleAddReqDTO) {
 	if err := c.ShouldBindJSON(&param); err != nil {
 		c.JSON(http.StatusBadRequest, global.NewError(translate.GetErrorMsg(err)))
 		return
@@ -55,14 +60,20 @@ func (ctl *AlarmRuleCtl) CreateRule(c *gin.Context) {
 	tenantId, err := util.GetTenantId(c)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, global.NewError(err.Error()))
+		return
 	}
 	param.TenantId = tenantId
 	userId, err := util.GetUserId(c)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, global.NewError(err.Error()))
+		return
 	}
 	param.UserId = userId
-	addMetricName(&param)
+	err = addMetricName(&param)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, global.NewError(err.Error()))
+		return
+	}
 	err = util.Tx(&param, service.CreateRule)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, err.Error())
@@ -73,6 +84,10 @@ func (ctl *AlarmRuleCtl) CreateRule(c *gin.Context) {
 
 func (ctl *AlarmRuleCtl) UpdateRule(c *gin.Context) {
 	var param form.AlarmRuleAddReqDTO
+	UpdateRule(c, param)
+}
+
+func UpdateRule(c *gin.Context, param form.AlarmRuleAddReqDTO) {
 	if err := c.ShouldBindJSON(&param); err != nil {
 		c.JSON(http.StatusBadRequest, global.NewError(translate.GetErrorMsg(err)))
 		return
@@ -80,14 +95,20 @@ func (ctl *AlarmRuleCtl) UpdateRule(c *gin.Context) {
 	tenantId, err := util.GetTenantId(c)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, global.NewError(err.Error()))
+		return
 	}
 	param.TenantId = tenantId
 	userId, err := util.GetUserId(c)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, global.NewError(err.Error()))
+		return
 	}
 	param.UserId = userId
-	addMetricName(&param)
+	err = addMetricName(&param)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, global.NewError(err.Error()))
+		return
+	}
 	err = util.Tx(&param, service.UpdateRule)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, err.Error())
@@ -121,6 +142,10 @@ func (ctl *AlarmRuleCtl) ChangeRuleStatus(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, global.NewError(translate.GetErrorMsg(err)))
 		return
 	}
+	if len(param.Status) == 0 {
+		c.JSON(http.StatusBadRequest, global.NewError("状态值不应为空"))
+		return
+	}
 	tenantId, err := util.GetTenantId(c)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, global.NewError(err.Error()))
@@ -134,9 +159,13 @@ func (ctl *AlarmRuleCtl) ChangeRuleStatus(c *gin.Context) {
 	c.JSON(http.StatusOK, global.NewSuccess("更新成功", true))
 }
 
-func addMetricName(param *form.AlarmRuleAddReqDTO) {
+func addMetricName(param *form.AlarmRuleAddReqDTO) error {
 	item := dao.AlarmRule.GetMonitorItem(param.RuleCondition.MetricName)
+	if item == nil {
+		return errors.New("指标不存在")
+	}
 	param.RuleCondition.Labels = item.Labels
 	param.RuleCondition.Unit = item.Unit
 	param.RuleCondition.MonitorItemName = item.Name
+	return nil
 }
