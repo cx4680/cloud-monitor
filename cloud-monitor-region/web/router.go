@@ -1,16 +1,17 @@
 package web
 
 import (
-	commonDao "code.cestc.cn/ccos-ops/cloud-monitor/business-common/dao"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/iam"
 	commonService "code.cestc.cn/ccos-ops/cloud-monitor/business-common/service"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/service/external/message_center"
-	actuator2 "code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/api/actuator"
-	controller2 "code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/api/controller"
+	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/api/actuator"
+	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/api/controller"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/api/inner"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/dao"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/docs"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/service"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/task"
+	"code.cestc.cn/yyptb-group_tech/iam-sdk-go/pkg/models"
 	"github.com/gin-gonic/gin"
 	gs "github.com/swaggo/gin-swagger"
 	"github.com/swaggo/gin-swagger/swaggerFiles"
@@ -18,7 +19,6 @@ import (
 )
 
 func loadRouters() {
-	monitorProductRouters()
 	swagger()
 	instance()
 	MonitorReportForm()
@@ -28,21 +28,12 @@ func loadRouters() {
 }
 
 func MonitorReportForm() {
-	monitorReportFormCtl := controller2.NewMonitorReportFormController(service.NewMonitorReportFormService())
+	monitorReportFormCtl := controller.NewMonitorReportFormController(service.NewMonitorReportFormService())
 	group := router.Group("/hawkeye/MonitorReportForm/")
 	{
-		group.GET("/getData", monitorReportFormCtl.GetData)
-		group.GET("/getAxisData", monitorReportFormCtl.GetAxisData)
-		group.GET("/getTop", monitorReportFormCtl.GetTop)
-	}
-}
-
-func monitorProductRouters() {
-	monitorProductCtl := controller2.NewMonitorProductCtl(commonDao.MonitorProduct)
-	group := router.Group("/hawkeye/monitorProduct/")
-	{
-		group.GET("/getById", monitorProductCtl.GetById)
-		group.PUT("/updateById", monitorProductCtl.UpdateById)
+		group.GET("/getData", iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetMonitorReportData", ResourceType: "*", ResourceId: "*"}), monitorReportFormCtl.GetData)
+		group.GET("/getAxisData", iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetMonitorReportRangeData", ResourceType: "*", ResourceId: "*"}), monitorReportFormCtl.GetAxisData)
+		group.GET("/getTop", iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetMonitorReportTop", ResourceType: "*", ResourceId: "*"}), monitorReportFormCtl.GetTop)
 	}
 }
 
@@ -52,11 +43,11 @@ func swagger() {
 }
 
 func instance() {
-	instanceCtl := controller2.NewInstanceCtl(dao.Instance)
+	instanceCtl := controller.NewInstanceCtl(dao.Instance)
 	group := router.Group("/hawkeye/instance/")
 	{
-		group.GET("/page", instanceCtl.GetPage)
-		group.GET("/getInstanceNum", instanceCtl.GetInstanceNumByRegion)
+		group.GET("/page", iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetInstancePageList", ResourceType: "*", ResourceId: "*"}), instanceCtl.GetPage)
+		group.GET("/getInstanceNum", iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetInstanceNum", ResourceType: "*", ResourceId: "*"}), instanceCtl.GetInstanceNumByRegion)
 	}
 }
 
@@ -73,16 +64,16 @@ func actuatorMapping() {
 	group := router.Group("/actuator")
 	{
 		group.GET("/env", func(c *gin.Context) {
-			c.JSON(http.StatusOK, actuator2.Env())
+			c.JSON(http.StatusOK, actuator.Env())
 		})
 		group.GET("/info", func(c *gin.Context) {
-			c.JSON(http.StatusOK, actuator2.Info())
+			c.JSON(http.StatusOK, actuator.Info())
 		})
 		group.GET("/health", func(c *gin.Context) {
-			c.JSON(http.StatusOK, actuator2.Health())
+			c.JSON(http.StatusOK, actuator.Health())
 		})
 		group.GET("/metrics", func(c *gin.Context) {
-			c.JSON(http.StatusOK, actuator2.Metrics())
+			c.JSON(http.StatusOK, actuator.Metrics())
 		})
 	}
 }

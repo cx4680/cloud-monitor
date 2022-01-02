@@ -1,20 +1,17 @@
 package controller
 
 import (
-	dao2 "code.cestc.cn/ccos-ops/cloud-monitor/business-common/dao"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/dao"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
-	models2 "code.cestc.cn/ccos-ops/cloud-monitor/business-common/model"
-	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/form"
-	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/validator/translate"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
 
 type MonitorProductCtl struct {
-	dao *dao2.MonitorProductDao
+	dao *dao.MonitorProductDao
 }
 
-func NewMonitorProductCtl(dao *dao2.MonitorProductDao) *MonitorProductCtl {
+func NewMonitorProductCtl(dao *dao.MonitorProductDao) *MonitorProductCtl {
 	return &MonitorProductCtl{dao}
 }
 
@@ -35,23 +32,6 @@ func (mpc *MonitorProductCtl) GetById(c *gin.Context) {
 
 func (mpc *MonitorProductCtl) GetAllMonitorProducts(c *gin.Context) {
 	c.JSON(http.StatusOK, global.NewSuccess("查询成功", mpc.dao.SelectMonitorProductList()))
-}
-
-func (mpc *MonitorProductCtl) UpdateById(c *gin.Context) {
-	var f form.MonitorProductUpdateForm
-	if err := c.ShouldBindJSON(&f); err != nil {
-		c.JSON(http.StatusBadRequest, global.NewError(translate.GetErrorMsg(err)))
-		return
-	}
-
-	var p = &models2.MonitorProduct{
-		Id:         f.Id,
-		Name:       f.Name,
-		CreateUser: f.CreateUser,
-	}
-	mpc.dao.UpdateById(p)
-	c.JSON(http.StatusOK, global.NewSuccess("更新成功", nil))
-
 }
 
 type Proxy struct {
