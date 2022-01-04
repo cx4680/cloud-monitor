@@ -22,13 +22,27 @@ func NewTenantService() *TenantService {
 	return &TenantService{}
 }
 
+type tenantResponse struct {
+	Result tenantResult `json:"result"`
+	Module tenantResult `json:"module"`
+}
+
+type tenantResult struct {
+	Login tenantLogin `json:"login"`
+}
+
+type tenantLogin struct {
+	LoginCode    string `json:"loginCode"`
+	SerialNumber string `json:"serialNumber"`
+}
+
 func (s *TenantService) GetTenantInfo(tenantId string) dto.TenantDTO {
 	var tenant dto.TenantDTO
 	key := fmt.Sprintf(constant.TenantInfoKey, tenantId)
 
 	value, err := sys_redis.Get(key)
 	if err != nil {
-		logger.Logger().Error("获取缓存出错, key=" + key)
+		logger.Logger().Error("key=" + key + ", error:" + err.Error())
 	}
 	if strutil.IsNotBlank(value) {
 		jsonutil.ToObject(value, &tenant)
@@ -54,15 +68,15 @@ func getTenantFromServer(tenantId string) *dto.TenantDTO {
 		logger.Logger().Error("查询租户信息失败:", resp, err)
 		return nil
 	}
-	var result map[string]map[string]map[string]string
+	var result tenantResponse
 	var loginName, serialNumber string
 	jsonutil.ToObject(resp, &result)
-	if result["module"] != nil {
-		loginName = result["module"]["login"]["loginCode"]
-		serialNumber = result["module"]["login"]["serialNumber"]
+	if result.Result != (tenantResult{}) {
+		loginName = result.Result.Login.LoginCode
+		serialNumber = result.Result.Login.SerialNumber
 	} else {
-		loginName = result["result"]["login"]["loginCode"]
-		serialNumber = result["result"]["login"]["serialNumber"]
+		loginName = result.Module.Login.LoginCode
+		serialNumber = result.Module.Login.SerialNumber
 	}
 	return &dto.TenantDTO{
 		Name:  loginName,
