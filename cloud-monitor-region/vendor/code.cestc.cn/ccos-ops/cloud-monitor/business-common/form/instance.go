@@ -19,12 +19,12 @@ type InstanceRuleDTO struct {
 type InstanceInfo struct {
 	InstanceId   string `json:"instanceId"  binding:"required"`
 	ZoneCode     string `json:"zoneCode"`
-	RegionCode   string `json:"regionCode"`
-	RegionName   string `json:"regionName"`
+	RegionCode   string `json:"regionCode" binding:"required"`
+	RegionName   string `json:"regionName" binding:"required"`
 	ZoneName     string `json:"zoneName"`
 	Ip           string `json:"ip"`
 	Status       string `json:"status"`
-	InstanceName string `json:"instanceName"`
+	InstanceName string `json:"instanceName" binding:"required"`
 }
 
 type InstanceBindRuleDTO struct {

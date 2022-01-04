@@ -105,28 +105,28 @@ func (s *MessageService) SendAlarmNotice(msgList []interface{}) error {
 				})
 			}
 		}
-		//send msg
-		if err := s.MCS.SendBatch(sendMsgList); err != nil {
-			logger.Logger().Errorf("message send error, %v\n\n", err)
-			return err
-		}
-		//save record local
-		s.NotificationRecordDao.InsertBatch(global.DB, recordList)
+	}
+	//send msg
+	if err := s.MCS.SendBatch(sendMsgList); err != nil {
+		logger.Logger().Errorf("message send error, %v\n\n", err)
+		return err
+	}
+	//save record local
+	s.NotificationRecordDao.InsertBatch(global.DB, recordList)
 
-		//	sync record to center
+	//	sync record to center
+	_ = sys_rocketmq.SendRocketMqMsg(sys_rocketmq.RocketMqMsg{
+		Topic:   sys_rocketmq.NotificationSyncTopic,
+		Content: jsonutil.ToString(recordList),
+	})
+	// 发送短信余量不足提醒
+	if len(smsSender) > 0 {
+		smsSender = util.RemoveDuplicateElement(smsSender)
+		//通过MQ异步解耦
 		_ = sys_rocketmq.SendRocketMqMsg(sys_rocketmq.RocketMqMsg{
-			Topic:   sys_rocketmq.NotificationSyncTopic,
-			Content: jsonutil.ToString(recordList),
+			Topic:   sys_rocketmq.SmsMarginReminderTopic,
+			Content: jsonutil.ToString(smsSender),
 		})
-		// 发送短信余量不足提醒
-		if len(smsSender) > 0 {
-			smsSender = util.RemoveDuplicateElement(smsSender)
-			//通过MQ异步解耦
-			_ = sys_rocketmq.SendRocketMqMsg(sys_rocketmq.RocketMqMsg{
-				Topic:   sys_rocketmq.SmsMarginReminderTopic,
-				Content: jsonutil.ToString(smsSender),
-			})
-		}
 	}
 	return nil
 }

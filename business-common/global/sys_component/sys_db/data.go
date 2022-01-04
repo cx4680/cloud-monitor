@@ -15,8 +15,8 @@ type DBInitializer struct {
 }
 
 func (i *DBInitializer) Initnitialization() error {
-	for _, b := range i.Fetches {
-		t, s, err := b.Fetch(i.DB)
+	for _, f := range i.Fetches {
+		t, s, err := f(i.DB)
 		if err != nil {
 			return err
 		}
@@ -38,14 +38,12 @@ func (i *DBInitializer) Initnitialization() error {
 	return nil
 }
 
-type InitializerFetch interface {
-	Fetch(db *gorm.DB) ([]interface{}, []string, error)
-}
 
-type CommonInitializerFetch struct {
-}
 
-func (c *CommonInitializerFetch) Fetch(db *gorm.DB) ([]interface{}, []string, error) {
+type InitializerFetch func (db *gorm.DB) ([]interface{}, []string, error)
+
+
+func  CommonFetch(db *gorm.DB) ([]interface{}, []string, error) {
 	var tables []interface{}
 	var sqls []string
 	//先将不需要保留的表删除

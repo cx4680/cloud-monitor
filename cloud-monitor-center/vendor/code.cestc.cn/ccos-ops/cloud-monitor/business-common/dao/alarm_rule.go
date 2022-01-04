@@ -121,7 +121,7 @@ func (dao *AlarmRuleDao) GetById(db *gorm.DB, id string) *model.AlarmRule {
 
 func (dao *AlarmRuleDao) GetInstanceList(tx *gorm.DB, ruleId string) []*form.InstanceInfo {
 	var model []*form.InstanceInfo
-	tx.Raw("SELECT DISTINCT t2.instance_id, t2.region_code, t2.region_name, t2.instance_name  FROM t_alarm_rule_resource_rel t1, t_alarm_instance t2  WHERE t1.alarm_rule_id = ?  AND t1.resource_id = t2.instance_id", ruleId).Scan(&model)
+	tx.Raw("select * from (SELECT   DISTINCT   t2.instance_id,   t2.region_code,   t2.region_name,   t2.instance_name    FROM   t_alarm_rule_resource_rel t1,   t_alarm_instance t2    WHERE   t1.alarm_rule_id = ?    AND t1.resource_id = t2.instance_id and t2.region_code!='' ) t group by   instance_id", ruleId).Scan(&model)
 	return model
 }
 

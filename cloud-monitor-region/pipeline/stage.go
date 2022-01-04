@@ -8,10 +8,9 @@ import (
 	"strings"
 )
 
-type ProjectInitializerFetch struct {
-}
 
-func (p *ProjectInitializerFetch) Fetch(db *gorm.DB) ([]interface{}, []string, error) {
+
+func ProjectFetch(db *gorm.DB) ([]interface{}, []string, error) {
 	var tables []interface{}
 	var sqls []string
 

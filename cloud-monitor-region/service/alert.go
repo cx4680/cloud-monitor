@@ -288,7 +288,7 @@ func (s *AlertRecordAddService) buildNoticeData(alert *form.AlertRecordAlertsBea
 	cv := fmt.Sprintf("%.2f", f)
 	objMap["currentValue"] = cv + ruleDesc.Unit
 
-	val := strconv.FormatFloat(ruleDesc.TargetValue, 'f', 2, 64)
+	val := strconv.FormatFloat(ruleDesc.TargetValue, 'f', 0, 64)
 
 	if handler_type.Email == ht {
 		objMap["instanceAmount"] = "1"
