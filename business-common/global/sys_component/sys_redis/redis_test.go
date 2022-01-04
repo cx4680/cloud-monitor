@@ -10,7 +10,7 @@ import (
 
 func TestRedisLock(t *testing.T) {
 	config.InitConfig("config.local.yml")
-	InitClient(config.GetRedisConfig())
+	InitClient(config.Cfg.Redis)
 	var waitGroup = &sync.WaitGroup{}
 	waitGroup.Add(10)
 	for i := 0; i < 10; i++ {

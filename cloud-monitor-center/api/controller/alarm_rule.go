@@ -133,7 +133,7 @@ func (ctl *AlarmRuleCtl) DeleteRule(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, global.NewError(err.Error()))
 		return
 	}
-	c.JSON(http.StatusOK, global.NewSuccess("更新成功", true))
+	c.JSON(http.StatusOK, global.NewSuccess("删除成功", true))
 }
 
 func (ctl *AlarmRuleCtl) ChangeRuleStatus(c *gin.Context) {

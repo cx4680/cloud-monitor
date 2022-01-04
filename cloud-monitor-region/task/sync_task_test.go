@@ -9,7 +9,7 @@ import (
 
 func Test111(t *testing.T) {
 	config.InitConfig("D:\\dev-go\\cloud-monitor\\cloud-monitor-region\\config.local.yml")
-	sys_db.InitDb(config.GetDbConfig())
+	sys_db.InitDb(config.Cfg.Db)
 	bt := commonTask.NewBusinessTaskImpl()
 	go AddSyncJobs(bt)
 	bt.Start()

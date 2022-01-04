@@ -12,8 +12,8 @@ db:
   username: root
 
 logger:
-  data_log_prefix: ../logs/
-  group: cloud-manager
+  data_log_prefix: logs/
+  group: cloud-region
   max_size:
   max_backups:
   max_age:

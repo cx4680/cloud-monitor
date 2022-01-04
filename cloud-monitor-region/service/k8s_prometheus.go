@@ -190,9 +190,9 @@ func (service *K8sPrometheusService) buildAlertRule(ruleExpress *dto.RuleExpress
 	alert.Labels = labelMaps
 	silenceTime, err := strconv.Atoi(ruleExpress.SilencesTime)
 	if err != nil {
-		alert.SilencesTime = "3h"
+		alert.SilencesTime = "2h59s"
 	} else {
-		alert.SilencesTime = util.SecToTime(silenceTime)
+		alert.SilencesTime = util.SecToTime(silenceTime - 1)
 	}
 	alert.SourceType = ruleExpress.SourceType
 	noticeGroupIds := make([]string, len(ruleExpress.NoticeGroupIds))

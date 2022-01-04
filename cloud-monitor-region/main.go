@@ -30,7 +30,7 @@ func main() {
 		AddStage(func(c *context.Context) error {
 			initializer := sys_db.DBInitializer{
 				DB:      global.DB,
-				Fetches: []sys_db.InitializerFetch{new(sys_db.CommonInitializerFetch), new(pipeline.ProjectInitializerFetch)},
+				Fetches: []sys_db.InitializerFetch{sys_db.CommonFetch, pipeline.ProjectFetch},
 			}
 
 			if err := initializer.Initnitialization(); err != nil {

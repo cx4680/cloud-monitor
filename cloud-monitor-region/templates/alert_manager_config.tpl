@@ -9,6 +9,7 @@
     "spec":{
       "route":{
         "receiver": "webhook-inner-op-{{ .Name }}",
+        "groupInterval": 1s,
         "routes":[
         {{ range .Router}}
           {
