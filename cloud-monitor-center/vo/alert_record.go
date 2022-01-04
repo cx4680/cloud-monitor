@@ -11,7 +11,7 @@ type AlertRecordPageVO struct {
 	RuleID       string          `json:"ruleId"`
 	RuleName     string          `json:"ruleName"`
 	MonitorType  string          `json:"monitorType"`
-	SourceType   string          `json:"source_type"`
+	SourceType   string          `json:"sourceType"`
 	SourceID     string          `json:"sourceId"`
 	Summary      string          `json:"summary"`
 	CurrentValue string          `json:"currentValue"`
@@ -36,7 +36,7 @@ type AlertRecordDetailVO struct {
 	RuleID       string          `json:"ruleId"`
 	RuleName     string          `json:"ruleName"`
 	MonitorType  string          `json:"monitorType"`
-	SourceType   string          `json:"source_type"`
+	SourceType   string          `json:"sourceType"`
 	SourceID     string          `json:"sourceId"`
 	Summary      string          `json:"summary"`
 	CurrentValue string          `json:"currentValue"`
