@@ -1,12 +1,14 @@
 package controller
 
 import (
+	commonDtos "code.cestc.cn/ccos-ops/cloud-monitor/business-common/dto"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/util"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/dao"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/form"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/validator/translate"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/vo"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/jsonutil"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/strutil"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -29,6 +31,27 @@ func (a *AlertRecordController) GetPageList(c *gin.Context) {
 	tenantId, _ := util.GetTenantId(c)
 	page := dao.AlertRecord.GetPageList(global.DB, tenantId, f)
 	c.JSON(http.StatusOK, global.NewSuccess("查询成功", page))
+}
+
+func (a *AlertRecordController) GetAlarmContactInfo(c *gin.Context) {
+	id := c.Query("id")
+	if strutil.IsBlank(id) {
+		c.JSON(http.StatusBadRequest, global.NewError("参数错误"))
+		return
+	}
+	tenantId, err := util.GetTenantId(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, global.NewError("身份获取错误"))
+		return
+	}
+	r := dao.AlertRecord.GetByIdAndTenantId(global.DB, id, tenantId)
+	if strutil.IsBlank(r.ContactInfo) {
+		c.JSON(http.StatusOK, global.NewSuccess("查询成功", nil))
+		return
+	}
+	var contactGroups []*commonDtos.ContactGroupInfo
+	jsonutil.ToObject(r.ContactInfo, &contactGroups)
+	c.JSON(http.StatusOK, global.NewSuccess("查询成功", contactGroups))
 }
 
 func (a *AlertRecordController) GetDetail(c *gin.Context) {

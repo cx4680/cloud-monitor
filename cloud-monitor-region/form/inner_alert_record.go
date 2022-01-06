@@ -34,6 +34,7 @@ type AlertBeanAnnotationsBean struct {
 }
 
 type AlertRecordAlertsBean struct {
+	RequestId    string
 	Status       string
 	Labels       *AlertBeanLabelsBean
 	Annotations  *AlertBeanAnnotationsBean

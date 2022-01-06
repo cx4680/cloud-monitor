@@ -62,6 +62,8 @@ func (s *MessageService) TargetFilter(targetList []string, rt message_center.Rec
 			logger.Logger().Infof("too many records have been sent, send refused, sender=%s \n", senderId)
 		}
 	}
+	//去重
+	addrs = util.RemoveDuplicateElement(addrs)
 	return addrs
 }
 

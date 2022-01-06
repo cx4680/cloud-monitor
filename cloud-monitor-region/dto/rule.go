@@ -19,4 +19,5 @@ type RuleExpress struct {
 	ResourceId     string              `gorm:"column:resource_id"`
 	TenantId       string
 	SourceType     uint8
+	Source         string
 }
