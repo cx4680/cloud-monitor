@@ -47,8 +47,9 @@ func (dao *AlarmRuleDao) DeleteRule(tx *gorm.DB, ruleReqDTO *form.RuleReqDTO) {
 	rule := model.AlarmRule{
 		TenantID: ruleReqDTO.TenantId,
 		ID:       ruleReqDTO.Id,
+		Deleted:  1,
 	}
-	tx.Delete(&rule)
+	tx.Updates(&rule)
 	dao.deleteOthers(tx, ruleReqDTO.Id)
 }
 
