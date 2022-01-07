@@ -38,12 +38,9 @@ func (i *DBInitializer) Initnitialization() error {
 	return nil
 }
 
+type InitializerFetch func(db *gorm.DB) ([]interface{}, []string, error)
 
-
-type InitializerFetch func (db *gorm.DB) ([]interface{}, []string, error)
-
-
-func  CommonFetch(db *gorm.DB) ([]interface{}, []string, error) {
+func CommonFetch(db *gorm.DB) ([]interface{}, []string, error) {
 	var tables []interface{}
 	var sqls []string
 	//先将不需要保留的表删除
