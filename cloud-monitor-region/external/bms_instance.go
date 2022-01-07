@@ -1,10 +1,7 @@
 package external
 
 import (
-	commonDao "code.cestc.cn/ccos-ops/cloud-monitor/business-common/dao"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/service"
-	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/httputil"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/jsonutil"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/strutil"
@@ -124,30 +121,9 @@ func (bms *BmsInstanceService) ConvertResp(realResp interface{}) (int, []service
 				Labels: []service.InstanceLabel{{
 					Name:  "status",
 					Value: d.Status,
-				}, {
-					Name:  "serialNumber",
-					Value: getSerialNumber(d.Status),
 				}},
 			})
 		}
 	}
 	return vo.Data.TotalCount, list
-}
-
-//获取机器SN号
-func getSerialNumber(bmsId string) string {
-	p := commonDao.MonitorProduct.GetByAbbreviation(global.DB, BMS)
-	url := p.Host + p.PageUrl + "/bmcnodes?filter=ecs_id:eq:" + bmsId
-	respStr, err := httputil.HttpGet(url)
-	if err != nil {
-		logger.Logger().Error("BMS error", err)
-		return ""
-	}
-	var resp SerialResponse
-	jsonutil.ToObject(respStr, &resp)
-	if resp.Data.TotalCount <= 0 {
-		logger.Logger().Error("Not found BMS_ID")
-		return ""
-	}
-	return resp.Data.Bmcnodes[0].SerialNumber
 }
