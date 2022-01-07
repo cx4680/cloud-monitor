@@ -12,8 +12,8 @@ db:
   username: root
 
 logger:
-  data_log_prefix: logs/
-  group: cloud-region
+  data_log_prefix: /logs/
+  service_name: cloud-monitor-region
   max_size:
   max_backups:
   max_age:

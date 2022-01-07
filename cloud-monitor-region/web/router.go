@@ -2,6 +2,7 @@ package web
 
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/iam"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/logs"
 	commonService "code.cestc.cn/ccos-ops/cloud-monitor/business-common/service"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/service/external/message_center"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/api/actuator"
@@ -18,6 +19,9 @@ import (
 	"net/http"
 )
 
+const Read = "Read"
+const Write = "Write"
+
 func loadRouters() {
 	swagger()
 	instance()
@@ -31,9 +35,9 @@ func MonitorReportForm() {
 	monitorReportFormCtl := controller.NewMonitorReportFormController(service.NewMonitorReportFormService())
 	group := router.Group("/hawkeye/MonitorReportForm/")
 	{
-		group.GET("/getData", iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetMonitorReportData", ResourceType: "*", ResourceId: "*"}), monitorReportFormCtl.GetData)
-		group.GET("/getAxisData", iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetMonitorReportRangeData", ResourceType: "*", ResourceId: "*"}), monitorReportFormCtl.GetAxisData)
-		group.GET("/getTop", iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetMonitorReportTop", ResourceType: "*", ResourceId: "*"}), monitorReportFormCtl.GetTop)
+		group.GET("/getData", iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetMonitorReportData", ResourceType: "*", ResourceId: "*"}), monitorReportFormCtl.GetData, logs.GinTrailzap(false, Read))
+		group.GET("/getAxisData", iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetMonitorReportRangeData", ResourceType: "*", ResourceId: "*"}), monitorReportFormCtl.GetAxisData, logs.GinTrailzap(false, Read))
+		group.GET("/getTop", iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetMonitorReportTop", ResourceType: "*", ResourceId: "*"}), monitorReportFormCtl.GetTop, logs.GinTrailzap(false, Read))
 	}
 }
 
@@ -46,8 +50,8 @@ func instance() {
 	instanceCtl := controller.NewInstanceCtl(dao.Instance)
 	group := router.Group("/hawkeye/instance/")
 	{
-		group.GET("/page", iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetInstancePageList", ResourceType: "*", ResourceId: "*"}), instanceCtl.GetPage)
-		group.GET("/getInstanceNum", iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetInstanceNum", ResourceType: "*", ResourceId: "*"}), instanceCtl.GetInstanceNumByRegion)
+		group.GET("/page", iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetInstancePageList", ResourceType: "*", ResourceId: "*"}), instanceCtl.GetPage, logs.GinTrailzap(false, Read))
+		group.GET("/getInstanceNum", iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetInstanceNum", ResourceType: "*", ResourceId: "*"}), instanceCtl.GetInstanceNumByRegion, logs.GinTrailzap(false, Read))
 	}
 }
 
