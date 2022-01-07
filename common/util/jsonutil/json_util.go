@@ -19,3 +19,11 @@ func ToObject(str string, obj interface{}) {
 		logger.Logger().Errorf("反序列化json失败, error:%v, data:%v", err, str)
 	}
 }
+
+func ToObjectWithError(str string, obj interface{}) error {
+	err := json.Unmarshal([]byte(str), obj)
+	if err != nil {
+		logger.Logger().Errorf("反序列化json失败, error:%v, data:%v", err, str)
+	}
+	return err
+}
