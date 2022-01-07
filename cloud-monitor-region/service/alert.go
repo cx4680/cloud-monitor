@@ -41,8 +41,7 @@ func NewAlertRecordAddService(AlertRecordSvc *AlertRecordService, AlarmHandlerSv
 	return &AlertRecordAddService{
 		FilterChain: []filter{func(alert *form.AlertRecordAlertsBean) (bool, error) {
 			rule := &commonDtos.RuleDesc{}
-			jsonutil.ToObject(alert.Annotations.Description, rule)
-			if rule == nil {
+			if err := jsonutil.ToObjectWithError(alert.Annotations.Description, rule); err != nil {
 				return false, errors.New("requestId=" + alert.RequestId + ", 序列化告警数据失败")
 			}
 			// 判断该告警对应的规则是否有变化 资源组
@@ -132,8 +131,7 @@ func (s *AlertRecordAddService) checkAndBuild(requestId string, alerts []*form.A
 		}
 		//解析告警规则信息
 		ruleDesc := &commonDtos.RuleDesc{}
-		jsonutil.ToObject(a.Annotations.Description, ruleDesc)
-		if ruleDesc == nil {
+		if err:=jsonutil.ToObjectWithError(a.Annotations.Description, ruleDesc); err != nil{
 			logger.Logger().Error("requestId=", a.RequestId, ", 序列化告警数据失败, ", jsonutil.ToString(a))
 			continue
 		}
