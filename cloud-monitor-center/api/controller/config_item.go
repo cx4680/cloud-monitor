@@ -4,6 +4,7 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/dao"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/service"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
@@ -46,5 +47,9 @@ func (ctl *ConfigItemCtl) GetMonitorRange(c *gin.Context) {
 }
 
 func (ctl *ConfigItemCtl) GetNoticeChannel(c *gin.Context) {
-	c.JSON(http.StatusOK, global.NewSuccess("查询成功", dao.ConfigItem.GetConfigItemList(dao.NoticeChannel)))
+	if config.Cfg.Common.MsgIsOpen == config.MsgClose {
+		c.JSON(http.StatusOK, global.NewSuccess("查询成功", nil))
+		return
+	}
+	c.JSON(http.StatusOK, global.NewSuccess("查询成功", global.NoticeChannelMap))
 }
