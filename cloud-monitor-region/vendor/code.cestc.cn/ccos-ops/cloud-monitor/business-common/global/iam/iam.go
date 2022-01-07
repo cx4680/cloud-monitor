@@ -9,6 +9,10 @@ import (
 
 func AuthIdentify(identity *models.Identity) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		c.Set("Product", identity.Product)
+		c.Set("Action", identity.Action)
+		c.Set("ResourceType", identity.ResourceType)
+		c.Set("ResourceId", identity.ResourceId)
 		// IAM鉴权接口
 		err := middleware.AuthIdentify(c, identity, "")
 		if err != nil {
