@@ -20,7 +20,7 @@ func GinTrailzap(utc bool, requestType string) gin.HandlerFunc {
 		serviceName := "CCS::CloudMonitor::Manager"
 		var data []byte
 		if http.MethodGet == c.Request.Method {
-			params:=c.Request.URL.RawQuery
+			params := c.Request.URL.RawQuery
 			requestParams, err := json.Marshal(params)
 			if err != nil {
 				c.Abort()
@@ -90,7 +90,7 @@ func GinTrailzap(utc bool, requestType string) gin.HandlerFunc {
 				zap.Namespace("user_info"),
 				zap.String("account_id", accountId),
 				zap.String("user_type", userType),
-				zap.String("user_name",userName),
+				zap.String("user_name", userName),
 				zap.String("principal_id", loginId),
 			)
 		}()
