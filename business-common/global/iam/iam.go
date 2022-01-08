@@ -18,7 +18,7 @@ func AuthIdentify(identity *models.Identity) gin.HandlerFunc {
 		// IAM鉴权接口
 		err := middleware.AuthIdentify(c, identity, "")
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, global.NewError(err.Error()))
+			c.JSON(http.StatusInternalServerError, global.NewError("用户不允许进行该操作"))
 			c.Abort()
 		}
 	}
