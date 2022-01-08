@@ -82,9 +82,9 @@ type RedisConfig struct {
 }
 
 type IamConfig struct {
-	Site   string
-	Region string
-	Log    string
+	Site   string`yaml:"site"`
+	Region string`yaml:"region"`
+	Log    string`yaml:"log"`
 }
 
 var Cfg = defaultAppConfig()
