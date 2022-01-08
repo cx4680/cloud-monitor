@@ -17,24 +17,10 @@ import (
 
 func GinTrailzap(utc bool, requestType string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// some evil middlewares modify this values
-		// path := c.Request.URL.Path
-		accountId := c.GetString(global.TenantId)
-		userType := c.GetString("userType")
-		loginId := c.GetString(global.UserId)
-		resourceType := c.GetString("ResourceType")
-		resourceName := c.GetString("ResourceId")
-		eventName := c.GetString("Action")
-		source := c.Request.Header["Origin"]
-		eventSource := ""
-		userName := c.GetString(global.UserName)
-		if len(source) > 0 {
-			eventSource = source[0]
-		}
 		serviceName := "CCS::CloudMonitor::Manager"
 		var data []byte
 		if http.MethodGet == c.Request.Method {
-			params:=c.Request.URL.RawQuery
+			params := c.Request.URL.RawQuery
 			requestParams, err := json.Marshal(params)
 			if err != nil {
 				c.Abort()
@@ -66,34 +52,48 @@ func GinTrailzap(utc bool, requestType string) gin.HandlerFunc {
 		ctx := context.WithValue(context.Background(), "X-Request-ID", requestID)
 		c.Set("ctx", ctx)
 		c.Next()
-		end := time.Now()
-		if utc {
-			end = end.UTC()
-		}
+		defer func() {
+			accountId := c.GetString(global.TenantId)
+			userType := c.GetString(global.UserType)
+			loginId := c.GetString(global.UserId)
+			userName := c.GetString(global.UserName)
+			resourceType := c.GetString("ResourceType")
+			resourceName := c.GetString("ResourceId")
+			eventName := c.GetString("Action")
+			source := c.Request.Header["Origin"]
+			eventSource := ""
+			if len(source) > 0 {
+				eventSource = source[0]
+			}
 
-		logger.GetTrailLogger().Info("[ACTION_TRAIL_LOG]",
-			zap.String("event_id", requestID),
-			zap.String("event_version", "1"),
-			zap.String("event_source", eventSource),
-			zap.String("source_ip_address", c.ClientIP()),
-			zap.String("user_agent", c.Request.UserAgent()),
-			zap.String("service_name", serviceName),
-			zap.String("event_name", eventName),
-			zap.String("request_type", requestType),
-			zap.String("api_version", "1.0"),
-			zap.String("request_id", requestID),
-			zap.String("event_time", end.Format(util.FullTimeFmt)),
-			zap.String("event_region", eventRegion),
-			zap.String("resource_type", resourceType),
-			zap.String("resource_name", resourceName),
-			zap.String("request_parameters", string(requestParamJson)),
-			zap.Int("error_code", c.Writer.Status()),
-			zap.Namespace("user_info"),
-			zap.String("account_id", accountId),
-			zap.String("user_type", userType),
-			zap.String("user_name",userName),
-			zap.String("principal_id", loginId),
-		)
+			end := time.Now()
+			if utc {
+				end = end.UTC()
+			}
+			logger.GetTrailLogger().Info("[ACTION_TRAIL_LOG]",
+				zap.String("event_id", requestID),
+				zap.String("event_version", "1"),
+				zap.String("event_source", eventSource),
+				zap.String("source_ip_address", c.ClientIP()),
+				zap.String("user_agent", c.Request.UserAgent()),
+				zap.String("service_name", serviceName),
+				zap.String("event_name", eventName),
+				zap.String("request_type", requestType),
+				zap.String("api_version", "1.0"),
+				zap.String("request_id", requestID),
+				zap.String("event_time", end.Format(util.FullTimeFmt)),
+				zap.String("event_region", eventRegion),
+				zap.String("resource_type", resourceType),
+				zap.String("resource_name", resourceName),
+				zap.String("request_parameters", string(requestParamJson)),
+				zap.Int("error_code", c.Writer.Status()),
+				zap.Namespace("user_info"),
+				zap.String("account_id", accountId),
+				zap.String("user_type", userType),
+				zap.String("user_name", userName),
+				zap.String("principal_id", loginId),
+			)
+		}()
 	}
 
 }
