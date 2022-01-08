@@ -5,7 +5,6 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/httputil"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/jsonutil"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/strutil"
-	"strconv"
 	"strings"
 )
 
@@ -46,61 +45,40 @@ type SlbQueryPageResult struct {
 }
 
 type SlbInfoBean struct {
-	SubnetId    int         `json:"subnetId"`
-	UnbindEip   interface{} `json:"unbindEip"`
-	OldState    interface{} `json:"oldState"`
-	NetworkName string      `json:"networkName"`
-	CrmAttrList []struct {
-		AttrCode  string `json:"attrCode"`
-		AttrValue string `json:"attrValue"`
-		AttrName  string `json:"attrName"`
-	} `json:"crmAttrList"`
-	Remark   string `json:"remark"`
-	PayModel string `json:"payModel"`
-	Eip      struct {
-		ExpireTime    interface{} `json:"expireTime"`
-		Bandwidth     int         `json:"bandwidth"`
-		Ip            string      `json:"ip"`
-		Name          interface{} `json:"name"`
-		FloatingIpUid string      `json:"floatingIpUid"`
-		CrmAttrList   []struct {
-			AttrCode  string  `json:"attrCode"`
-			AttrValue *string `json:"attrValue"`
-			AttrName  string  `json:"attrName"`
-		} `json:"crmAttrList"`
-		PayModel interface{} `json:"payModel"`
-		Id       int         `json:"id"`
-	} `json:"eip"`
-	PoolList      []interface{} `json:"poolList"`
-	UserCode      string        `json:"userCode"`
-	Spec          string        `json:"spec"`
-	SubnetName    string        `json:"subnetName"`
-	RegionCode    string        `json:"regionCode"`
-	ResourceCode  string        `json:"resourceCode"`
-	NetworkId     int           `json:"networkId"`
-	Id            int           `json:"id"`
-	State         string        `json:"state"`
-	BandWidthUid  string        `json:"bandWidthUid"`
-	Address       string        `json:"address"`
-	LbUid         string        `json:"lbUid"`
-	Ip            string        `json:"ip"`
-	StateList     interface{}   `json:"stateList"`
-	EipInstaceUid interface{}   `json:"eipInstaceUid"`
-	FloatingIpUid string        `json:"floatingIpUid"`
-	UpdateTime    interface{}   `json:"updateTime"`
-	PortUid       interface{}   `json:"portUid"`
-	ExpireTime    string        `json:"expireTime"`
-	CreateTime    string        `json:"createTime"`
-	ListenerList  []struct {
-		ListenerUid  string `json:"listenerUid"`
+	Name         string        `json:"name"`
+	UserCode     string        `json:"userCode"`
+	LbUid        string        `json:"lbUid"`
+	State        string        `json:"state"`
+	Address      string        `json:"address"`
+	SubnetUid    string        `json:"subnetUid"`
+	PortUid      interface{}   `json:"portUid"`
+	RegionCode   string        `json:"regionCode"`
+	ZoneCode     interface{}   `json:"zoneCode"`
+	Remark       string        `json:"remark"`
+	CreateTime   string        `json:"createTime"`
+	UpdateTime   interface{}   `json:"updateTime"`
+	NetworkName  string        `json:"networkName"`
+	NetworkUid   string        `json:"networkUid"`
+	SubnetName   string        `json:"subnetName"`
+	PoolList     []interface{} `json:"poolList"`
+	ListenerList []struct {
 		Protocol     string `json:"protocol"`
 		ProtocolPort int    `json:"protocolPort"`
-		Name         string `json:"name"`
+		ListenerUid  string `json:"listenerUid"`
+		ListenerName string `json:"listenerName"`
 	} `json:"listenerList"`
-	SubnetUid  string      `json:"subnetUid"`
-	Name       string      `json:"name"`
-	NetworkUid string      `json:"networkUid"`
-	ZoneCode   interface{} `json:"zoneCode"`
+	Eip struct {
+		Ip         string      `json:"ip"`
+		Name       interface{} `json:"name"`
+		Bandwidth  int         `json:"bandwidth"`
+		ExpireTime string      `json:"expireTime"`
+		PayModel   interface{} `json:"payModel"`
+		EipUid     int         `json:"eipUid"`
+	} `json:"eip"`
+	ExpireTime string `json:"expireTime"`
+	PayModel   string `json:"payModel"`
+	OrderId    string `json:"orderId"`
+	Spec       string `json:"spec"`
 }
 
 func (slb *SlbInstanceService) ConvertRealForm(form service.InstancePageForm) interface{} {
@@ -161,9 +139,6 @@ func (slb *SlbInstanceService) ConvertResp(realResp interface{}) (int, []service
 				}, {
 					Name:  "listener",
 					Value: getListenerList(d),
-				}, {
-					Name:  "id",
-					Value: strconv.Itoa(d.Id),
 				}},
 			})
 		}
@@ -174,7 +149,7 @@ func (slb *SlbInstanceService) ConvertResp(realResp interface{}) (int, []service
 func getListenerList(slb *SlbInfoBean) string {
 	var listener []string
 	for _, v := range slb.ListenerList {
-		listener = append(listener, v.Name)
+		listener = append(listener, v.ListenerName)
 	}
 	return strings.Join(listener, ",")
 }
