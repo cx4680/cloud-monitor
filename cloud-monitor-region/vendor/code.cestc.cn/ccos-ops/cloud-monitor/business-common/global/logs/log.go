@@ -10,6 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 	"io/ioutil"
+	"net/http"
 	"strings"
 	"time"
 )
@@ -20,22 +21,35 @@ func GinTrailzap(utc bool, requestType string) gin.HandlerFunc {
 		// path := c.Request.URL.Path
 		accountId := c.GetString(global.TenantId)
 		userType := c.GetString("userType")
-		loginCode := c.GetString(global.UserId)
+		loginId := c.GetString(global.UserId)
 		resourceType := c.GetString("ResourceType")
 		resourceName := c.GetString("ResourceId")
 		eventName := c.GetString("Action")
 		source := c.Request.Header["Origin"]
 		eventSource := ""
+		userName := c.GetString(global.UserName)
 		if len(source) > 0 {
 			eventSource = source[0]
 		}
-		serviceName := "CCS::IAM::CloudMonitor"
-		// c.Request.PostForm
-		data, err := c.GetRawData()
-		if err != nil {
-			c.Abort()
-			logger.Logger().Error(err.Error())
-			return
+		serviceName := "CCS::CloudMonitor::Manager"
+		var data []byte
+		if http.MethodGet == c.Request.Method {
+			params:=c.Request.URL.RawQuery
+			requestParams, err := json.Marshal(params)
+			if err != nil {
+				c.Abort()
+				logger.Logger().Error(err.Error())
+				return
+			}
+			data = requestParams
+		} else {
+			body, err := c.GetRawData()
+			if err != nil {
+				c.Abort()
+				logger.Logger().Error(err.Error())
+				return
+			}
+			data = body
 		}
 		formatData := strings.Replace(strings.Replace(string(data), "\r\n", "", -1), " ", "", -1)
 		requestParameters := make(map[string]string, 0)
@@ -77,7 +91,8 @@ func GinTrailzap(utc bool, requestType string) gin.HandlerFunc {
 			zap.Namespace("user_info"),
 			zap.String("account_id", accountId),
 			zap.String("user_type", userType),
-			zap.String("user_name", loginCode),
+			zap.String("user_name",userName),
+			zap.String("principal_id", loginId),
 		)
 	}
 

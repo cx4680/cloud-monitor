@@ -20,7 +20,6 @@ import (
 )
 
 const Read = "Read"
-const Write = "Write"
 
 func loadRouters() {
 	swagger()
@@ -35,9 +34,9 @@ func MonitorReportForm() {
 	monitorReportFormCtl := controller.NewMonitorReportFormController(service.NewMonitorReportFormService())
 	group := router.Group("/hawkeye/MonitorReportForm/")
 	{
-		group.GET("/getData", iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetMonitorReportData", ResourceType: "*", ResourceId: "*"}), monitorReportFormCtl.GetData, logs.GinTrailzap(false, Read))
-		group.GET("/getAxisData", iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetMonitorReportRangeData", ResourceType: "*", ResourceId: "*"}), monitorReportFormCtl.GetAxisData, logs.GinTrailzap(false, Read))
-		group.GET("/getTop", iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetMonitorReportTop", ResourceType: "*", ResourceId: "*"}), monitorReportFormCtl.GetTop, logs.GinTrailzap(false, Read))
+		group.GET("/getData", logs.GinTrailzap(false, Read), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetMonitorReportData", ResourceType: "*", ResourceId: "*"}), monitorReportFormCtl.GetData)
+		group.GET("/getAxisData", logs.GinTrailzap(false, Read), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetMonitorReportRangeData", ResourceType: "*", ResourceId: "*"}), monitorReportFormCtl.GetAxisData)
+		group.GET("/getTop", logs.GinTrailzap(false, Read), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetMonitorReportTop", ResourceType: "*", ResourceId: "*"}), monitorReportFormCtl.GetTop)
 	}
 }
 
@@ -50,8 +49,8 @@ func instance() {
 	instanceCtl := controller.NewInstanceCtl(dao.Instance)
 	group := router.Group("/hawkeye/instance/")
 	{
-		group.GET("/page", iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetInstancePageList", ResourceType: "*", ResourceId: "*"}), instanceCtl.GetPage, logs.GinTrailzap(false, Read))
-		group.GET("/getInstanceNum", iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetInstanceNum", ResourceType: "*", ResourceId: "*"}), instanceCtl.GetInstanceNumByRegion, logs.GinTrailzap(false, Read))
+		group.GET("/page", logs.GinTrailzap(false, Read), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetInstancePageList", ResourceType: "*", ResourceId: "*"}), instanceCtl.GetPage)
+		group.GET("/getInstanceNum", logs.GinTrailzap(false, Read), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetInstanceNum", ResourceType: "*", ResourceId: "*"}), instanceCtl.GetInstanceNumByRegion)
 	}
 }
 
