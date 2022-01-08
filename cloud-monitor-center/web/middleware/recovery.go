@@ -34,10 +34,6 @@ func Recovery() gin.HandlerFunc {
 				c.JSON(http.StatusInternalServerError, global.NewError("系统异常"))
 				return
 			}
-			if c.Writer.Status() == 404 {
-				c.JSON(http.StatusNotFound, "path not found")
-			}
-
 		}()
 
 		c.Next()

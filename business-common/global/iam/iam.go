@@ -1,10 +1,12 @@
 package iam
 
 import (
+	"net/http"
+
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
 	"code.cestc.cn/yyptb-group_tech/iam-sdk-go/pkg/middleware"
 	"code.cestc.cn/yyptb-group_tech/iam-sdk-go/pkg/models"
 	"github.com/gin-gonic/gin"
-	"net/http"
 )
 
 func AuthIdentify(identity *models.Identity) gin.HandlerFunc {
@@ -16,7 +18,7 @@ func AuthIdentify(identity *models.Identity) gin.HandlerFunc {
 		// IAM鉴权接口
 		err := middleware.AuthIdentify(c, identity, "")
 		if err != nil {
-			c.JSON(http.StatusOK, err)
+			c.JSON(http.StatusInternalServerError, global.NewError(err.Error()))
 			c.Abort()
 		}
 	}

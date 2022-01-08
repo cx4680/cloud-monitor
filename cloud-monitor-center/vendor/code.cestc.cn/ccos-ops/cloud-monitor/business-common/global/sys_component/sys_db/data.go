@@ -14,8 +14,6 @@ type DBInitializer struct {
 	Fetches []InitializerFetch
 }
 
-
-
 func (i *DBInitializer) Initnitialization() error {
 	for _, f := range i.Fetches {
 		t, s, err := f(i.DB)
