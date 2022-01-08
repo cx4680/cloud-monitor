@@ -47,6 +47,10 @@ func (ctl *InstanceCtl) GetPage(c *gin.Context) {
 	}
 	f.TenantId = tenantId
 	instanceService := external.ProductInstanceServiceMap[f.Product]
+	if instanceService == nil {
+		c.JSON(http.StatusBadRequest, global.NewError("该产品未接入"))
+		return
+	}
 	page, err := instanceService.GetPage(f, instanceService.(commonService.InstanceStage))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, global.NewError("查询失败"))
