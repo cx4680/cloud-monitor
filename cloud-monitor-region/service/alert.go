@@ -131,7 +131,7 @@ func (s *AlertRecordAddService) checkAndBuild(requestId string, alerts []*form.A
 		}
 		//解析告警规则信息
 		ruleDesc := &commonDtos.RuleDesc{}
-		if err:=jsonutil.ToObjectWithError(a.Annotations.Description, ruleDesc); err != nil{
+		if err := jsonutil.ToObjectWithError(a.Annotations.Description, ruleDesc); err != nil {
 			logger.Logger().Error("requestId=", a.RequestId, ", 序列化告警数据失败, ", jsonutil.ToString(a))
 			continue
 		}
@@ -208,7 +208,7 @@ func (s *AlertRecordAddService) buildAlertRecord(alert *form.AlertRecordAlertsBe
 		EndTime:        commonUtil.TimeToStr(commonUtil.TimeParseForZone(alert.EndsAt), commonUtil.FullTimeFmt),
 		TargetValue:    val,
 		Expression:     ruleDesc.Express,
-		Duration:       s.getDurationTime(now, startTime, ruleDesc.Period),
+		Duration:       s.getDurationTime(now, startTime, ruleDesc.Period*ruleDesc.Time),
 		Level:          ruleDesc.Level,
 		AlarmKey:       ruleDesc.MetricName,
 		ContactInfo:    jsonutil.ToString(contactGroups),
