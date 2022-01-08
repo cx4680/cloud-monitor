@@ -10,3 +10,4 @@ const (
 const TenantId = "accountId"
 const UserId = "userId"
 const UserType = "userType"
+const UserName = "userName"

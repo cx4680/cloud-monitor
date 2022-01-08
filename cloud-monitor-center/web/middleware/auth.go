@@ -63,5 +63,6 @@ func ParsingAndSetUserInfo(c *gin.Context) error {
 	c.Set(global.UserType, userMap["userTypeCode"])
 	c.Set(global.TenantId, userMap["cloudLoginId"])
 	c.Set(global.UserId, userMap["loginId"])
+	c.Set(global.UserName, userMap["loginCode"])
 	return nil
 }
