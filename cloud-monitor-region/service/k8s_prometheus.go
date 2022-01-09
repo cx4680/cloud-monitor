@@ -134,7 +134,7 @@ func (service *K8sPrometheusService) buildAlertRuleListByResourceGroup(wg *sync.
 		ruleExpress.NoticeGroupIds = dao2.AlarmRule.GetNoticeGroupList(global.DB, ruleExpress.RuleId)
 		instanceList := dao2.AlarmRule.GetResourceListByGroup(global.DB, ruleExpress.ResGroupId)
 		ruleExpress.TenantId = tenantId
-		if calc_mode.ResourceGroup == ruleExpress.CalcMode {
+		if calc_mode.Resource != ruleExpress.CalcMode {
 			rule, err := service.buildAlertRule(ruleExpress, service.joinResourceId(instanceList, "|"))
 			if err != nil {
 				logger.Logger().Errorf("build rule err %+v", err)
@@ -168,7 +168,7 @@ func (service *K8sPrometheusService) buildAlertRule(ruleExpress *dto.RuleExpress
 		return nil, err
 	}
 	resourceId := ""
-	if len(ruleExpress.ResGroupId) == 0 {
+	if len(ruleExpress.ResGroupId) == 0 || calc_mode.Resource == ruleExpress.CalcMode {
 		alert.Alert = fmt.Sprintf("%s#%s#%s", ruleExpress.RuleId, instanceId, conditionId)
 		resourceId = instanceId
 	} else {

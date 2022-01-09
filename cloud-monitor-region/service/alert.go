@@ -105,7 +105,7 @@ func (s *AlertRecordAddService) Add(requestId string, f form.InnerAlertRecordAdd
 			//调用弹性伸缩
 			for _, a := range p {
 				data := a.(*commonDtos.AutoScalingData)
-				respJson, err := httputil.HttpPostJson(data.Param+"/inner/as/trigger", map[string]string{"ruleId": data.RuleId, "tenantId": data.TenantId}, nil)
+				respJson, err := httputil.HttpPostJson(data.Param, map[string]string{"ruleId": data.RuleId, "tenantId": data.TenantId}, nil)
 				if err != nil {
 					logger.Logger().Error("requestId=", requestId, ", autoScaling request fail,", err)
 				} else {
