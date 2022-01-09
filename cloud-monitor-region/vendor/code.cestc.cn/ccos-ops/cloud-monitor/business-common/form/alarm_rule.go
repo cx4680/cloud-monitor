@@ -59,7 +59,7 @@ type UserInfo struct {
 }
 
 type ResGroupInfo struct {
-	CalcMode     int             `json:"calc_mode"`
+	CalcMode     int             `json:"calcMode"`
 	ResGroupId   string          `json:"resGroupId"`
 	ResGroupName string          `json:"resGroupName"`
 	ResourceList []*InstanceInfo `json:"resourceList"`
@@ -82,7 +82,7 @@ type AlarmRuleAddReqDTO struct {
 	NoticeChannel     string          `json:"noticeChannel"`
 	GroupList         []string        `json:"groupList"`
 	Source            string          `json:"source"`
-	SourceType        uint8           `json:"source_type"`
+	SourceType        uint8           `json:"sourceType"`
 	Id                string          `json:"id"`
 }
 
