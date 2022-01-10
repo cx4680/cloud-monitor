@@ -73,8 +73,8 @@ func (s *AlertContactInformationService) getActiveCode(noType uint8) (string, ui
 	if config.Cfg.Common.MsgIsOpen == config.MsgClose {
 		return "", 1
 	}
-	for k := range global.NoticeChannelMap {
-		if (k == config.MsgChannelSms && noType == constant.Phone) || (k == config.MsgChannelEmail && noType == constant.Email) {
+	for _, v := range global.NoticeChannelList {
+		if (v.Code == config.MsgChannelSms && noType == constant.Phone) || (v.Code == config.MsgChannelEmail && noType == constant.Email) {
 			return strings.ReplaceAll(uuid.New().String(), "-", ""), 0
 		}
 	}

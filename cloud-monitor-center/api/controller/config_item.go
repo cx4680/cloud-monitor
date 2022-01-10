@@ -51,5 +51,5 @@ func (ctl *ConfigItemCtl) GetNoticeChannel(c *gin.Context) {
 		c.JSON(http.StatusOK, global.NewSuccess("查询成功", nil))
 		return
 	}
-	c.JSON(http.StatusOK, global.NewSuccess("查询成功", global.NoticeChannelMap))
+	c.JSON(http.StatusOK, global.NewSuccess("查询成功", global.NoticeChannelList))
 }
