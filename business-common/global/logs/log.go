@@ -15,9 +15,18 @@ import (
 	"time"
 )
 
+var userTypeMap = map[string]string{
+	"0": "root-account",
+	"1": "root-account",
+	"2": "root-account",
+	"3": "iam-user",
+	"4": "assumed-role",
+	"5": "system",
+}
+
 func GinTrailzap(utc bool, requestType string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		serviceName := "CCS::CloudMonitor::Manager"
+		serviceName := "CloudMonitor"
 		var data []byte
 		if http.MethodGet == c.Request.Method {
 			params := c.Request.URL.RawQuery
@@ -57,7 +66,6 @@ func GinTrailzap(utc bool, requestType string) gin.HandlerFunc {
 			userType := c.GetString(global.UserType)
 			loginId := c.GetString(global.UserId)
 			userName := c.GetString(global.UserName)
-			resourceType := c.GetString("ResourceType")
 			resourceName := c.GetString("ResourceId")
 			eventName := c.GetString("Action")
 			source := c.Request.Header["Origin"]
@@ -70,6 +78,8 @@ func GinTrailzap(utc bool, requestType string) gin.HandlerFunc {
 			if utc {
 				end = end.UTC()
 			}
+			resourceType := "CCS::CloudMonitor::Manager"
+
 			logger.GetTrailLogger().Info("[ACTION_TRAIL_LOG]",
 				zap.String("event_id", requestID),
 				zap.String("event_version", "1"),
@@ -89,7 +99,7 @@ func GinTrailzap(utc bool, requestType string) gin.HandlerFunc {
 				zap.Int("error_code", c.Writer.Status()),
 				zap.Namespace("user_info"),
 				zap.String("account_id", accountId),
-				zap.String("user_type", userType),
+				zap.String("type", userTypeMap[userType]),
 				zap.String("user_name", userName),
 				zap.String("principal_id", loginId),
 			)
