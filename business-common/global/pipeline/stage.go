@@ -1,13 +1,12 @@
 package pipeline
 
 import (
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/enum/handler_type"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/form"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/sys_component"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
 	"context"
 	"flag"
-	"strconv"
 	"strings"
 )
 
@@ -27,21 +26,18 @@ func NewMainLoader() *MainLoader {
 		return config.InitConfig(*cf)
 	},
 	).Then(func(c *context.Context) error {
-		noticeChannelMap := make(map[string]string)
 		if config.Cfg.Common.MsgIsOpen == config.MsgClose {
-			global.NoticeChannelMap = noticeChannelMap
 			return nil
 		}
 		msgChannelList := strings.Split(config.Cfg.Common.MsgChannel, ",")
 		for _, v := range msgChannelList {
 			switch v {
 			case config.MsgChannelEmail:
-				noticeChannelMap[v] = strconv.Itoa(handler_type.Email)
+				global.NoticeChannelList = append(global.NoticeChannelList, form.NoticeChannel{Name: "邮箱", Code: v, Data: 1})
 			case config.MsgChannelSms:
-				noticeChannelMap[v] = strconv.Itoa(handler_type.Sms)
+				global.NoticeChannelList = append(global.NoticeChannelList, form.NoticeChannel{Name: "短信", Code: v, Data: 2})
 			}
 		}
-		global.NoticeChannelMap = noticeChannelMap
 		return nil
 	}).Then(func(c *context.Context) error {
 		return sys_component.InitSys()

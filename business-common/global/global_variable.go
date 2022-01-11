@@ -1,8 +1,11 @@
 package global
 
-import "gorm.io/gorm"
+import (
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/form"
+	"gorm.io/gorm"
+)
 
 var (
-	DB               *gorm.DB
-	NoticeChannelMap map[string]string
+	DB                *gorm.DB
+	NoticeChannelList []form.NoticeChannel
 )
