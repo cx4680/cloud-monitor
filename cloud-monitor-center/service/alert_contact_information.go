@@ -1,6 +1,7 @@
 package service
 
 import (
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/constant"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/dao"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/enum"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/errors"
@@ -68,11 +69,16 @@ func (s *AlertContactInformationService) PersistenceLocal(db *gorm.DB, param int
 
 }
 
-func (s *AlertContactInformationService) getActiveCode() (string, uint8) {
-	if config.Cfg.Common.MsgIsOpen != config.MsgOpen {
+func (s *AlertContactInformationService) getActiveCode(noType uint8) (string, uint8) {
+	if config.Cfg.Common.MsgIsOpen == config.MsgClose {
 		return "", 1
 	}
-	return strings.ReplaceAll(uuid.New().String(), "-", ""), 0
+	for _, v := range global.NoticeChannelList {
+		if (v.Code == config.MsgChannelSms && noType == constant.Phone) || (v.Code == config.MsgChannelEmail && noType == constant.Email) {
+			return strings.ReplaceAll(uuid.New().String(), "-", ""), 0
+		}
+	}
+	return "", 1
 }
 
 func (s *AlertContactInformationService) insertAlertContactInformation(db *gorm.DB, p form.AlertContactParam) []*model.AlertContactInformation {
@@ -122,9 +128,9 @@ func (s *AlertContactInformationService) sendCertifyMsg(tenantId string, no stri
 	params["activationdomain"] = config.Cfg.Common.CertifyInformationUrl + activeCode
 
 	var t message_center.ReceiveType
-	if noType == 1 {
+	if noType == constant.Phone {
 		t = message_center.Phone
-	} else {
+	} else if noType == constant.Email {
 		t = message_center.Email
 	}
 	s.messageSvc.SendCertifyMsg(message_center.MessageSendDTO{
@@ -134,11 +140,10 @@ func (s *AlertContactInformationService) sendCertifyMsg(tenantId string, no stri
 		Targets:    []string{no},
 		Content:    jsonutil.ToString(params),
 	}, contactId)
-
 }
 
 func (s *AlertContactInformationService) buildInformation(p form.AlertContactParam, no string, noType uint8) *model.AlertContactInformation {
-	activeCode, isCertify := s.getActiveCode()
+	activeCode, isCertify := s.getActiveCode(noType)
 	var information = &model.AlertContactInformation{}
 	//判断新增的联系方式是否已存在，若存在则不修改，若不存在，则删除旧号码，添加新号码
 	var count int64

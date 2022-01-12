@@ -9,6 +9,7 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/k8s"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/mq/consumer"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/pipeline"
+	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/pipeline/sys_upgrade"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/task"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/validator/translate"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/web"
@@ -62,6 +63,10 @@ func main() {
 				Topic:   sys_rocketmq.RuleTopic,
 				Handler: consumer.AlarmRuleHandler,
 			}})
+		}).
+		AddStage(func(c *context.Context) error {
+			sys_upgrade.PrometheusRuleUpgrade()
+			return nil
 		}).
 		AddStage(func(c *context.Context) error {
 			return web.Start(config.Cfg.Serve)

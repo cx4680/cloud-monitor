@@ -129,12 +129,12 @@ func (service *K8sPrometheusService) buildAlertRuleListByResourceGroup(wg *sync.
 	defer wg.Done()
 	var groupRuleList []*dto.RuleExpress
 	var alertList []*form.AlertDTO
-	global.DB.Raw("SELECT   t1.name as ruleName ,t1.`level`, t1.trigger_condition as ruleCondition, t1.id as ruleId,t1.product_type, t1.monitor_type ,t2.resource_group_id,t2.calc_mode ,t1.silences_time ,t1.source_type FROM  t_alarm_rule t1,  t_alarm_rule_group_rel t2   WHERE  t2.alarm_rule_id = t1.id   AND t2.tenant_id = ?   AND t1.deleted = 0   AND t1.enabled = 1", tenantId).Scan(&groupRuleList)
+	global.DB.Raw("SELECT   t1.name as ruleName ,t1.`source` ,t1.`level`, t1.trigger_condition as ruleCondition, t1.id as ruleId,t1.product_type, t1.monitor_type ,t2.resource_group_id,t2.calc_mode ,t1.silences_time ,t1.source_type FROM  t_alarm_rule t1,  t_alarm_rule_group_rel t2   WHERE  t2.alarm_rule_id = t1.id   AND t2.tenant_id = ?   AND t1.deleted = 0   AND t1.enabled = 1", tenantId).Scan(&groupRuleList)
 	for _, ruleExpress := range groupRuleList {
 		ruleExpress.NoticeGroupIds = dao2.AlarmRule.GetNoticeGroupList(global.DB, ruleExpress.RuleId)
 		instanceList := dao2.AlarmRule.GetResourceListByGroup(global.DB, ruleExpress.ResGroupId)
 		ruleExpress.TenantId = tenantId
-		if calc_mode.ResourceGroup == ruleExpress.CalcMode {
+		if calc_mode.Resource != ruleExpress.CalcMode {
 			rule, err := service.buildAlertRule(ruleExpress, service.joinResourceId(instanceList, "|"))
 			if err != nil {
 				logger.Logger().Errorf("build rule err %+v", err)
@@ -168,7 +168,7 @@ func (service *K8sPrometheusService) buildAlertRule(ruleExpress *dto.RuleExpress
 		return nil, err
 	}
 	resourceId := ""
-	if len(ruleExpress.ResGroupId) == 0 {
+	if len(ruleExpress.ResGroupId) == 0 || calc_mode.Resource == ruleExpress.CalcMode {
 		alert.Alert = fmt.Sprintf("%s#%s#%s", ruleExpress.RuleId, instanceId, conditionId)
 		resourceId = instanceId
 	} else {
@@ -218,6 +218,8 @@ func (service *K8sPrometheusService) buildAlertRule(ruleExpress *dto.RuleExpress
 		GroupList:          noticeGroupIds,
 		ResourceId:         resourceId,
 		ResourceGroupId:    ruleExpress.ResGroupId,
+		Source:             ruleExpress.Source,
+		SourceType:         ruleExpress.SourceType,
 	}
 	desc, err := json.Marshal(ruleDesc)
 	alert.Description = string(desc)

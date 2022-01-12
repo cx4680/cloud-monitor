@@ -27,7 +27,7 @@ type InstancePageForm struct {
 	StatusList   string            `form:"statusList"`
 	Current      int               `form:"current,default=1"`
 	PageSize     int               `form:"pageSize,default=10"`
-	Product      string            `form:"product"`
+	Product      string            `form:"product" binding:"required"`
 	ExtraAttr    map[string]string `form:"extraAttr"`
 }
 

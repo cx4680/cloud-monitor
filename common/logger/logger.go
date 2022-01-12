@@ -7,14 +7,15 @@ import (
 	"go.uber.org/zap/zapcore"
 	"os"
 	"sync"
+	"time"
 )
 
 var (
 	logger               *zap.SugaredLogger
+	TrailLogger          *zap.Logger
 	once                 sync.Once
-	defaultApp           = "ucmp"
-	defaultGroup         = "cec"
 	defaultDataLogPrefix = "/data/logs/"
+	TimeFormatLayout     = "2006/01/02 15:04:05"
 )
 
 func Logger() *zap.SugaredLogger {
@@ -23,12 +24,25 @@ func Logger() *zap.SugaredLogger {
 	})
 	return logger
 }
+func GetTrailLogger() *zap.Logger {
+	once.Do(func() {
+		InitLogger(config.Cfg.Logger)
+	})
+	return TrailLogger
+}
 func InitLogger(cfg config.LogConfig) {
-
-	encoder := getEncoder()
-
 	var core zapcore.Core
+	core = newCore(cfg, core)
 
+	sugarLogger := zap.New(core, zap.AddCaller())
+	logger = sugarLogger.Sugar()
+
+	//增加log tail
+	coreTrail := newTrail(cfg)
+	TrailLogger = zap.New(coreTrail)
+}
+
+func newCore(cfg config.LogConfig, core zapcore.Core) zapcore.Core {
 	if cfg.Debug {
 		debugLevel := zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
 			return lvl >= zapcore.DebugLevel
@@ -36,29 +50,56 @@ func InitLogger(cfg config.LogConfig) {
 		debugWriter := getLogWriter("debug", cfg)
 
 		core = zapcore.NewTee(
-			zapcore.NewCore(encoder, zapcore.NewMultiWriteSyncer(zapcore.AddSync(os.Stdout), zapcore.AddSync(debugWriter)), debugLevel),
+			zapcore.NewCore(zapcore.NewConsoleEncoder(getEncoderConfig("File")), zapcore.NewMultiWriteSyncer(zapcore.AddSync(debugWriter)), debugLevel),
+			zapcore.NewCore(zapcore.NewConsoleEncoder(getEncoderConfig("Stdout")), zapcore.NewMultiWriteSyncer(zapcore.AddSync(os.Stdout)), debugLevel),
 		)
 	} else {
 		infoLevel := zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
 			return lvl >= zapcore.InfoLevel
 		})
 		infoWriter := getLogWriter("info", cfg)
-
 		core = zapcore.NewTee(
-			zapcore.NewCore(encoder, zapcore.NewMultiWriteSyncer(zapcore.AddSync(os.Stdout), zapcore.AddSync(infoWriter)), infoLevel),
+			zapcore.NewCore(zapcore.NewConsoleEncoder(getEncoderConfig("File")), zapcore.NewMultiWriteSyncer(zapcore.AddSync(infoWriter)), infoLevel),
+			zapcore.NewCore(zapcore.NewConsoleEncoder(getEncoderConfig("Stdout")), zapcore.NewMultiWriteSyncer(zapcore.AddSync(os.Stdout)), infoLevel),
 		)
 	}
-
-	sugarLogger := zap.New(core, zap.AddCaller())
-	logger = sugarLogger.Sugar()
-	zap.ReplaceGlobals(sugarLogger) // 替换zap包中全局的logger实例，后续在其他包中只需使用zap.L()调用即可
+	return core
 }
 
-func getEncoder() zapcore.Encoder {
-	encoderConfig := zap.NewProductionEncoderConfig()
-	encoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
-	encoderConfig.EncodeLevel = zapcore.CapitalLevelEncoder
-	return zapcore.NewConsoleEncoder(encoderConfig)
+func newTrail(cfg config.LogConfig) zapcore.Core {
+	infoLevel := zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
+		return lvl >= zapcore.InfoLevel
+	})
+	coreTrail := zapcore.NewTee(
+		zapcore.NewCore(zapcore.NewConsoleEncoder(getEncoderConfig("File")), zapcore.NewMultiWriteSyncer(zapcore.AddSync(getLogWriter("operation_trail", cfg))), infoLevel),
+		zapcore.NewCore(zapcore.NewConsoleEncoder(getEncoderConfig("Stdout")), zapcore.NewMultiWriteSyncer(zapcore.AddSync(os.Stdout)), infoLevel),
+	)
+	return coreTrail
+}
+
+func getEncoderConfig(writerType string) zapcore.EncoderConfig {
+	EncodeLevel := zapcore.CapitalLevelEncoder
+	if writerType == "Stdout" {
+		EncodeLevel = zapcore.CapitalColorLevelEncoder
+	}
+	return zapcore.EncoderConfig{
+		FunctionKey:      "func",
+		StacktraceKey:    "stack",
+		NameKey:          "name",
+		MessageKey:       "msg",
+		LevelKey:         "level",
+		ConsoleSeparator: " | ",
+		EncodeLevel:      EncodeLevel,
+		TimeKey:          "s",
+		EncodeTime: func(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
+			enc.AppendString(t.Format(TimeFormatLayout))
+		},
+		CallerKey:    "file",
+		EncodeCaller: zapcore.ShortCallerEncoder,
+		EncodeName: func(n string, enc zapcore.PrimitiveArrayEncoder) {
+			enc.AppendString(n)
+		},
+	}
 }
 
 func getLogWriter(level string, cfg config.LogConfig) zapcore.WriteSyncer {
@@ -82,17 +123,7 @@ func getLogWriter(level string, cfg config.LogConfig) zapcore.WriteSyncer {
 		} else {
 			fileName = defaultDataLogPrefix
 		}
-		if cfg.Group != "" {
-			fileName = fileName + cfg.Group + "_"
-		} else {
-			fileName = fileName + defaultGroup + "_"
-		}
-		if cfg.App != "" {
-			fileName = fileName + cfg.App + "_"
-		} else {
-			fileName = fileName + defaultApp + "_"
-		}
-		fileName = fileName + level + ".log"
+		fileName = fileName + cfg.ServiceName + "/" + level + ".log"
 
 		lumberJackLogger.Filename = fileName
 
