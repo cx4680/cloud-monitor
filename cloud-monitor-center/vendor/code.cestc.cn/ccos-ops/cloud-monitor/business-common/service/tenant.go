@@ -32,7 +32,7 @@ type tenantResult struct {
 }
 
 type tenantLogin struct {
-	LoginCode string `json:"loginCode"`
+	LoginCode    string `json:"loginCode"`
 	SerialNumber string `json:"serialNumber"`
 }
 

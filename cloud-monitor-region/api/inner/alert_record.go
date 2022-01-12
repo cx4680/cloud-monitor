@@ -8,6 +8,7 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/jsonutil"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"net/http"
 )
 
@@ -23,13 +24,15 @@ func NewAlertRecordCtl(alertRecordAddSvc *service.AlertRecordAddService) *AlertR
 
 // AddAlertRecord 创建告警记录
 func (ctl AlertRecordCtl) AddAlertRecord(c *gin.Context) {
+	requestId := uuid.New().String()
 	var f form.InnerAlertRecordAddForm
 	if err := c.ShouldBindJSON(&f); err != nil {
+		//TODO 添加requestId
 		c.JSON(http.StatusBadRequest, global.NewError(translate.GetErrorMsg(err)))
 		return
 	}
-	logger.Logger().Info("receive alarm data: ", jsonutil.ToString(f))
-	if err := ctl.alertRecordAddSvc.Add(f); err != nil {
+	logger.Logger().Info("requestId=", requestId, ", receive alarm data=", jsonutil.ToString(f))
+	if err := ctl.alertRecordAddSvc.Add(requestId, f); err != nil {
 		c.JSON(http.StatusInternalServerError, global.NewError("创建告警记录失败"))
 	}
 	c.JSON(http.StatusOK, global.NewSuccess("创建告警成功", nil))

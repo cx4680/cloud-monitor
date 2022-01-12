@@ -51,9 +51,8 @@ type DB struct {
 
 type LogConfig struct {
 	Debug         bool   `yaml:"debug"`
-	App           string `yaml:"app"`
 	DataLogPrefix string `yaml:"data_log_prefix"`
-	Group         string `yaml:"group"`
+	ServiceName   string `yaml:"service_name"`
 	MaxSize       int    `yaml:"max_size"`
 	MaxBackups    int    `yaml:"max_backups"`
 	MaxAge        int    `yaml:"max_age"`
@@ -83,9 +82,9 @@ type RedisConfig struct {
 }
 
 type IamConfig struct {
-	Site   string
-	Region string
-	Log    string
+	Site   string `yaml:"site"`
+	Region string `yaml:"region"`
+	Log    string `yaml:"log"`
 }
 
 var Cfg = defaultAppConfig()
@@ -99,8 +98,7 @@ func defaultAppConfig() AppConfig {
 		},
 		Logger: LogConfig{
 			DataLogPrefix: "./logs/",
-			//TODO group
-			Group: "cloud-monitor-region",
+			ServiceName:   "cloud-monitor-region",
 		},
 		Rocketmq: Rocketmq{
 			NameServer: "127.0.0.1:9876",

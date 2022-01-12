@@ -42,6 +42,5 @@ const (
 	OverviewItemPid       = 21 //概览监控项
 	RegionListPid         = 24 //region列表
 	MonitorRange          = 5  //监控周期
-	NoticeChannel         = 33 //通知方式
 	AlarmLevel            = 28 //告警级别
 )

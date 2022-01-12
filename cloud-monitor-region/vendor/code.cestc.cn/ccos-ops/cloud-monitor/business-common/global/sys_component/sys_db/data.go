@@ -38,12 +38,9 @@ func (i *DBInitializer) Initnitialization() error {
 	return nil
 }
 
+type InitializerFetch func(db *gorm.DB) ([]interface{}, []string, error)
 
-
-type InitializerFetch func (db *gorm.DB) ([]interface{}, []string, error)
-
-
-func  CommonFetch(db *gorm.DB) ([]interface{}, []string, error) {
+func CommonFetch(db *gorm.DB) ([]interface{}, []string, error) {
 	var tables []interface{}
 	var sqls []string
 	//先将不需要保留的表删除
@@ -74,7 +71,7 @@ func  CommonFetch(db *gorm.DB) ([]interface{}, []string, error) {
 	if strutil.IsNotBlank(sql) {
 		sqls = append(sqls, strings.Split(sql, ";")...)
 	}
-	if !db.Migrator().HasTable(&commonModels.AlarmHandler{}) {
+	if !db.Migrator().HasTable(&commonModels.AlarmHandler{}) && db.Migrator().HasColumn(&commonModels.AlarmRule{}, "notify_channel") {
 		//升级sql
 		updateSqlBytes, err := ioutil.ReadFile("scripts/upgrade.sql")
 		if err != nil {

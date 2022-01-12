@@ -4,6 +4,7 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/form"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/strutil"
 	"encoding/json"
 	"net/http"
 	"net/url"
@@ -14,7 +15,7 @@ func Query(pql string, time string) form.PrometheusResponse {
 	requestUrl := cfg.Url + cfg.Query
 	logger.Logger().Info(requestUrl + pql)
 	pql = url.QueryEscape(pql)
-	if time != "" {
+	if strutil.IsNotBlank(time) {
 		pql += "&time=" + time
 	}
 	return sendRequest(requestUrl, pql)

@@ -12,6 +12,7 @@ require (
 	github.com/go-playground/universal-translator v0.18.0
 	github.com/go-playground/validator/v10 v10.9.0
 	github.com/gohouse/converter v0.0.3
+	github.com/google/uuid v1.3.0
 	github.com/pkg/errors v0.9.1
 	github.com/swaggo/gin-swagger v1.3.1
 	github.com/swaggo/swag v1.7.3
@@ -43,7 +44,6 @@ require (
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/go-cmp v0.5.6 // indirect
 	github.com/google/gofuzz v1.1.0 // indirect
-	github.com/google/uuid v1.3.0 // indirect
 	github.com/imdario/mergo v0.3.5 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.2 // indirect

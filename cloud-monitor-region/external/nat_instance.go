@@ -102,9 +102,6 @@ func (nat *NatInstanceService) ConvertResp(realResp interface{}) (int, []service
 				}, {
 					Name:  "vpcName",
 					Value: d.VpcName,
-				}, {
-					Name:  "specification",
-					Value: d.Specification,
 				}},
 			})
 		}
