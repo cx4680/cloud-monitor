@@ -27,9 +27,10 @@ func InitSys() error {
 	topics := []sys_rocketmq.Topic{
 		sys_rocketmq.SmsMarginReminderTopic,
 		sys_rocketmq.InstanceTopic,
-		sys_rocketmq.AlertContactTopic,
-		sys_rocketmq.AlertContactGroupTopic,
+		sys_rocketmq.ContactTopic,
+		sys_rocketmq.ContactGroupTopic,
 		sys_rocketmq.RecordTopic,
+		sys_rocketmq.AlarmInfoTopic,
 		sys_rocketmq.RuleTopic,
 		sys_rocketmq.NotificationSyncTopic,
 		sys_rocketmq.DeleteInstanceTopic,

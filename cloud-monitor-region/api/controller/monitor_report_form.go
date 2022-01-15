@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/dao"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/util"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/form"
@@ -32,8 +31,6 @@ func (mpc *MonitorReportFormCtl) GetData(c *gin.Context) {
 		return
 	}
 	param.TenantId = tenantId
-	monitorItemDao := dao.MonitorItem
-	param.Labels = monitorItemDao.GetMonitorItemByName(param.Name).Labels
 	data, err := mpc.service.GetData(param)
 	if err == nil {
 		c.JSON(http.StatusOK, global.NewSuccess("查询成功", data))

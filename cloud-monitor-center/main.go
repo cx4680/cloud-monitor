@@ -1,13 +1,11 @@
 package main
 
 import (
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
 	cp "code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/pipeline"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/sys_component/sys_db"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/sys_component/sys_rocketmq"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/task"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/mq/consumer"
-	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/pipeline"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/validator/translate"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/web"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
@@ -24,39 +22,30 @@ import (
 func main() {
 
 	loader := cp.NewMainLoader()
-	loader.AddStage(func(c *context.Context) error {
+	loader.AddStage(func(*context.Context) error {
 		cfg := config.Cfg.Iam
 		middleware.InitIamConfig(cfg.Site, cfg.Region, cfg.Log)
 		return nil
 	})
-
-	loader.AddStage(func(c *context.Context) error {
-		initializer := sys_db.DBInitializer{
-			DB:      global.DB,
-			Fetches: []sys_db.InitializerFetch{sys_db.CommonFetch, pipeline.ProjectFetch},
-		}
-		if err := initializer.Initnitialization(); err != nil {
-			return err
-		}
-		return nil
+	loader.AddStage(func(*context.Context) error {
+		return sys_db.InitData(config.Cfg.Db, "hawkeye", "file://./migrations")
 	})
-
-	loader.AddStage(func(c *context.Context) error {
+	loader.AddStage(func(*context.Context) error {
 		return translate.InitTrans("zh")
 	})
 
-	loader.AddStage(func(c *context.Context) error {
+	loader.AddStage(func(*context.Context) error {
 		bt := task.NewBusinessTaskImpl()
 		err := bt.Add(task.BusinessTaskDTO{
 			Cron: "0 0 0/1 * * ?",
-			Name: "clearAlertRecordJob",
+			Name: "clearAlarmRecordJob",
 			Task: task.Clear,
 		})
 		bt.Start()
 		return err
 	})
 
-	loader.AddStage(func(c *context.Context) error {
+	loader.AddStage(func(*context.Context) error {
 		return sys_rocketmq.StartConsumersScribe("cloud-monitor-center", []*sys_rocketmq.Consumer{{
 			Topic:   sys_rocketmq.InstanceTopic,
 			Handler: consumer.InstanceHandler,
@@ -68,11 +57,14 @@ func main() {
 			Handler: consumer.DeleteInstanceHandler,
 		}, {
 			Topic:   sys_rocketmq.RecordTopic,
-			Handler: consumer.AlertRecordAddHandler,
+			Handler: consumer.AlarmRecordAddHandler,
+		}, {
+			Topic:   sys_rocketmq.AlarmInfoTopic,
+			Handler: consumer.AlarmInfoAddHandler,
 		}})
 	})
 
-	loader.AddStage(func(c *context.Context) error {
+	loader.AddStage(func(*context.Context) error {
 		return web.Start(config.Cfg.Serve)
 	})
 

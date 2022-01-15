@@ -3,10 +3,11 @@ package model
 import "time"
 
 type ResourceGroup struct {
-	Id           string           `gorm:"column:id;primary_key"`
+	ID           uint64           `gorm:"column:id;primary_key;autoIncrement"`
+	BizId        string           `gorm:"column:biz_id;"`
 	Name         string           `gorm:"column:name"`
 	TenantId     string           `gorm:"column:tenant_id"`
-	ProductId    int              `gorm:"column:product_id"`
+	ProductId    int              `gorm:"column:product_biz_id"`
 	SourceType   uint8            `gorm:"column:source"` // 来源:1 用户 2 弹性伸缩
 	CreateTime   time.Time        `gorm:"column:create_time;autoCreateTime;type:datetime"`
 	UpdateTime   time.Time        `gorm:"column:update_time;autoUpdateTime;type:datetime"`

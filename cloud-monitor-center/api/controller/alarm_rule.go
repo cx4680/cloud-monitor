@@ -29,6 +29,7 @@ func (ctl *AlarmRuleCtl) SelectRulePageList(c *gin.Context) {
 	tenantId, err := util.GetTenantId(c)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, global.NewError(err.Error()))
+		return
 	}
 	param.TenantId = tenantId
 	c.JSON(http.StatusOK, global.NewSuccess("查询成功", dao.AlarmRule.SelectRulePageList(&param)))
@@ -126,6 +127,7 @@ func (ctl *AlarmRuleCtl) DeleteRule(c *gin.Context) {
 	tenantId, err := util.GetTenantId(c)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, global.NewError(err.Error()))
+		return
 	}
 	param.TenantId = tenantId
 	err = util.Tx(&param, service.DeleteRule)
@@ -149,6 +151,7 @@ func (ctl *AlarmRuleCtl) ChangeRuleStatus(c *gin.Context) {
 	tenantId, err := util.GetTenantId(c)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, global.NewError(err.Error()))
+		return
 	}
 	param.TenantId = tenantId
 	err = util.Tx(&param, service.ChangeRuleStatus)

@@ -12,63 +12,63 @@ import (
 	"github.com/apache/rocketmq-client-go/v2/primitive"
 )
 
-func AlertContactHandler(msgs []*primitive.MessageExt) {
+func ContactHandler(msgs []*primitive.MessageExt) {
 	for i := range msgs {
 		var MsgErr error
 		var MqMsg form.MqMsg
 		fmt.Printf("subscribe callback: %v \n", msgs[i])
 		MsgErr = json.Unmarshal(msgs[i].Body, &MqMsg)
 		switch MqMsg.EventEum {
-		case enum.InsertAlertContact:
+		case enum.InsertContact:
 			data, _ := json.Marshal(MqMsg.Data)
-			var model *model.AlertContact
+			var model *model.Contact
 			MsgErr = json.Unmarshal(data, &model)
-			dao.AlertContact.Insert(global.DB, model)
-		case enum.UpdateAlertContact:
+			dao.Contact.Insert(global.DB, model)
+		case enum.UpdateContact:
 			data, _ := json.Marshal(MqMsg.Data)
-			var model *model.AlertContact
+			var model *model.Contact
 			MsgErr = json.Unmarshal(data, &model)
-			dao.AlertContact.Update(global.DB, model)
-		case enum.DeleteAlertContact:
+			dao.Contact.Update(global.DB, model)
+		case enum.DeleteContact:
 			data, _ := json.Marshal(MqMsg.Data)
-			var model *model.AlertContact
+			var model *model.Contact
 			MsgErr = json.Unmarshal(data, &model)
-			dao.AlertContact.Delete(global.DB, model)
-		case enum.InsertAlertContactInformation:
+			dao.Contact.Delete(global.DB, model)
+		case enum.InsertContactInformation:
 			data, _ := json.Marshal(MqMsg.Data)
-			var modelList []*model.AlertContactInformation
+			var modelList []*model.ContactInformation
 			MsgErr = json.Unmarshal(data, &modelList)
-			dao.AlertContactInformation.InsertBatch(global.DB, modelList)
-		case enum.UpdateAlertContactInformation:
+			dao.ContactInformation.InsertBatch(global.DB, modelList)
+		case enum.UpdateContactInformation:
 			data, _ := json.Marshal(MqMsg.Data)
-			var modelList []*model.AlertContactInformation
+			var modelList []*model.ContactInformation
 			MsgErr = json.Unmarshal(data, &modelList)
-			dao.AlertContactInformation.Update(global.DB, modelList)
-		case enum.DeleteAlertContactInformation:
+			dao.ContactInformation.Update(global.DB, modelList)
+		case enum.DeleteContactInformation:
 			data, _ := json.Marshal(MqMsg.Data)
-			var model *model.AlertContactInformation
+			var model *model.ContactInformation
 			MsgErr = json.Unmarshal(data, &model)
-			dao.AlertContactInformation.Delete(global.DB, model)
-		case enum.CertifyAlertContact:
+			dao.ContactInformation.Delete(global.DB, model)
+		case enum.ActivateContact:
 			data, _ := json.Marshal(MqMsg.Data)
 			var activeCode string
 			MsgErr = json.Unmarshal(data, &activeCode)
-			dao.AlertContact.CertifyAlertContact(global.DB, activeCode)
-		case enum.InsertAlertContactGroupRel:
+			dao.Contact.ActivateContact(global.DB, activeCode)
+		case enum.InsertContactGroupRel:
 			data, _ := json.Marshal(MqMsg.Data)
-			var modelList []*model.AlertContactGroupRel
+			var modelList []*model.ContactGroupRel
 			MsgErr = json.Unmarshal(data, &modelList)
-			dao.AlertContactGroupRel.InsertBatch(global.DB, modelList)
-		case enum.UpdateAlertContactGroupRel:
+			dao.ContactGroupRel.InsertBatch(global.DB, modelList)
+		case enum.UpdateContactGroupRel:
 			data, _ := json.Marshal(MqMsg.Data)
-			var model model.UpdateAlertContactGroupRel
+			var model model.UpdateContactGroupRel
 			MsgErr = json.Unmarshal(data, &model)
-			dao.AlertContactGroupRel.Update(global.DB, model.RelList, model.Param)
-		case enum.DeleteAlertContactGroupRel:
+			dao.ContactGroupRel.Update(global.DB, model.RelList, model.Param)
+		case enum.DeleteContactGroupRel:
 			data, _ := json.Marshal(MqMsg.Data)
-			var model *model.AlertContactGroupRel
+			var model *model.ContactGroupRel
 			MsgErr = json.Unmarshal(data, &model)
-			dao.AlertContactGroupRel.Delete(global.DB, model)
+			dao.ContactGroupRel.Delete(global.DB, model)
 		}
 		if MsgErr != nil {
 			logger.Logger().Errorf("%v", MsgErr)
@@ -76,43 +76,43 @@ func AlertContactHandler(msgs []*primitive.MessageExt) {
 	}
 }
 
-func AlertContactGroupHandler(msgs []*primitive.MessageExt) {
+func ContactGroupHandler(msgs []*primitive.MessageExt) {
 	for i := range msgs {
 		fmt.Printf("subscribe callback: %v \n", msgs[i])
 		var MsgErr error
 		var MqMsg form.MqMsg
 		MsgErr = json.Unmarshal(msgs[i].Body, &MqMsg)
 		switch MqMsg.EventEum {
-		case enum.InsertAlertContactGroupRel:
+		case enum.InsertContactGroupRel:
 			data, _ := json.Marshal(MqMsg.Data)
-			var modelList []*model.AlertContactGroupRel
+			var modelList []*model.ContactGroupRel
 			MsgErr = json.Unmarshal(data, &modelList)
-			dao.AlertContactGroupRel.InsertBatch(global.DB, modelList)
-		case enum.UpdateAlertContactGroupRel:
+			dao.ContactGroupRel.InsertBatch(global.DB, modelList)
+		case enum.UpdateContactGroupRel:
 			data, _ := json.Marshal(MqMsg.Data)
-			var model model.UpdateAlertContactGroupRel
+			var model model.UpdateContactGroupRel
 			MsgErr = json.Unmarshal(data, &model)
-			dao.AlertContactGroupRel.Update(global.DB, model.RelList, model.Param)
-		case enum.DeleteAlertContactGroupRel:
+			dao.ContactGroupRel.Update(global.DB, model.RelList, model.Param)
+		case enum.DeleteContactGroupRel:
 			data, _ := json.Marshal(MqMsg.Data)
-			var model *model.AlertContactGroupRel
+			var model *model.ContactGroupRel
 			MsgErr = json.Unmarshal(data, &model)
-			dao.AlertContactGroupRel.Delete(global.DB, model)
-		case enum.InsertAlertContactGroup:
+			dao.ContactGroupRel.Delete(global.DB, model)
+		case enum.InsertContactGroup:
 			data, _ := json.Marshal(MqMsg.Data)
-			var model *model.AlertContactGroup
+			var model *model.ContactGroup
 			MsgErr = json.Unmarshal(data, &model)
-			dao.AlertContactGroup.Insert(global.DB, model)
-		case enum.UpdateAlertContactGroup:
+			dao.ContactGroup.Insert(global.DB, model)
+		case enum.UpdateContactGroup:
 			data, _ := json.Marshal(MqMsg.Data)
-			var model *model.AlertContactGroup
+			var model *model.ContactGroup
 			MsgErr = json.Unmarshal(data, &model)
-			dao.AlertContactGroup.Update(global.DB, model)
-		case enum.DeleteAlertContactGroup:
+			dao.ContactGroup.Update(global.DB, model)
+		case enum.DeleteContactGroup:
 			data, _ := json.Marshal(MqMsg.Data)
-			var model *model.AlertContactGroup
+			var model *model.ContactGroup
 			MsgErr = json.Unmarshal(data, &model)
-			dao.AlertContactGroup.Delete(global.DB, model)
+			dao.ContactGroup.Delete(global.DB, model)
 		}
 		if MsgErr != nil {
 			logger.Logger().Errorf("%v", MsgErr)

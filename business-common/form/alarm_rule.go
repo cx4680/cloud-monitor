@@ -17,7 +17,7 @@ type AlarmPageReqParam struct {
 type AlarmRulePageDTO struct {
 	Name          string         `json:"name" `
 	MonitorType   string         `json:"monitorType" gorm:"monitor_type" `
-	ProductType   string         `json:"productType" gorm:"product_type" `
+	ProductType   string         `json:"productType" gorm:"productName" `
 	MetricName    string         `json:"metricName" gorm:"metric_name" `
 	MonitorItem   string         `json:"monitorItem" gorm:"monitor_item" `
 	Express       string         `json:"express" gorm:"express"`

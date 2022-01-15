@@ -55,11 +55,11 @@ func instance() {
 }
 
 func innerCtl() {
-	addService := service.NewAlertRecordAddService(service.NewAlertRecordService(), commonService.NewAlarmHandlerService(), commonService.NewMessageService(message_center.NewService()), commonService.NewTenantService())
+	addService := service.NewAlarmRecordAddService(service.NewAlarmRecordService(service.NewAlarmInfoService()), commonService.NewAlarmHandlerService(), commonService.NewMessageService(message_center.NewService()), commonService.NewTenantService())
 	ctl := inner.NewAlertRecordCtl(addService)
 	group := router.Group("/inner/")
 	{
-		group.POST("/alertRecord/insert", ctl.AddAlertRecord)
+		group.POST("/alarmRecord/insert", ctl.AddAlarmRecord)
 	}
 }
 

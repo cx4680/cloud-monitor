@@ -3,7 +3,8 @@ package model
 import "time"
 
 type AlarmInstance struct {
-	InstanceID   string    `gorm:"column:instance_id;primary_key"`
+	Id           uint64    `gorm:"column:id;primary_key;autoIncrement"`
+	InstanceID   string    `gorm:"column:instance_id;"`
 	CreateTime   time.Time `gorm:"column:create_time;autoCreateTime;type:datetime"` // 创建时间
 	RegionCode   string    `gorm:"column:region_code"`
 	ZoneCode     string    `gorm:"column:zone_code"`
@@ -12,9 +13,10 @@ type AlarmInstance struct {
 	ZoneName     string    `gorm:"column:zone_name"`
 	InstanceName string    `gorm:"column:instance_name"`
 	TenantID     string    `gorm:"column:tenant_id"` // 租户id
-	ProductType  string    `gorm:"column:product_type"`
+	ProductName  string    `gorm:"column:product_name"`
+	ProductBizId string    `gorm:"column:product_biz_id"`
 }
 
 func (*AlarmInstance) TableName() string {
-	return "t_alarm_instance"
+	return "t_resource"
 }

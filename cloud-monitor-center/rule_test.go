@@ -21,18 +21,18 @@ func TestDD(t *testing.T) {
 	}
 
 	rule := []*model.AlarmInstance{{
-		InstanceID:   "2",
+		InstanceID:   "ecs-1",
 		InstanceName: "ecs-1",
 		RegionName:   "A",
 	},
 		{
-			InstanceID:   "2",
-			InstanceName: "ecs-3",
+			InstanceID:   "ecs-1",
+			InstanceName: "ecs-1-1",
 			RegionName:   "B",
 		},
 	}
 
-	db.Clauses(clause.OnConflict{DoNothing: false}).Create(&rule)
+	db.Clauses(clause.OnConflict{Columns: []clause.Column{{Name: "instance_id"}}, DoNothing: false}).Create(&rule)
 }
 
 func TestRuleAdd(t *testing.T) {

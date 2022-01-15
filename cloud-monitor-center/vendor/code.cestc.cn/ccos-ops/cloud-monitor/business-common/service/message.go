@@ -96,7 +96,7 @@ func (s *MessageService) SendAlarmNotice(msgList []interface{}) error {
 			}
 			for _, addr := range newTargets {
 				recordList = append(recordList, commonModels.NotificationRecord{
-					Id:               strconv.FormatInt(snowflake.GetWorker().NextId(), 10),
+					BizId:            strconv.FormatInt(snowflake.GetWorker().NextId(), 10),
 					SenderId:         am.SenderId,
 					SourceId:         am.AlertId,
 					SourceType:       uint8(am.SourceType),
@@ -133,8 +133,8 @@ func (s *MessageService) SendAlarmNotice(msgList []interface{}) error {
 	return nil
 }
 
-// SendCertifyMsg 发送激活信息
-func (s *MessageService) SendCertifyMsg(msg message_center.MessageSendDTO, contactId string) {
+// SendActivateMsg 发送激活信息
+func (s *MessageService) SendActivateMsg(msg message_center.MessageSendDTO, contactId string) {
 	//send msg
 	var ret uint8 = 1
 	if err := s.MCS.Send(msg); err != nil {
@@ -142,7 +142,7 @@ func (s *MessageService) SendCertifyMsg(msg message_center.MessageSendDTO, conta
 		ret = 0
 	}
 	record := commonModels.NotificationRecord{
-		Id:               strconv.FormatInt(snowflake.GetWorker().NextId(), 10),
+		BizId:            strconv.FormatInt(snowflake.GetWorker().NextId(), 10),
 		SenderId:         msg.SenderId,
 		SourceId:         contactId,
 		SourceType:       uint8(message_center.VERIFY),
@@ -259,7 +259,7 @@ func (s *MessageService) saveNotificationRecords(noticeMsgDTOS []*dto.NoticeMsgD
 	var recordList []commonModels.NotificationRecord
 	for _, noticeMsgDTO := range noticeMsgDTOS {
 		recordList = append(recordList, commonModels.NotificationRecord{
-			Id:               strconv.FormatInt(snowflake.GetWorker().NextId(), 10),
+			BizId:            strconv.FormatInt(snowflake.GetWorker().NextId(), 10),
 			SenderId:         noticeMsgDTO.TenantId,
 			SourceId:         noticeMsgDTO.SourceId,
 			SourceType:       uint8(noticeMsgDTO.MsgEvent.Source),

@@ -24,8 +24,8 @@ func (dao *NotificationRecordDao) InsertBatch(db *gorm.DB, recordList []model.No
 }
 
 func (dao *NotificationRecordDao) Insert(db *gorm.DB, record model.NotificationRecord) {
-	if strutil.IsBlank(record.Id) {
-		record.Id = strconv.FormatInt(snowflake.GetWorker().NextId(), 10)
+	if strutil.IsBlank(record.BizId) {
+		record.BizId = strconv.FormatInt(snowflake.GetWorker().NextId(), 10)
 	}
 	db.Create(&record)
 }
@@ -33,7 +33,7 @@ func (dao *NotificationRecordDao) Insert(db *gorm.DB, record model.NotificationR
 func (dao *NotificationRecordDao) GetTenantPhoneCurrentMonthRecordNum(tenantId string) int {
 	var count int64
 	start, end := util.GetMonthStartEnd(time.Now())
-	global.DB.Debug().Model(&model.NotificationRecord{}).Where("sender_id=? and notification_type = ? and source_type != ? and create_time >= ? and create_time <= ?", tenantId, 1, dto.SMS_LACK, start, end).Count(&count)
+	global.DB.Debug().Model(&model.NotificationRecord{}).Where("sender_id=? and create_time >= ? and create_time <= ? and notification_type = ? and source_type != ? ", tenantId, start, end, 1, dto.SMS_LACK).Count(&count)
 	return int(count)
 }
 

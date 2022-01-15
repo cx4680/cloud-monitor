@@ -3,20 +3,20 @@ package enum
 type EventEum string
 
 const (
-	InsertAlertContact            EventEum = "insertAlertContact"
-	UpdateAlertContact            EventEum = "updateAlertContact"
-	DeleteAlertContact            EventEum = "deleteAlertContact"
-	CertifyAlertContact           EventEum = "certifyAlertContact"
-	InsertAlertContactInformation EventEum = "insertAlertContactInformation"
-	UpdateAlertContactInformation EventEum = "updateAlertContactInformation"
-	DeleteAlertContactInformation EventEum = "deleteAlertContactInformation"
-	InsertAlertContactGroupRel    EventEum = "insertAlertContactGroupRel"
-	UpdateAlertContactGroupRel    EventEum = "updateAlertContactGroupRel"
-	DeleteAlertContactGroupRel    EventEum = "DeleteAlertContactGroupRel"
+	InsertContact            EventEum = "insertContact"
+	UpdateContact            EventEum = "updateContact"
+	DeleteContact            EventEum = "deleteContact"
+	ActivateContact          EventEum = "activateContact"
+	InsertContactInformation EventEum = "insertContactInformation"
+	UpdateContactInformation EventEum = "updateContactInformation"
+	DeleteContactInformation EventEum = "deleteContactInformation"
+	InsertContactGroupRel    EventEum = "insertContactGroupRel"
+	UpdateContactGroupRel    EventEum = "updateContactGroupRel"
+	DeleteContactGroupRel    EventEum = "DeleteContactGroupRel"
 
-	InsertAlertContactGroup EventEum = "insertAlertContactGroup"
-	UpdateAlertContactGroup EventEum = "updateAlertContactGroup"
-	DeleteAlertContactGroup EventEum = "deleteAlertContactGroup"
+	InsertContactGroup EventEum = "insertContactGroup"
+	UpdateContactGroup EventEum = "updateContactGroup"
+	DeleteContactGroup EventEum = "deleteContactGroup"
 
 	CreateRule   EventEum = "create"
 	UpdateRule   EventEum = "update"

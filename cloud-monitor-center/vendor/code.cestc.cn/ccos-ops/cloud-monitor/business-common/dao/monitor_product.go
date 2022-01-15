@@ -26,9 +26,3 @@ func (mpd *MonitorProductDao) SelectMonitorProductList() *[]model.MonitorProduct
 	global.DB.Where("status = ?", "1").Find(product)
 	return product
 }
-
-func (mpd *MonitorProductDao) GetById(id string) *model.MonitorProduct {
-	var product model.MonitorProduct
-	global.DB.First(&product, id)
-	return &product
-}

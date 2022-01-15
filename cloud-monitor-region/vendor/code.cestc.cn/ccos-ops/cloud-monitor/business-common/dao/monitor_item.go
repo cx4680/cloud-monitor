@@ -3,11 +3,14 @@ package dao
 import (
 	"bytes"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/sys_component/sys_redis"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/model"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/jsonutil"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/strutil"
 	"strconv"
 	"text/template"
+	"time"
 )
 
 type MonitorItemDao struct {
@@ -15,9 +18,9 @@ type MonitorItemDao struct {
 
 var MonitorItem = new(MonitorItemDao)
 
-func (d *MonitorItemDao) SelectMonitorItemsById(productId string, osType string) []model.MonitorItem {
+func (d *MonitorItemDao) SelectMonitorItemsById(productBizId string, osType string) []model.MonitorItem {
 	var monitorItemList []model.MonitorItem
-	global.DB.Where("status = ?", "1").Where("is_display = ?", "1").Where("product_id = ?", productId).Find(&monitorItemList)
+	global.DB.Where("status = ? AND is_display = ? AND product_biz_id = ?", "1", "1", productBizId).Find(&monitorItemList)
 	if strutil.IsBlank(osType) {
 		return monitorItemList
 	}
@@ -31,10 +34,31 @@ func (d *MonitorItemDao) SelectMonitorItemsById(productId string, osType string)
 	return newMonitorItemList
 }
 
+func (d *MonitorItemDao) GetMonitorItemCacheByName(name string) model.MonitorItem {
+	value, err := sys_redis.Get(name)
+	if err != nil {
+		logger.Logger().Error("key=" + name + ", error:" + err.Error())
+	}
+	var monitorItemModel = model.MonitorItem{}
+	if strutil.IsNotBlank(value) {
+		jsonutil.ToObject(value, &monitorItemModel)
+		return monitorItemModel
+	}
+	monitorItemModel = d.GetMonitorItemByName(name)
+	if monitorItemModel == (model.MonitorItem{}) {
+		logger.Logger().Info("获取监控项为空")
+		return monitorItemModel
+	}
+	if e := sys_redis.SetByTimeOut(name, jsonutil.ToString(monitorItemModel), time.Hour); e != nil {
+		logger.Logger().Error("设置监控项缓存错误, key=" + name)
+	}
+	return monitorItemModel
+}
+
 func (d *MonitorItemDao) GetMonitorItemByName(name string) model.MonitorItem {
-	var model = model.MonitorItem{}
-	global.DB.Where("metric_name = ?", name).First(&model)
-	return model
+	var monitorItemModel = model.MonitorItem{}
+	global.DB.Where("metric_name = ?", name).First(&monitorItemModel)
+	return monitorItemModel
 }
 
 func isShow(exp string, os string) bool {
