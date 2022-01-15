@@ -6,11 +6,13 @@ import (
 )
 
 type AlarmRule struct {
-	ID             string              `gorm:"column:id;primary_key"`
-	MonitorType    string              `gorm:"column:monitor_type"` // 监控类型
-	ProductType    string              `gorm:"column:product_type"` // 所属产品
-	Dimensions     uint8               `gorm:"column:dimensions"`   // 维度（1 全部资源 2 实例 ）
-	Name           string              `gorm:"column:name"`         // 规则名称
+	Id             uint64              `gorm:"column:id;primary_key;autoIncrement"`
+	BizId          string              `gorm:"column:biz_id;"`
+	MonitorType    string              `gorm:"column:monitor_type"`   // 监控类型
+	ProductName    string              `gorm:"column:product_name"`   // 所属产品
+	ProductBizId   string              `gorm:"column:product_biz_id"` // 所属产品
+	Dimensions     uint8               `gorm:"column:dimensions"`     // 维度（1 全部资源 2 实例 ）
+	Name           string              `gorm:"column:name"`           // 规则名称
 	MetricName     string              `gorm:"column:metric_name"`
 	RuleCondition  *form.RuleCondition `gorm:"column:trigger_condition"`                        // 触发条件
 	SilencesTime   string              `gorm:"column:silences_time"`                            // 冷却周期

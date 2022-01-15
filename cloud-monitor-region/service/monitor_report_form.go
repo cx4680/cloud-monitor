@@ -29,10 +29,10 @@ func (s *MonitorReportFormService) GetData(request form.PrometheusRequest) (*for
 	if strutil.IsBlank(request.Instance) {
 		return nil, errors.NewBusinessError("instance为空")
 	}
-	if !checkUserInstanceIdentity(request.TenantId, request.ProductId, request.Instance) {
+	if !checkUserInstanceIdentity(request.TenantId, request.ProductBizId, request.Instance) {
 		return nil, errors.NewBusinessError("该租户无此实例")
 	}
-	if constant.ProductMap[request.ProductId] == external.BMS {
+	if constant.ProductMap[request.ProductBizId] == external.BMS {
 		request.Instance = getSerialNumber(request.Instance)
 		if strutil.IsBlank(request.Instance) {
 			return nil, errors.NewBusinessError("SerialNumber为空")
@@ -76,10 +76,10 @@ func (s *MonitorReportFormService) GetAxisData(request form.PrometheusRequest) (
 	if strutil.IsBlank(request.Instance) {
 		return nil, errors.NewBusinessError("instance为空")
 	}
-	if !checkUserInstanceIdentity(request.TenantId, request.ProductId, request.Instance) {
+	if !checkUserInstanceIdentity(request.TenantId, request.ProductBizId, request.Instance) {
 		return nil, errors.NewBusinessError("该租户无此实例")
 	}
-	if constant.ProductMap[request.ProductId] == external.BMS {
+	if constant.ProductMap[request.ProductBizId] == external.BMS {
 		request.Instance = getSerialNumber(request.Instance)
 		if strutil.IsBlank(request.Instance) {
 			return nil, errors.NewBusinessError("SerialNumber为空")
@@ -162,8 +162,7 @@ func changeDecimal(value string) string {
 
 //根据监控名查询监控项
 func getMonitorItemByName(name string) model.MonitorItem {
-	monitorItemDao := dao.MonitorItem
-	return monitorItemDao.GetMonitorItemByName(name)
+	return dao.MonitorItem.GetMonitorItemCacheByName(name)
 }
 
 //查询租户的ECS实例列表
@@ -176,8 +175,8 @@ func getEcsInstances(tenantId string) (string, error) {
 }
 
 //校验该租户下是否拥有该实例
-func checkUserInstanceIdentity(tenantId, productId, instanceId string) bool {
-	list, err := getInstanceList(productId, tenantId)
+func checkUserInstanceIdentity(tenantId, productBizId, instanceId string) bool {
+	list, err := getInstanceList(productBizId, tenantId)
 	if err != nil {
 		logger.Logger().Error("获取实例列表失败")
 		return false
@@ -191,15 +190,19 @@ func checkUserInstanceIdentity(tenantId, productId, instanceId string) bool {
 }
 
 // GetInstanceList 获取实例ID列表
-func getInstanceList(productId string, tenantId string) ([]string, error) {
+func getInstanceList(productBizId string, tenantId string) ([]string, error) {
 	f := commonService.InstancePageForm{
 		TenantId: tenantId,
-		Product:  constant.ProductMap[productId],
+		Product:  constant.ProductMap[productBizId],
 		Current:  1,
 		PageSize: 10000,
 	}
 	instanceService := external.ProductInstanceServiceMap[f.Product]
-	page, err := instanceService.GetPage(f, instanceService.(commonService.InstanceStage))
+	stage, ok := instanceService.(commonService.InstanceStage)
+	if !ok {
+		return nil, errors.NewBusinessError("获取监控产品服务失败")
+	}
+	page, err := instanceService.GetPage(f, stage)
 	if err != nil {
 		return nil, errors.NewBusinessError(err.Error())
 	}

@@ -16,17 +16,18 @@ import (
 )
 
 var userTypeMap = map[string]string{
-			"0":"root-account",
-			"1":"root-account",
-			"2":"root-account",
-			"3":"iam-user",
-			"4":"assumed-role",
-			"5":"system",
-            }
+	"0": "root-account",
+	"1": "root-account",
+	"2": "root-account",
+	"3": "iam-user",
+	"4": "assumed-role",
+	"5": "system",
+}
 
 func GinTrailzap(utc bool, requestType string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		serviceName := "CloudMonitor"
+		start := time.Now()
 		var data []byte
 		if http.MethodGet == c.Request.Method {
 			params := c.Request.URL.RawQuery
@@ -60,6 +61,8 @@ func GinTrailzap(utc bool, requestType string) gin.HandlerFunc {
 		requestID := c.GetHeader("X-Request-ID")
 		ctx := context.WithValue(context.Background(), "X-Request-ID", requestID)
 		c.Set("ctx", ctx)
+		sub := time.Now().Sub(start)
+		logger.Logger().Info("request log duration time, ", sub.Round(time.Second).Seconds())
 		c.Next()
 		defer func() {
 			accountId := c.GetString(global.TenantId)

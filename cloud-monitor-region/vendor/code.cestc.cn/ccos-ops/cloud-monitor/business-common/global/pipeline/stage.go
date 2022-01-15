@@ -20,12 +20,12 @@ type MainLoader struct {
 }
 
 func NewMainLoader() *MainLoader {
-	pipeline := (&ActuatorPipeline{}).First(func(c *context.Context) error {
+	pipeline := (&ActuatorPipeline{}).First(func(*context.Context) error {
 		var cf = flag.String("config", "config.local.yml", "config.yml path")
 		flag.Parse()
 		return config.InitConfig(*cf)
 	},
-	).Then(func(c *context.Context) error {
+	).Then(func(*context.Context) error {
 		if config.Cfg.Common.MsgIsOpen == config.MsgClose {
 			return nil
 		}
@@ -39,7 +39,7 @@ func NewMainLoader() *MainLoader {
 			}
 		}
 		return nil
-	}).Then(func(c *context.Context) error {
+	}).Then(func(*context.Context) error {
 		return sys_component.InitSys()
 	})
 	return &MainLoader{Pipeline: pipeline}

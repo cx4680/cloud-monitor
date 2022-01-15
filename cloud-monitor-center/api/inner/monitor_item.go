@@ -17,11 +17,11 @@ func NewMonitorItemController() *MonitorItemController {
 }
 
 func (ctl *MonitorItemController) GetMonitorItemsById(c *gin.Context) {
-	productId := c.Query("productId")
+	productBizId := c.Query("productBizId")
 	osType := c.Query("osType")
-	if strutil.IsBlank(productId) {
+	if strutil.IsBlank(productBizId) {
 		c.JSON(http.StatusBadRequest, global.NewError("参数异常"))
 		return
 	}
-	c.JSON(http.StatusOK, global.NewSuccess("查询成功", ctl.dao.SelectMonitorItemsById(productId, osType)))
+	c.JSON(http.StatusOK, global.NewSuccess("查询成功", ctl.dao.SelectMonitorItemsById(productBizId, osType)))
 }

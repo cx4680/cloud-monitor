@@ -3,8 +3,9 @@ package model
 import "time"
 
 type MonitorItem struct {
-	ID             uint64    `gorm:"column:id;primary_key;AUTO_INCREMENT" json:"id"`                    // ID
-	ProductID      string    `gorm:"column:product_id" json:"productId"`                                // 监控产品ID
+	ID             uint64    `gorm:"column:id;primary_key;AUTO_INCREMENT" json:"id"` // ID
+	BizId          string    `gorm:"column:biz_id;size=50" json:"bizId"`
+	ProductBizID   string    `gorm:"column:product_biz_id" json:"productBizId"`                         // 监控产品ID
 	Name           string    `gorm:"column:name" json:"name"`                                           // 监控项名称
 	MetricName     string    `gorm:"column:metric_name" json:"metricName"`                              // 指标名
 	Labels         string    `gorm:"column:labels" json:"labels"`                                       // 标签名 分号隔开
@@ -23,5 +24,5 @@ type MonitorItem struct {
 }
 
 func (*MonitorItem) TableName() string {
-	return "monitor_item"
+	return "t_monitor_item"
 }

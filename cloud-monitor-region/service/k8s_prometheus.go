@@ -41,7 +41,12 @@ func (service *K8sPrometheusService) GenerateUserPrometheusRule(tenantId string)
 		log.Printf("获取 rule lock error  %+v", err)
 		return
 	}
-	defer sys_redis.Unlock(ctxLock, key)
+	defer func(ctx context.Context, key string) {
+		err := sys_redis.Unlock(ctx, key)
+		if err != nil {
+			logger.Logger().Errorf("unlock errorL%+v, lock:%s", err, key)
+		}
+	}(ctxLock, key)
 	alertRuleDTO, router, err := service.buildPrometheusRule("", "", tenantId)
 	if err != nil {
 		service.deleteK8sRule(tenantId, err, router)
@@ -111,7 +116,7 @@ func (service *K8sPrometheusService) buildAlertRuleListByResource(wg *sync.WaitG
 	defer wg.Done()
 	var resRuleList []*dto.RuleExpress
 	var alertList []*form.AlertDTO
-	global.DB.Raw("SELECT   t1.name as ruleName ,t1.`level`, t1.trigger_condition as ruleCondition, t1.id as ruleId,t1.product_type, t1.monitor_type ,t2.resource_id,t1.silences_time,t1.source_type FROM  t_alarm_rule t1,  t_alarm_rule_resource_rel t2   WHERE  t2.alarm_rule_id = t1.id   AND t2.tenant_id = ?   AND t1.deleted = 0   AND t1.enabled = 1", tenantId).Scan(&resRuleList)
+	global.DB.Raw("SELECT   t1.name as ruleName ,t1.`level`, t1.trigger_condition as ruleCondition, t1.biz_id as ruleId,t1.product_name as product_type, t1.monitor_type ,t2.resource_id,t1.silences_time,t1.source_type FROM  t_alarm_rule t1,  t_alarm_rule_resource_rel t2   WHERE  t2.alarm_rule_id = t1.biz_id   AND t2.tenant_id = ?   AND t1.deleted = 0   AND t1.enabled = 1", tenantId).Scan(&resRuleList)
 	for _, ruleExpress := range resRuleList {
 		ruleExpress.NoticeGroupIds = dao2.AlarmRule.GetNoticeGroupList(global.DB, ruleExpress.RuleId)
 		ruleExpress.TenantId = tenantId
@@ -129,7 +134,7 @@ func (service *K8sPrometheusService) buildAlertRuleListByResourceGroup(wg *sync.
 	defer wg.Done()
 	var groupRuleList []*dto.RuleExpress
 	var alertList []*form.AlertDTO
-	global.DB.Raw("SELECT   t1.name as ruleName ,t1.`source` ,t1.`level`, t1.trigger_condition as ruleCondition, t1.id as ruleId,t1.product_type, t1.monitor_type ,t2.resource_group_id,t2.calc_mode ,t1.silences_time ,t1.source_type FROM  t_alarm_rule t1,  t_alarm_rule_group_rel t2   WHERE  t2.alarm_rule_id = t1.id   AND t2.tenant_id = ?   AND t1.deleted = 0   AND t1.enabled = 1", tenantId).Scan(&groupRuleList)
+	global.DB.Raw("SELECT   t1.name as ruleName ,t1.`source` ,t1.`level`, t1.trigger_condition as ruleCondition, t1.biz_id as ruleId,t1.product_name as  product_type, t1.monitor_type ,t2.resource_group_id,t2.calc_mode ,t1.silences_time ,t1.source_type FROM  t_alarm_rule t1,  t_alarm_rule_group_rel t2   WHERE  t2.alarm_rule_id = t1.biz_id   AND t2.tenant_id = ?   AND t1.deleted = 0   AND t1.enabled = 1", tenantId).Scan(&groupRuleList)
 	for _, ruleExpress := range groupRuleList {
 		ruleExpress.NoticeGroupIds = dao2.AlarmRule.GetNoticeGroupList(global.DB, ruleExpress.RuleId)
 		instanceList := dao2.AlarmRule.GetResourceListByGroup(global.DB, ruleExpress.ResGroupId)

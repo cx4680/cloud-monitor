@@ -2,7 +2,8 @@ package model
 
 type ConfigItem struct {
 	Id     uint64 `gorm:"column:id;primary_key;autoIncrement" json:"id"`
-	Pid    int64  `gorm:"column:pid" json:"pid"`                //上级Id
+	BizId  string `gorm:"column:biz_id;size=50" json:"bizId"`
+	PBizId string `gorm:"column:p_biz_id;size=50" json:"pBizId"`
 	Name   string `gorm:"column:name;size=100" json:"name"`     //配置名称
 	Code   string `gorm:"column:code;size=100" json:"code"`     //配置编码
 	Data   string `gorm:"column:data;size=100" json:"data"`     //配置值
@@ -11,5 +12,5 @@ type ConfigItem struct {
 }
 
 func (m *ConfigItem) TableName() string {
-	return "config_item"
+	return "t_config_item"
 }
