@@ -4,9 +4,9 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/form"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/httputil"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/jsonutil"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/strutil"
-	"encoding/json"
-	"net/http"
 	"net/url"
 )
 
@@ -30,15 +30,12 @@ func QueryRange(pql string, start string, end string, step string) form.Promethe
 }
 
 func sendRequest(requestUrl string, pql string) form.PrometheusResponse {
-	response, err := http.Get(requestUrl + pql)
-	if err != nil {
-		logger.Logger().Errorf("error:%v\n", err)
-		return form.PrometheusResponse{}
-	}
 	var prometheusResponse form.PrometheusResponse
-	err = json.NewDecoder(response.Body).Decode(&prometheusResponse)
+	response, err := httputil.HttpGet(requestUrl + pql)
 	if err != nil {
 		logger.Logger().Errorf("error:%v\n", err)
+		return prometheusResponse
 	}
+	jsonutil.ToObject(response, &prometheusResponse)
 	return prometheusResponse
 }

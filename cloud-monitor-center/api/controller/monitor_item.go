@@ -16,7 +16,7 @@ func NewMonitorItemCtl(dao *dao.MonitorItemDao) *MonitorItemCtl {
 }
 
 func (d *MonitorItemCtl) GetMonitorItemsById(c *gin.Context) {
-	productId := c.Query("productId")
+	productBizId := c.Query("productBizId")
 	osType := c.Query("osType")
-	c.JSON(http.StatusOK, global.NewSuccess("查询成功", d.dao.SelectMonitorItemsById(productId, osType)))
+	c.JSON(http.StatusOK, global.NewSuccess("查询成功", d.dao.SelectMonitorItemsById(productBizId, osType)))
 }

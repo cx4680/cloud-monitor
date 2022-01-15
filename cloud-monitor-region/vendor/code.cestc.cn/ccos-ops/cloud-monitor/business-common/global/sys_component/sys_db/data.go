@@ -1,87 +1,52 @@
 package sys_db
 
 import (
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
 	commonModels "code.cestc.cn/ccos-ops/cloud-monitor/business-common/model"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
-	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/strutil"
-	"gorm.io/gorm"
-	"io/ioutil"
-	"strings"
+	"database/sql"
+	"github.com/golang-migrate/migrate"
+	"github.com/golang-migrate/migrate/database/mysql"
+	_ "github.com/golang-migrate/migrate/source/file"
+	"os"
+	"time"
 )
 
-type DBInitializer struct {
-	DB      *gorm.DB
-	Fetches []InitializerFetch
+var Update = false
+
+type migrateLog struct {
 }
 
-func (i *DBInitializer) Initnitialization() error {
-	for _, f := range i.Fetches {
-		t, s, err := f(i.DB)
-		if err != nil {
-			return err
-		}
-		if e := i.DB.AutoMigrate(t...); e != nil {
-			return e
-		}
-		for _, sql := range s {
-			ns := strings.Replace(sql, "\n", "", -1)
-			ns = strings.Replace(ns, "\r", "", -1)
-			ns = strings.Replace(ns, "\t", "", -1)
+func (l *migrateLog) Printf(format string, v ...interface{}) {
+	logger.Logger().Infof(format, v...)
+}
 
-			if strutil.IsNotEmpty(ns) {
-				if e := i.DB.Exec(sql).Error; e != nil {
-					return e
-				}
-			}
-		}
+func (l *migrateLog) Verbose() bool {
+	return true
+}
+func InitData(dbConfig config.DB, database, path string) error {
+	if !global.DB.Migrator().HasTable(&commonModels.AlarmHandler{}) && global.DB.Migrator().HasColumn(&commonModels.AlarmRule{}, "notify_channel") {
+		Update = true
+	}
+	var err error
+	pwd := os.Getenv("DB_PWD")
+	url := dbConfig.Username + ":" + pwd + "@" + dbConfig.Url + "&multiStatements=true"
+	db, err := sql.Open("mysql", url)
+	defer db.Close()
+	if err != nil {
+		return err
+	}
+	driver, _ := mysql.WithInstance(db, &mysql.Config{})
+	m, err := migrate.NewWithDatabaseInstance(path, database, driver)
+	if err != nil {
+		return err
+	}
+	m.Log = new(migrateLog)
+	m.LockTimeout = 3 * time.Minute
+	if err = m.Up(); err != nil && err != migrate.ErrNoChange {
+		logger.Logger().Error("An error occurred while syncing the database.. ", err)
+		return err
 	}
 	return nil
-}
-
-type InitializerFetch func(db *gorm.DB) ([]interface{}, []string, error)
-
-func CommonFetch(db *gorm.DB) ([]interface{}, []string, error) {
-	var tables []interface{}
-	var sqls []string
-	//先将不需要保留的表删除
-	if err := db.Migrator().DropTable(&commonModels.MonitorItem{}, &commonModels.MonitorProduct{}, &commonModels.ConfigItem{}); err != nil {
-		return nil, nil, err
-	}
-
-	tables = append(tables, &commonModels.MonitorItem{}, &commonModels.MonitorProduct{}, &commonModels.ConfigItem{})
-
-	tables = append(tables, &commonModels.AlertContact{})
-	tables = append(tables, &commonModels.AlertContactGroup{})
-	tables = append(tables, &commonModels.AlertContactGroupRel{})
-	tables = append(tables, &commonModels.AlertContactInformation{})
-	tables = append(tables, &commonModels.AlarmRule{})
-	tables = append(tables, &commonModels.AlarmNotice{})
-	tables = append(tables, &commonModels.AlarmInstance{})
-	tables = append(tables, &commonModels.AlertRecord{})
-	tables = append(tables, &commonModels.NotificationRecord{})
-	tables = append(tables, &commonModels.ResourceGroup{}, &commonModels.ResourceResourceGroupRel{}, &commonModels.AlarmRuleGroupRel{}, &commonModels.AlarmRuleResourceRel{}, &commonModels.AlarmHandler{})
-
-	//加载SQL
-	sqlBytes, err := ioutil.ReadFile("scripts/common.sql")
-	if err != nil {
-		logger.Logger().Errorf("load sql file error:%v", err)
-		return nil, nil, err
-	}
-	sql := string(sqlBytes)
-	if strutil.IsNotBlank(sql) {
-		sqls = append(sqls, strings.Split(sql, ";")...)
-	}
-	if !db.Migrator().HasTable(&commonModels.AlarmHandler{}) && db.Migrator().HasColumn(&commonModels.AlarmRule{}, "notify_channel") {
-		//升级sql
-		updateSqlBytes, err := ioutil.ReadFile("scripts/upgrade.sql")
-		if err != nil {
-			logger.Logger().Errorf("load update sql file error:%v", err)
-			return nil, nil, err
-		}
-		updateSql := string(updateSqlBytes)
-		if strutil.IsNotBlank(updateSql) {
-			sqls = append(sqls, strings.Split(updateSql, ";")...)
-		}
-	}
-	return tables, sqls, nil
 }

@@ -20,16 +20,16 @@ type AppConfig struct {
 }
 
 type CommonConfig struct {
-	Env                   string `yaml:"env"`
-	Nk                    string `yaml:"nk"`
-	TenantUrl             string `yaml:"tenantUrl"`
-	SmsCenterPath         string `yaml:"smsCenterPath"`
-	CertifyInformationUrl string `yaml:"certifyInformationUrl"`
-	HawkeyeCenterPath     string `yaml:"hawkeyeCenterPath"`
-	MsgIsOpen             string `yaml:"msgIsOpen"`
-	MsgChannel            string `yaml:"msgChannel"`
-	RegionName            string `yaml:"regionName"`
-	EcsInnerGateway       string `yaml:"ecs-inner-gateway"`
+	Env                    string `yaml:"env"`
+	Nk                     string `yaml:"nk"`
+	TenantUrl              string `yaml:"tenantUrl"`
+	SmsCenterPath          string `yaml:"smsCenterPath"`
+	ActivateInformationUrl string `yaml:"activateInformationUrl"`
+	HawkeyeCenterPath      string `yaml:"hawkeyeCenterPath"`
+	MsgIsOpen              string `yaml:"msgIsOpen"`
+	MsgChannel             string `yaml:"msgChannel"`
+	RegionName             string `yaml:"regionName"`
+	EcsInnerGateway        string `yaml:"ecs-inner-gateway"`
 }
 
 type Serve struct {
@@ -104,16 +104,16 @@ func defaultAppConfig() AppConfig {
 			NameServer: "127.0.0.1:9876",
 		},
 		Common: CommonConfig{
-			Env:                   "local",
-			Nk:                    "",
-			TenantUrl:             "",
-			SmsCenterPath:         "",
-			CertifyInformationUrl: "",
-			HawkeyeCenterPath:     "",
-			MsgIsOpen:             MsgOpen,
-			MsgChannel:            MsgChannelEmail,
-			RegionName:            "local",
-			EcsInnerGateway:       "",
+			Env:                    "local",
+			Nk:                     "",
+			TenantUrl:              "",
+			SmsCenterPath:          "",
+			ActivateInformationUrl: "",
+			HawkeyeCenterPath:      "",
+			MsgIsOpen:              MsgOpen,
+			MsgChannel:             MsgChannelEmail,
+			RegionName:             "local",
+			EcsInnerGateway:        "",
 		},
 	}
 }
