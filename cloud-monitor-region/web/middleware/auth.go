@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/jsonutil"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/strutil"
 	"encoding/base64"
@@ -12,7 +13,7 @@ import (
 )
 
 //忽略认证的路径列表
-var ignoreList = []string{"/hawkeye/alertContact/certifyAlertContact?*", "/inner/alertRecord/**", "/actuator/**", "/hawkeye/swagger/**", "/inner/remote/*"}
+var ignoreList = []string{"/hawkeye/contact/activateContact?*", "/inner/alarmRecord/**", "/actuator/**", "/hawkeye/swagger/**", "/inner/remote/*"}
 
 func Auth() gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -39,6 +40,15 @@ func Auth() gin.HandlerFunc {
 }
 
 func ParsingAndSetUserInfo(c *gin.Context) error {
+
+	if config.Cfg.Common.Env == "local" {
+		c.Set(global.UserType, 1)
+		c.Set(global.TenantId, 1)
+		c.Set(global.UserId, 1)
+		c.Set(global.UserName, "jim")
+		return nil
+	}
+
 	req := c.Request
 	userInfoEncode := req.Header.Get("user-info")
 	userInfoDecode, err := base64.StdEncoding.DecodeString(userInfoEncode)

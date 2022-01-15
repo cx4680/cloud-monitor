@@ -49,6 +49,7 @@ func (ctl *InstanceCtl) Bind(c *gin.Context) {
 	tenantId, err := util.GetTenantId(c)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, global.NewError(err.Error()))
+		return
 	}
 	param.TenantId = tenantId
 	err = util.Tx(&param, service.BindInstance)
@@ -68,6 +69,7 @@ func (ctl *InstanceCtl) GetRuleList(c *gin.Context) {
 	tenantId, err := util.GetTenantId(c)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, global.NewError(err.Error()))
+		return
 	}
 	param.TenantId = tenantId
 	c.JSON(http.StatusOK, global.NewSuccess("查询成功", dao.Instance.GetRuleListByProductType(&param)))

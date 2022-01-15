@@ -109,6 +109,13 @@ github.com/go-sql-driver/mysql
 # github.com/gohouse/converter v0.0.3
 ## explicit
 github.com/gohouse/converter
+# github.com/golang-migrate/migrate v3.5.4+incompatible
+## explicit
+github.com/golang-migrate/migrate
+github.com/golang-migrate/migrate/database
+github.com/golang-migrate/migrate/database/mysql
+github.com/golang-migrate/migrate/source
+github.com/golang-migrate/migrate/source/file
 # github.com/golang/mock v1.6.0
 ## explicit; go 1.11
 github.com/golang/mock/gomock
@@ -169,7 +176,7 @@ go.uber.org/atomic
 # go.uber.org/multierr v1.7.0
 ## explicit; go 1.14
 go.uber.org/multierr
-# go.uber.org/zap v1.19.1
+# go.uber.org/zap v1.20.0
 ## explicit; go 1.13
 go.uber.org/zap
 go.uber.org/zap/buffer

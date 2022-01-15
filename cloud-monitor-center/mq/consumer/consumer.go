@@ -47,12 +47,22 @@ func DeleteInstanceHandler(msgs []*primitive.MessageExt) {
 	}
 }
 
-func AlertRecordAddHandler(msgs []*primitive.MessageExt) {
+func AlarmRecordAddHandler(msgs []*primitive.MessageExt) {
 	for _, msg := range msgs {
-		var list []model.AlertRecord
+		var list []model.AlarmRecord
 		jsonutil.ToObject(string(msg.Body), &list)
 		if list != nil && len(list) > 0 {
-			dao.AlertRecord.InsertBatch(global.DB, list)
+			dao.AlarmRecord.InsertBatch(global.DB, list)
+		}
+	}
+}
+
+func AlarmInfoAddHandler(msgs []*primitive.MessageExt) {
+	for _, msg := range msgs {
+		var list []model.AlarmInfo
+		jsonutil.ToObject(string(msg.Body), &list)
+		if list != nil && len(list) > 0 {
+			dao.AlarmInfo.InsertBatch(global.DB, list)
 		}
 	}
 }

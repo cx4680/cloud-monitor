@@ -10,3 +10,4 @@
 /.build
 cloud-monitor-center/logs/*.log
 cloud-monitor-region/logs/*.log
+logs/application.log

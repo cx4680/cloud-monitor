@@ -21,14 +21,14 @@ logger:
 
 rocketmq:
   name-server: 127.0.0.1:9876
-  alertContactTopic: alertContactTopic
+  contactTopic: contactTopic
   instanceTopic: hawkeye-instance
   ruleTopic: rule
 
 common:
   nk: http://aopesb.dev001.intranet.cecloudcs.com/cestc
-  msgIsOpen: open
+  msgIsOpen: close
   msgChannel: mail,sms
   smsCenterPath: http://aopesb.dev001.intranet.cecloudcs.com/cestc?appId=600006&format=json&method=CESTC_UNHQ_saveMessageOperate
-  certifyInformationUrl: http://monitor.console.dev001.intranet.cecloudcs.com/#/alarm/activation?code=
+  activateInformationUrl: http://monitor.console.dev001.intranet.cecloudcs.com/#/alarm/activation?code=
   tenantUrl: http://cbcm.dev001.intranet.cecloudcs.com/api/cbcm/IUcaInfosOpenService/queryUcaInfosByUserId

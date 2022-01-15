@@ -22,7 +22,7 @@ func generate() {
 	// 开始迁移转换
 	err := t2t.
 		// 指定某个表,如果不指定,则默认全部表都迁移
-		Table("t_alarm_instance").
+		Table("t_resource").
 		// 表前缀
 		Prefix("t_").
 		// 是否添加json tag
