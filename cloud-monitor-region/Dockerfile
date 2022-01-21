@@ -21,8 +21,9 @@ COPY --from=builder /build/migrations/*.sql ./migrations/
 COPY --from=builder /build/templates/*.tpl ./templates/
 
 RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime &&\
-    echo 'Asia/Shanghai' >/etc/timezone
+    echo 'Asia/Shanghai' >/etc/timezone  \
 
+source /opt/cecloud/.appEnv
 # 声明服务端口
 EXPOSE 80
 
