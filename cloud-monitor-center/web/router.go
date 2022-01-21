@@ -142,7 +142,7 @@ func configItemRouters() {
 
 func noticeRouters() {
 	ctl := controller.NewNoticeCtl(commonService.MessageService{})
-	group := router.Group("/rest/notice/")
+	group := router.Group("/hawkeye/notice")
 	{
 		group.GET("/getUsage", logs.GinTrailzap(false, Read), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetNoticeUsage", ResourceType: "*", ResourceId: "*"}), ctl.GetUsage)
 	}
@@ -153,11 +153,12 @@ func innerMapping() {
 	monitorItemController := inner.NewMonitorItemController()
 	ruleCtl := controller.NewAlarmRuleCtl()
 	innerRuleCtl := inner.NewAlarmRuleCtl()
+	noticeCtl := controller.NewNoticeCtl(commonService.MessageService{})
 	group := router.Group("/hawkeye/inner/")
 	{
-
 		group.GET("configItem/getItemList", configItemController.GetItemListById)
 		group.GET("monitorItem/getMonitorItemList", monitorItemController.GetMonitorItemsById)
+		group.GET("notice/getUsage", noticeCtl.GetCenterUsage)
 
 		ruleGroup := group.Group("rule/")
 		ruleGroup.POST("create", innerRuleCtl.CreateRule)
