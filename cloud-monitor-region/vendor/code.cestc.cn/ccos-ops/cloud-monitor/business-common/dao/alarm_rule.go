@@ -247,7 +247,7 @@ func (dao *AlarmRuleDao) saveResource(tx *gorm.DB, tenantID string, info *form.R
 			TenantId:        tenantID,
 		}
 	}
-	tx.Clauses(clause.OnConflict{Columns: []clause.Column{{Name: "instance_id"}},DoNothing: false}).Create(&resourceList)
+	tx.Clauses(clause.OnConflict{Columns: []clause.Column{{Name: "instance_id"}}, DoNothing: false}).Create(&resourceList)
 	tx.Create(&resourceRelList)
 }
 
@@ -267,7 +267,7 @@ func (dao *AlarmRuleDao) saveAlarmRuleResource(tx *gorm.DB, ruleReqDTO *form.Ala
 		}
 		resourceList[index] = dao.buildResource(info, ruleReqDTO.TenantId, ruleReqDTO.ProductType)
 	}
-	tx.Clauses(clause.OnConflict{Columns: []clause.Column{{Name: "instance_id"}},DoNothing: false}).Create(&resourceList)
+	tx.Clauses(clause.OnConflict{Columns: []clause.Column{{Name: "instance_id"}}, DoNothing: false}).Create(&resourceList)
 	tx.Create(&resourceRelList)
 }
 
