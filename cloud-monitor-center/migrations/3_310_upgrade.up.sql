@@ -1,4 +1,4 @@
---清除303版本测试可能存在的脏数据
+-- 清除303版本测试可能存在的脏数据
 DELETE FROM `t_monitor_product` WHERE biz_id in ('5','6','7');
 
 INSERT INTO `t_monitor_product` (`biz_id`, `name`, `status`, `description`, `create_user`, `create_time`, `route`, `cron`, `host`, `page_url`, `abbreviation`) VALUES ('5', '云备份CBR', '1', 'cbr', null, null, '/productmonitoring/cbr', '0 0 0/1 * * ?', 'http://product-backup-backup-manage.product-backup', '/noauth/backup/vault/pageList', 'cbr');
