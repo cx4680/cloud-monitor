@@ -283,7 +283,7 @@ type ResultDTO struct {
 }
 
 func (s *MessageService) getUserCurrentMonthSmsUsedNum(tenantId string) int {
-	resp, err := httputil.HttpGet(config.Cfg.Common.HawkeyeCenterPath + "/inner/getUsage?tenantId=" + tenantId)
+	resp, err := httputil.HttpGet(config.Cfg.Common.HawkeyeCenterPath + "/hawkeye/inner/notice/getUsage?tenantId=" + tenantId)
 	if err != nil {
 		log.Fatal("获取用户短信月使用量出错, tenantId=" + tenantId)
 		return 0
