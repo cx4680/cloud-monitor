@@ -4,6 +4,7 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/constant"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/service"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/strutil"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
@@ -32,6 +33,20 @@ func (nc *NoticeCtl) GetUsage(c *gin.Context) {
 		Total: constant.MaxSmsNum,
 	}
 	c.JSON(http.StatusOK, global.NewSuccess("查询成功", noticeUsageVO))
+}
+
+func (nc *NoticeCtl) GetCenterUsage(c *gin.Context) {
+	tenantId := c.Query("tenantId")
+	if strutil.IsBlank(tenantId) {
+		c.JSON(http.StatusOK, global.NewError("获取租户ID失败"))
+		return
+	}
+	num, err := nc.service.GetTenantCurrentMonthSmsUsedNum(tenantId)
+	if err != nil {
+		c.JSON(http.StatusOK, global.NewError(err.Error()))
+		return
+	}
+	c.JSON(http.StatusOK, global.NewSuccess("查询成功", num))
 }
 
 type NoticeUsageVO struct {

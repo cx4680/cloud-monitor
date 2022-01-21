@@ -53,6 +53,7 @@ func (ctl *InstanceCtl) GetPage(c *gin.Context) {
 	}
 	page, err := instanceService.GetPage(f, instanceService.(commonService.InstanceStage))
 	if err != nil {
+		logger.Logger().Error(err)
 		c.JSON(http.StatusInternalServerError, global.NewError("查询失败"))
 		return
 	}
