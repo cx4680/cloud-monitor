@@ -3,6 +3,7 @@ package config
 import (
 	"gopkg.in/yaml.v3"
 	"io/ioutil"
+	"os"
 	"time"
 )
 
@@ -123,5 +124,11 @@ func InitConfig(file string) error {
 	if err != nil {
 		return err
 	}
-	return yaml.Unmarshal(data, &Cfg)
+	if e := yaml.Unmarshal(data, &Cfg); e != nil {
+		return e
+	}
+	//从环境变量中读取消息中心配置
+	Cfg.Common.MsgIsOpen = os.Getenv("GLOBAL_CBC_MSG_ISOPEN")
+	Cfg.Common.MsgChannel = os.Getenv("GLOBAL_CBC_MSG_CHANNEL")
+	return nil
 }
