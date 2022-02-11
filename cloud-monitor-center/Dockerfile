@@ -22,9 +22,8 @@ COPY --from=builder /build/migrations/*.sql ./migrations/
 RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime &&\
     echo 'Asia/Shanghai' >/etc/timezone  \
 
-source /opt/cecloud/.appEnv
 # 声明服务端口
 EXPOSE 80
 
 # 启动容器时运行的命令
-ENTRYPOINT ["/bin/sh", "-c", "ls && ls migrations && ./app -config /conf/center.yaml"]
+ENTRYPOINT ["/bin/sh", "-c", "ls && ls migrations && source /opt/cecloud/.appEnv && ./app -config /conf/center.yaml"]
