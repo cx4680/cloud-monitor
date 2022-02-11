@@ -23,9 +23,8 @@ COPY --from=builder /build/templates/*.tpl ./templates/
 RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime &&\
     echo 'Asia/Shanghai' >/etc/timezone  \
 
-source /opt/cecloud/.appEnv
 # 声明服务端口
 EXPOSE 80
 
 # 启动容器时运行的命令
-ENTRYPOINT ["/bin/sh", "-c", "ls / && ls && ./app -config /conf/region.yaml"]
+ENTRYPOINT ["/bin/sh", "-c", "ls / && ls && source /opt/cecloud/.appEnv && ./app -config /conf/region.yaml"]
