@@ -3,15 +3,12 @@ package service
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/dao"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/errors"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/model"
 	commonService "code.cestc.cn/ccos-ops/cloud-monitor/business-common/service"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/constant"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/external"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/form"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
-	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/httputil"
-	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/jsonutil"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/strutil"
 	"fmt"
 	"strconv"
@@ -31,12 +28,6 @@ func (s *MonitorReportFormService) GetData(request form.PrometheusRequest) (*for
 	}
 	if !checkUserInstanceIdentity(request.TenantId, request.ProductBizId, request.Instance) {
 		return nil, errors.NewBusinessError("该租户无此实例")
-	}
-	if constant.ProductMap[request.ProductBizId] == external.BMS {
-		request.Instance = getSerialNumber(request.Instance)
-		if strutil.IsBlank(request.Instance) {
-			return nil, errors.NewBusinessError("SerialNumber为空")
-		}
 	}
 	pql := strings.ReplaceAll(getMonitorItemByName(request.Name).MetricsLinux, constant.MetricLabel, constant.INSTANCE+"='"+request.Instance+"',"+constant.FILTER)
 	prometheusResponse := Query(pql, request.Time)
@@ -78,12 +69,6 @@ func (s *MonitorReportFormService) GetAxisData(request form.PrometheusRequest) (
 	}
 	if !checkUserInstanceIdentity(request.TenantId, request.ProductBizId, request.Instance) {
 		return nil, errors.NewBusinessError("该租户无此实例")
-	}
-	if constant.ProductMap[request.ProductBizId] == external.BMS {
-		request.Instance = getSerialNumber(request.Instance)
-		if strutil.IsBlank(request.Instance) {
-			return nil, errors.NewBusinessError("SerialNumber为空")
-		}
 	}
 	monitorItem := getMonitorItemByName(request.Name)
 	pql := strings.ReplaceAll(monitorItem.MetricsLinux, constant.MetricLabel, constant.INSTANCE+"='"+request.Instance+"',"+constant.FILTER)
@@ -211,22 +196,4 @@ func getInstanceList(productBizId string, tenantId string) ([]string, error) {
 		instanceList = append(instanceList, v.InstanceId)
 	}
 	return instanceList, nil
-}
-
-//获取机器SN号
-func getSerialNumber(bmsId string) string {
-	p := dao.MonitorProduct.GetByAbbreviation(global.DB, external.BMS)
-	url := p.Host + p.PageUrl + "/bmcnodes?filter=ecs_id:eq:" + bmsId
-	respStr, err := httputil.HttpGet(url)
-	if err != nil {
-		logger.Logger().Error("BMS error", err)
-		return ""
-	}
-	var resp external.SerialResponse
-	jsonutil.ToObject(respStr, &resp)
-	if resp.Data.TotalCount <= 0 {
-		logger.Logger().Error("Not found BMS_ID")
-		return ""
-	}
-	return resp.Data.Bmcnodes[0].SerialNumber
 }
