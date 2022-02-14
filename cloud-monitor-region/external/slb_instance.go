@@ -73,7 +73,7 @@ type SlbInfoBean struct {
 		Bandwidth  int         `json:"bandwidth"`
 		ExpireTime string      `json:"expireTime"`
 		PayModel   interface{} `json:"payModel"`
-		EipUid     int         `json:"eipUid"`
+		EipUid     string      `json:"eipUid"`
 	} `json:"eip"`
 	ExpireTime string `json:"expireTime"`
 	PayModel   string `json:"payModel"`
