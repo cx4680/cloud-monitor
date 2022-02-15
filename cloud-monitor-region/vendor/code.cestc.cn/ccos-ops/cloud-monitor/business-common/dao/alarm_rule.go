@@ -237,15 +237,26 @@ func (dao *AlarmRuleDao) saveResource(tx *gorm.DB, tenantID string, info *form.R
 	if resSize == 0 {
 		return
 	}
-	resourceList := make([]*model.AlarmInstance, resSize)
-	resourceRelList := make([]*model.ResourceResourceGroupRel, resSize)
-	for index, resInfo := range info.ResourceList {
-		resourceList[index] = dao.buildResource(resInfo, tenantID, productType)
-		resourceRelList[index] = &model.ResourceResourceGroupRel{
+	var resourceList []*model.AlarmInstance
+	var resourceRelList []*model.ResourceResourceGroupRel
+	resourceMap := map[string]byte{}
+	for _, resInfo := range info.ResourceList {
+		_, ok := resourceMap[resInfo.InstanceId]
+		if ok {
+			continue
+		}
+		resourceMap[resInfo.InstanceId] = 0
+		resource := dao.buildResource(resInfo, tenantID, productType)
+		resourceList = append(resourceList, resource)
+		resourceRel := &model.ResourceResourceGroupRel{
 			ResourceGroupId: info.ResGroupId,
 			ResourceId:      resInfo.InstanceId,
 			TenantId:        tenantID,
 		}
+		resourceRelList = append(resourceRelList, resourceRel)
+	}
+	if len(resourceList)==0{
+		return
 	}
 	tx.Clauses(clause.OnConflict{Columns: []clause.Column{{Name: "instance_id"}}, DoNothing: false}).Create(&resourceList)
 	tx.Create(&resourceRelList)
@@ -257,15 +268,26 @@ func (dao *AlarmRuleDao) saveAlarmRuleResource(tx *gorm.DB, ruleReqDTO *form.Ala
 	if resourceSize == 0 {
 		return
 	}
-	resourceRelList := make([]*model.AlarmRuleResourceRel, resourceSize)
-	resourceList := make([]*model.AlarmInstance, resourceSize)
-	for index, info := range ruleReqDTO.ResourceList {
-		resourceRelList[index] = &model.AlarmRuleResourceRel{
+	var resourceRelList []*model.AlarmRuleResourceRel
+	var resourceList []*model.AlarmInstance
+	resourceMap := map[string]byte{}
+	for _, info := range ruleReqDTO.ResourceList {
+		_, ok := resourceMap[info.InstanceId]
+		if ok {
+			continue
+		}
+		resourceMap[info.InstanceId] = 0
+		resource := dao.buildResource(info, ruleReqDTO.TenantId, ruleReqDTO.ProductType)
+		resourceRel := &model.AlarmRuleResourceRel{
 			AlarmRuleId: ruleReqDTO.Id,
 			ResourceId:  info.InstanceId,
 			TenantId:    ruleReqDTO.TenantId,
 		}
-		resourceList[index] = dao.buildResource(info, ruleReqDTO.TenantId, ruleReqDTO.ProductType)
+		resourceRelList = append(resourceRelList, resourceRel)
+		resourceList = append(resourceList, resource)
+	}
+	if len(resourceList)==0{
+		return
 	}
 	tx.Clauses(clause.OnConflict{Columns: []clause.Column{{Name: "instance_id"}}, DoNothing: false}).Create(&resourceList)
 	tx.Create(&resourceRelList)
