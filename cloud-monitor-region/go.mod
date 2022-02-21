@@ -16,6 +16,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/swaggo/gin-swagger v1.3.1
 	github.com/swaggo/swag v1.7.3
+	github.com/toolkits/pkg v1.2.9
 	golang.org/x/net v0.0.0-20210928044308-7d9f5e0b762b
 	gorm.io/driver/mysql v1.1.2
 	gorm.io/gorm v1.22.1
