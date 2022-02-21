@@ -15,7 +15,6 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/util"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
-	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/httputil"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/jsonutil"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/snowflake"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/strutil"
@@ -32,7 +31,6 @@ type AlarmRecordAddService struct {
 	FilterChain     []filter
 	AlarmRecordSvc  *AlarmRecordService
 	AlarmHandlerSvc *commonService.AlarmHandlerService
-	MessageSvc      *service.MessageService
 	TenantSvc       *service.TenantService
 	AlarmRecordDao  *commonDao.AlarmRecordDao
 }
@@ -42,7 +40,7 @@ type AlarmAddParam struct {
 	InfoList   []commonModels.AlarmInfo
 }
 
-func NewAlarmRecordAddService(AlarmRecordSvc *AlarmRecordService, AlarmHandlerSvc *commonService.AlarmHandlerService, MessageSvc *service.MessageService, TenantSvc *service.TenantService) *AlarmRecordAddService {
+func NewAlarmRecordAddService(AlarmRecordSvc *AlarmRecordService, AlarmHandlerSvc *commonService.AlarmHandlerService, TenantSvc *service.TenantService) *AlarmRecordAddService {
 	return &AlarmRecordAddService{
 		FilterChain: []filter{func(alert *form.AlarmRecordAlertsBean) (bool, error) {
 			rule := &commonDtos.RuleDesc{}
@@ -77,7 +75,6 @@ func NewAlarmRecordAddService(AlarmRecordSvc *AlarmRecordService, AlarmHandlerSv
 		}},
 		AlarmHandlerSvc: AlarmHandlerSvc,
 		AlarmRecordSvc:  AlarmRecordSvc,
-		MessageSvc:      MessageSvc,
 		TenantSvc:       TenantSvc,
 		AlarmRecordDao:  commonDao.AlarmRecord,
 	}
@@ -88,9 +85,9 @@ func (s *AlarmRecordAddService) Add(requestId string, f form.InnerAlarmRecordAdd
 		logger.Logger().Info("requestId=", requestId, ", alerts 信息为空")
 		return nil
 	}
-	list, infoList, handlerMap := s.checkAndBuild(requestId, f.Alerts)
+	list, infoList, events := s.checkAndBuild(requestId, f.Alerts)
 	logger.Logger().Info("requestId=", requestId, ", alarm data=", jsonutil.ToString(list))
-	logger.Logger().Info("requestId=", requestId, ", handler data=", jsonutil.ToString(handlerMap))
+	logger.Logger().Info("requestId=", requestId, ", handler data=", jsonutil.ToString(events))
 	//持久化
 	if list != nil && len(list) > 0 && infoList != nil && len(infoList) > 0 {
 		if err := s.AlarmRecordSvc.Persistence(s.AlarmRecordSvc, sys_rocketmq.RecordTopic, AlarmAddParam{
@@ -101,35 +98,17 @@ func (s *AlarmRecordAddService) Add(requestId string, f form.InnerAlarmRecordAdd
 		}
 	}
 	//告警处置
-	for t, p := range handlerMap {
-		if p == nil || len(p) <= 0 {
-			continue
-		}
-		if t == handler_type.Sms || t == handler_type.Email {
-			if err := s.MessageSvc.SendAlarmNotice(p); err != nil {
-				logger.Logger().Error("requestId=", requestId, ", send alarm message fail,", err)
-			}
-		} else if t == handler_type.Http {
-			//调用弹性伸缩
-			for _, a := range p {
-				data := a.(*commonDtos.AutoScalingData)
-				respJson, err := httputil.HttpPostJson(data.Param, map[string]string{"ruleId": data.RuleId, "tenantId": data.TenantId}, nil)
-				if err != nil {
-					logger.Logger().Error("requestId=", requestId, ", autoScaling request fail,", err)
-				} else {
-					logger.Logger().Info("requestId=", requestId, ", autoScaling request success, resp=", respJson)
-				}
-			}
-		}
+	if !AlarmHandlerQueue.PushFrontBatch(events) {
+		logger.Logger().Error("requestId=", requestId, ", add to alarm handler fail, handlerMap=", jsonutil.ToString(events))
 	}
 
 	return nil
 }
 
-func (s *AlarmRecordAddService) checkAndBuild(requestId string, alerts []*form.AlarmRecordAlertsBean) ([]commonModels.AlarmRecord, []commonModels.AlarmInfo, map[int][]interface{}) {
+func (s *AlarmRecordAddService) checkAndBuild(requestId string, alerts []*form.AlarmRecordAlertsBean) ([]commonModels.AlarmRecord, []commonModels.AlarmInfo, []interface{}) {
 	var list []commonModels.AlarmRecord
 	var infoList []commonModels.AlarmInfo
-	handlerMap := s.initHandlerMap()
+	var alarmHandlerEventList []interface{}
 
 	for _, alert := range alerts {
 		a := alert
@@ -173,19 +152,15 @@ func (s *AlarmRecordAddService) checkAndBuild(requestId string, alerts []*form.A
 
 			}
 			if data != nil {
-				handlerMap[handler.HandleType] = append(handlerMap[handler.HandleType], data)
+				alarmHandlerEventList = append(alarmHandlerEventList, AlarmHandlerEvent{
+					RequestId: requestId,
+					Type:      handler.HandleType,
+					Data:      data,
+				})
 			}
 		}
 	}
-	return list, infoList, handlerMap
-}
-
-func (s *AlarmRecordAddService) initHandlerMap() map[int][]interface{} {
-	m := map[int][]interface{}{}
-	m[handler_type.Email] = []interface{}{}
-	m[handler_type.Sms] = []interface{}{}
-	m[handler_type.Http] = []interface{}{}
-	return m
+	return list, infoList, alarmHandlerEventList
 }
 
 func (s *AlarmRecordAddService) getDurationTime(now, startTime time.Time, period int) string {
