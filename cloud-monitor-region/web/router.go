@@ -4,7 +4,6 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/iam"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/logs"
 	commonService "code.cestc.cn/ccos-ops/cloud-monitor/business-common/service"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/service/external/message_center"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/api/actuator"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/api/controller"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/api/inner"
@@ -55,7 +54,7 @@ func instance() {
 }
 
 func innerCtl() {
-	addService := service.NewAlarmRecordAddService(service.NewAlarmRecordService(service.NewAlarmInfoService()), commonService.NewAlarmHandlerService(), commonService.NewMessageService(message_center.NewService()), commonService.NewTenantService())
+	addService := service.NewAlarmRecordAddService(service.NewAlarmRecordService(service.NewAlarmInfoService()), commonService.NewAlarmHandlerService(), commonService.NewTenantService())
 	ctl := inner.NewAlertRecordCtl(addService)
 	group := router.Group("/inner/")
 	{

@@ -40,7 +40,7 @@
           "webhookConfigs":[
             {
               "sendResolved": true,
-              "url": "http://region-web-provider-svc.product-cec-hawkeye/inner/alertRecord/insert",
+              "url": "http://region-web-provider-svc.product-cec-hawkeye/inner/alarmRecord/insert",
               "maxAlerts": 1000
             }
           ]

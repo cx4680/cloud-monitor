@@ -8,13 +8,15 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/k8s"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/mq/consumer"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/pipeline/sys_upgrade"
+	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/service"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/task"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/validator/translate"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/web"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/run_time"
 	"code.cestc.cn/yyptb-group_tech/iam-sdk-go/pkg/middleware"
 	"context"
-	"fmt"
 	"os"
 )
 
@@ -58,13 +60,19 @@ func main() {
 			sys_upgrade.PrometheusRuleUpgrade()
 			return nil
 		}).
+		AddStage(func(c *context.Context) error {
+			go run_time.SafeRun(func() {
+				service.StartHandleAlarmEvent(*c)
+			})
+			return nil
+		}).
 		AddStage(func(*context.Context) error {
 			return web.Start(config.Cfg.Serve)
 		})
 
 	_, err := loader.Start()
 	if err != nil {
-		fmt.Printf("exit error:%v", err)
+		logger.Logger().Error("exit error, ", err)
 		os.Exit(1)
 	}
 }
