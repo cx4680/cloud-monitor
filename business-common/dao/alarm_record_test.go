@@ -27,6 +27,4 @@ func TestFindGroupIdsByRecordId(t *testing.T) {
 	config.InitConfig("C:\\work\\go-space\\cloud-monitor\\cloud-monitor-center\\config.local.yml")
 	os.Setenv("DB_PWD", "123456")
 	sys_db.InitDb(config.Cfg.Db)
-	groupids := AlertRecord.FindGroupIdsByRecordId("","1")
-	fmt.Println(groupids)
 }
