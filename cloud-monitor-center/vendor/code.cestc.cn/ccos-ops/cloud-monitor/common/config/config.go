@@ -22,6 +22,7 @@ type AppConfig struct {
 
 type CommonConfig struct {
 	Env                    string `yaml:"env"`
+	EnvType                string `yaml:"envType"`
 	Nk                     string `yaml:"nk"`
 	TenantUrl              string `yaml:"tenantUrl"`
 	SmsCenterPath          string `yaml:"smsCenterPath"`

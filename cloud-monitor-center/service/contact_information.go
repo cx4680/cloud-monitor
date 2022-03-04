@@ -44,7 +44,9 @@ func (s *ContactInformationService) PersistenceLocal(db *gorm.DB, param interfac
 		}
 		list := s.insertContactInformation(db, p)
 		for _, information := range list {
-			s.sendActivateMsg(information.TenantId, information.Address, information.Type, information.ActiveCode, information.ContactBizId)
+			if strutil.IsNotBlank(information.ActiveCode) {
+				s.sendActivateMsg(information.TenantId, information.Address, information.Type, information.ActiveCode, information.ContactBizId)
+			}
 		}
 		return jsonutil.ToString(form.MqMsg{
 			EventEum: enum.InsertContactInformation,
@@ -77,7 +79,7 @@ func (s *ContactInformationService) PersistenceLocal(db *gorm.DB, param interfac
 }
 
 func (s *ContactInformationService) getActiveCode(addressType uint8) (string, uint8) {
-	if config.Cfg.Common.MsgIsOpen == config.MsgClose {
+	if config.Cfg.Common.EnvType == config.ProprietaryCloud || config.Cfg.Common.MsgIsOpen == config.MsgClose {
 		return "", constant.Activated
 	}
 	for _, v := range global.NoticeChannelList {
