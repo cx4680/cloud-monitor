@@ -45,7 +45,7 @@ func (d *MonitorItemDao) ChangeDisplay(productBizId, display string, bizIdList [
 func (d *MonitorItemDao) GetMonitorItemCacheByName(name string) model.MonitorItem {
 	value, err := sys_redis.Get(name)
 	if err != nil {
-		logger.Logger().Error("key=" + name + ", error:" + err.Error())
+		logger.Logger().Info("key=" + name + ", error:" + err.Error())
 	}
 	var monitorItemModel = model.MonitorItem{}
 	if strutil.IsNotBlank(value) {
