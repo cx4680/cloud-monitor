@@ -24,4 +24,7 @@ const (
 	DeleteRule   EventEum = "delete"
 	BindRule     EventEum = "bind"
 	UnbindRule   EventEum = "unbind"
+
+	ChangeMonitorProductStatus EventEum = "changeMonitorProductStatus"
+	ChangeMonitorItemDisplay   EventEum = "changeMonitorItemDisplay"
 )

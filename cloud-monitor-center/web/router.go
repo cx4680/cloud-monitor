@@ -1,7 +1,6 @@
 package web
 
 import (
-	commonDao "code.cestc.cn/ccos-ops/cloud-monitor/business-common/dao"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/iam"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/logs"
 	commonService "code.cestc.cn/ccos-ops/cloud-monitor/business-common/service"
@@ -32,18 +31,21 @@ func loadRouters() {
 }
 
 func monitorProductRouters() {
-	monitorProductCtl := controller.NewMonitorProductCtl(commonDao.MonitorProduct)
+	monitorProductCtl := controller.NewMonitorProductCtl(service.MonitorProductService{})
 	group := router.Group("/hawkeye/monitorProduct/")
 	{
-		group.GET("/getAllMonitorProducts", logs.GinTrailzap(false, Read), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetAllMonitorProductsList", ResourceType: "*", ResourceId: "*"}), monitorProductCtl.GetAllMonitorProducts)
+		group.GET("/getAllMonitorProducts", logs.GinTrailzap(false, Read), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetAllMonitorProductsList", ResourceType: "*", ResourceId: "*"}), monitorProductCtl.GetMonitorProduct)
+		group.GET("/getMonitorProduct", logs.GinTrailzap(false, Read), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetAllMonitorProductsList", ResourceType: "*", ResourceId: "*"}), monitorProductCtl.GetAllMonitorProduct)
+		group.POST("/ChangeStatus", logs.GinTrailzap(false, Write), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetAllMonitorProductsList", ResourceType: "*", ResourceId: "*"}), monitorProductCtl.ChangeStatus)
 	}
 }
 
 func monitorItemRouters() {
-	monitorItemCtl := controller.NewMonitorItemCtl(commonDao.MonitorItem)
+	monitorItemCtl := controller.NewMonitorItemCtl(service.MonitorItemService{})
 	group := router.Group("/hawkeye/monitorItem/")
 	{
 		group.GET("/getMonitorItemsById", logs.GinTrailzap(false, Read), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetMonitorItemsByIdList", ResourceType: "*", ResourceId: "*"}), monitorItemCtl.GetMonitorItemsById)
+		group.POST("/changeDisplay", logs.GinTrailzap(false, Write), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetMonitorItemsByIdList", ResourceType: "*", ResourceId: "*"}), monitorItemCtl.ChangeDisplay)
 	}
 }
 

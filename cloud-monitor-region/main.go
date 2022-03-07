@@ -54,6 +54,12 @@ func main() {
 			}, {
 				Topic:   sys_rocketmq.RuleTopic,
 				Handler: consumer.AlarmRuleHandler,
+			}, {
+				Topic:   sys_rocketmq.MonitorProductTopic,
+				Handler: consumer.MonitorProductHandler,
+			}, {
+				Topic:   sys_rocketmq.MonitorItemTopic,
+				Handler: consumer.MonitorItemHandler,
 			}})
 		}).
 		AddStage(func(*context.Context) error {
