@@ -16,7 +16,7 @@ import (
 )
 
 func AddSyncJobs(bt *task.BusinessTaskImpl) error {
-	list := dao.MonitorProduct.SelectMonitorProductList()
+	list := dao.MonitorProduct.GetMonitorProduct()
 	for _, product := range *list {
 		if strutil.IsNotBlank(product.Cron) {
 			abbreviation := product.Abbreviation

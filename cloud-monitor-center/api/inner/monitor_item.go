@@ -2,6 +2,7 @@ package inner
 
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/dao"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/form"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/strutil"
 	"github.com/gin-gonic/gin"
@@ -17,11 +18,11 @@ func NewMonitorItemController() *MonitorItemController {
 }
 
 func (ctl *MonitorItemController) GetMonitorItemsById(c *gin.Context) {
-	productBizId := c.Query("productBizId")
-	osType := c.Query("osType")
-	if strutil.IsBlank(productBizId) {
+	var param form.MonitorItemParam
+	err := c.ShouldBindQuery(&param)
+	if err != nil || strutil.IsBlank(param.ProductBizId) {
 		c.JSON(http.StatusBadRequest, global.NewError("参数异常"))
 		return
 	}
-	c.JSON(http.StatusOK, global.NewSuccess("查询成功", ctl.dao.SelectMonitorItemsById(productBizId, osType)))
+	c.JSON(http.StatusOK, global.NewSuccess("查询成功", ctl.dao.GetMonitorItem(param.ProductBizId, param.OsType, param.Display)))
 }

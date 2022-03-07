@@ -104,3 +104,18 @@ INSERT INTO `t_monitor_item` (`biz_id`, `product_biz_id`, `name`, `metric_name`,
 INSERT INTO `t_monitor_item` (`biz_id`, `product_biz_id`, `name`, `metric_name`, `labels`, `metrics_linux`, `metrics_windows`, `statistics`, `unit`, `frequency`, `type`, `is_display`, `status`, `description`, `create_user`, `create_time`, `show_expression`) VALUES ('163', '11', '消费速率', 'kafka_server_brokertopicmetrics_bytesoutpersec', 'instance', 'kafka_server_brokertopicmetrics_bytesoutpersec{$INSTANCE}', null, null, 'Byte/s', null, '2', '1', '1', null, null, null, null);
 INSERT INTO `t_monitor_item` (`biz_id`, `product_biz_id`, `name`, `metric_name`, `labels`, `metrics_linux`, `metrics_windows`, `statistics`, `unit`, `frequency`, `type`, `is_display`, `status`, `description`, `create_user`, `create_time`, `show_expression`) VALUES ('164', '11', '消息生产速率', 'kafka_server_brokertopicmetrics_messagesinpersec', 'instance', 'kafka_server_brokertopicmetrics_messagesinpersec{$INSTANCE}', null, null, '个/s', null, '2', '1', '1', null, null, null, null);
 INSERT INTO `t_monitor_item` (`biz_id`, `product_biz_id`, `name`, `metric_name`, `labels`, `metrics_linux`, `metrics_windows`, `statistics`, `unit`, `frequency`, `type`, `is_display`, `status`, `description`, `create_user`, `create_time`, `show_expression`) VALUES ('165', '11', '落后的消费量', 'kafka_server_fetcherlagmetrics_consumerlag', 'instance', 'kafka_server_fetcherlagmetrics_consumerlag{$INSTANCE}', null, null, '个', null, '2', '1', '1', null, null, null, null);
+
+ALTER TABLE `t_monitor_item` ADD `display` VARCHAR (256) DEFAULT 'chart,rule,scaling' COMMENT '展示位置';
+
+ALTER TABLE `t_monitor_product` ADD `sort` INT COMMENT '排序';
+
+UPDATE t_monitor_product SET sort = 1 WHERE abbreviation = 'ecs';
+UPDATE t_monitor_product SET sort = 2 WHERE abbreviation = 'eip';
+UPDATE t_monitor_product SET sort = 3 WHERE abbreviation = 'slb';
+UPDATE t_monitor_product SET sort = 4 WHERE abbreviation = 'cbr';
+UPDATE t_monitor_product SET sort = 5 WHERE abbreviation = 'nat';
+UPDATE t_monitor_product SET sort = 6 WHERE abbreviation = 'bms';
+UPDATE t_monitor_product SET sort = 7 WHERE abbreviation = 'mysql';
+UPDATE t_monitor_product SET sort = 8 WHERE abbreviation = 'dm';
+UPDATE t_monitor_product SET sort = 9 WHERE abbreviation = 'postgresql';
+UPDATE t_monitor_product SET sort = 10 WHERE abbreviation = 'kafka';

@@ -21,8 +21,19 @@ func (mpd *MonitorProductDao) GetByAbbreviation(db *gorm.DB, abbreviation string
 	return &product
 
 }
-func (mpd *MonitorProductDao) SelectMonitorProductList() *[]model.MonitorProduct {
+
+func (mpd *MonitorProductDao) GetMonitorProduct() *[]model.MonitorProduct {
 	var product = &[]model.MonitorProduct{}
-	global.DB.Where("status = ?", "1").Find(product)
+	global.DB.Where("status = ?", "1").Order("sort ASC").Find(product)
 	return product
+}
+
+func (mpd *MonitorProductDao) GetAllMonitorProduct() *[]model.MonitorProduct {
+	var product = &[]model.MonitorProduct{}
+	global.DB.Find(product)
+	return product
+}
+
+func (mpd *MonitorProductDao) ChangeStatus(bizId []string, status uint8) {
+	global.DB.Model(&model.MonitorProduct{}).Where("biz_id IN (?)", bizId).Update("status", status)
 }
