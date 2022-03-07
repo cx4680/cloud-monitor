@@ -34,6 +34,8 @@ func InitSys() error {
 		sys_rocketmq.RuleTopic,
 		sys_rocketmq.NotificationSyncTopic,
 		sys_rocketmq.DeleteInstanceTopic,
+		sys_rocketmq.MonitorProductTopic,
+		sys_rocketmq.MonitorItemTopic,
 	}
 
 	err := sys_rocketmq.CreateTopics(topics...)
