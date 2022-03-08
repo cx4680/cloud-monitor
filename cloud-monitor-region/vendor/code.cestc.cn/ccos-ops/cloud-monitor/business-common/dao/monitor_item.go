@@ -18,9 +18,13 @@ type MonitorItemDao struct {
 
 var MonitorItem = new(MonitorItemDao)
 
-func (d *MonitorItemDao) SelectMonitorItemsById(productBizId string, osType string) []model.MonitorItem {
+func (d *MonitorItemDao) GetMonitorItem(productBizId, osType, display string) []model.MonitorItem {
 	var monitorItemList []model.MonitorItem
-	global.DB.Where("status = ? AND is_display = ? AND product_biz_id = ?", "1", "1", productBizId).Find(&monitorItemList)
+	if strutil.IsNotBlank(display) {
+		global.DB.Where("status = ? AND is_display = ? AND product_biz_id = ? AND display LIKE ?", "1", "1", productBizId, "%"+display+"%").Find(&monitorItemList)
+	} else {
+		global.DB.Where("status = ? AND is_display = ? AND product_biz_id = ?", "1", "1", productBizId).Find(&monitorItemList)
+	}
 	if strutil.IsBlank(osType) {
 		return monitorItemList
 	}
@@ -34,10 +38,14 @@ func (d *MonitorItemDao) SelectMonitorItemsById(productBizId string, osType stri
 	return newMonitorItemList
 }
 
+func (d *MonitorItemDao) ChangeDisplay(productBizId, display string, bizIdList []string) {
+	global.DB.Model(&model.MonitorItem{}).Where("product_biz_id = ? AND biz_id IN (?)", productBizId, bizIdList).Update("display", display)
+}
+
 func (d *MonitorItemDao) GetMonitorItemCacheByName(name string) model.MonitorItem {
 	value, err := sys_redis.Get(name)
 	if err != nil {
-		logger.Logger().Error("key=" + name + ", error:" + err.Error())
+		logger.Logger().Info("key=" + name + ", error:" + err.Error())
 	}
 	var monitorItemModel = model.MonitorItem{}
 	if strutil.IsNotBlank(value) {

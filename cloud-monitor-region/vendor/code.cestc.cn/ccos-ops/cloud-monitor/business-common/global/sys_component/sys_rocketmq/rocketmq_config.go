@@ -33,6 +33,9 @@ const (
 	ContactGroupTopic Topic = "contact_group" //告警联系组
 
 	DeleteInstanceTopic Topic = "delete_instance"
+
+	MonitorProductTopic Topic = "monitor_product" //监控产品
+	MonitorItemTopic    Topic = "monitor_item"    //监控项
 )
 
 type Consumer struct {
