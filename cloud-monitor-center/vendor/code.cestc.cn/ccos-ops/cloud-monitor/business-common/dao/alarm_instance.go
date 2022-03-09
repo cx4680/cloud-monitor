@@ -35,7 +35,7 @@ func (mpd *AlarmInstanceDao) UpdateBatchInstanceName(models []*model.AlarmInstan
 }
 
 func (mpd *AlarmInstanceDao) SelectInstanceList(tenantId string, productType string) []*model.AlarmInstance {
-	sql := "SELECT DISTINCT instance_id  FROM t_resource t1, t_monitor_product t2  WHERE t1.tenant_id =?  AND t1.product_name = t2.NAME  and t2.abbreviation=? "
+	sql := "SELECT DISTINCT t1.instance_id ,t1.region_code  FROM t_resource t1, t_monitor_product t2  WHERE t1.tenant_id =?  AND t1.product_name = t2.NAME  and t2.abbreviation=? "
 	var instance = &[]*model.AlarmInstance{}
 	global.DB.Raw(sql, tenantId, productType).Find(instance)
 	return *instance
