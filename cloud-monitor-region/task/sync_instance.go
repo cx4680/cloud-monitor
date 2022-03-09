@@ -10,6 +10,7 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/external"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/mq/producer"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/service"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/strutil"
 	"github.com/pkg/errors"
@@ -112,6 +113,9 @@ func deleteNotExistsInstances(tenantId string, dbInstanceList []*model.AlarmInst
 	var deletedList []*model.AlarmInstance
 	for _, oldInstance := range dbInstanceList {
 		exist := false
+		if oldInstance.RegionCode != config.Cfg.Common.RegionName {
+			continue
+		}
 		for _, newInstance := range instanceInfoList {
 			if IsEqual(oldInstance, newInstance) {
 				exist = true
