@@ -117,6 +117,10 @@ func (s *MessageService) SendAlarmNotice(msgList []interface{}) error {
 	s.NotificationRecordDao.InsertBatch(global.DB, recordList)
 
 	//	sync record to center
+	//擦除自增Id，解决同步到中心化Id冲突问题
+	for i, _ := range recordList {
+		recordList[i].Id = 0
+	}
 	_ = sys_rocketmq.SendRocketMqMsg(sys_rocketmq.RocketMqMsg{
 		Topic:   sys_rocketmq.NotificationSyncTopic,
 		Content: jsonutil.ToString(recordList),
