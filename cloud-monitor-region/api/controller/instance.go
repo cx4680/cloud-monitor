@@ -78,10 +78,10 @@ func (ctl *InstanceCtl) GetPage(c *gin.Context) {
 // @Router /hawkeye/instance/getInstanceNum [get]
 func (ctl *InstanceCtl) GetInstanceNumByRegion(c *gin.Context) {
 	tenantId, _ := commonUtil.GetTenantId(c)
-	regionCode := c.GetString("region")
+	regionCode := c.Query("region")
 	if len(regionCode) == 0 {
-		logger.Logger().Error("regionCode不能为空")
-		c.JSON(http.StatusOK, global.NewError("regionCode不能为空"))
+		logger.Logger().Error("region不能为空")
+		c.JSON(http.StatusOK, global.NewError("region不能为空"))
 		return
 	}
 	f := commonService.InstancePageForm{
