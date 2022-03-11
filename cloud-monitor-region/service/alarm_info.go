@@ -21,6 +21,10 @@ func (s *AlarmInfoService) PersistenceLocal(db *gorm.DB, param interface{}) (str
 	list := param.([]commonModels.AlarmInfo)
 	if len(list) > 0 {
 		s.AlarmInfoDao.InsertBatch(db, list)
+		//擦除自增Id，解决同步到中心化Id冲突问题
+		for i, _ := range list {
+			list[i].Id = 0
+		}
 	}
 	return jsonutil.ToString(list), nil
 }
