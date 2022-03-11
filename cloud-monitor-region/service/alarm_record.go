@@ -28,6 +28,11 @@ func (s *AlarmRecordService) PersistenceLocal(db *gorm.DB, param interface{}) (s
 		}
 		if len(p.RecordList) > 0 {
 			s.AlarmRecordDao.InsertBatch(db, p.RecordList)
+			//擦除自增Id，解决同步到中心化Id冲突问题
+			for i, _ := range p.RecordList {
+				p.RecordList[i].Id = 0
+			}
+
 			return jsonutil.ToString(p.RecordList), nil
 		}
 	} else {
