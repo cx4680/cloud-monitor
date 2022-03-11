@@ -15,7 +15,6 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/httputil"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/jsonutil"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/snowflake"
-	"log"
 	"strconv"
 )
 
@@ -117,6 +116,10 @@ func (s *MessageService) SendAlarmNotice(msgList []interface{}) error {
 	s.NotificationRecordDao.InsertBatch(global.DB, recordList)
 
 	//	sync record to center
+	//擦除自增Id，解决同步到中心化Id冲突问题
+	for i, _ := range recordList {
+		recordList[i].Id = 0
+	}
 	_ = sys_rocketmq.SendRocketMqMsg(sys_rocketmq.RocketMqMsg{
 		Topic:   sys_rocketmq.NotificationSyncTopic,
 		Content: jsonutil.ToString(recordList),
@@ -283,9 +286,9 @@ type ResultDTO struct {
 }
 
 func (s *MessageService) getUserCurrentMonthSmsUsedNum(tenantId string) int {
-	resp, err := httputil.HttpGet(config.Cfg.Common.HawkeyeCenterPath + "/hawkeye/inner/notice/getUsage?tenantId=" + tenantId)
+	resp, err := httputil.HttpGet("http://" + config.Cfg.Common.HawkeyeCenterPath + "/hawkeye/inner/notice/getUsage?tenantId=" + tenantId)
 	if err != nil {
-		log.Fatal("获取用户短信月使用量出错, tenantId=" + tenantId)
+		logger.Logger().Errorf("获取用户短信月使用量出错, tenantId=%s, %v"+tenantId, err)
 		return 0
 	}
 	var respObj ResultDTO
