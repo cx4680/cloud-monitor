@@ -78,6 +78,12 @@ func (ctl *InstanceCtl) GetPage(c *gin.Context) {
 // @Router /hawkeye/instance/getInstanceNum [get]
 func (ctl *InstanceCtl) GetInstanceNumByRegion(c *gin.Context) {
 	tenantId, _ := commonUtil.GetTenantId(c)
+	regionCode := c.Query("region")
+	if len(regionCode) == 0 {
+		logger.Logger().Error("region不能为空")
+		c.JSON(http.StatusOK, global.NewError("region不能为空"))
+		return
+	}
 	f := commonService.InstancePageForm{
 		TenantId: tenantId,
 		Product:  external.ECS,
@@ -91,7 +97,7 @@ func (ctl *InstanceCtl) GetInstanceNumByRegion(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, global.NewError("查询失败"))
 		return
 	}
-	bindNum := ctl.dao.GetInstanceNum(tenantId)
+	bindNum := ctl.dao.GetInstanceNum(tenantId, regionCode)
 	total := util.If(bindNum > page.Total, bindNum, page.Total)
 	vo := &AlarmInstanceRegionVO{Total: total.(int), BindNum: bindNum}
 	c.JSON(http.StatusOK, global.NewSuccess("查询成功", vo))
