@@ -19,6 +19,7 @@ var ignoreList = []string{"/hawkeye/contact/activateContact?*", "/inner/alarmRec
 	"/hawkeye/inner/rule/*",
 	"/hawkeye/inner/configItem/*",
 	"/hawkeye/inner/monitorItem/*",
+	"/hawkeye/inner/notice/*",
 }
 
 func Auth() gin.HandlerFunc {
