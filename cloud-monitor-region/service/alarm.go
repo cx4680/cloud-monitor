@@ -248,7 +248,8 @@ func (s *AlarmRecordAddService) buildNoticeData(alert *form.AlarmRecordAlertsBea
 	objMap["metricName"] = ruleDesc.MonitorItem
 	objMap["Name"] = ruleDesc.RuleName
 	objMap["userName"] = s.TenantSvc.GetTenantInfo(ruleDesc.TenantId).Name
-
+	objMap["alertTime"] = record.StartTime
+	objMap["recoveryTime"] = record.EndTime
 	f, _ := strconv.ParseFloat(record.CurrentValue, 64)
 	cv := fmt.Sprintf("%.2f", f)
 	objMap["currentValue"] = cv + ruleDesc.Unit

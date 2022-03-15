@@ -161,6 +161,7 @@ func innerMapping() {
 		group.GET("configItem/getItemList", configItemController.GetItemListById)
 		group.GET("monitorItem/getMonitorItemList", monitorItemController.GetMonitorItemsById)
 		group.GET("notice/getUsage", noticeCtl.GetCenterUsage)
+		group.POST("notice/changeNoticeChannel", noticeCtl.ChangeNoticeChannel)
 
 		ruleGroup := group.Group("rule/")
 		ruleGroup.POST("create", innerRuleCtl.CreateRule)

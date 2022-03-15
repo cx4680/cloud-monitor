@@ -81,7 +81,7 @@ func (s *Service) buildReq(msgList []MessageSendDTO) (req *SmsMessageReqDTO) {
 		var recvList = make([]RecvObjectBean, len(msg.Targets))
 		for i, addr := range msg.Targets {
 			recvList[i] = RecvObjectBean{
-				RecvObjectType: msg.Type,
+				RecvObjectType: 2,
 				RecvObject:     addr,
 				NoticeContent:  msg.Content,
 			}
