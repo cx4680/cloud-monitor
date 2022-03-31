@@ -211,7 +211,13 @@ func (c *Client) GetBrokerDataList(nameServerAddress string) (*TopicRouteData, e
 		ExtFields: reqMap,
 	}
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
-	response, err = c.InvokeSync(ctx, nameServerAddress, cmd)
+
+	for _, addr := range strings.Split(nameServerAddress, ";") {
+		response, err = c.InvokeSync(ctx, addr, cmd)
+		if err == nil {
+			break
+		}
+	}
 	if err != nil {
 		rlog.Error("get broker list error", map[string]interface{}{
 			rlog.LogKeyBroker: err,

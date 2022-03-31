@@ -21,6 +21,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"log"
 	"strconv"
 	"sync"
 	"sync/atomic"
@@ -64,6 +65,7 @@ func NewDefaultProducer(opts ...Option) (*defaultProducer, error) {
 	if !defaultOpts.Credentials.IsEmpty() {
 		srvs.SetCredentials(defaultOpts.Credentials)
 	}
+	log.Printf("jim producer namesrv: %p\n", srvs)
 	defaultOpts.Namesrv = srvs
 
 	producer := &defaultProducer{
@@ -74,7 +76,7 @@ func NewDefaultProducer(opts ...Option) (*defaultProducer, error) {
 	producer.client = internal.GetOrNewRocketMQClient(defaultOpts.ClientOptions, producer.callbackCh)
 
 	producer.interceptor = primitive.ChainInterceptors(producer.options.Interceptors...)
-
+	log.Printf("jim producer client: %p\n", producer.client)
 	return producer, nil
 }
 
