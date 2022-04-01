@@ -29,6 +29,7 @@ type BmsServers struct {
 	InstanceId string `json:"InstanceId"`
 	Name       string `json:"name"`
 	State      string `json:"State"`
+	BmType     int    `json:"BmType"`
 }
 
 func (bms *BmsInstanceService) ConvertRealForm(form service.InstancePageForm) interface{} {
@@ -72,6 +73,9 @@ func (bms *BmsInstanceService) ConvertResp(realResp interface{}) (int, []service
 				Labels: []service.InstanceLabel{{
 					Name:  "status",
 					Value: d.State,
+				}, {
+					Name:  "bmType",
+					Value: strconv.Itoa(d.BmType),
 				}},
 			})
 		}
