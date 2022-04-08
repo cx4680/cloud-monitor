@@ -9,35 +9,33 @@ import (
 	"strings"
 )
 
-type BmsInstanceService struct {
+type EbmsInstanceService struct {
 	service.InstanceServiceImpl
 }
 
-type BmsRequest struct {
+type EbmsRequest struct {
 	TenantId string `json:"tenantId"`
 	Params   string `json:"params"`
 }
 
-type BmsResponse struct {
-	RequestId string             `json:"RequestId"`
-	Code      string             `json:"code"`
-	Message   string             `json:"message"`
-	Data      BmsQueryPageResult `json:"data"`
+type EbmsResponse struct {
+	Code    string              `json:"code"`
+	Message string              `json:"message"`
+	Data    EbmsQueryPageResult `json:"data"`
 }
 
-type BmsQueryPageResult struct {
-	Servers    []BmsServers `json:"servers"`
-	TotalCount int          `json:"total_count"`
+type EbmsQueryPageResult struct {
+	Servers    []EbmsServers `json:"servers"`
+	TotalCount int           `json:"total_count"`
 }
 
-type BmsServers struct {
-	InstanceId string `json:"InstanceId"`
-	Name       string `json:"name"`
-	State      string `json:"State"`
-	BmType     int    `json:"BmType"`
+type EbmsServers struct {
+	Id     string `json:"id"`
+	Name   string `json:"name"`
+	Status string `json:"status"`
 }
 
-func (bms *BmsInstanceService) ConvertRealForm(form service.InstancePageForm) interface{} {
+func (ebms *EbmsInstanceService) ConvertRealForm(form service.InstancePageForm) interface{} {
 	var params = "?pageNumber=" + strconv.Itoa(form.Current) + "&pageSize=" + strconv.Itoa(form.PageSize)
 	var filterList []string
 	if strutil.IsNotBlank(form.InstanceName) {
@@ -49,42 +47,36 @@ func (bms *BmsInstanceService) ConvertRealForm(form service.InstancePageForm) in
 	if strutil.IsNotBlank(form.StatusList) {
 		filterList = append(filterList, "status:in:"+form.StatusList)
 	}
-	if strutil.IsNotBlank(form.ExtraAttr["bmType"]) {
-		filterList = append(filterList, "BmType:in:"+form.ExtraAttr["bmType"])
-	}
 	if len(filterList) > 0 {
 		filter := strings.Join(filterList, "|")
 		params += "&filter=" + filter
 	}
-	return BmsRequest{TenantId: form.TenantId, Params: params}
+	return EbmsRequest{TenantId: form.TenantId, Params: params}
 }
 
-func (bms *BmsInstanceService) DoRequest(url string, f interface{}) (interface{}, error) {
-	var param = f.(BmsRequest)
-	url = strings.ReplaceAll(url, "{tenantId}", param.TenantId)
-	respStr, err := httputil.HttpGet(url + param.Params)
+func (ebms *EbmsInstanceService) DoRequest(url string, f interface{}) (interface{}, error) {
+	var params = f.(EbmsRequest)
+	url = strings.ReplaceAll(url, "{tenantId}", params.TenantId)
+	respStr, err := httputil.HttpGet(url + params.Params)
 	if err != nil {
 		return nil, err
 	}
-	var resp BmsResponse
+	var resp EbmsResponse
 	jsonutil.ToObject(respStr, &resp)
 	return resp, nil
 }
 
-func (bms *BmsInstanceService) ConvertResp(realResp interface{}) (int, []service.InstanceCommonVO) {
-	vo := realResp.(BmsResponse)
+func (ebms *EbmsInstanceService) ConvertResp(realResp interface{}) (int, []service.InstanceCommonVO) {
+	vo := realResp.(EbmsResponse)
 	var list []service.InstanceCommonVO
 	if vo.Data.TotalCount > 0 {
 		for _, d := range vo.Data.Servers {
 			list = append(list, service.InstanceCommonVO{
-				InstanceId:   d.InstanceId,
+				InstanceId:   d.Id,
 				InstanceName: d.Name,
 				Labels: []service.InstanceLabel{{
 					Name:  "status",
-					Value: d.State,
-				}, {
-					Name:  "bmType",
-					Value: strconv.Itoa(d.BmType),
+					Value: d.Status,
 				}},
 			})
 		}
