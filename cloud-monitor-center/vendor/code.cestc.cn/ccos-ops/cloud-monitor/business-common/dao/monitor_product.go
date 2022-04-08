@@ -26,7 +26,6 @@ func (mpd *MonitorProductDao) GetMonitorProductByBizId(BizId string) model.Monit
 	var product = model.MonitorProduct{}
 	global.DB.Where("biz_id = ?", BizId).First(&product)
 	return product
-
 }
 
 func (mpd *MonitorProductDao) GetMonitorProduct() *[]model.MonitorProduct {
