@@ -207,6 +207,7 @@ func (s *namesrvs) FindBrokerAddrByTopic(topic string) string {
 }
 
 func (s *namesrvs) FindBrokerAddrByName(brokerName string) string {
+
 	bd, exist := s.brokerAddressesMap.Load(brokerName)
 
 	if !exist {

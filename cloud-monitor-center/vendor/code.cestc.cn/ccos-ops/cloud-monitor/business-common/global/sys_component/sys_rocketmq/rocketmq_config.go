@@ -51,7 +51,7 @@ type RocketMqMsg struct {
 func CreateTopics(topics ...Topic) error {
 	cfg := config.Cfg.Rocketmq
 	addrs := strings.Split(cfg.NameServer, ";")
-	brokerAddr, err2 := getBrokerAddr(cfg)
+	brokerAddrs, err2 := getBrokerAddrs(cfg)
 	if err2 != nil {
 		return err2
 	}
@@ -62,20 +62,23 @@ func CreateTopics(topics ...Topic) error {
 		return err
 	}
 	for _, topic := range topics {
-		err = testAdmin.CreateTopic(
-			context.Background(),
-			admin.WithTopicCreate(string(topic)),
-			admin.WithBrokerAddrCreate(brokerAddr),
-		)
-		if err != nil {
-			logger.Logger().Infof("create topic error %+v", err)
-			return err
+		for _, addr := range brokerAddrs {
+			err = testAdmin.CreateTopic(
+				context.Background(),
+				admin.WithTopicCreate(string(topic)),
+				admin.WithBrokerAddrCreate(addr),
+			)
+			if err != nil {
+				logger.Logger().Infof("create topic error %+v", err)
+				return err
+			}
 		}
 	}
+
 	return nil
 }
 
-func getBrokerAddr(cfg config.Rocketmq) (string, error) {
+func getBrokerAddrs(cfg config.Rocketmq) ([]string, error) {
 	c := &Client{
 		responseTable:    sync.Map{},
 		connectionTable:  sync.Map{},
@@ -84,18 +87,18 @@ func getBrokerAddr(cfg config.Rocketmq) (string, error) {
 		connectionLocker: sync.Mutex{},
 		interceptor:      nil,
 	}
-	broker, e := c.GetBrokerDataList(strings.Split(cfg.NameServer, ";")[0])
+	broker, e := c.GetBrokerDataList(cfg.NameServer)
 	if e != nil {
-		return "", e
+		logger.Logger().Info("get broker address error", e)
+		return nil, e
 	}
-	brokerAddr := ""
+	var brokerAddrs []string
 	for _, b := range broker.BrokerDataList {
 		for _, v := range b.BrokerAddresses {
-			brokerAddr = v
-			break
+			brokerAddrs = append(brokerAddrs, v)
 		}
 	}
-	return brokerAddr, nil
+	return brokerAddrs, nil
 }
 
 func InitProducer() error {

@@ -20,6 +20,7 @@ package consumer
 import (
 	"context"
 	"fmt"
+	"log"
 	"sort"
 	"strconv"
 	"strings"
@@ -287,7 +288,7 @@ func (dc *defaultConsumer) start() error {
 	} else {
 		dc.storage = NewLocalFileOffsetStore(dc.consumerGroup, dc.client.ClientID())
 	}
-
+	log.Printf("jim consumer client start: %p\n", dc.client)
 	dc.client.Start()
 	atomic.StoreInt32(&dc.state, int32(internal.StateRunning))
 	dc.consumerStartTimestamp = time.Now().UnixNano() / int64(time.Millisecond)
