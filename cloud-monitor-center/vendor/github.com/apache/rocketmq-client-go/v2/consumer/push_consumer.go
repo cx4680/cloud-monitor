@@ -20,6 +20,7 @@ package consumer
 import (
 	"context"
 	"fmt"
+	"log"
 	"math"
 	"strconv"
 	"strings"
@@ -80,6 +81,7 @@ func NewPushConsumer(opts ...Option) (*pushConsumer, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "new Namesrv failed.")
 	}
+	log.Printf("jim consumer namesrv : %p\n", srvs)
 	if !defaultOpts.Credentials.IsEmpty() {
 		srvs.SetCredentials(defaultOpts.Credentials)
 	}
@@ -89,8 +91,10 @@ func NewPushConsumer(opts ...Option) (*pushConsumer, error) {
 		defaultOpts.GroupName = defaultOpts.Namespace + "%" + defaultOpts.GroupName
 	}
 
+	c := internal.GetOrNewRocketMQClient(defaultOpts.ClientOptions, nil)
+
 	dc := &defaultConsumer{
-		client:         internal.GetOrNewRocketMQClient(defaultOpts.ClientOptions, nil),
+		client:         c,
 		consumerGroup:  defaultOpts.GroupName,
 		cType:          _PushConsume,
 		state:          int32(internal.StateCreateJust),
@@ -100,9 +104,10 @@ func NewPushConsumer(opts ...Option) (*pushConsumer, error) {
 		fromWhere:      defaultOpts.FromWhere,
 		allocate:       defaultOpts.Strategy,
 		option:         defaultOpts,
-		namesrv:        srvs,
+		namesrv:        c.GetNameSrv(),
 	}
 
+	log.Printf("jim consumer client: %p, namesrv: %p\n", dc.client, c.GetNameSrv())
 	p := &pushConsumer{
 		defaultConsumer: dc,
 		subscribedTopic: make(map[string]string, 0),

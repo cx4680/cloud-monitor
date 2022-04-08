@@ -21,6 +21,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"net"
 	"os"
 	"strconv"
@@ -153,6 +154,8 @@ type RMQClient interface {
 	PullMessage(ctx context.Context, brokerAddrs string, request *PullMessageRequestHeader) (*primitive.PullResult, error)
 	RebalanceImmediately()
 	UpdatePublishInfo(topic string, data *TopicRouteData, changed bool)
+
+	GetNameSrv() *namesrvs
 }
 
 var _ RMQClient = new(rmqClient)
@@ -176,6 +179,10 @@ type rmqClient struct {
 }
 
 var clientMap sync.Map
+
+func (c *rmqClient) GetNameSrv() *namesrvs {
+	return c.namesrvs
+}
 
 func GetOrNewRocketMQClient(option ClientOptions, callbackCh chan interface{}) RMQClient {
 	client := &rmqClient{
@@ -284,6 +291,7 @@ func GetOrNewRocketMQClient(option ClientOptions, callbackCh chan interface{}) R
 			return res
 		})
 	}
+	log.Printf("jim namesrv, client:%p, cache:%p\n", client.namesrvs, actual.(*rmqClient).namesrvs)
 	return actual.(*rmqClient)
 }
 
@@ -320,6 +328,7 @@ func (c *rmqClient) Start() {
 		go primitive.WithRecover(func() {
 			// delay
 			op := func() {
+				//log.Printf("jim client=%p update topic routeInfo", c)
 				c.UpdateTopicRouteInfo()
 			}
 			time.Sleep(10 * time.Millisecond)
