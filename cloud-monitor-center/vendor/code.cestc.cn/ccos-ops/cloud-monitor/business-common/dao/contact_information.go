@@ -1,6 +1,7 @@
 package dao
 
 import (
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/model"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/util"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/strutil"
@@ -47,4 +48,14 @@ func (d *ContactInformationDao) Update(db *gorm.DB, list []*model.ContactInforma
 
 func (d *ContactInformationDao) Delete(db *gorm.DB, entity *model.ContactInformation) {
 	db.Model(&model.ContactInformation{}).Where("tenant_id = ? AND contact_biz_id = ?", entity.TenantId, entity.ContactBizId).Delete(&model.ContactInformation{})
+}
+
+//判断新增的联系方式是否已存在
+func (d *ContactInformationDao) CheckInformation(tenantId, contactBizId, address string, addressType uint8) bool {
+	var count int64
+	global.DB.Model(&model.ContactInformation{}).Where("tenant_id = ? AND contact_biz_id = ? AND address = ? AND type = ?", tenantId, contactBizId, address, addressType).Count(&count)
+	if count > 0 {
+		return true
+	}
+	return false
 }

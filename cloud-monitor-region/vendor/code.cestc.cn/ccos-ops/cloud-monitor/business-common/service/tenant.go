@@ -42,7 +42,7 @@ func (s *TenantService) GetTenantInfo(tenantId string) dto.TenantDTO {
 
 	value, err := sys_redis.Get(key)
 	if err != nil {
-		logger.Logger().Error("key=" + key + ", error:" + err.Error())
+		logger.Logger().Info("key=" + key + ", error:" + err.Error())
 	}
 	if strutil.IsNotBlank(value) {
 		jsonutil.ToObject(value, &tenant)
@@ -54,7 +54,7 @@ func (s *TenantService) GetTenantInfo(tenantId string) dto.TenantDTO {
 		return tenant
 	}
 	if e := sys_redis.SetByTimeOut(key, jsonutil.ToString(tenantFromRemote), RedisTimeOutOneHour*time.Second); e != nil {
-		logger.Logger().Info("设置redis出错, key=" + key)
+		logger.Logger().Error("设置redis出错, key=" + key)
 	}
 	return *tenantFromRemote
 }

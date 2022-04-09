@@ -19,12 +19,11 @@ func Tx(param interface{}, f func(xx *gorm.DB, param interface{}) error) (err er
 	err = f(tx, param)
 	if err != nil {
 		tx.Rollback()
-		return
+		return err
 	}
 	err = tx.Commit().Error
 	if err != nil {
 		tx.Rollback()
-		return
 	}
 	return err
 }

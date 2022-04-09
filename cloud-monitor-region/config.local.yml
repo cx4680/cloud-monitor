@@ -32,7 +32,7 @@ rocketmq:
   ruleTopic: rule
 
 prometheus:
-  url: http://localhost:52617/api/v1
+  url: http://10.255.190.73:31401/api/v1
   query: /query?query=
   queryRange: /query_range?query=
 

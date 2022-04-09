@@ -7,6 +7,9 @@ require (
 	code.cestc.cn/yyptb-group_tech/iam-sdk-go v1.0.3
 	github.com/apache/rocketmq-client-go/v2 v2.1.0
 	github.com/gin-gonic/gin v1.7.4
+	github.com/go-playground/locales v0.14.0
+	github.com/go-playground/universal-translator v0.18.0
+	github.com/go-playground/validator/v10 v10.9.0
 	github.com/go-redis/redis/v8 v8.11.4
 	github.com/golang-migrate/migrate/v4 v4.15.1
 	github.com/google/uuid v1.3.0
@@ -27,9 +30,6 @@ require (
 	github.com/docker/docker v20.10.12+incompatible // indirect
 	github.com/emirpasic/gods v1.12.0 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
-	github.com/go-playground/locales v0.14.0 // indirect
-	github.com/go-playground/universal-translator v0.18.0 // indirect
-	github.com/go-playground/validator/v10 v10.9.0 // indirect
 	github.com/go-sql-driver/mysql v1.6.0 // indirect
 	github.com/golang/mock v1.6.0 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect

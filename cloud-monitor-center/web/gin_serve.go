@@ -2,6 +2,7 @@ package web
 
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/openapi"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/web/middleware"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
 	"github.com/gin-gonic/gin"
@@ -10,7 +11,7 @@ import (
 	"time"
 )
 
-var router = gin.New()
+var Router = gin.New()
 
 // Start /
 func Start(cfg config.Serve) error {
@@ -18,13 +19,18 @@ func Start(cfg config.Serve) error {
 	loadPlugin(cfg)
 	//加载路由
 	loadRouters()
+	//加载路由OpenApi
+	loadOpenApiV1Routers()
 	//启动服务
 	return doStart(cfg)
 }
 
 func doStart(cfg config.Serve) error {
-
-	router.NoRoute(func(c *gin.Context) {
+	Router.NoRoute(func(c *gin.Context) {
+		if openapi.OpenApiRouter(c) {
+			c.JSON(http.StatusNotFound, openapi.NewRespError(openapi.PathNotFound, c))
+			return
+		}
 		c.JSON(http.StatusNotFound, global.NewError("接口不存在"))
 		return
 	})
@@ -36,7 +42,7 @@ func doStart(cfg config.Serve) error {
 
 	s := &http.Server{
 		Addr:           ":" + port,
-		Handler:        router,
+		Handler:        Router,
 		ReadTimeout:    10 * time.Second,
 		WriteTimeout:   10 * time.Second,
 		MaxHeaderBytes: 1 << 20,
@@ -54,7 +60,7 @@ func loadPlugin(cfg config.Serve) {
 		//router.Use(middleware.GinLogger())
 	}
 	//自定义组件
-	router.Use(middleware.Recovery())
+	Router.Use(middleware.Recovery())
 	//router.Use(middleware.Cors())
-	router.Use(middleware.Auth())
+	Router.Use(middleware.Auth())
 }

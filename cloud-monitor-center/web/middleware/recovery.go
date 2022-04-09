@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/openapi"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -31,6 +32,10 @@ func Recovery() gin.HandlerFunc {
 		defer func() {
 			if err := recover(); err != nil {
 				logger.Logger().Error(err)
+				if openapi.OpenApiRouter(c) {
+					c.JSON(http.StatusInternalServerError, openapi.NewRespError(openapi.SystemError, c))
+					return
+				}
 				c.JSON(http.StatusInternalServerError, global.NewError("系统异常"))
 				return
 			}

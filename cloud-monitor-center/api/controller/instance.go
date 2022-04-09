@@ -7,6 +7,7 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/util"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/service"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/validator/translate"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
@@ -32,6 +33,13 @@ func (ctl *InstanceCtl) Unbind(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, global.NewError(translate.GetErrorMsg(err)))
 		return
 	}
+	tenantId, err2 := util.GetTenantId(c)
+	if err2 != nil {
+		logger.Logger().Info("tenantId is nil")
+		c.JSON(http.StatusBadRequest, global.NewError(err2.Error()))
+		return
+	}
+	param.TenantId = tenantId
 	err := util.Tx(&param, service.UnbindInstance)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, global.NewError(err.Error()))

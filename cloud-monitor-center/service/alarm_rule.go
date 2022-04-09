@@ -22,20 +22,29 @@ func CreateRule(tx *gorm.DB, param interface{}) error {
 func UpdateRule(tx *gorm.DB, param interface{}) error {
 	ruleDao := dao.AlarmRule
 	dto := param.(*form.AlarmRuleAddReqDTO)
-	ruleDao.UpdateRule(tx, dto)
+	err := ruleDao.UpdateRule(tx, dto)
+	if err != nil {
+		return err
+	}
 	return mq.SendMsg(sys_rocketmq.RuleTopic, enum.UpdateRule, dto)
 }
 
 func DeleteRule(tx *gorm.DB, param interface{}) error {
 	ruleDao := dao.AlarmRule
 	dto := param.(*form.RuleReqDTO)
-	ruleDao.DeleteRule(tx, dto)
+	err := ruleDao.DeleteRule(tx, dto)
+	if err != nil {
+		return err
+	}
 	return mq.SendMsg(sys_rocketmq.RuleTopic, enum.DeleteRule, param)
 }
 
 func ChangeRuleStatus(tx *gorm.DB, param interface{}) error {
 	ruleDao := dao.AlarmRule
 	dto := param.(*form.RuleReqDTO)
-	ruleDao.UpdateRuleState(tx, dto)
+	err := ruleDao.UpdateRuleState(tx, dto)
+	if err != nil {
+		return err
+	}
 	return mq.SendMsg(sys_rocketmq.RuleTopic, enum.ChangeStatus, param)
 }

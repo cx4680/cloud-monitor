@@ -3,17 +3,21 @@ package task
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/dao"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/dto"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/sys_component/sys_redis"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/sys_component/sys_rocketmq"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/model"
 	commonService "code.cestc.cn/ccos-ops/cloud-monitor/business-common/service"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/service/external/region"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/task"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/external"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/mq/producer"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/service"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/jsonutil"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/strutil"
 	"github.com/pkg/errors"
+	"log"
 )
 
 func AddSyncJobs(bt *task.BusinessTaskImpl) error {
@@ -105,7 +109,13 @@ func sync(tenantId string, dbList, remoteList []*model.AlarmInstance) {
 }
 
 func syncInstanceName(list []*model.AlarmInstance) {
+	for _, instance := range list {
+		instance.RegionCode = config.Cfg.Common.RegionName
+		info := GetRegionInfo(instance.RegionCode)
+		instance.RegionName = info.Name
+	}
 	dao.AlarmInstance.UpdateBatchInstanceName(list)
+
 	producer.SendInstanceJobMsg(sys_rocketmq.InstanceTopic, list)
 }
 
@@ -145,4 +155,30 @@ func IsEqual(A, B interface{}) bool {
 		}
 	}
 	return false
+}
+
+func GetRegionInfo(regionCode string) region.ConfigItemVO {
+	regionInfo, err2 := sys_redis.Get(regionCode)
+	if err2 != nil {
+		log.Printf("获取region缓存错误, key=%v,err:%v", regionCode, err2)
+	}
+	vo := region.ConfigItemVO{}
+	if regionInfo != "" {
+		jsonutil.ToObject(regionInfo, &vo)
+		return vo
+	}
+	list, err := region.RegionService.GetRegionList("1")
+	if err != nil {
+		log.Printf("查询region list 错误, key=%v,err:%v", regionCode, err2)
+		return vo
+	}
+	for _, vo := range list {
+		if vo.Code == regionCode {
+			if e := sys_redis.Set(regionCode, jsonutil.ToString(vo)); e != nil {
+				log.Printf("缓存region错误, key=%v,err:%v", regionCode, err2)
+			}
+			return vo
+		}
+	}
+	return vo
 }
