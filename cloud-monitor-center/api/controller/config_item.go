@@ -3,18 +3,18 @@ package controller
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/dao"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
-	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/service"
+	external "code.cestc.cn/ccos-ops/cloud-monitor/business-common/service/external/region"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
 
 type ConfigItemCtl struct {
-	service *service.ExternService
+	service *external.ExternService
 }
 
 func NewConfigItemCtl() *ConfigItemCtl {
-	return &ConfigItemCtl{service.NewExternService()}
+	return &ConfigItemCtl{external.NewExternService()}
 }
 
 func (ctl *ConfigItemCtl) GetStatisticalPeriodList(c *gin.Context) {

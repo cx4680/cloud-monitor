@@ -2,8 +2,9 @@ package middleware
 
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
-	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/openapi"
 	"github.com/gin-gonic/gin"
+	"log"
 	"net/http"
 	"runtime"
 	"strconv"
@@ -30,31 +31,14 @@ func Recovery() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer func() {
 			if err := recover(); err != nil {
-				logger.Logger().Error(err)
+				log.Println(err)
+				if openapi.OpenApiRouter(c) {
+					c.JSON(http.StatusInternalServerError, openapi.NewRespError(openapi.SystemError, c))
+					return
+				}
 				c.JSON(http.StatusInternalServerError, global.NewError("系统异常"))
 				return
-				//default:
-				//	message := fmt.Sprintf("%s", err)
-				//	// 提取整理一下
-				//	traceData := trace()
-				//	position := traceData[0]["file"] + ":" + traceData[0]["line"]
-				//	ResponseData := gin.H{
-				//		"code": 5000,
-				//		"msg":  "Internal Server Error ",
-				//		"result": map[string]interface{}{
-				//			"error_info": message,
-				//			"position":   position,
-				//			"detail":     trace(),
-				//		},
-				//	}
-				//	c.Set("ResponseData", ResponseData)
-				//	c.JSON(500, ResponseData)
-				//}
 			}
-			if c.Writer.Status() == 404 {
-				c.JSON(http.StatusNotFound, "path not found")
-			}
-
 		}()
 
 		c.Next()

@@ -8,6 +8,8 @@ import (
 	commonForm "code.cestc.cn/ccos-ops/cloud-monitor/business-common/form"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/model"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/service"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/util"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/vo"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/jsonutil"
 	"gorm.io/gorm"
 )
@@ -44,4 +46,11 @@ func (s *MonitorItemService) PersistenceLocal(db *gorm.DB, param interface{}) (s
 	default:
 		return "", errors.NewBusinessError("系统异常")
 	}
+}
+
+func (s *MonitorItemService) GetMonitorItemPage(pageSize int, pageNum int, productAbbr string) *vo.PageVO {
+	var monitorItemList []model.MonitorItem
+	sql := "select item.* from t_monitor_item item  ,t_monitor_product product  where item.product_biz_id=product.biz_id  and product.abbreviation=?"
+	paginate := util.Paginate(pageSize, pageNum, sql, []interface{}{productAbbr}, &monitorItemList)
+	return paginate
 }

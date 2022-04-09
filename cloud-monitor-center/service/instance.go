@@ -12,13 +12,19 @@ import (
 func UnbindInstance(tx *gorm.DB, param interface{}) error {
 	instanceDao := dao.Instance
 	dto := param.(*form.UnBindRuleParam)
-	instanceDao.UnbindInstance(tx, dto)
+	err := instanceDao.UnbindInstance(tx, dto)
+	if err != nil {
+		return err
+	}
 	return mq.SendMsg(sys_rocketmq.RuleTopic, enum.UnbindRule, param)
 }
 
 func BindInstance(tx *gorm.DB, param interface{}) error {
 	instanceDao := dao.Instance
 	dto := param.(*form.InstanceBindRuleDTO)
-	instanceDao.BindInstance(tx, dto)
+	err := instanceDao.BindInstance(tx, dto)
+	if err != nil {
+		return err
+	}
 	return mq.SendMsg(sys_rocketmq.RuleTopic, enum.BindRule, param)
 }

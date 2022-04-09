@@ -1,5 +1,9 @@
 package util
 
+import (
+	"math"
+)
+
 func RemoveDuplicateElement(list []string) []string {
 	result := make([]string, 0, len(list))
 	temp := map[string]struct{}{}
@@ -10,4 +14,14 @@ func RemoveDuplicateElement(list []string) []string {
 		}
 	}
 	return result
+}
+
+func FormatFloat(num float64, decimal int) float64 {
+	// 默认乘1
+	d := float64(1)
+	if decimal > 0 {
+		// 10的N次方
+		d = math.Pow10(decimal)
+	}
+	return math.Trunc(num*d) / d
 }

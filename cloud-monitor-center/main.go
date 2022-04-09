@@ -20,7 +20,6 @@ import (
 // @description  This is a sample server Petstore server.
 // @BasePath /
 func main() {
-
 	loader := cp.NewMainLoader()
 	loader.AddStage(func(*context.Context) error {
 		cfg := config.Cfg.Iam

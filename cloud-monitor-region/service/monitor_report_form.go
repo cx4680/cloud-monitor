@@ -50,7 +50,7 @@ func (s *MonitorReportFormService) GetTop(request form.PrometheusRequest) ([]for
 	if strutil.IsBlank(instances) {
 		return nil, nil
 	}
-	pql := fmt.Sprintf(constant.TopExpr, strings.ReplaceAll(getMonitorItemByName(request.Name).MetricsLinux, constant.MetricLabel, constant.INSTANCE+"=~'"+instances+"'"))
+	pql := fmt.Sprintf(constant.TopExpr, "5", strings.ReplaceAll(getMonitorItemByName(request.Name).MetricsLinux, constant.MetricLabel, constant.INSTANCE+"=~'"+instances+"'"))
 	result := Query(pql, request.Time).Data.Result
 	var instanceList []form.PrometheusInstance
 	for i := range result {

@@ -42,7 +42,8 @@ func (ctl *AlarmRuleCtl) GetDetail(c *gin.Context) {
 		return
 	}
 	tenantId, _ := util.GetTenantId(c)
-	c.JSON(http.StatusOK, global.NewSuccess("查询成功", dao.AlarmRule.GetDetail(global.DB, id, tenantId)))
+	detail, _ := dao.AlarmRule.GetDetail(global.DB, id, tenantId)
+	c.JSON(http.StatusOK, global.NewSuccess("查询成功", detail))
 
 }
 

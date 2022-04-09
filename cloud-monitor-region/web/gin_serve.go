@@ -2,6 +2,7 @@ package web
 
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/openapi"
 	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-region/web/middleware"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
 	"github.com/gin-gonic/gin"
@@ -22,6 +23,8 @@ func Start(cfg config.Serve) error {
 	loadPlugin(cfg)
 	//加载路由
 	loadRouters()
+	//加载路由OpenApi
+	loadOpenApiV1Routers()
 	//启动服务
 	return doStart(cfg)
 }
@@ -29,6 +32,10 @@ func Start(cfg config.Serve) error {
 func doStart(cfg config.Serve) error {
 
 	router.NoRoute(func(c *gin.Context) {
+		if openapi.OpenApiRouter(c) {
+			c.JSON(http.StatusNotFound, openapi.NewRespError(openapi.PathNotFound, c))
+			return
+		}
 		c.JSON(http.StatusNotFound, global.NewError("接口不存在"))
 	})
 
