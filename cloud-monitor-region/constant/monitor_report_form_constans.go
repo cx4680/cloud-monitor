@@ -4,7 +4,7 @@ const (
 	INSTANCE    = "instance"
 	FILTER      = "device!='tmpfs'"
 	MetricLabel = "$INSTANCE"
-	TopExpr     = "topk(5,(%s))"
+	TopExpr     = "topk(%s,(%s))"
 
 	TenantId = "accountId"
 )

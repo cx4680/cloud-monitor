@@ -68,7 +68,7 @@ func (acgc *ContactGroupCtl) AddContactGroup(c *gin.Context) {
 	}
 	param.TenantId = tenantId
 	param.EventEum = enum.InsertContactGroup
-	err = contactGroupService.Persistence(contactGroupService, sys_rocketmq.ContactGroupTopic, param)
+	err = contactGroupService.Persistence(contactGroupService, sys_rocketmq.ContactGroupTopic, &param)
 	if err != nil {
 		c.JSON(http.StatusOK, global.NewError(err.Error()))
 	} else {
@@ -90,7 +90,7 @@ func (acgc *ContactGroupCtl) UpdateContactGroup(c *gin.Context) {
 	}
 	param.TenantId = tenantId
 	param.EventEum = enum.UpdateContactGroup
-	err = contactGroupService.Persistence(contactGroupService, sys_rocketmq.ContactGroupTopic, param)
+	err = contactGroupService.Persistence(contactGroupService, sys_rocketmq.ContactGroupTopic, &param)
 	if err != nil {
 		c.JSON(http.StatusOK, global.NewError(err.Error()))
 	} else {
@@ -112,7 +112,7 @@ func (acgc *ContactGroupCtl) DeleteContactGroup(c *gin.Context) {
 	}
 	param.TenantId = tenantId
 	param.EventEum = enum.DeleteContactGroup
-	err = contactGroupService.Persistence(contactGroupService, sys_rocketmq.ContactGroupTopic, param)
+	err = contactGroupService.Persistence(contactGroupService, sys_rocketmq.ContactGroupTopic, &param)
 	if err != nil {
 		c.JSON(http.StatusOK, global.NewError(err.Error()))
 	} else {

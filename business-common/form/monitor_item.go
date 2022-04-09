@@ -9,3 +9,9 @@ type MonitorItemParam struct {
 	Display      string   `form:"display"`
 	EventEum     enum.EventEum
 }
+
+type MonitorItem struct {
+	ProductAbbreviation string `gorm:"column:product_abbreviation" json:"ProductAbbreviation"`
+	Metric              string `gorm:"column:metric" json:"Metric"`
+	Labels              string `gorm:"column:labels" json:"Labels"`
+}

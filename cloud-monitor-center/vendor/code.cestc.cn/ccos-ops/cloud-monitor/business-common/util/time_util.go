@@ -38,3 +38,11 @@ func TimeParseForZone(s string) time.Time {
 	parse, _ := time.Parse(ZoneTimeFmt, s)
 	return time.Unix(parse.Unix(), 0)
 }
+
+func TimeToFullTimeFmtStr(t time.Time) string {
+	return t.Format(FullTimeFmt)
+}
+
+func TimestampToFullTimeFmtStr(timestamp int64) string {
+	return time.Unix(timestamp, 0).Format(FullTimeFmt)
+}

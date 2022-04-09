@@ -1,29 +1,34 @@
 package form
 
-import "code.cestc.cn/ccos-ops/cloud-monitor/business-common/enum"
+import (
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/enum"
+	"time"
+)
 
 type ContactForm struct {
-	ContactBizId string `gorm:"column:contact_biz_id" json:"contactBizId"`
-	ContactName  string `gorm:"column:contact_name" json:"contactName"`
-	GroupBizId   string `gorm:"column:group_biz_id" json:"groupBizId"`
-	GroupName    string `gorm:"column:group_name" json:"groupName"`
-	Phone        string `gorm:"column:phone" json:"phone"`
-	PhoneState   int    `gorm:"column:phone_state" json:"phoneState"`
-	Email        string `gorm:"column:email" json:"email"`
-	EmailState   int    `gorm:"column:email_state" json:"emailState"`
-	Lanxin       string `gorm:"column:lanxin" json:"lanxin"`
-	LanxinState  int    `gorm:"column:lanxin_state" json:"lanxinState"`
-	Description  string `gorm:"column:description" json:"description"`
-	GroupCount   int    `gorm:"column:group_count" json:"groupCount"`
+	ContactBizId string    `gorm:"column:contact_biz_id" json:"contactBizId"`
+	ContactName  string    `gorm:"column:contact_name" json:"contactName"`
+	GroupBizId   string    `gorm:"column:group_biz_id" json:"groupBizId"`
+	GroupName    string    `gorm:"column:group_name" json:"groupName"`
+	Phone        string    `gorm:"column:phone" json:"phone"`
+	PhoneState   int       `gorm:"column:phone_state" json:"phoneState"`
+	Email        string    `gorm:"column:email" json:"email"`
+	EmailState   int       `gorm:"column:email_state" json:"emailState"`
+	Lanxin       string    `gorm:"column:lanxin" json:"lanxin"`
+	LanxinState  int       `gorm:"column:lanxin_state" json:"lanxinState"`
+	Description  string    `gorm:"column:description" json:"description"`
+	GroupCount   int       `gorm:"column:group_count" json:"groupCount"`
+	CreateTime   time.Time `gorm:"column:create_time" json:"createTime"`
+	UpdateTime   time.Time `gorm:"column:update_time" json:"updateTime"`
 }
 
 type ContactGroupForm struct {
-	GroupBizId   string `gorm:"column:group_biz_id" json:"groupBizId"`
-	GroupName    string `gorm:"column:group_name" json:"groupName"`
-	Description  string `gorm:"column:description" json:"description"`
-	CreateTime   string `gorm:"column:create_time" json:"createTime"`
-	UpdateTime   string `gorm:"column:update_time" json:"updateTime"`
-	ContactCount int    `gorm:"column:contact_count" json:"contactCount"`
+	GroupBizId   string    `gorm:"column:group_biz_id" json:"groupBizId"`
+	GroupName    string    `gorm:"column:group_name" json:"groupName"`
+	Description  string    `gorm:"column:description" json:"description"`
+	CreateTime   time.Time `gorm:"column:create_time" json:"createTime"`
+	UpdateTime   time.Time `gorm:"column:update_time" json:"updateTime"`
+	ContactCount int       `gorm:"column:contact_count" json:"contactCount"`
 }
 
 type ContactFormPage struct {

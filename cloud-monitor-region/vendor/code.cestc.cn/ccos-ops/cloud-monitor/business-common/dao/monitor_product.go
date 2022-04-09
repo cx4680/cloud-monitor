@@ -37,3 +37,13 @@ func (mpd *MonitorProductDao) GetAllMonitorProduct() *[]model.MonitorProduct {
 func (mpd *MonitorProductDao) ChangeStatus(bizId []string, status uint8) {
 	global.DB.Model(&model.MonitorProduct{}).Where("biz_id IN (?)", bizId).Update("status", status)
 }
+
+func (mpd *MonitorProductDao) GetByName(db *gorm.DB, name string) *model.MonitorProduct {
+	if strutil.IsBlank(name) {
+		return nil
+	}
+	var product model.MonitorProduct
+	db.Where(model.MonitorProduct{Name: name}).First(&product)
+	return &product
+
+}

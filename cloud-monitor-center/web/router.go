@@ -32,7 +32,7 @@ func loadRouters() {
 
 func monitorProductRouters() {
 	monitorProductCtl := controller.NewMonitorProductCtl(service.MonitorProductService{})
-	group := router.Group("/hawkeye/monitorProduct/")
+	group := Router.Group("/hawkeye/monitorProduct/")
 	{
 		group.GET("/getAllMonitorProducts", logs.GinTrailzap(false, Read), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetAllMonitorProductsList", ResourceType: "*", ResourceId: "*"}), monitorProductCtl.GetMonitorProduct)
 		group.GET("/getMonitorProduct", logs.GinTrailzap(false, Read), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetAllMonitorProductsList", ResourceType: "*", ResourceId: "*"}), monitorProductCtl.GetAllMonitorProduct)
@@ -42,7 +42,7 @@ func monitorProductRouters() {
 
 func monitorItemRouters() {
 	monitorItemCtl := controller.NewMonitorItemCtl(service.MonitorItemService{})
-	group := router.Group("/hawkeye/monitorItem/")
+	group := Router.Group("/hawkeye/monitorItem/")
 	{
 		group.GET("/getMonitorItemsById", logs.GinTrailzap(false, Read), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetMonitorItemsByIdList", ResourceType: "*", ResourceId: "*"}), monitorItemCtl.GetMonitorItemsById)
 		group.POST("/changeDisplay", logs.GinTrailzap(false, Write), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetMonitorItemsByIdList", ResourceType: "*", ResourceId: "*"}), monitorItemCtl.ChangeDisplay)
@@ -51,7 +51,7 @@ func monitorItemRouters() {
 
 func contactRouters() {
 	contactCtl := controller.NewContactCtl(service.ContactService{})
-	group := router.Group("/hawkeye/contact/")
+	group := Router.Group("/hawkeye/contact/")
 	{
 		group.GET("/getContact", logs.GinTrailzap(false, Read), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetAlertContact", ResourceType: "*", ResourceId: "*"}), contactCtl.GetContact)
 		group.POST("/addContact", logs.GinTrailzap(false, Write), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "SetAlertContact", ResourceType: "*", ResourceId: "*"}), contactCtl.AddContact)
@@ -63,7 +63,7 @@ func contactRouters() {
 
 func contactGroupRouters() {
 	contactGroupCtl := controller.NewContactGroupCtl(service.ContactGroupService{})
-	group := router.Group("/hawkeye/contactGroup/")
+	group := Router.Group("/hawkeye/contactGroup/")
 	{
 		group.GET("/getContactGroup", logs.GinTrailzap(false, Read), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetAlertContactGroup", ResourceType: "*", ResourceId: "*"}), contactGroupCtl.GetContactGroup)
 		group.GET("/getContact", logs.GinTrailzap(false, Read), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetAlertContact", ResourceType: "*", ResourceId: "*"}), contactGroupCtl.GetGroupContact)
@@ -75,7 +75,7 @@ func contactGroupRouters() {
 
 func alarmRuleRouters() {
 	ruleCtl := controller.NewAlarmRuleCtl()
-	group := router.Group("/hawkeye/rule/")
+	group := Router.Group("/hawkeye/rule/")
 	{
 		group.POST("/page", logs.GinTrailzap(false, Read), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetAlertRulePageList", ResourceType: "*", ResourceId: "*"}), ruleCtl.SelectRulePageList)
 		group.POST("/detail", logs.GinTrailzap(false, Read), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetAlertRuleDetail", ResourceType: "*", ResourceId: "*"}), ruleCtl.GetDetail)
@@ -88,7 +88,7 @@ func alarmRuleRouters() {
 
 func instanceRouters() {
 	ctl := controller.NewInstanceCtl()
-	group := router.Group("/hawkeye/instance/")
+	group := Router.Group("/hawkeye/instance/")
 	{
 		group.POST("/rulePage", logs.GinTrailzap(false, Read), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetInstanceRulePageList", ResourceType: "*", ResourceId: "*"}), ctl.Page)
 		group.POST("/unbind", logs.GinTrailzap(false, Write), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "UnbindInstanceRule", ResourceType: "*", ResourceId: "*"}), ctl.Unbind)
@@ -99,7 +99,7 @@ func instanceRouters() {
 
 func alertRecordRouters() {
 	ctl := controller.NewAlarmRecordController()
-	group := router.Group("/hawkeye/alarmRecord/")
+	group := Router.Group("/hawkeye/alarmRecord/")
 	{
 		group.POST("/page", logs.GinTrailzap(false, Read), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetAlertRecordPageList", ResourceType: "*", ResourceId: "*"}), ctl.GetPageList)
 		group.GET("/contactInfos", logs.GinTrailzap(false, Read), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetContactInfoList", ResourceType: "*", ResourceId: "*"}), ctl.GetAlarmContactInfo)
@@ -110,7 +110,7 @@ func alertRecordRouters() {
 }
 
 func actuatorMapping() {
-	group := router.Group("/actuator")
+	group := Router.Group("/actuator")
 	{
 		group.GET("/env", func(c *gin.Context) {
 			c.JSON(http.StatusOK, actuator.Env())
@@ -129,7 +129,7 @@ func actuatorMapping() {
 
 func configItemRouters() {
 	ctl := controller.NewConfigItemCtl()
-	group := router.Group("/hawkeye/configItem/")
+	group := Router.Group("/hawkeye/configItem/")
 	{
 		group.GET("/getStatisticalPeriodList", logs.GinTrailzap(false, Read), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetStatisticalPeriodList", ResourceType: "*", ResourceId: "*"}), ctl.GetStatisticalPeriodList)
 		group.GET("/getContinuousCycleList", logs.GinTrailzap(false, Read), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetContinuousCycleList", ResourceType: "*", ResourceId: "*"}), ctl.GetContinuousCycleList)
@@ -144,7 +144,7 @@ func configItemRouters() {
 
 func noticeRouters() {
 	ctl := controller.NewNoticeCtl(commonService.MessageService{})
-	group := router.Group("/hawkeye/notice")
+	group := Router.Group("/hawkeye/notice")
 	{
 		group.GET("/getUsage", logs.GinTrailzap(false, Read), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetNoticeUsage", ResourceType: "*", ResourceId: "*"}), ctl.GetUsage)
 	}
@@ -156,7 +156,7 @@ func innerMapping() {
 	ruleCtl := controller.NewAlarmRuleCtl()
 	innerRuleCtl := inner.NewAlarmRuleCtl()
 	noticeCtl := controller.NewNoticeCtl(commonService.MessageService{})
-	group := router.Group("/hawkeye/inner/")
+	group := Router.Group("/hawkeye/inner/")
 	{
 		group.GET("configItem/getItemList", configItemController.GetItemListById)
 		group.GET("monitorItem/getMonitorItemList", monitorItemController.GetMonitorItemsById)

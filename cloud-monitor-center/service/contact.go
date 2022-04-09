@@ -15,6 +15,7 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/snowflake"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/strutil"
 	"gorm.io/gorm"
+	"regexp"
 	"strconv"
 )
 
@@ -37,7 +38,7 @@ func NewContactService(contactGroupService *ContactGroupService, contactInformat
 }
 
 func (s *ContactService) PersistenceLocal(db *gorm.DB, param interface{}) (string, error) {
-	p := param.(form.ContactParam)
+	p := param.(*form.ContactParam)
 	//每个联系人最多加入5个联系组
 	if len(p.GroupBizIdList) > constant.MaxContactGroup {
 		return "", errors.NewBusinessError("每个联系人最多加入" + strconv.Itoa(constant.MaxContactGroup) + "个联系组")
@@ -48,7 +49,10 @@ func (s *ContactService) PersistenceLocal(db *gorm.DB, param interface{}) (strin
 		if strutil.IsBlank(p.ContactName) {
 			return "", errors.NewBusinessError("联系人名字不能为空")
 		}
-		contact, err := s.insertContact(db, p)
+		if !s.checkContactName(p.ContactName) {
+			return "", errors.NewBusinessError("联系人名字格式错误")
+		}
+		contact, err := s.insertContact(db, *p)
 		if err != nil {
 			return "", err
 		}
@@ -68,7 +72,10 @@ func (s *ContactService) PersistenceLocal(db *gorm.DB, param interface{}) (strin
 		if strutil.IsBlank(p.ContactName) {
 			return "", errors.NewBusinessError("联系人名字不能为空")
 		}
-		contact, err := s.updateContact(db, p)
+		if !s.checkContactName(p.ContactName) {
+			return "", errors.NewBusinessError("联系人名字格式错误")
+		}
+		contact, err := s.updateContact(db, *p)
 		if err != nil {
 			return "", err
 		}
@@ -82,7 +89,7 @@ func (s *ContactService) PersistenceLocal(db *gorm.DB, param interface{}) (strin
 		}
 		return jsonutil.ToString(msg), nil
 	case enum.DeleteContact:
-		contact, err := s.deleteContact(db, p)
+		contact, err := s.deleteContact(db, *p)
 		if err != nil {
 			return "", err
 		}
@@ -96,7 +103,10 @@ func (s *ContactService) PersistenceLocal(db *gorm.DB, param interface{}) (strin
 		}
 		return jsonutil.ToString(msg), nil
 	case enum.ActivateContact:
-		s.dao.ActivateContact(db, p.ActiveCode)
+		tenantId := s.dao.ActivateContact(db, p.ActiveCode)
+		if strutil.IsBlank(tenantId) {
+			return "", errors.NewBusinessError("无效激活码")
+		}
 		msg := form.MqMsg{
 			EventEum: enum.ActivateContact,
 			Data:     p.ActiveCode,
@@ -113,9 +123,7 @@ func (s *ContactService) SelectContact(param form.ContactParam) *form.ContactFor
 
 func (s *ContactService) insertContact(db *gorm.DB, p form.ContactParam) (*model.Contact, error) {
 	//每个账号限制创建100个联系人
-	var count int64
-	global.DB.Model(&model.Contact{}).Where("tenant_id = ?", p.TenantId).Count(&count)
-	if count >= constant.MaxContactNum {
+	if s.dao.GetContactCount(p.TenantId) >= constant.MaxContactNum {
 		return nil, errors.NewBusinessError("联系人限制创建" + strconv.Itoa(constant.MaxContactNum) + "个")
 	}
 	currentTime := util.GetNow()
@@ -134,7 +142,7 @@ func (s *ContactService) insertContact(db *gorm.DB, p form.ContactParam) (*model
 }
 
 func (s *ContactService) updateContact(db *gorm.DB, p form.ContactParam) (*model.Contact, error) {
-	if !checkContact(p.TenantId, p.ContactBizId) {
+	if !s.dao.CheckContact(p.TenantId, p.ContactBizId) {
 		return nil, errors.NewBusinessError("该租户无此联系人")
 	}
 	if strutil.IsBlank(p.ContactBizId) {
@@ -154,7 +162,7 @@ func (s *ContactService) updateContact(db *gorm.DB, p form.ContactParam) (*model
 }
 
 func (s *ContactService) deleteContact(db *gorm.DB, p form.ContactParam) (*model.Contact, error) {
-	if !checkContact(p.TenantId, p.ContactBizId) {
+	if !s.dao.CheckContact(p.TenantId, p.ContactBizId) {
 		return nil, errors.NewBusinessError("该租户无此联系人")
 	}
 	if strutil.IsBlank(p.ContactBizId) {
@@ -168,7 +176,7 @@ func (s *ContactService) deleteContact(db *gorm.DB, p form.ContactParam) (*model
 	return contact, nil
 }
 
-func (s *ContactService) persistenceInner(db *gorm.DB, p form.ContactParam) error {
+func (s *ContactService) persistenceInner(db *gorm.DB, p *form.ContactParam) error {
 	//联系人组关联
 	if err := s.contactGroupRelService.PersistenceInner(db, s.contactGroupRelService, sys_rocketmq.ContactGroupTopic, p); err != nil {
 		return err
@@ -180,17 +188,13 @@ func (s *ContactService) persistenceInner(db *gorm.DB, p form.ContactParam) erro
 	return nil
 }
 
-func checkContact(tenantId, contactBizId string) bool {
-	var check int64
-	global.DB.Model(&model.Contact{}).Where("tenant_id = ? AND biz_id = ?", tenantId, contactBizId).Count(&check)
-	if check == 0 {
-		return false
-	}
-	return true
+func (s *ContactService) GetTenantId(activeCode string) string {
+	return s.dao.GetTenantIdByActiveCode(activeCode)
 }
 
-func (s *ContactService) GetTenantId(activeCode string) string {
-	var entity = &model.ContactInformation{}
-	global.DB.Where("active_code = ?", activeCode).First(entity)
-	return entity.TenantId
+func (s *ContactService) checkContactName(contactName string) bool {
+	if regexp.MustCompile("^[a-zA-Z0-9_\u4e00-\u9fa5]{1,40}$").MatchString(contactName) {
+		return true
+	}
+	return false
 }
