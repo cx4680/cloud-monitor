@@ -22,6 +22,12 @@ func (mpd *MonitorProductDao) GetByAbbreviation(db *gorm.DB, abbreviation string
 
 }
 
+func (mpd *MonitorProductDao) GetMonitorProductByBizId(BizId string) model.MonitorProduct {
+	var product = model.MonitorProduct{}
+	global.DB.Where("biz_id = ?", BizId).First(&product)
+	return product
+}
+
 func (mpd *MonitorProductDao) GetMonitorProduct() *[]model.MonitorProduct {
 	var product = &[]model.MonitorProduct{}
 	global.DB.Where("status = ?", "1").Order("sort ASC").Find(product)

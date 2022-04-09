@@ -13,6 +13,11 @@ type BmsInstanceService struct {
 	service.InstanceServiceImpl
 }
 
+type BmsRequest struct {
+	TenantId string `json:"tenantId"`
+	Params   string `json:"params"`
+}
+
 type BmsResponse struct {
 	RequestId string             `json:"RequestId"`
 	Code      string             `json:"code"`
@@ -29,10 +34,11 @@ type BmsServers struct {
 	InstanceId string `json:"InstanceId"`
 	Name       string `json:"name"`
 	State      string `json:"State"`
+	BmType     int    `json:"BmType"`
 }
 
 func (bms *BmsInstanceService) ConvertRealForm(form service.InstancePageForm) interface{} {
-	var param = "/tenants/" + form.TenantId + "/servers?pageNumber=" + strconv.Itoa(form.Current) + "&pageSize=" + strconv.Itoa(form.PageSize)
+	var params = "?pageNumber=" + strconv.Itoa(form.Current) + "&pageSize=" + strconv.Itoa(form.PageSize)
 	var filterList []string
 	if strutil.IsNotBlank(form.InstanceName) {
 		filterList = append(filterList, "name:lk:"+form.InstanceName)
@@ -41,18 +47,22 @@ func (bms *BmsInstanceService) ConvertRealForm(form service.InstancePageForm) in
 		filterList = append(filterList, "id:lk:"+form.InstanceId)
 	}
 	if strutil.IsNotBlank(form.StatusList) {
-		filterList = append(filterList, "status:in:"+form.StatusList)
+		filterList = append(filterList, "state:in:"+form.StatusList)
+	}
+	if strutil.IsNotBlank(form.ExtraAttr["bmType"]) {
+		filterList = append(filterList, "BmType:in:"+form.ExtraAttr["bmType"])
 	}
 	if len(filterList) > 0 {
 		filter := strings.Join(filterList, "|")
-		param += "&filter=" + filter
+		params += "&filter=" + filter
 	}
-	return param
+	return BmsRequest{TenantId: form.TenantId, Params: params}
 }
 
 func (bms *BmsInstanceService) DoRequest(url string, f interface{}) (interface{}, error) {
-	var param = f.(string)
-	respStr, err := httputil.HttpGet(url + param)
+	var param = f.(BmsRequest)
+	url = strings.ReplaceAll(url, "{tenantId}", param.TenantId)
+	respStr, err := httputil.HttpGet(url + param.Params)
 	if err != nil {
 		return nil, err
 	}
@@ -72,6 +82,9 @@ func (bms *BmsInstanceService) ConvertResp(realResp interface{}) (int, []service
 				Labels: []service.InstanceLabel{{
 					Name:  "status",
 					Value: d.State,
+				}, {
+					Name:  "bmType",
+					Value: strconv.Itoa(d.BmType),
 				}},
 			})
 		}

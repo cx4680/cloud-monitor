@@ -10,6 +10,7 @@ const (
 	NAT        = "nat"
 	SLB        = "slb"
 	BMS        = "bms"
+	EBMS       = "ebms"
 	MYSQL      = "mysql"
 	DM         = "dm"
 	POSTGRESQL = "postgresql"
@@ -33,6 +34,9 @@ var ProductInstanceServiceMap = map[string]commonService.InstanceService{
 		InstanceServiceImpl: commonService.InstanceServiceImpl{},
 	},
 	BMS: &BmsInstanceService{
+		InstanceServiceImpl: commonService.InstanceServiceImpl{},
+	},
+	EBMS: &EbmsInstanceService{
 		InstanceServiceImpl: commonService.InstanceServiceImpl{},
 	},
 	MYSQL: &MySqlInstanceService{
