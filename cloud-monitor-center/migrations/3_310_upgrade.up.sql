@@ -120,5 +120,4 @@ UPDATE t_monitor_product SET sort = 8 WHERE abbreviation = 'dm';
 UPDATE t_monitor_product SET sort = 9 WHERE abbreviation = 'postgresql';
 UPDATE t_monitor_product SET sort = 10 WHERE abbreviation = 'kafka';
 
-
-alter table t_alarm_record modify column source_id varchar(100) COMMENT '资源id';
+ALTER TABLE t_alarm_record MODIFY COLUMN source_id varchar(100) COMMENT '资源id';
