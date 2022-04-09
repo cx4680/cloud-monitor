@@ -47,7 +47,7 @@ func (bms *BmsInstanceService) ConvertRealForm(form service.InstancePageForm) in
 		filterList = append(filterList, "id:lk:"+form.InstanceId)
 	}
 	if strutil.IsNotBlank(form.StatusList) {
-		filterList = append(filterList, "status:in:"+form.StatusList)
+		filterList = append(filterList, "state:in:"+form.StatusList)
 	}
 	if strutil.IsNotBlank(form.ExtraAttr["bmType"]) {
 		filterList = append(filterList, "BmType:in:"+form.ExtraAttr["bmType"])
