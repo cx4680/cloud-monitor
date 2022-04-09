@@ -8,16 +8,3 @@ const (
 
 	TenantId = "accountId"
 )
-
-var ProductMap = map[string]string{
-	"1":  "ecs",
-	"2":  "eip",
-	"3":  "slb",
-	"5":  "cbr",
-	"6":  "nat",
-	"7":  "bms",
-	"8":  "mysql",
-	"9":  "dm",
-	"10": "postgresql",
-	"11": "kafka",
-}

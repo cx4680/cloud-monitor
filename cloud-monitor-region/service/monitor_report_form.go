@@ -178,7 +178,7 @@ func checkUserInstanceIdentity(tenantId, productBizId, instanceId string) bool {
 func getInstanceList(productBizId string, tenantId string) ([]string, error) {
 	f := commonService.InstancePageForm{
 		TenantId: tenantId,
-		Product:  constant.ProductMap[productBizId],
+		Product:  dao.MonitorProduct.GetMonitorProductByBizId(productBizId).Abbreviation,
 		Current:  1,
 		PageSize: 10000,
 	}
