@@ -2,6 +2,7 @@ package dao
 
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/form"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/model"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/strutil"
 	"fmt"
@@ -27,7 +28,9 @@ const (
 		"GROUP_CONCAT( CASE aci.type WHEN 3 THEN aci.address END ) AS lanxin, " +
 		"GROUP_CONCAT( CASE aci.type WHEN 3 THEN aci.state END ) AS lanxin_state, " +
 		"ac.description AS description, " +
-		"ANY_VALUE( acg.group_count ) AS group_count " +
+		"ANY_VALUE( acg.group_count ) AS group_count, " +
+		"ac.create_time AS create_time, " +
+		"ac.update_time AS update_time " +
 		"FROM " +
 		"t_contact AS ac " +
 		"LEFT JOIN t_contact_information AS aci ON ac.biz_id = aci.contact_biz_id AND ac.tenant_id = aci.tenant_id " +
@@ -57,24 +60,24 @@ const (
 )
 
 func (d *ContactDao) Select(db *gorm.DB, param form.ContactParam) *form.ContactFormPage {
-	var entity = &[]form.ContactForm{}
+	var entity []form.ContactForm
 	var sql string
-	var value string
 	var total int64
 	if strutil.IsNotBlank(param.ContactName) {
-		sql = " AND ac.name LIKE CONCAT('%',?,'%') "
-		value = param.ContactName
-	} else if strutil.IsNotBlank(param.Phone) {
-		sql = " AND ac.biz_id = ANY(SELECT contact_biz_id FROM t_contact_information WHERE type = 1 AND state = 1 AND address LIKE CONCAT('%',?,'%')) "
-		value = param.Phone
-	} else if strutil.IsNotBlank(param.Email) {
-		sql = " AND ac.biz_id = ANY(SELECT contact_biz_id FROM t_contact_information WHERE type = 2 AND state = 1 AND address LIKE CONCAT('%',?,'%')) "
-		value = param.Email
+		sql += " AND ac.name LIKE CONCAT('%','" + param.ContactName + "','%') "
+	}
+	if strutil.IsNotBlank(param.Phone) {
+		sql += " AND ac.biz_id = ANY(SELECT contact_biz_id FROM t_contact_information WHERE type = 1 AND state = 1 AND address LIKE CONCAT('%','" + param.Phone + "','%')) "
+	}
+	if strutil.IsNotBlank(param.Email) {
+		sql += " AND ac.biz_id = ANY(SELECT contact_biz_id FROM t_contact_information WHERE type = 2 AND state = 1 AND address LIKE CONCAT('%','" + param.Email + "','%')) "
 	}
 	sql = fmt.Sprintf(SelectContact, sql)
-	db.Raw("select count(1) from ( "+sql+") t ", param.TenantId, value).Scan(&total)
-	sql += "LIMIT " + strconv.Itoa((param.PageCurrent-1)*param.PageSize) + "," + strconv.Itoa(param.PageSize)
-	db.Raw(sql, param.TenantId, value).Find(entity)
+	db.Raw("select count(1) from ( "+sql+") t ", param.TenantId).Scan(&total)
+	if total >= 0 {
+		sql += " LIMIT " + strconv.Itoa((param.PageCurrent-1)*param.PageSize) + "," + strconv.Itoa(param.PageSize)
+		db.Raw(sql, param.TenantId).Find(&entity)
+	}
 	var contactFormPage = &form.ContactFormPage{
 		Records: entity,
 		Current: param.PageCurrent,
@@ -98,6 +101,30 @@ func (d *ContactDao) Delete(db *gorm.DB, entity *model.Contact) {
 
 func (d *ContactDao) ActivateContact(db *gorm.DB, activeCode string) string {
 	var entity = &model.ContactInformation{}
-	db.Model(entity).Where("active_code = ?", activeCode).Update("state", 1)
+	db.Model(entity).Where("active_code = ?", activeCode).Update("state", 1).Find(entity)
+	return entity.TenantId
+}
+
+//查询租户下的联系人数量
+func (d *ContactDao) GetContactCount(tenantId string) int64 {
+	var count int64
+	global.DB.Model(&model.Contact{}).Where("tenant_id = ?", tenantId).Count(&count)
+	return count
+}
+
+//校验联系人
+func (d *ContactDao) CheckContact(tenantId, contactBizId string) bool {
+	var count int64
+	global.DB.Model(&model.Contact{}).Where("tenant_id = ? AND biz_id = ?", tenantId, contactBizId).Count(&count)
+	if count > 0 {
+		return true
+	}
+	return false
+}
+
+//根据激活码获取租户ID
+func (d *ContactDao) GetTenantIdByActiveCode(activeCode string) string {
+	var entity = &model.ContactInformation{}
+	global.DB.Where("active_code = ?", activeCode).First(entity)
 	return entity.TenantId
 }

@@ -2,6 +2,7 @@ package dao
 
 import (
 	"bytes"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/form"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/sys_component/sys_redis"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/model"
@@ -69,6 +70,16 @@ func (d *MonitorItemDao) GetMonitorItemByName(name string) model.MonitorItem {
 	return monitorItemModel
 }
 
+func (d *MonitorItemDao) GetMonitorItemByMetricCode(metricCode string) form.MonitorItem {
+	var monitorItem = form.MonitorItem{}
+	global.DB.Raw(SelectMonitorItem, metricCode).Find(&monitorItem)
+	if monitorItem == (form.MonitorItem{}) {
+		logger.Logger().Info("获取监控项为空")
+		return monitorItem
+	}
+	return monitorItem
+}
+
 func isShow(exp string, os string) bool {
 	m := map[string]string{"OSTYPE": os}
 	var buf bytes.Buffer
@@ -84,3 +95,5 @@ func isShow(exp string, os string) bool {
 	}
 	return isShowBool
 }
+
+var SelectMonitorItem = "SELECT mi.metrics_linux AS metric, mi.labels AS labels, mp.abbreviation AS product_abbreviation FROM t_monitor_item AS mi LEFT JOIN t_monitor_product mp ON mi.product_biz_id = mp.biz_id WHERE mi.metric_name = ?;"

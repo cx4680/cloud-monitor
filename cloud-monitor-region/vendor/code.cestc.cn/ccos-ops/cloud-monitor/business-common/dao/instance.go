@@ -1,11 +1,13 @@
 package dao
 
 import (
+	commonError "code.cestc.cn/ccos-ops/cloud-monitor/business-common/errors"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/form"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/model"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/util"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/vo"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -32,30 +34,40 @@ func (dao *InstanceDao) SelectInstanceRulePage(param *form.InstanceRulePageReqPa
 	}
 }
 
-func (dao *InstanceDao) UnbindInstance(tx *gorm.DB, param *form.UnBindRuleParam) {
+func (dao *InstanceDao) UnbindInstance(tx *gorm.DB, param *form.UnBindRuleParam) error {
+	exists := AlarmRule.CheckRuleExists(tx, param.RuleId, param.TenantId)
+	if !exists {
+		logger.Logger().Infof("%s %+v", commonError.RuleNotExist, param)
+		return commonError.NewBusinessError(commonError.RuleNotExist)
+	}
 	tx.Where("resource_id=?", param.InstanceId).Where("alarm_rule_id=?", param.RuleId).Delete(&model.AlarmRuleResourceRel{})
+	return nil
 }
-func (dao *InstanceDao) BindInstance(tx *gorm.DB, param *form.InstanceBindRuleDTO) {
+func (dao *InstanceDao) BindInstance(tx *gorm.DB, param *form.InstanceBindRuleDTO) error {
 	tx.Where("resource_id=?", param.InstanceId).Delete(&model.AlarmRuleResourceRel{})
+	instance := model.AlarmInstance{
+		Ip:           param.Ip,
+		RegionCode:   param.RegionCode,
+		RegionName:   param.RegionName,
+		ZoneCode:     param.ZoneCode,
+		ZoneName:     param.ZoneName,
+		InstanceName: param.InstanceName,
+		InstanceID:   param.InstanceId,
+		TenantID:     param.TenantId,
+	}
 	if len(param.RuleIdList) != 0 {
-		instanceList := make([]*model.AlarmInstance, len(param.RuleIdList))
-		ruleRelList := make([]*model.AlarmRuleResourceRel, len(param.RuleIdList))
-		for index, ruleId := range param.RuleIdList {
-			instanceList[index] = &model.AlarmInstance{
-				Ip:           param.Ip,
-				RegionCode:   param.RegionCode,
-				RegionName:   param.RegionName,
-				ZoneCode:     param.ZoneCode,
-				ZoneName:     param.ZoneName,
-				InstanceName: param.InstanceName,
-				InstanceID:   param.InstanceId,
-				TenantID:     param.TenantId,
+		var ruleRelList []*model.AlarmRuleResourceRel
+		for _, ruleId := range param.RuleIdList {
+			exists := AlarmRule.CheckRuleExists(tx, ruleId, param.TenantId)
+			if !exists {
+				continue
 			}
-			ruleRelList[index] = &model.AlarmRuleResourceRel{ResourceId: param.InstanceId, AlarmRuleId: ruleId, TenantId: param.TenantId}
+			ruleRelList = append(ruleRelList, &model.AlarmRuleResourceRel{ResourceId: param.InstanceId, AlarmRuleId: ruleId, TenantId: param.TenantId})
 		}
 		tx.Create(&ruleRelList)
-		tx.Clauses(clause.OnConflict{DoNothing: false}).Create(&instanceList)
+		tx.Clauses(clause.OnConflict{Columns: []clause.Column{{Name: "instance_id"}}, DoNothing: false}).Create(&instance)
 	}
+	return nil
 }
 
 func (dao *InstanceDao) GetRuleListByProductType(param *form.ProductRuleParam) *form.ProductRuleListDTO {

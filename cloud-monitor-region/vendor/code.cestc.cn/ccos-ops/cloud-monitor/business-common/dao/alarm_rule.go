@@ -2,6 +2,7 @@ package dao
 
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/enum/source_type"
+	commonError "code.cestc.cn/ccos-ops/cloud-monitor/business-common/errors"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/form"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/model"
@@ -28,21 +29,22 @@ func (dao *AlarmRuleDao) SaveRule(tx *gorm.DB, ruleReqDTO *form.AlarmRuleAddReqD
 	tx.Create(rule)
 	dao.saveRuleOthers(tx, ruleReqDTO, rule.BizId)
 }
-func (dao *AlarmRuleDao) UpdateRule(tx *gorm.DB, ruleReqDTO *form.AlarmRuleAddReqDTO) {
-	if !dao.checkRuleExists(tx, ruleReqDTO.Id, ruleReqDTO.TenantId) {
-		logger.Logger().Infof("规则不存在 %+v", ruleReqDTO)
-		return
+func (dao *AlarmRuleDao) UpdateRule(tx *gorm.DB, ruleReqDTO *form.AlarmRuleAddReqDTO) error {
+	if !dao.CheckRuleExists(tx, ruleReqDTO.Id, ruleReqDTO.TenantId) {
+		logger.Logger().Infof("%s %+v", commonError.RuleNotExist, ruleReqDTO)
+		return commonError.NewBusinessError(commonError.RuleNotExist)
 	}
 	dao.deleteOthers(tx, ruleReqDTO.Id)
 	rule := buildAlarmRule(ruleReqDTO)
 	tx.Model(&rule).Where("biz_id=?", ruleReqDTO.Id).Updates(rule)
 	dao.saveRuleOthers(tx, ruleReqDTO, ruleReqDTO.Id)
+	return nil
 }
 
-func (dao *AlarmRuleDao) DeleteRule(tx *gorm.DB, ruleReqDTO *form.RuleReqDTO) {
-	if !dao.checkRuleExists(tx, ruleReqDTO.Id, ruleReqDTO.TenantId) {
-		logger.Logger().Infof("规则不存在 %+v", ruleReqDTO)
-		return
+func (dao *AlarmRuleDao) DeleteRule(tx *gorm.DB, ruleReqDTO *form.RuleReqDTO) error {
+	if !dao.CheckRuleExists(tx, ruleReqDTO.Id, ruleReqDTO.TenantId) {
+		logger.Logger().Infof("%s %+v", commonError.RuleNotExist, ruleReqDTO)
+		return commonError.NewBusinessError(commonError.RuleNotExist)
 	}
 	rule := model.AlarmRule{
 		TenantID: ruleReqDTO.TenantId,
@@ -51,18 +53,20 @@ func (dao *AlarmRuleDao) DeleteRule(tx *gorm.DB, ruleReqDTO *form.RuleReqDTO) {
 	}
 	tx.Where("biz_id=?", ruleReqDTO.Id).Updates(&rule)
 	dao.deleteOthers(tx, ruleReqDTO.Id)
+	return nil
 }
 
-func (dao *AlarmRuleDao) UpdateRuleState(tx *gorm.DB, ruleReqDTO *form.RuleReqDTO) {
-	if !dao.checkRuleExists(tx, ruleReqDTO.Id, ruleReqDTO.TenantId) {
-		logger.Logger().Infof("规则不存在 %+v", ruleReqDTO)
-		return
+func (dao *AlarmRuleDao) UpdateRuleState(tx *gorm.DB, ruleReqDTO *form.RuleReqDTO) error {
+	if !dao.CheckRuleExists(tx, ruleReqDTO.Id, ruleReqDTO.TenantId) {
+		logger.Logger().Infof("%s %+v", commonError.RuleNotExist, ruleReqDTO)
+		return commonError.NewBusinessError(commonError.RuleNotExist)
 	}
 	rule := model.AlarmRule{}
 	tx.Model(&rule).Where("biz_id=?", ruleReqDTO.Id).Update("enabled", getAlarmStatusTextInt(ruleReqDTO.Status))
+	return nil
 }
 
-func (dao *AlarmRuleDao) checkRuleExists(tx *gorm.DB, ruleId string, tenantId string) bool {
+func (dao *AlarmRuleDao) CheckRuleExists(tx *gorm.DB, ruleId string, tenantId string) bool {
 	var count int64
 	tx.Model(&model.AlarmRule{}).Where("biz_id=?", ruleId).Where("tenant_id=?", tenantId).Count(&count)
 	return count != 0
@@ -98,9 +102,12 @@ func (dao *AlarmRuleDao) SelectRulePageList(param *form.AlarmPageReqParam) *vo.P
 
 }
 
-func (dao *AlarmRuleDao) GetDetail(tx *gorm.DB, id string, tenantId string) *form.AlarmRuleDetailDTO {
+func (dao *AlarmRuleDao) GetDetail(tx *gorm.DB, id string, tenantId string) (*form.AlarmRuleDetailDTO, error) {
 	ruleDto := &form.AlarmRuleDetailDTO{}
 	tx.Raw("SELECT    biz_id as id ,    NAME  as ruleName,  enabled as status,  product_name as product_type,  monitor_type,   level as alarmLevel,  dimensions as scope,  trigger_condition as ruleCondition ,  silences_time,   effective_start,  effective_end    FROM t_alarm_rule        WHERE biz_id = ?          AND deleted = 0  and tenant_id=?", id, tenantId).Scan(ruleDto)
+	if len(ruleDto.Id) == 0 {
+		return ruleDto, commonError.NewBusinessError(commonError.RuleNotExist)
+	}
 	ruleDto.NoticeGroups = dao.GetNoticeGroupList(tx, id)
 	ruleDto.InstanceList = dao.GetInstanceList(tx, id)
 	ruleDto.AlarmHandlerList = dao.GetHandlerList(tx, id)
@@ -108,7 +115,7 @@ func (dao *AlarmRuleDao) GetDetail(tx *gorm.DB, id string, tenantId string) *for
 	ruleDto.Describe = GetExpress(ruleDto.RuleCondition)
 	scope, _ := strconv.Atoi(ruleDto.Scope)
 	ruleDto.Scope = getResourceScopeText(scope)
-	return ruleDto
+	return ruleDto, nil
 }
 
 func (dao *AlarmRuleDao) GetById(db *gorm.DB, id string) *model.AlarmRule {
@@ -119,7 +126,7 @@ func (dao *AlarmRuleDao) GetById(db *gorm.DB, id string) *model.AlarmRule {
 
 func (dao *AlarmRuleDao) GetInstanceList(tx *gorm.DB, ruleId string) []*form.InstanceInfo {
 	var instanceInfo []*form.InstanceInfo
-	tx.Raw("select * from (SELECT   DISTINCT   t2.instance_id,   t2.region_code,   t2.region_name,   t2.instance_name    FROM   t_alarm_rule_resource_rel t1,   t_resource t2    WHERE   t1.alarm_rule_id = ?    AND t1.resource_id = t2.instance_id and t2.region_code!='' ) t group by   instance_id", ruleId).Scan(&instanceInfo)
+	tx.Raw("select * from (SELECT   DISTINCT   t2.instance_id,   t2.region_code,   t2.region_name,   t2.instance_name    FROM   t_alarm_rule_resource_rel t1,   t_resource t2    WHERE   t1.alarm_rule_id = ?    AND t1.resource_id = t2.instance_id  ) t group by   instance_id", ruleId).Scan(&instanceInfo)
 	return instanceInfo
 }
 
@@ -190,12 +197,16 @@ func (dao *AlarmRuleDao) saveAlarmNotice(tx *gorm.DB, ruleReqDTO *form.AlarmRule
 	if len(ruleReqDTO.GroupList) == 0 {
 		return
 	}
-	list := make([]model.AlarmNotice, len(ruleReqDTO.GroupList))
-	for index, group := range ruleReqDTO.GroupList {
-		list[index] = model.AlarmNotice{
+	var list []model.AlarmNotice
+	for _, group := range ruleReqDTO.GroupList {
+		exist := ContactGroup.CheckGroupId(ruleReqDTO.TenantId, group)
+		if !exist {
+			continue
+		}
+		list = append(list, model.AlarmNotice{
 			AlarmRuleID:     ruleId,
 			ContractGroupID: group,
-		}
+		})
 	}
 	tx.Create(&list)
 }

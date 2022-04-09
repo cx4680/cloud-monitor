@@ -1,7 +1,6 @@
-package service
+package region
 
 import (
-	"code.cestc.cn/ccos-ops/cloud-monitor/cloud-monitor-center/vo"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/httputil"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/jsonutil"
@@ -11,21 +10,23 @@ import (
 type ExternService struct {
 }
 
+var RegionService = NewExternService()
+
 func NewExternService() *ExternService {
 	return &ExternService{}
 }
 
-func (externService *ExternService) GetRegionList(tenantId string) ([]vo.ConfigItemVO, error) {
+func (externService *ExternService) GetRegionList(tenantId string) ([]ConfigItemVO, error) {
 	path := fmt.Sprintf("%s?format=json&method=%s&appId=%s", config.Cfg.Common.Nk, "CESTC_UNHQ_queryPoolsByLoginId", "600006")
 	json, err := httputil.HttpPostJson(path, map[string]string{"loginId": tenantId}, map[string]string{"userCode": tenantId})
 	if err != nil {
 		return nil, err
 	}
-	region := &RegionInfoDTO{}
+	region := &InfoDTO{}
 	jsonutil.ToObject(json, region)
-	var configItemVOList []vo.ConfigItemVO
+	var configItemVOList []ConfigItemVO
 	for _, v := range region.Result {
-		configItemVO := vo.ConfigItemVO{
+		configItemVO := ConfigItemVO{
 			Code: v.PoolId,
 			Name: v.PoolName,
 			Data: v.PoolUrl,
@@ -35,7 +36,7 @@ func (externService *ExternService) GetRegionList(tenantId string) ([]vo.ConfigI
 	return configItemVOList, nil
 }
 
-type RegionInfoDTO struct {
+type InfoDTO struct {
 	RespDesc string        `json:"respDesc"`
 	Code     string        `json:"code"`
 	Message  string        `json:"message"`
@@ -49,4 +50,14 @@ type ResultBean struct {
 	AllFlag  bool   `json:"allFlag"`
 	PoolId   string `json:"poolId"`
 	PoolName string `json:"poolName"`
+}
+
+type ConfigItemVO struct {
+	Id     string `json:"id"`
+	BizId  string `json:"bizId"`
+	PBizId string `json:"pBizId"` //配置名称
+	Name   string `json:"name"`   //配置编码
+	Code   string `json:"code"`   //配置编码
+	Data   string `json:"data"`   //配置值
+	Remark string `json:"remark"` //备注
 }

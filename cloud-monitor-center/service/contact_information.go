@@ -15,7 +15,7 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/strutil"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
-	"strconv"
+	"regexp"
 	"strings"
 )
 
@@ -35,14 +35,14 @@ func NewContactInformationService(messageSvc *service.MessageService) *ContactIn
 
 // PersistenceLocal 插入两条数据
 func (s *ContactInformationService) PersistenceLocal(db *gorm.DB, param interface{}) (string, error) {
-	p := param.(form.ContactParam)
+	p := param.(*form.ContactParam)
 	switch p.EventEum {
 	case enum.InsertContact:
 		err := checkAddressSize(p.Phone, p.Email)
 		if err != nil {
 			return "", err
 		}
-		list := s.insertContactInformation(db, p)
+		list := s.insertContactInformation(db, *p)
 		for _, information := range list {
 			if strutil.IsNotBlank(information.ActiveCode) {
 				s.sendActivateMsg(information.TenantId, information.Address, information.Type, information.ActiveCode, information.ContactBizId)
@@ -57,7 +57,7 @@ func (s *ContactInformationService) PersistenceLocal(db *gorm.DB, param interfac
 		if err != nil {
 			return "", err
 		}
-		list := s.updateContactInformation(db, p)
+		list := s.updateContactInformation(db, *p)
 		for _, information := range list {
 			s.sendActivateMsg(information.TenantId, information.Address, information.Type, information.ActiveCode, information.ContactBizId)
 		}
@@ -66,7 +66,7 @@ func (s *ContactInformationService) PersistenceLocal(db *gorm.DB, param interfac
 			Data:     list,
 		}), nil
 	case enum.DeleteContact:
-		contactInformation := s.deleteContactInformation(db, p)
+		contactInformation := s.deleteContactInformation(db, *p)
 		return jsonutil.ToString(form.MqMsg{
 			EventEum: enum.DeleteContactInformation,
 			Data:     contactInformation,
@@ -151,9 +151,7 @@ func (s *ContactInformationService) buildInformation(p form.ContactParam, addres
 	activeCode, state := s.getActiveCode(addressType)
 	var information = &model.ContactInformation{}
 	//判断新增的联系方式是否已存在，若存在则不修改，若不存在，则删除旧号码，添加新号码
-	var count int64
-	global.DB.Model(&model.ContactInformation{}).Where("tenant_id = ? AND contact_biz_id = ? AND address = ? AND type = ?", p.TenantId, p.ContactBizId, address, addressType).Count(&count)
-	if count == 0 {
+	if !s.dao.CheckInformation(p.TenantId, p.ContactBizId, address, addressType) {
 		information = &model.ContactInformation{
 			TenantId:     p.TenantId,
 			ContactBizId: p.ContactBizId,
@@ -169,11 +167,14 @@ func (s *ContactInformationService) buildInformation(p form.ContactParam, addres
 }
 
 func checkAddressSize(phone, email string) error {
-	if strutil.IsNotBlank(phone) && len(phone) != constant.PhoneSize {
-		return errors.NewBusinessError("手机号必须为" + strconv.Itoa(constant.PhoneSize) + "位")
+	if strutil.IsNotBlank(phone) && !regexp.MustCompile("^((13[0-9])|(14[5,7])|(15[0-3,5-9])|(17[0,3,5-8])|(18[0-9])|166|198|199|(147))\\d{8}$").MatchString(phone) {
+		return errors.NewBusinessError("手机号格式错误")
 	}
-	if strutil.IsNotBlank(email) && len(email) > constant.MaxEmailSize {
-		return errors.NewBusinessError("邮箱限制" + strconv.Itoa(constant.MaxEmailSize) + "个字符")
+	if strutil.IsNotBlank(email) && !regexp.MustCompile("\\w+([-+.]\\w+)*@\\w+([-.]\\w+)*\\.\\w+([-.]\\w+)*").MatchString(email) {
+		return errors.NewBusinessError("邮箱格式错误")
+	}
+	if strutil.IsBlank(phone) && strutil.IsBlank(email) {
+		return errors.NewBusinessError("手机号和邮箱必须填写一项")
 	}
 	return nil
 }

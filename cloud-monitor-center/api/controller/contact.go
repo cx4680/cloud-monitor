@@ -56,7 +56,7 @@ func (acl *ContactCtl) AddContact(c *gin.Context) {
 	}
 	param.TenantId = tenantId
 	param.EventEum = enum.InsertContact
-	err = contactService.Persistence(contactService, sys_rocketmq.ContactTopic, param)
+	err = contactService.Persistence(contactService, sys_rocketmq.ContactTopic, &param)
 	if err != nil {
 		c.JSON(http.StatusOK, global.NewError(err.Error()))
 	} else {
@@ -78,7 +78,7 @@ func (acl *ContactCtl) UpdateContact(c *gin.Context) {
 	}
 	param.TenantId = tenantId
 	param.EventEum = enum.UpdateContact
-	err = contactService.Persistence(contactService, sys_rocketmq.ContactTopic, param)
+	err = contactService.Persistence(contactService, sys_rocketmq.ContactTopic, &param)
 	if err != nil {
 		c.JSON(http.StatusOK, global.NewError(err.Error()))
 	} else {
@@ -100,7 +100,7 @@ func (acl *ContactCtl) DeleteContact(c *gin.Context) {
 	}
 	param.TenantId = tenantId
 	param.EventEum = enum.DeleteContact
-	err = contactService.Persistence(contactService, sys_rocketmq.ContactTopic, param)
+	err = contactService.Persistence(contactService, sys_rocketmq.ContactTopic, &param)
 	if err != nil {
 		c.JSON(http.StatusOK, global.NewError(err.Error()))
 	} else {
@@ -116,7 +116,7 @@ func (acl *ContactCtl) ActivateContact(c *gin.Context) {
 		return
 	}
 	param.EventEum = enum.ActivateContact
-	err = contactService.Persistence(contactService, sys_rocketmq.ContactTopic, param)
+	err = contactService.Persistence(contactService, sys_rocketmq.ContactTopic, &param)
 	if err != nil {
 		c.JSON(http.StatusOK, global.NewError(err.Error()))
 	} else {

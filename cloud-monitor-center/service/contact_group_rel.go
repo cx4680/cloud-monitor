@@ -27,10 +27,10 @@ func NewContactGroupRelService() *ContactGroupRelService {
 }
 
 func (s *ContactGroupRelService) PersistenceLocal(db *gorm.DB, param interface{}) (string, error) {
-	p := param.(form.ContactParam)
+	p := param.(*form.ContactParam)
 	switch p.EventEum {
 	case enum.InsertContact, enum.InsertContactGroup:
-		relList, err := s.insertContactRel(db, p)
+		relList, err := s.insertContactRel(db, *p)
 		if err != nil {
 			return "", err
 		}
@@ -40,20 +40,20 @@ func (s *ContactGroupRelService) PersistenceLocal(db *gorm.DB, param interface{}
 		}
 		return jsonutil.ToString(msg), nil
 	case enum.UpdateContact, enum.UpdateContactGroup:
-		List, err := s.updateContactGroupRel(db, p)
+		List, err := s.updateContactGroupRel(db, *p)
 		if err != nil {
 			return "", err
 		}
 		var date = model.UpdateContactGroupRel{
 			RelList: List,
-			Param:   p,
+			Param:   *p,
 		}
 		return jsonutil.ToString(form.MqMsg{
 			EventEum: enum.UpdateContactGroupRel,
 			Data:     date,
 		}), nil
 	case enum.DeleteContact, enum.DeleteContactGroup:
-		contactGroupRel, err := s.deleteContactGroupRel(db, p)
+		contactGroupRel, err := s.deleteContactGroupRel(db, *p)
 		if err != nil {
 			return "", err
 		}
@@ -143,7 +143,7 @@ func (s *ContactGroupRelService) buildContactRelList(db *gorm.DB, p form.Contact
 
 func (s *ContactGroupRelService) buildGroupRelList(db *gorm.DB, p form.ContactParam) ([]*model.ContactGroupRel, error) {
 	if len(p.GroupBizIdList) > constant.MaxContactGroup {
-		return nil, errors.NewBusinessError("联系人限制加入" + strconv.Itoa(constant.MaxContactGroup) + "个联系组")
+		return nil, errors.NewBusinessError("每个联系人最多加入" + strconv.Itoa(constant.MaxContactGroup) + "个联系组")
 	}
 	var list []*model.ContactGroupRel
 	for _, groupBizId := range p.GroupBizIdList {
