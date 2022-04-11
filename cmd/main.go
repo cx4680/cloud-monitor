@@ -6,7 +6,11 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/sys_component/sys_rocketmq"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/task"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/run_time"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/k8s"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/mq/consumer"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/pipeline/sys_upgrade"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/service"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/validator/translate"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/web"
 	"code.cestc.cn/yyptb-group_tech/iam-sdk-go/pkg/middleware"
@@ -40,10 +44,14 @@ func main() {
 			Name: "clearAlarmRecordJob",
 			Task: task.Clear,
 		})
+		err = task.AddSyncJobs(bt)
 		bt.Start()
 		return err
 	})
 
+	loader.AddStage(func(*context.Context) error {
+		return k8s.InitK8s()
+	})
 	loader.AddStage(func(*context.Context) error {
 		return sys_rocketmq.StartConsumersScribe(sys_rocketmq.Group(config.Cfg.Common.RegionName), []*sys_rocketmq.Consumer{{
 			Topic:   sys_rocketmq.InstanceTopic,
@@ -60,7 +68,35 @@ func main() {
 		}, {
 			Topic:   sys_rocketmq.AlarmInfoTopic,
 			Handler: consumer.AlarmInfoAddHandler,
-		}})
+		}, {
+			Topic:   sys_rocketmq.ContactTopic,
+			Handler: consumer.ContactHandler,
+		}, {
+			Topic:   sys_rocketmq.ContactGroupTopic,
+			Handler: consumer.ContactGroupHandler,
+		}, {
+			Topic:   sys_rocketmq.RuleTopic,
+			Handler: consumer.AlarmRuleHandler,
+		}, {
+			Topic:   sys_rocketmq.MonitorProductTopic,
+			Handler: consumer.MonitorProductHandler,
+		}, {
+			Topic:   sys_rocketmq.MonitorItemTopic,
+			Handler: consumer.MonitorItemHandler,
+		},
+		})
+	})
+
+	loader.AddStage(func(*context.Context) error {
+		sys_upgrade.PrometheusRuleUpgrade()
+		return nil
+	})
+
+	loader.AddStage(func(c *context.Context) error {
+		go run_time.SafeRun(func() {
+			service.StartHandleAlarmEvent(*c)
+		})
+		return nil
 	})
 
 	loader.AddStage(func(*context.Context) error {
