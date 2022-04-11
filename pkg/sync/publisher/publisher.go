@@ -36,14 +36,25 @@ type MQPublisher struct {
 }
 
 func (mqp *MQPublisher) Pub(msg PubMessage) error {
-	bs, err := json.Marshal(msg.Data)
+	s, ok := msg.Data.(string)
+	var body []byte
+	if ok {
+		body = []byte(s)
+	} else {
+		bs, err := json.Marshal(msg.Data)
+		if err != nil {
+			return err
+		}
+		body = bs
+	}
+
+	res, err := mqp.Producer.SendSync(context.Background(), &primitive.Message{
+		Topic: string(msg.Topic),
+		Body:  body,
+	})
 	if err != nil {
 		return err
 	}
-	res, err := mqp.Producer.SendSync(context.Background(), &primitive.Message{
-		Topic: string(msg.Topic),
-		Body:  bs,
-	})
 	logger.Logger().Infof("publish MQ message, data=%v, res=%v", jsonutil.ToString(msg), res)
 	return nil
 }

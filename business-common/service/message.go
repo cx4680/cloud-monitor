@@ -12,7 +12,6 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/util"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
-	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/httputil"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/jsonutil"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/snowflake"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/sync/publisher"
@@ -44,7 +43,7 @@ func NewMessageService(messageCenterService *message_center.Service) *MessageSer
 	}
 }
 
-func (s *MessageService) TargetFilter(targetList []string, rt message_center.ReceiveType, senderId string, isCenter bool) []string {
+func (s *MessageService) TargetFilter(targetList []string, rt message_center.ReceiveType, senderId string) []string {
 	if targetList == nil || len(targetList) <= 0 {
 		return nil
 	}
@@ -56,7 +55,7 @@ func (s *MessageService) TargetFilter(targetList []string, rt message_center.Rec
 		}
 		//短信需要验证是否超限
 		num := s.NotificationRecordDao.GetTenantPhoneCurrentMonthRecordNum(senderId)
-		if s.checkSentNum(senderId, num, isCenter) {
+		if s.checkSentNum(senderId, num) {
 			addrs = append(addrs, t)
 		} else {
 			logger.Logger().Infof("too many records have been sent, send refused, sender=%s \n", senderId)
@@ -83,7 +82,7 @@ func (s *MessageService) SendAlarmNotice(msgList []interface{}) error {
 	for _, alertMsg := range msgList {
 		am := alertMsg.(*AlertMsgSendDTO)
 		for _, msg := range am.Msgs {
-			newTargets := s.TargetFilter(msg.Targets, msg.Type, am.SenderId, false)
+			newTargets := s.TargetFilter(msg.Targets, msg.Type, am.SenderId)
 			sendMsgList = append(sendMsgList, message_center.MessageSendDTO{
 				SenderId:   am.SenderId,
 				Type:       msg.Type,
@@ -116,7 +115,7 @@ func (s *MessageService) SendAlarmNotice(msgList []interface{}) error {
 	//save record local
 	s.NotificationRecordDao.InsertBatch(global.DB, recordList)
 
-	//	sync record to center
+	//	sync record
 	//擦除自增Id，解决同步到中心化Id冲突问题
 	for i, _ := range recordList {
 		recordList[i].Id = 0
@@ -146,7 +145,7 @@ func (s *MessageService) SendActivateMsg(msg message_center.MessageSendDTO, cont
 		logger.Logger().Errorf("message send error, %v\n\n", err)
 		ret = 0
 	}
-	record := commonModels.NotificationRecord{
+	record := &commonModels.NotificationRecord{
 		BizId:            strconv.FormatInt(snowflake.GetWorker().NextId(), 10),
 		SenderId:         msg.SenderId,
 		SourceId:         contactId,
@@ -157,6 +156,11 @@ func (s *MessageService) SendActivateMsg(msg message_center.MessageSendDTO, cont
 		CreateTime:       util.GetNow(),
 	}
 	s.NotificationRecordDao.Insert(global.DB, record)
+	record.Id = 0
+	_ = publisher.GlobalPublisher.Pub(publisher.PubMessage{
+		Topic: sys_rocketmq.NotificationSyncTopic,
+		Data:  jsonutil.ToString(record),
+	})
 }
 
 // SmsMarginReminder 短信余量提醒
@@ -166,7 +170,8 @@ func (s *MessageService) SmsMarginReminder(sender string) {
 		//已发送过短信提醒
 		return
 	}
-	alreadySendNum := s.getUserCurrentMonthSmsUsedNum(sender)
+	alreadySendNum := s.NotificationRecordDao.GetTenantPhoneCurrentMonthRecordNum(sender)
+
 	if alreadySendNum < constant.ThresholdSmsNum {
 		//未达到提醒阈值
 		return
@@ -192,7 +197,7 @@ func (s *MessageService) SmsMarginReminder(sender string) {
 		return
 	}
 	//保存发送记录
-	s.NotificationRecordDao.Insert(global.DB, commonModels.NotificationRecord{
+	record := &commonModels.NotificationRecord{
 		SenderId:         sender,
 		SourceId:         "sms-lack-" + sender,
 		SourceType:       uint8(message_center.SMS_LACK),
@@ -200,102 +205,23 @@ func (s *MessageService) SmsMarginReminder(sender string) {
 		NotificationType: uint8(message_center.Phone),
 		Result:           1,
 		CreateTime:       util.GetNow(),
+	}
+	s.NotificationRecordDao.Insert(global.DB, record)
+
+	record.Id = 0
+	_ = publisher.GlobalPublisher.Pub(publisher.PubMessage{
+		Topic: sys_rocketmq.NotificationSyncTopic,
+		Data:  jsonutil.ToString(record),
 	})
 }
 
-func (s *MessageService) checkSentNum(tenantId string, num int, isCenter bool) bool {
+func (s *MessageService) checkSentNum(tenantId string, num int) bool {
 	//check local
 	if num > constant.MaxSmsNum {
 		logger.Logger().Info("user ", tenantId, " already used more", constant.MaxSmsNum, ", send sms refused.")
 		return false
 	}
-	//	check remote
-	if !isCenter {
-		num = s.getUserCurrentMonthSmsUsedNum(tenantId)
-		if num > constant.MaxSmsNum {
-			logger.Logger().Info("user ", tenantId, " already used more", constant.MaxSmsNum, ", send sms refused.")
-			return false
-		}
-	}
 	return true
-}
-
-func (s *MessageService) sendNotification(sender string, num int) []commonModels.NotificationRecord {
-	count := s.NotificationRecordDao.GetTenantSMSLackRecordNum(sender)
-	if count > 0 {
-		return nil
-	}
-	if num < constant.ThresholdSmsNum {
-		return nil
-	}
-	tenantDTO := dto.TenantDTO{}
-	logingName := tenantDTO.Name
-	serialNumber := tenantDTO.Phone
-
-	params := make(map[string]string)
-	params["userName"] = logingName
-	params["msgUsed"] = strconv.Itoa(num)
-	params["msgLeft"] = strconv.Itoa(constant.MaxSmsNum - num)
-	params["msgInitial"] = strconv.Itoa(constant.MaxSmsNum)
-
-	var noticeMsgDTOList []*dto.NoticeMsgDTO
-	noticeMsgDTO := dto.NoticeMsgDTO{
-		SourceId: "sms-lack-" + sender,
-		TenantId: sender,
-		MsgEvent: dto.MsgEvent{
-			Type:   1, //TODO 枚举
-			Source: dto.SMS_LACK,
-		},
-		RevObjectBean: dto.RecvObjectBean{
-			RecvObjectType: 1, //TODO 枚举
-			RecvObject:     serialNumber,
-			NoticeContent:  jsonutil.ToString(params),
-		},
-	}
-	noticeMsgDTOList = append(noticeMsgDTOList, &noticeMsgDTO)
-	//TODO send to message center
-	//s.sendToMsgCenter(noticeMsgDTOList)
-
-	return s.saveNotificationRecords(noticeMsgDTOList)
-
-}
-
-func (s *MessageService) saveNotificationRecords(noticeMsgDTOS []*dto.NoticeMsgDTO) []commonModels.NotificationRecord {
-	var recordList []commonModels.NotificationRecord
-	for _, noticeMsgDTO := range noticeMsgDTOS {
-		recordList = append(recordList, commonModels.NotificationRecord{
-			BizId:            strconv.FormatInt(snowflake.GetWorker().NextId(), 10),
-			SenderId:         noticeMsgDTO.TenantId,
-			SourceId:         noticeMsgDTO.SourceId,
-			SourceType:       uint8(noticeMsgDTO.MsgEvent.Source),
-			TargetAddress:    noticeMsgDTO.RevObjectBean.RecvObject,
-			NotificationType: uint8(noticeMsgDTO.MsgEvent.Type),
-			Result:           1,
-			CreateTime:       util.GetNow(),
-		})
-	}
-	s.NotificationRecordDao.InsertBatch(global.DB, recordList)
-	return recordList
-}
-
-type ResultDTO struct {
-	ErrorMsg   string
-	ErrorCode  string
-	Success    bool
-	Module     int
-	AllowRetry bool
-	ErrorArgs  []interface{}
-}
-
-func (s *MessageService) getUserCurrentMonthSmsUsedNum(tenantId string) int {
-	resp, err := httputil.HttpGet("http://" + config.Cfg.Common.HawkeyeCenterPath + "/hawkeye/inner/notice/getUsage?tenantId=" + tenantId)
-	if err != nil {
-		logger.Logger().Errorf("获取用户短信月使用量出错, tenantId=%s, %v", tenantId, err)
-		return 0
-	}
-	var respObj ResultDTO
-	jsonutil.ToObject(resp, &respObj)
-	return respObj.Module
 }
 
 func (s *MessageService) GetTenantCurrentMonthSmsUsedNum(tenantId string) (int, error) {

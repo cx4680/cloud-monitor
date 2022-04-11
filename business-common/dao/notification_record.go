@@ -23,11 +23,11 @@ func (dao *NotificationRecordDao) InsertBatch(db *gorm.DB, recordList []model.No
 	}
 }
 
-func (dao *NotificationRecordDao) Insert(db *gorm.DB, record model.NotificationRecord) {
+func (dao *NotificationRecordDao) Insert(db *gorm.DB, record *model.NotificationRecord) {
 	if strutil.IsBlank(record.BizId) {
 		record.BizId = strconv.FormatInt(snowflake.GetWorker().NextId(), 10)
 	}
-	db.Create(&record)
+	db.Create(record)
 }
 
 func (dao *NotificationRecordDao) GetTenantPhoneCurrentMonthRecordNum(tenantId string) int {
