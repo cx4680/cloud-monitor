@@ -1,0 +1,34 @@
+app: cloud-monitor
+serve:
+  port: 8080
+  debug: true
+#  read_timeout:
+#  write_timeout:
+db:
+  url: (127.0.0.1:3306)/hawkeye?charset=utf8mb4&parseTime=True&loc=Local
+  dialect: mysql
+  max_idle_connes: 10
+  max_open_connes: 100
+  username: root
+
+logger:
+  data_log_prefix: /logs/
+  service_name: cloud-monitor
+  max_size:
+  max_backups:
+  max_age:
+  compress:
+
+rocketmq:
+  name-server: 127.0.0.1:9876
+  contactTopic: contactTopic
+  instanceTopic: hawkeye-instance
+  ruleTopic: rule
+
+common:
+  nk: http://aopesb.dev001.intranet.cecloudcs.com/cestc
+  msgIsOpen: close
+  msgChannel: mail,sms
+  smsCenterPath: http://aopesb.dev001.intranet.cecloudcs.com/cestc?appId=600006&format=json&method=CESTC_UNHQ_saveMessageOperate
+  activateInformationUrl: http://monitor.console.dev001.intranet.cecloudcs.com/#/alarm/activation?code=
+  tenantUrl: http://cbcm.dev001.intranet.cecloudcs.com/api/cbcm/IUcaInfosOpenService/queryUcaInfosByUserId
