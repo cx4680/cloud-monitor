@@ -3,7 +3,6 @@ package pipeline
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/form"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/sys_component"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
 	"context"
 	"flag"
@@ -39,8 +38,6 @@ func NewMainLoader() *MainLoader {
 			}
 		}
 		return nil
-	}).Then(func(*context.Context) error {
-		return sys_component.InitSys()
 	})
 	return &MainLoader{Pipeline: pipeline}
 }

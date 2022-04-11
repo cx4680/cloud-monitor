@@ -3,6 +3,7 @@ package service
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/sys_component/sys_rocketmq"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/sync/publisher"
 	"gorm.io/gorm"
 )
 
@@ -15,9 +16,9 @@ type AbstractSyncServiceImpl struct {
 }
 
 func (s *AbstractSyncServiceImpl) SyncRemote(topic sys_rocketmq.Topic, msg string) error {
-	return sys_rocketmq.SendRocketMqMsg(sys_rocketmq.RocketMqMsg{
-		Topic:   topic,
-		Content: msg,
+	return publisher.GlobalPublisher.Pub(publisher.PubMessage{
+		Topic: topic,
+		Data:  msg,
 	})
 }
 

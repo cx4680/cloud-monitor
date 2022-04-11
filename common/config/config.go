@@ -32,6 +32,7 @@ type CommonConfig struct {
 	MsgChannel             string `yaml:"msgChannel"`
 	RegionName             string `yaml:"regionName"`
 	EcsInnerGateway        string `yaml:"ecs-inner-gateway"`
+	IsSingleRegion         bool   `yaml:"isSingleRegion"`
 }
 
 type Serve struct {

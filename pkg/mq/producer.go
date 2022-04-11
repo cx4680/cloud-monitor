@@ -5,6 +5,7 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/form"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/sys_component/sys_rocketmq"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/jsonutil"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/sync/publisher"
 )
 
 func SendMsg(topic sys_rocketmq.Topic, eventEum enum.EventEum, module interface{}) error {
@@ -13,5 +14,8 @@ func SendMsg(topic sys_rocketmq.Topic, eventEum enum.EventEum, module interface{
 		Data:     module,
 	}
 	str := jsonutil.ToString(mqMsg)
-	return sys_rocketmq.SendMsg(topic, str)
+	return publisher.GlobalPublisher.Pub(publisher.PubMessage{
+		Topic: topic,
+		Data:  str,
+	})
 }

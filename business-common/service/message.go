@@ -15,6 +15,7 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/httputil"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/jsonutil"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/snowflake"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/sync/publisher"
 	"strconv"
 )
 
@@ -120,17 +121,18 @@ func (s *MessageService) SendAlarmNotice(msgList []interface{}) error {
 	for i, _ := range recordList {
 		recordList[i].Id = 0
 	}
-	_ = sys_rocketmq.SendRocketMqMsg(sys_rocketmq.RocketMqMsg{
-		Topic:   sys_rocketmq.NotificationSyncTopic,
-		Content: jsonutil.ToString(recordList),
+
+	_ = publisher.GlobalPublisher.Pub(publisher.PubMessage{
+		Topic: sys_rocketmq.NotificationSyncTopic,
+		Data:  jsonutil.ToString(recordList),
 	})
 	// 发送短信余量不足提醒
 	if len(smsSender) > 0 {
 		smsSender = util.RemoveDuplicateElement(smsSender)
 		//通过MQ异步解耦
-		_ = sys_rocketmq.SendRocketMqMsg(sys_rocketmq.RocketMqMsg{
-			Topic:   sys_rocketmq.SmsMarginReminderTopic,
-			Content: jsonutil.ToString(smsSender),
+		_ = publisher.GlobalPublisher.Pub(publisher.PubMessage{
+			Topic: sys_rocketmq.SmsMarginReminderTopic,
+			Data:  jsonutil.ToString(smsSender),
 		})
 	}
 	return nil

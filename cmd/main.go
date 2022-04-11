@@ -3,14 +3,15 @@ package main
 import (
 	cp "code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/pipeline"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/sys_component/sys_db"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/sys_component/sys_rocketmq"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/sys_component/sys_redis"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/task"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/run_time"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/k8s"
-	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/mq/consumer"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/pipeline/sys_upgrade"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/service"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/sync"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/validator/translate"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/web"
 	"code.cestc.cn/yyptb-group_tech/iam-sdk-go/pkg/middleware"
@@ -30,6 +31,27 @@ func main() {
 		middleware.InitIamConfig(cfg.Site, cfg.Region, cfg.Log)
 		return nil
 	})
+
+	loader.AddStage(func(*context.Context) error {
+		if err := sys_db.InitDb(config.Cfg.Db); err != nil {
+			logger.Logger().Errorf("init database error: %v\n", err)
+			return err
+		}
+		return nil
+	})
+
+	loader.AddStage(func(*context.Context) error {
+		if err := sys_redis.InitClient(config.Cfg.Redis); err != nil {
+			logger.Logger().Errorf("init redis error: %v\n", err)
+			return err
+		}
+		return nil
+	})
+
+	loader.AddStage(func(*context.Context) error {
+		return sync.InitSync(config.Cfg.Common.IsSingleRegion)
+	})
+
 	loader.AddStage(func(*context.Context) error {
 		return sys_db.InitData(config.Cfg.Db, "hawkeye", "file://./migrations")
 	})
@@ -51,40 +73,6 @@ func main() {
 
 	loader.AddStage(func(*context.Context) error {
 		return k8s.InitK8s()
-	})
-	loader.AddStage(func(*context.Context) error {
-		return sys_rocketmq.StartConsumersScribe(sys_rocketmq.Group(config.Cfg.Common.RegionName), []*sys_rocketmq.Consumer{{
-			Topic:   sys_rocketmq.InstanceTopic,
-			Handler: consumer.InstanceHandler,
-		}, {
-			Topic:   sys_rocketmq.SmsMarginReminderTopic,
-			Handler: consumer.SmsMarginReminderConsumer,
-		}, {
-			Topic:   sys_rocketmq.DeleteInstanceTopic,
-			Handler: consumer.DeleteInstanceHandler,
-		}, {
-			Topic:   sys_rocketmq.RecordTopic,
-			Handler: consumer.AlarmRecordAddHandler,
-		}, {
-			Topic:   sys_rocketmq.AlarmInfoTopic,
-			Handler: consumer.AlarmInfoAddHandler,
-		}, {
-			Topic:   sys_rocketmq.ContactTopic,
-			Handler: consumer.ContactHandler,
-		}, {
-			Topic:   sys_rocketmq.ContactGroupTopic,
-			Handler: consumer.ContactGroupHandler,
-		}, {
-			Topic:   sys_rocketmq.RuleTopic,
-			Handler: consumer.AlarmRuleHandler,
-		}, {
-			Topic:   sys_rocketmq.MonitorProductTopic,
-			Handler: consumer.MonitorProductHandler,
-		}, {
-			Topic:   sys_rocketmq.MonitorItemTopic,
-			Handler: consumer.MonitorItemHandler,
-		},
-		})
 	})
 
 	loader.AddStage(func(*context.Context) error {

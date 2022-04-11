@@ -4,18 +4,13 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
 	"context"
-	"fmt"
 	"github.com/apache/rocketmq-client-go/v2"
 	"github.com/apache/rocketmq-client-go/v2/admin"
 	"github.com/apache/rocketmq-client-go/v2/consumer"
 	"github.com/apache/rocketmq-client-go/v2/primitive"
-	"github.com/apache/rocketmq-client-go/v2/producer"
-	"github.com/pkg/errors"
 	"strings"
 	"sync"
 )
-
-var p rocketmq.Producer
 
 type Topic string
 type Group string
@@ -101,25 +96,6 @@ func getBrokerAddrs(cfg config.Rocketmq) ([]string, error) {
 	return brokerAddrs, nil
 }
 
-func InitProducer() error {
-	cfg := config.Cfg.Rocketmq
-	addrs := strings.Split(cfg.NameServer, ";")
-	var err error
-	p, err = rocketmq.NewProducer(
-		producer.WithNsResolver(primitive.NewPassthroughResolver(addrs)),
-		producer.WithRetry(2),
-	)
-	if err != nil {
-		fmt.Printf("start producer error: %s", err.Error())
-		return err
-	}
-	if err := p.Start(); err != nil {
-		fmt.Printf("start producer error: %s", err.Error())
-		return err
-	}
-	return nil
-}
-
 func StartConsumersScribe(group Group, consumers []*Consumer) error {
 	addrs := strings.Split(config.Cfg.Rocketmq.NameServer, ";")
 	c, _ := rocketmq.NewPushConsumer(
@@ -139,29 +115,5 @@ func StartConsumersScribe(group Group, consumers []*Consumer) error {
 	if err := c.Start(); err != nil {
 		return err
 	}
-	return nil
-}
-
-func SendRocketMqMsg(msg RocketMqMsg) error {
-	return SendMsg(msg.Topic, msg.Content)
-}
-
-func SendMsg(topic Topic, msg string) error {
-	if topic == "" {
-		return errors.New("topic can't be null")
-	}
-	if msg == "" {
-		return errors.New("rocketmq send msg can't be null")
-	}
-	res, err := p.SendSync(context.Background(), &primitive.Message{
-		Topic: string(topic),
-		Body:  []byte(msg),
-	})
-
-	if err != nil {
-		fmt.Printf("send message error: %s\n", err)
-		return err
-	}
-	fmt.Printf("send message success: result=%s\n", res.String())
 	return nil
 }
