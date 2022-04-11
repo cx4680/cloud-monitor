@@ -8,7 +8,7 @@ ENV GO111MODULE=on \
 # 移动到工作目录：/build
 WORKDIR /build
 # 将代码复制到容器中
-COPY ./cloud-monitor .
+COPY .. .
 
 RUN go build -o app .
 
