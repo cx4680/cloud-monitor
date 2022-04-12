@@ -80,7 +80,7 @@ func (d *ContactGroupDao) SelectContactGroup(db *gorm.DB, param form.ContactPara
 	var total int64
 	db.Raw("select count(1) from ( "+SelectContactGroup+") t ", param.TenantId, param.GroupName).Scan(&total)
 	if total >= 0 {
-		db.Raw(SelectContactGroup+" LIMIT ?,?", param.TenantId, param.GroupName, strconv.Itoa((param.PageCurrent-1)*param.PageSize), strconv.Itoa(param.PageSize)).Find(&modelList)
+		db.Raw(SelectContactGroup+" LIMIT ?,? ", param.TenantId, param.GroupName, strconv.Itoa((param.PageCurrent-1)*param.PageSize), strconv.Itoa(param.PageSize)).Find(&modelList)
 	}
 	var contactFormPage = &form.ContactFormPage{
 		Records: modelList,

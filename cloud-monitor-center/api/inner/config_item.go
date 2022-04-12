@@ -27,5 +27,6 @@ func (ctl *ConfigItemController) GetItemListById(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, global.NewError("参数异常"))
 		return
 	}
+	c.Set(global.ResourceName, id)
 	c.JSON(http.StatusOK, global.NewSuccess("查询成功", dao.ConfigItem.GetConfigItemList(id)))
 }

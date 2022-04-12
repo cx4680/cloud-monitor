@@ -4,6 +4,7 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/enum"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/errors"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/form"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/openapi"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/sys_component/sys_rocketmq"
 	commonService "code.cestc.cn/ccos-ops/cloud-monitor/business-common/service"
@@ -142,6 +143,7 @@ func (acgc *ContactGroupCtl) CreateContactGroup(c *gin.Context) {
 			RequestId string
 			GroupId   string
 		}{RequestId: openapi.GetRequestId(c), GroupId: request.GroupBizId}
+		c.Set(global.ResourceName, request.GroupBizId)
 		c.JSON(http.StatusOK, result)
 	}
 }
@@ -173,6 +175,7 @@ func (acgc *ContactGroupCtl) UpdateContactGroup(c *gin.Context) {
 		return
 	} else {
 		result := struct{ RequestId string }{RequestId: openapi.GetRequestId(c)}
+		c.Set(global.ResourceName, request.GroupBizId)
 		c.JSON(http.StatusOK, result)
 	}
 }
@@ -194,6 +197,7 @@ func (acgc *ContactGroupCtl) DeleteContactGroup(c *gin.Context) {
 		return
 	} else {
 		result := struct{ RequestId string }{RequestId: openapi.GetRequestId(c)}
+		c.Set(global.ResourceName, request.GroupBizId)
 		c.JSON(http.StatusOK, result)
 	}
 }

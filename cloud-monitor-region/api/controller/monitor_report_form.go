@@ -30,6 +30,7 @@ func (mpc *MonitorReportFormCtl) GetData(c *gin.Context) {
 		c.JSON(http.StatusOK, global.NewError(err.Error()))
 		return
 	}
+	c.Set(global.ResourceName, param.Instance)
 	param.TenantId = tenantId
 	data, err := mpc.service.GetData(param)
 	if err == nil {
@@ -51,6 +52,7 @@ func (mpc *MonitorReportFormCtl) GetAxisData(c *gin.Context) {
 		c.JSON(http.StatusOK, global.NewError(err.Error()))
 		return
 	}
+	c.Set(global.ResourceName, param.Instance)
 	param.TenantId = tenantId
 	data, err := mpc.service.GetAxisData(param)
 	if err == nil {
@@ -72,6 +74,7 @@ func (mpc *MonitorReportFormCtl) GetTop(c *gin.Context) {
 		c.JSON(http.StatusOK, global.NewError(err.Error()))
 		return
 	}
+	c.Set(global.ResourceName, param.Name)
 	param.TenantId = tenantId
 	data, err := mpc.service.GetTop(param)
 	if err == nil {

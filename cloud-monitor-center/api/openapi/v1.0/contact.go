@@ -5,6 +5,7 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/enum"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/errors"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/form"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/openapi"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/sys_component/sys_rocketmq"
 	commonService "code.cestc.cn/ccos-ops/cloud-monitor/business-common/service"
@@ -115,6 +116,7 @@ func (acl *ContactCtl) CreateContact(c *gin.Context) {
 			RequestId string
 			ContactId string
 		}{RequestId: openapi.GetRequestId(c), ContactId: request.ContactBizId}
+		c.Set(global.ResourceName, request.ContactBizId)
 		c.JSON(http.StatusOK, result)
 	}
 }
@@ -148,6 +150,7 @@ func (acl *ContactCtl) UpdateContact(c *gin.Context) {
 		return
 	} else {
 		result := struct{ RequestId string }{RequestId: openapi.GetRequestId(c)}
+		c.Set(global.ResourceName, request.ContactBizId)
 		c.JSON(http.StatusOK, result)
 	}
 }
@@ -169,6 +172,7 @@ func (acl *ContactCtl) DeleteContact(c *gin.Context) {
 		return
 	} else {
 		result := struct{ RequestId string }{RequestId: openapi.GetRequestId(c)}
+		c.Set(global.ResourceName, request.ContactBizId)
 		c.JSON(http.StatusOK, result)
 	}
 }
@@ -196,6 +200,7 @@ func (acl *ContactCtl) ActivateContact(c *gin.Context) {
 			RequestId:  openapi.GetRequestId(c),
 			TenantName: commonService.NewTenantService().GetTenantInfo(tenantId).Name,
 		}
+		c.Set(global.ResourceName, request.ActiveCode)
 		c.JSON(http.StatusOK, result)
 	}
 }

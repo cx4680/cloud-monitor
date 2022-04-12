@@ -24,5 +24,6 @@ func (ctl *MonitorItemController) GetMonitorItemsById(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, global.NewError("参数异常"))
 		return
 	}
+	c.Set(global.ResourceName, param.ProductBizId)
 	c.JSON(http.StatusOK, global.NewSuccess("查询成功", ctl.dao.GetMonitorItem(param.ProductBizId, param.OsType, param.Display)))
 }

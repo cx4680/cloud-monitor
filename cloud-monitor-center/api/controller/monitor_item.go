@@ -33,6 +33,7 @@ func (mic *MonitorItemCtl) GetMonitorItemsById(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, global.NewError(translate.GetErrorMsg(err)))
 		return
 	}
+	c.Set(global.ResourceName, param.ProductBizId)
 	if strutil.IsNotBlank(param.Display) && !checkDisplay(param.Display) {
 		c.JSON(http.StatusOK, global.NewError("查询失败，展示参数错误"))
 		return
@@ -47,6 +48,7 @@ func (mic *MonitorItemCtl) ChangeDisplay(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, global.NewError(translate.GetErrorMsg(err)))
 		return
 	}
+	c.Set(global.ResourceName, param.ProductBizId)
 	for _, v := range strings.Split(param.Display, ",") {
 		if !checkDisplay(v) {
 			c.JSON(http.StatusOK, global.NewError("修改失败，展示参数错误"))

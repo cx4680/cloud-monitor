@@ -41,6 +41,7 @@ func (ctl *AlarmRuleCtl) GetDetail(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, global.NewError("缺少id"))
 		return
 	}
+	c.Set(global.ResourceName, id)
 	tenantId, _ := util.GetTenantId(c)
 	detail, _ := dao.AlarmRule.GetDetail(global.DB, id, tenantId)
 	c.JSON(http.StatusOK, global.NewSuccess("查询成功", detail))
@@ -81,6 +82,7 @@ func CreateRule(c *gin.Context, param form.AlarmRuleAddReqDTO) {
 		c.JSON(http.StatusInternalServerError, err.Error())
 		return
 	}
+	c.Set(global.ResourceName, param.Id)
 	c.JSON(http.StatusOK, global.NewSuccess("创建成功", param.Id))
 }
 
@@ -99,6 +101,7 @@ func UpdateRule(c *gin.Context, param form.AlarmRuleAddReqDTO) {
 		c.JSON(http.StatusBadRequest, global.NewError(err.Error()))
 		return
 	}
+	c.Set(global.ResourceName, param.Id)
 	param.TenantId = tenantId
 	userId, err := util.GetUserId(c)
 	if err != nil {
@@ -125,6 +128,7 @@ func (ctl *AlarmRuleCtl) DeleteRule(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, global.NewError(translate.GetErrorMsg(err)))
 		return
 	}
+	c.Set(global.ResourceName, param.Id)
 	tenantId, err := util.GetTenantId(c)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, global.NewError(err.Error()))
@@ -145,6 +149,7 @@ func (ctl *AlarmRuleCtl) ChangeRuleStatus(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, global.NewError(translate.GetErrorMsg(err)))
 		return
 	}
+	c.Set(global.ResourceName, param.Id)
 	if len(param.Status) == 0 {
 		c.JSON(http.StatusBadRequest, global.NewError("状态值不应为空"))
 		return

@@ -84,6 +84,7 @@ func ParsingAndSetUserInfo(c *gin.Context) error {
 		c.Set(global.UserType, userMap["typeCode"])
 		c.Set(global.TenantId, userMap["accountId"])
 		c.Set(global.UserId, userMap["principalId"])
+		c.Set(global.UserName, userMap["userName"])
 		return nil
 	}
 	return errors.New("无用户信息")

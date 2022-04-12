@@ -45,6 +45,7 @@ func (ctl *InstanceCtl) GetPage(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, global.NewError(translate.GetErrorMsg(err)))
 		return
 	}
+	c.Set(global.ResourceName, f.Product)
 	f.TenantId = tenantId
 	instanceService := external.ProductInstanceServiceMap[f.Product]
 	if instanceService == nil {
