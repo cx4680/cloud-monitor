@@ -60,6 +60,7 @@ func (acl *ContactCtl) AddContact(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusOK, global.NewError(err.Error()))
 	} else {
+		c.Set(global.ResourceName, param.ContactBizId)
 		c.JSON(http.StatusOK, global.NewSuccess("创建成功", true))
 	}
 }
@@ -82,6 +83,7 @@ func (acl *ContactCtl) UpdateContact(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusOK, global.NewError(err.Error()))
 	} else {
+		c.Set(global.ResourceName, param.ContactBizId)
 		c.JSON(http.StatusOK, global.NewSuccess("修改成功", true))
 	}
 }
@@ -104,6 +106,7 @@ func (acl *ContactCtl) DeleteContact(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusOK, global.NewError(err.Error()))
 	} else {
+		c.Set(global.ResourceName, param.ContactBizId)
 		c.JSON(http.StatusOK, global.NewSuccess("删除成功", true))
 	}
 }
@@ -120,6 +123,7 @@ func (acl *ContactCtl) ActivateContact(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusOK, global.NewError(err.Error()))
 	} else {
+		c.Set(global.ResourceName, param.ActiveCode)
 		c.JSON(http.StatusOK, global.NewSuccess("激活成功", getTenantName(param.ActiveCode)))
 	}
 }

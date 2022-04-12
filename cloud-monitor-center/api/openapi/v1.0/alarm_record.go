@@ -92,6 +92,7 @@ func (a *AlarmRecordController) GetAlarmContactInfo(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, openapi.NewRespError(openapi.InvalidParameter, c))
 		return
 	}
+	c.Set(global.ResourceName, bizId)
 	r := dao.AlarmRecord.GetByBizIdAndTenantId(global.DB, bizId, tenantId)
 	if strutil.IsBlank(r.ContactInfo) {
 		c.JSON(http.StatusOK, openapi.NewResSuccess(c))

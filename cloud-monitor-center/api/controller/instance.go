@@ -24,6 +24,7 @@ func (ctl *InstanceCtl) Page(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, global.NewError(translate.GetErrorMsg(err)))
 		return
 	}
+	c.Set(global.ResourceName, param.InstanceId)
 	c.JSON(http.StatusOK, global.NewSuccess("查询成功", dao.Instance.SelectInstanceRulePage(&param)))
 }
 
@@ -33,6 +34,7 @@ func (ctl *InstanceCtl) Unbind(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, global.NewError(translate.GetErrorMsg(err)))
 		return
 	}
+	c.Set(global.ResourceName, param.InstanceId)
 	tenantId, err2 := util.GetTenantId(c)
 	if err2 != nil {
 		logger.Logger().Info("tenantId is nil")
@@ -54,6 +56,7 @@ func (ctl *InstanceCtl) Bind(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, global.NewError(translate.GetErrorMsg(err)))
 		return
 	}
+	c.Set(global.ResourceName, param.InstanceId)
 	tenantId, err := util.GetTenantId(c)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, global.NewError(err.Error()))
@@ -74,6 +77,7 @@ func (ctl *InstanceCtl) GetRuleList(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, global.NewError(translate.GetErrorMsg(err)))
 		return
 	}
+	c.Set(global.ResourceName, param.InstanceId)
 	tenantId, err := util.GetTenantId(c)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, global.NewError(err.Error()))

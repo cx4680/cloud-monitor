@@ -72,6 +72,7 @@ func (acgc *ContactGroupCtl) AddContactGroup(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusOK, global.NewError(err.Error()))
 	} else {
+		c.Set(global.ResourceName, param.GroupBizId)
 		c.JSON(http.StatusOK, global.NewSuccess("创建成功", true))
 	}
 }
@@ -94,6 +95,7 @@ func (acgc *ContactGroupCtl) UpdateContactGroup(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusOK, global.NewError(err.Error()))
 	} else {
+		c.Set(global.ResourceName, param.GroupBizId)
 		c.JSON(http.StatusOK, global.NewSuccess("修改成功", true))
 	}
 }
@@ -116,6 +118,7 @@ func (acgc *ContactGroupCtl) DeleteContactGroup(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusOK, global.NewError(err.Error()))
 	} else {
+		c.Set(global.ResourceName, param.GroupBizId)
 		c.JSON(http.StatusOK, global.NewSuccess("删除成功", true))
 	}
 }

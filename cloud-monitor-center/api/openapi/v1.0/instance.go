@@ -4,6 +4,7 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/dao"
 	commonError "code.cestc.cn/ccos-ops/cloud-monitor/business-common/errors"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/form"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/openapi"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/util"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/vo"
@@ -27,6 +28,7 @@ func (ctl *InstanceCtl) Page(c *gin.Context) {
 		return
 	}
 	resourceId := c.Param("ResourceId")
+	c.Set(global.ResourceName, resourceId)
 	pageParam := form.InstanceRulePageReqParam{
 		InstanceId: resourceId,
 		PageSize:   reqParam.PageSize,
@@ -67,6 +69,7 @@ func (ctl *InstanceCtl) Unbind(c *gin.Context) {
 		return
 	}
 	resourceId := c.Param("ResourceId")
+	c.Set(global.ResourceName, resourceId)
 	unBindParam := form.UnBindRuleParam{
 		InstanceId: resourceId,
 		RuleId:     reqParam.RuleId,
@@ -99,6 +102,7 @@ func (ctl *InstanceCtl) Bind(c *gin.Context) {
 		return
 	}
 	resourceId := c.Param("ResourceId")
+	c.Set(global.ResourceName, resourceId)
 	instanceParam := form.InstanceBindRuleDTO{
 		TenantId: tenantId,
 		InstanceInfo: form.InstanceInfo{

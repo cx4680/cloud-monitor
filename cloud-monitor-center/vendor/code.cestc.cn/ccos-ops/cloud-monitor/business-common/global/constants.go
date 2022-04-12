@@ -6,8 +6,9 @@ const (
 	// ErrorServer 服务错误
 	ErrorServer = "500"
 
-	TenantId = "accountId"
-	UserId   = "userId"
-	UserType = "userType"
-	UserName = "userName"
+	TenantId     = "accountId"
+	UserId       = "userId"
+	UserType     = "userType"
+	UserName     = "userName"
+	ResourceName = "ResourceName"
 )

@@ -78,6 +78,7 @@ func (ctl *AlarmRuleCtl) SelectRulePageList(c *gin.Context) {
 
 func (ctl *AlarmRuleCtl) GetDetail(c *gin.Context) {
 	ruleId := c.Param("RuleId")
+	c.Set(global.ResourceName, ruleId)
 	tenantId, err := util.GetTenantId(c)
 	if err != nil {
 		logger.Logger().Info("tenantId is nil")
@@ -149,6 +150,7 @@ func (ctl *AlarmRuleCtl) CreateRule(c *gin.Context) {
 		RequestId: openapi.GetRequestId(c),
 		RuleId:    addForm.Id,
 	}
+	c.Set(global.ResourceName, addForm.Id)
 	c.JSON(http.StatusOK, res)
 }
 
@@ -257,6 +259,7 @@ func (ctl *AlarmRuleCtl) UpdateRule(c *gin.Context) {
 		return
 	}
 	ruleId := c.Param("RuleId")
+	c.Set(global.ResourceName, ruleId)
 	updateForm.Id = ruleId
 	err := util.Tx(updateForm, service.UpdateRule)
 	if err != nil {
@@ -272,6 +275,7 @@ func (ctl *AlarmRuleCtl) UpdateRule(c *gin.Context) {
 
 func (ctl *AlarmRuleCtl) DeleteRule(c *gin.Context) {
 	ruleId := c.Param("RuleId")
+	c.Set(global.ResourceName, ruleId)
 	tenantId, err := util.GetTenantId(c)
 	if err != nil {
 		logger.Logger().Info(err)
@@ -296,6 +300,7 @@ func (ctl *AlarmRuleCtl) DeleteRule(c *gin.Context) {
 
 func (ctl *AlarmRuleCtl) ChangeRuleStatus(c *gin.Context) {
 	ruleId := c.Param("RuleId")
+	c.Set(global.ResourceName, ruleId)
 	var status StatusBody
 	if err := c.ShouldBindJSON(&status); err != nil {
 		logger.Logger().Info(err)

@@ -1,15 +1,21 @@
 package logs
 
 import (
+	"bufio"
 	"bytes"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/util"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
 	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"go.uber.org/zap"
+	"io"
 	"io/ioutil"
+	"net"
 	"net/http"
 	"strings"
 	"time"
@@ -24,8 +30,33 @@ var userTypeMap = map[string]string{
 	"5": "system",
 }
 
-func GinTrailzap(utc bool, requestType string) gin.HandlerFunc {
+type EventLevel = string
+
+const (
+	INFO  EventLevel = "Info"
+	Warn  EventLevel = "Warn"
+	Fatal EventLevel = "Fatal"
+)
+
+type ResourceType = string
+
+const (
+	Product           ResourceType = "Product"
+	MonitorItem       ResourceType = "MonitorItem"
+	AlertContact      ResourceType = "AlertContact"
+	AlertContactGroup ResourceType = "AlertContactGroup"
+	AlertRule         ResourceType = "AlertRule"
+	MonitorReportForm ResourceType = "MonitorReportForm"
+	ConfigItem        ResourceType = "ConfigItem"
+	Instance          ResourceType = "Instance"
+	Notice            ResourceType = "Notice"
+	AlertRecord       ResourceType = "AlertRecord"
+	Resource          ResourceType = "Resource"
+)
+
+func GinTrailzap(utc bool, requestType string, eventLevel EventLevel, resourceType ResourceType) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		replaceResponseWriter(c)
 		serviceName := "CloudMonitor"
 		start := time.Now()
 		var data []byte
@@ -50,15 +81,15 @@ func GinTrailzap(utc bool, requestType string) gin.HandlerFunc {
 		formatData := strings.Replace(strings.Replace(string(data), "\r\n", "", -1), " ", "", -1)
 		requestParameters := make(map[string]string, 0)
 		requestParameters["request"] = formatData
-		eventRegion := "*"
-		if strings.Contains(formatData, "regionCode") {
-			arr1 := strings.Split(formatData, "regionCode")
-			arr2 := strings.Split(arr1[1], "\"")
-			eventRegion = arr2[2]
-		}
+		eventRegion := config.Cfg.Common.RegionName
 		requestParamJson, _ := json.Marshal(requestParameters)
 		c.Request.Body = ioutil.NopCloser(bytes.NewBuffer(data))
 		requestID := c.GetHeader("X-Request-ID")
+		if len(requestID) == 0 {
+			if newUUID, err := uuid.NewUUID(); err == nil {
+				requestID = newUUID.String()
+			}
+		}
 		ctx := context.WithValue(context.Background(), "X-Request-ID", requestID)
 		c.Set("ctx", ctx)
 		sub := time.Now().Sub(start)
@@ -69,7 +100,7 @@ func GinTrailzap(utc bool, requestType string) gin.HandlerFunc {
 			userType := c.GetString(global.UserType)
 			loginId := c.GetString(global.UserId)
 			userName := c.GetString(global.UserName)
-			resourceName := c.GetString("ResourceId")
+			resourceName := c.GetString(global.ResourceName)
 			eventName := c.GetString("Action")
 			source := c.Request.Header["Origin"]
 			eventSource := ""
@@ -81,10 +112,27 @@ func GinTrailzap(utc bool, requestType string) gin.HandlerFunc {
 			if utc {
 				end = end.UTC()
 			}
-			resourceType := "CCS::CloudMonitor::Manager"
-
+			var response string
+			var errs map[string]string
+			if writer, ok := c.Writer.(*responseWriter); ok {
+				response = string(writer.response)
+				json.Unmarshal(writer.response, &errs)
+			}
+			resourceTypeNew := "CCS::CloudMonitor::" + resourceType
+			result := getResult(c.Writer.Status())
+			errMessage := errs["message"]
+			var resError interface{}
+			if err := recover(); err != nil {
+				result = "Fail"
+				errMessage = fmt.Sprint(err)
+				resError = err
+			}
+			var eventId string
+			if newUUID, err := uuid.NewUUID(); err == nil {
+				eventId = newUUID.String()
+			}
 			logger.GetTrailLogger().Info("[ACTION_TRAIL_LOG]",
-				zap.String("event_id", requestID),
+				zap.String("event_id", eventId),
 				zap.String("event_version", "1"),
 				zap.String("event_source", eventSource),
 				zap.String("source_ip_address", c.ClientIP()),
@@ -93,20 +141,130 @@ func GinTrailzap(utc bool, requestType string) gin.HandlerFunc {
 				zap.String("event_name", eventName),
 				zap.String("request_type", requestType),
 				zap.String("api_version", "1.0"),
+				zap.String("event_level", eventLevel),
 				zap.String("request_id", requestID),
 				zap.String("event_time", end.Format(util.FullTimeFmt)),
 				zap.String("event_region", eventRegion),
-				zap.String("resource_type", resourceType),
+				zap.String("resource_type", resourceTypeNew),
 				zap.String("resource_name", resourceName),
 				zap.String("request_parameters", string(requestParamJson)),
-				zap.Int("error_code", c.Writer.Status()),
+				zap.String("result", result),
+				zap.String("response_elements", response),
+				zap.String("error_code", errs["code"]),
+				zap.String("error_message", errMessage),
 				zap.Namespace("user_info"),
 				zap.String("account_id", accountId),
 				zap.String("type", userTypeMap[userType]),
 				zap.String("user_name", userName),
 				zap.String("principal_id", loginId),
 			)
+			if resError != nil {
+				panic(resError)
+			}
 		}()
 	}
 
+}
+
+func getResult(status int) string {
+	if status != 200 {
+		return "Fail"
+	}
+	return "Success"
+}
+
+const (
+	noWritten     = -1
+	defaultStatus = http.StatusOK
+)
+
+func replaceResponseWriter(c *gin.Context) {
+	writer := &responseWriter{
+		ResponseWriter: c.Writer,
+		size:           noWritten,
+		status:         defaultStatus,
+	}
+	c.Writer = writer
+}
+
+type responseWriter struct {
+	http.ResponseWriter
+	size     int
+	status   int
+	response []byte
+}
+
+func (w *responseWriter) reset(writer http.ResponseWriter) {
+	w.ResponseWriter = writer
+	w.size = noWritten
+	w.status = defaultStatus
+}
+
+func (w *responseWriter) WriteHeader(code int) {
+	if code > 0 && w.status != code {
+		if w.Written() {
+			print("[WARNING] Headers were already written. Wanted to override status code %d with %d", w.status, code)
+		}
+		w.status = code
+	}
+}
+
+func (w *responseWriter) WriteHeaderNow() {
+	if !w.Written() {
+		w.size = 0
+		w.ResponseWriter.WriteHeader(w.status)
+	}
+}
+
+func (w *responseWriter) Write(data []byte) (n int, err error) {
+	w.response = data
+	w.WriteHeaderNow()
+	n, err = w.ResponseWriter.Write(data)
+	w.size += n
+	return
+}
+
+func (w *responseWriter) WriteString(s string) (n int, err error) {
+	w.WriteHeaderNow()
+	n, err = io.WriteString(w.ResponseWriter, s)
+	w.size += n
+	return
+}
+
+func (w *responseWriter) Status() int {
+	return w.status
+}
+
+func (w *responseWriter) Size() int {
+	return w.size
+}
+
+func (w *responseWriter) Written() bool {
+	return w.size != noWritten
+}
+
+// Hijack implements the http.Hijacker interface.
+func (w *responseWriter) Hijack() (net.Conn, *bufio.ReadWriter, error) {
+	if w.size < 0 {
+		w.size = 0
+	}
+	return w.ResponseWriter.(http.Hijacker).Hijack()
+}
+
+// CloseNotify implements the http.CloseNotify interface.
+func (w *responseWriter) CloseNotify() <-chan bool {
+	return w.ResponseWriter.(http.CloseNotifier).CloseNotify()
+}
+
+// Flush implements the http.Flush interface.
+func (w *responseWriter) Flush() {
+	w.WriteHeaderNow()
+	w.ResponseWriter.(http.Flusher).Flush()
+}
+
+func (w *responseWriter) Pusher() (pusher http.Pusher) {
+	if pusher, ok := w.ResponseWriter.(http.Pusher); ok {
+		return pusher
+	}
+	return nil
 }

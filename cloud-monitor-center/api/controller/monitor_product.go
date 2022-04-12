@@ -37,6 +37,7 @@ func (mpc *MonitorProductCtl) ChangeStatus(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, global.NewError(translate.GetErrorMsg(err)))
 		return
 	}
+	c.Set(global.ResourceName, param.BizIdList)
 	param.EventEum = enum.ChangeMonitorProductStatus
 	err = mpc.service.Persistence(MonitorProductService, sys_rocketmq.MonitorProductTopic, param)
 	if err != nil {
