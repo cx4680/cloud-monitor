@@ -198,7 +198,7 @@ func instance() {
 }
 
 func innerCtl() {
-	addService := service.NewAlarmRecordAddService(service.NewAlarmRecordService(service.NewAlarmInfoService()), commonService.NewAlarmHandlerService(), commonService.NewTenantService())
+	addService := service.NewAlarmRecordAddService(service.NewAlarmRecordService(), commonService.NewAlarmHandlerService(), commonService.NewTenantService())
 	ctl := inner.NewAlertRecordCtl(addService)
 	group := Router.Group("/inner/")
 	{

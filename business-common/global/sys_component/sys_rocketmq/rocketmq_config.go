@@ -19,10 +19,10 @@ const (
 	SmsMarginReminderTopic Topic = "sms_margin_reminder" //短信余量提醒
 	NotificationSyncTopic  Topic = "all_notification"    //通知记录
 
-	RuleTopic      Topic = "alert_rule"                 //告警规则
-	RecordTopic    Topic = "alert_record"               //告警历史记录
-	AlarmInfoTopic Topic = "Alarm_info"                 //告警详情
-	InstanceTopic  Topic = "alert_correlation_instance" //告警关联实例
+	RuleTopic  Topic = "alert_rule" //告警规则
+	AlarmTopic       = "alarm"      //告警数据同步：告警历史+告警详情
+
+	InstanceTopic Topic = "alert_correlation_instance" //告警关联实例
 
 	ContactTopic      Topic = "contact"       //告警联系人
 	ContactGroupTopic Topic = "contact_group" //告警联系组

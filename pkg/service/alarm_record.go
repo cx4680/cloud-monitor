@@ -2,42 +2,36 @@ package service
 
 import (
 	commonDao "code.cestc.cn/ccos-ops/cloud-monitor/business-common/dao"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/sys_component/sys_rocketmq"
-	commonService "code.cestc.cn/ccos-ops/cloud-monitor/business-common/service"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
+	commonModels "code.cestc.cn/ccos-ops/cloud-monitor/business-common/model"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/util"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/jsonutil"
+	"context"
 	"gorm.io/gorm"
 )
 
 type AlarmRecordService struct {
-	commonService.AbstractSyncServiceImpl
 	AlarmRecordDao *commonDao.AlarmRecordDao
-	AlarmInfoSvc   *AlarmInfoService
+	AlarmInfoDao   *commonDao.AlarmInfoDao
 }
 
-func NewAlarmRecordService(AlarmInfoSvc *AlarmInfoService) *AlarmRecordService {
-	return &AlarmRecordService{AlarmRecordDao: commonDao.AlarmRecord, AlarmInfoSvc: AlarmInfoSvc}
+func NewAlarmRecordService() *AlarmRecordService {
+	return &AlarmRecordService{AlarmRecordDao: commonDao.AlarmRecord, AlarmInfoDao: commonDao.AlarmInfo}
 }
 
-func (s *AlarmRecordService) PersistenceLocal(db *gorm.DB, param interface{}) (string, error) {
-	if p, ok := param.(AlarmAddParam); ok {
-		if len(p.InfoList) > 0 {
-			if err := s.AlarmInfoSvc.PersistenceInner(db, s.AlarmInfoSvc, sys_rocketmq.AlarmInfoTopic, p.InfoList); err != nil {
-				return "", err
-			}
+func (s *AlarmRecordService) InsertAndHandler(ctx *context.Context, recordList []commonModels.AlarmRecord, infoList []commonModels.AlarmInfo, eventList []interface{}) error {
+	return global.DB.Transaction(func(tx *gorm.DB) error {
+		if len(recordList) > 0 {
+			s.AlarmRecordDao.InsertBatch(tx, recordList)
 		}
-		if len(p.RecordList) > 0 {
-			s.AlarmRecordDao.InsertBatch(db, p.RecordList)
-			//擦除自增Id，解决同步到中心化Id冲突问题
-			for i, _ := range p.RecordList {
-				p.RecordList[i].Id = 0
-			}
-
-			return jsonutil.ToString(p.RecordList), nil
+		if len(infoList) > 0 {
+			s.AlarmInfoDao.InsertBatch(tx, infoList)
 		}
-	} else {
-		logger.Logger().Error("Alarm Record persistence param type error, ", jsonutil.ToString(param))
-	}
-	logger.Logger().Error("Alarm Record persistence fail, ", jsonutil.ToString(param))
-	return "", nil
+		//告警处置
+		if !AlarmHandlerQueue.PushFrontBatch(eventList) {
+			logger.Logger().Error("requestId=", util.GetRequestId(ctx), ", add to alarm handler fail, handlerMap=", jsonutil.ToString(eventList))
+		}
+		return nil
+	})
 }

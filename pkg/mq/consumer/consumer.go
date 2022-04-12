@@ -7,10 +7,12 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/model"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/service"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/service/external/message_center"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/jsonutil"
 	"encoding/json"
 	"fmt"
 	"github.com/apache/rocketmq-client-go/v2/primitive"
+	"gorm.io/gorm"
 )
 
 func InstanceHandler(msgs []*primitive.MessageExt) {
@@ -47,22 +49,24 @@ func DeleteInstanceHandler(msgs []*primitive.MessageExt) {
 	}
 }
 
-func AlarmRecordAddHandler(msgs []*primitive.MessageExt) {
+func AlarmAddHandler(msgs []*primitive.MessageExt) {
 	for _, msg := range msgs {
-		var list []model.AlarmRecord
-		jsonutil.ToObject(string(msg.Body), &list)
-		if list != nil && len(list) > 0 {
-			dao.AlarmRecord.InsertBatch(global.DB, list)
+		var data dto.AlarmSyncData
+		if err := jsonutil.ToObjectWithError(string(msg.Body), &data); err != nil {
+			logger.Logger().Errorf("序列化数据失败, %v", msg)
 		}
-	}
-}
+		if err := global.DB.Transaction(func(tx *gorm.DB) error {
+			if len(data.RecordList) > 0 {
+				dao.AlarmRecord.InsertBatch(tx, data.RecordList)
+			}
+			if len(data.InfoList) > 0 {
+				dao.AlarmInfo.InsertBatch(tx, data.InfoList)
+			}
+			return nil
+		}); err != nil {
+			logger.Logger().Errorf("消费MQ数据失败, %v", msg)
+		}
 
-func AlarmInfoAddHandler(msgs []*primitive.MessageExt) {
-	for _, msg := range msgs {
-		var list []model.AlarmInfo
-		jsonutil.ToObject(string(msg.Body), &list)
-		if list != nil && len(list) > 0 {
-			dao.AlarmInfo.InsertBatch(global.DB, list)
-		}
 	}
+
 }

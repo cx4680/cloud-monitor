@@ -17,7 +17,9 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/snowflake"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/strutil"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/form"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/sync/publisher"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/util"
+	"context"
 	"errors"
 	"fmt"
 	"strconv"
@@ -33,11 +35,6 @@ type AlarmRecordAddService struct {
 	AlarmHandlerSvc *commonService.AlarmHandlerService
 	TenantSvc       *service.TenantService
 	AlarmRecordDao  *commonDao.AlarmRecordDao
-}
-
-type AlarmAddParam struct {
-	RecordList []commonModels.AlarmRecord
-	InfoList   []commonModels.AlarmInfo
 }
 
 func NewAlarmRecordAddService(AlarmRecordSvc *AlarmRecordService, AlarmHandlerSvc *commonService.AlarmHandlerService, TenantSvc *service.TenantService) *AlarmRecordAddService {
@@ -80,26 +77,32 @@ func NewAlarmRecordAddService(AlarmRecordSvc *AlarmRecordService, AlarmHandlerSv
 	}
 }
 
-func (s *AlarmRecordAddService) Add(requestId string, f form.InnerAlarmRecordAddForm) error {
+func (s *AlarmRecordAddService) Add(ctx *context.Context, f form.InnerAlarmRecordAddForm) error {
 	if len(f.Alerts) == 0 {
-		logger.Logger().Info("requestId=", requestId, ", alerts 信息为空")
+		logger.Logger().Info("requestId=", commonUtil.GetRequestId(ctx), ", alerts 信息为空")
+		return errors.New("告警信息为空")
+	}
+	list, infoList, events := s.checkAndBuild(commonUtil.GetRequestId(ctx), f.Alerts)
+	logger.Logger().Info("requestId=", commonUtil.GetRequestId(ctx), ", alarm data=", jsonutil.ToString(list), ", handler data=", jsonutil.ToString(events))
+	//持久化
+	if len(list) <= 0 || len(infoList) <= 0 {
+		logger.Logger().Info("requestId=", commonUtil.GetRequestId(ctx), " alarm info list is empty! ")
 		return nil
 	}
-	list, infoList, events := s.checkAndBuild(requestId, f.Alerts)
-	logger.Logger().Info("requestId=", requestId, ", alarm data=", jsonutil.ToString(list))
-	logger.Logger().Info("requestId=", requestId, ", handler data=", jsonutil.ToString(events))
-	//持久化
-	if list != nil && len(list) > 0 && infoList != nil && len(infoList) > 0 {
-		if err := s.AlarmRecordSvc.Persistence(s.AlarmRecordSvc, sys_rocketmq.RecordTopic, AlarmAddParam{
+
+	if err := s.AlarmRecordSvc.InsertAndHandler(ctx, list, infoList, events); err != nil {
+		return err
+	}
+	//消息同步
+	if err := publisher.GlobalPublisher.Pub(publisher.PubMessage{
+		Topic: sys_rocketmq.AlarmTopic,
+		Data: commonDtos.AlarmSyncData{
 			RecordList: list,
 			InfoList:   infoList,
-		}); err != nil {
-			return err
-		}
-	}
-	//告警处置
-	if !AlarmHandlerQueue.PushFrontBatch(events) {
-		logger.Logger().Error("requestId=", requestId, ", add to alarm handler fail, handlerMap=", jsonutil.ToString(events))
+		},
+	}); err != nil {
+		logger.Logger().Errorf("sync alarm data error, recordList= %v, infoList=%v, error=%v", list, infoList, err)
+		return err
 	}
 
 	return nil

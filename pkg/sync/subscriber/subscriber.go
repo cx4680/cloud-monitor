@@ -21,11 +21,8 @@ func (*Subscriber) Run() error {
 			Topic:   sys_rocketmq.DeleteInstanceTopic,
 			Handler: consumer.DeleteInstanceHandler,
 		}, {
-			Topic:   sys_rocketmq.RecordTopic,
-			Handler: consumer.AlarmRecordAddHandler,
-		}, {
-			Topic:   sys_rocketmq.AlarmInfoTopic,
-			Handler: consumer.AlarmInfoAddHandler,
+			Topic:   sys_rocketmq.AlarmTopic,
+			Handler: consumer.AlarmAddHandler,
 		}, {
 			Topic:   sys_rocketmq.ContactTopic,
 			Handler: consumer.ContactHandler,
