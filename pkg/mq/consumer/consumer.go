@@ -57,9 +57,15 @@ func AlarmAddHandler(msgs []*primitive.MessageExt) {
 		}
 		if err := global.DB.Transaction(func(tx *gorm.DB) error {
 			if len(data.RecordList) > 0 {
+				for i, _ := range data.RecordList {
+					data.RecordList[i].Id = 0
+				}
 				dao.AlarmRecord.InsertBatch(tx, data.RecordList)
 			}
 			if len(data.InfoList) > 0 {
+				for i, _ := range data.InfoList {
+					data.InfoList[i].Id = 0
+				}
 				dao.AlarmInfo.InsertBatch(tx, data.InfoList)
 			}
 			return nil
