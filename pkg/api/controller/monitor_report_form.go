@@ -40,7 +40,7 @@ func (mpc *MonitorReportFormCtl) GetData(c *gin.Context) {
 }
 
 func (mpc *MonitorReportFormCtl) GetAxisData(c *gin.Context) {
-	var param form.PrometheusRequest
+	var param = form.PrometheusRequest{Step: 60}
 	err := c.ShouldBindQuery(&param)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, global.NewError(translate.GetErrorMsg(err)))

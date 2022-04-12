@@ -29,7 +29,11 @@ func (s *MonitorReportFormService) GetData(request form.PrometheusRequest) (*for
 	if !checkUserInstanceIdentity(request.TenantId, request.ProductBizId, request.Instance) {
 		return nil, errors.NewBusinessError("该租户无此实例")
 	}
-	pql := strings.ReplaceAll(getMonitorItemByName(request.Name).MetricsLinux, constant.MetricLabel, constant.INSTANCE+"='"+request.Instance+"',"+constant.FILTER)
+	monitorItem := getMonitorItemByName(request.Name)
+	if strutil.IsBlank(monitorItem.MetricsLinux) {
+		return nil, errors.NewBusinessError("指标不存在")
+	}
+	pql := strings.ReplaceAll(monitorItem.MetricsLinux, constant.MetricLabel, constant.INSTANCE+"='"+request.Instance+"',"+constant.FILTER)
 	prometheusResponse := Query(pql, request.Time)
 	if len(prometheusResponse.Data.Result) == 0 {
 		return nil, nil
@@ -67,10 +71,16 @@ func (s *MonitorReportFormService) GetAxisData(request form.PrometheusRequest) (
 	if strutil.IsBlank(request.Instance) {
 		return nil, errors.NewBusinessError("instance为空")
 	}
+	if request.Start == 0 || request.End == 0 || request.Start > request.End {
+		return nil, errors.NewBusinessError("时间参数错误")
+	}
 	if !checkUserInstanceIdentity(request.TenantId, request.ProductBizId, request.Instance) {
 		return nil, errors.NewBusinessError("该租户无此实例")
 	}
 	monitorItem := getMonitorItemByName(request.Name)
+	if strutil.IsBlank(monitorItem.MetricsLinux) {
+		return nil, errors.NewBusinessError("指标不存在")
+	}
 	pql := strings.ReplaceAll(monitorItem.MetricsLinux, constant.MetricLabel, constant.INSTANCE+"='"+request.Instance+"',"+constant.FILTER)
 	prometheusResponse := QueryRange(pql, strconv.Itoa(request.Start), strconv.Itoa(request.End), strconv.Itoa(request.Step))
 	result := prometheusResponse.Data.Result
@@ -94,12 +104,12 @@ func (s *MonitorReportFormService) GetAxisData(request form.PrometheusRequest) (
 
 	prometheusAxis := &form.PrometheusAxis{
 		XAxis: timeList,
-		YAxis: yAxisFillEmptyData(result, timeList, label, request.Name),
+		YAxis: yAxisFillEmptyData(result, timeList, label, request.Instance),
 	}
 	return prometheusAxis, nil
 }
 
-func yAxisFillEmptyData(result []form.PrometheusResult, timeList []string, label string, metricName string) map[string][]string {
+func yAxisFillEmptyData(result []form.PrometheusResult, timeList []string, label string, instanceId string) map[string][]string {
 	resultMap := make(map[string][]string)
 	for i := range result {
 		timeMap := map[string]string{}
@@ -113,7 +123,7 @@ func yAxisFillEmptyData(result []form.PrometheusResult, timeList []string, label
 			arr = append(arr, changeDecimal(timeMap[timeList[k]]))
 		}
 		if strutil.IsBlank(result[i].Metric[label]) {
-			key = metricName
+			key = instanceId
 		} else {
 			key = result[i].Metric[label]
 		}

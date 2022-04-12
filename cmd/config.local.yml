@@ -25,9 +25,14 @@ rocketmq:
   instanceTopic: hawkeye-instance
   ruleTopic: rule
 
+prometheus:
+  url: http://10.255.190.73:31401/api/v1
+  query: /query?query=
+  queryRange: /query_range?query=
+
 common:
   nk: http://aopesb.dev001.intranet.cecloudcs.com/cestc
-  msgIsOpen: close
+  msgIsOpen: open
   msgChannel: mail,sms
   smsCenterPath: http://aopesb.dev001.intranet.cecloudcs.com/cestc?appId=600006&format=json&method=CESTC_UNHQ_saveMessageOperate
   activateInformationUrl: http://monitor.console.dev001.intranet.cecloudcs.com/#/alarm/activation?code=

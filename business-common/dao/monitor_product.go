@@ -30,13 +30,19 @@ func (mpd *MonitorProductDao) GetMonitorProductByBizId(BizId string) model.Monit
 
 func (mpd *MonitorProductDao) GetMonitorProduct() *[]model.MonitorProduct {
 	var product = &[]model.MonitorProduct{}
-	global.DB.Where("status = ?", "1").Order("sort ASC").Find(product)
+	global.DB.Where("status = ?", "1").Find(product)
 	return product
 }
 
 func (mpd *MonitorProductDao) GetAllMonitorProduct() *[]model.MonitorProduct {
 	var product = &[]model.MonitorProduct{}
 	global.DB.Find(product)
+	return product
+}
+
+func (mpd *MonitorProductDao) GetMonitorProductDTO() *[]model.MonitorProductDTO {
+	var product = &[]model.MonitorProductDTO{}
+	global.DB.Model(&model.MonitorProduct{}).Where("status = ?", "1").Order("sort ASC").Find(product)
 	return product
 }
 

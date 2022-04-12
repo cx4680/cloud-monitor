@@ -45,7 +45,7 @@ func monitorProductRouters() {
 	{
 		group.GET("/getAllMonitorProducts", logs.GinTrailzap(false, Read), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetAllMonitorProductsList", ResourceType: "*", ResourceId: "*"}), monitorProductCtl.GetMonitorProduct)
 		group.GET("/getMonitorProduct", logs.GinTrailzap(false, Read), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetAllMonitorProductsList", ResourceType: "*", ResourceId: "*"}), monitorProductCtl.GetAllMonitorProduct)
-		group.POST("/ChangeStatus", logs.GinTrailzap(false, Write), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetAllMonitorProductsList", ResourceType: "*", ResourceId: "*"}), monitorProductCtl.ChangeStatus)
+		group.POST("/changeStatus", logs.GinTrailzap(false, Write), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetAllMonitorProductsList", ResourceType: "*", ResourceId: "*"}), monitorProductCtl.ChangeStatus)
 	}
 }
 

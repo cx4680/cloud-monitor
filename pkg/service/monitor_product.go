@@ -24,8 +24,8 @@ func NewMonitorProductService(dao *dao.MonitorProductDao) *MonitorProductService
 		AbstractSyncServiceImpl: service.AbstractSyncServiceImpl{}}
 }
 
-func (s *MonitorProductService) GetMonitorProduct() *[]model.MonitorProduct {
-	return s.dao.GetMonitorProduct()
+func (s *MonitorProductService) GetMonitorProduct() *[]model.MonitorProductDTO {
+	return s.dao.GetMonitorProductDTO()
 }
 
 func (s *MonitorProductService) GetAllMonitorProduct() *[]model.MonitorProduct {
