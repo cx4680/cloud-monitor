@@ -48,10 +48,13 @@ func (mqp *MQPublisher) Pub(msg PubMessage) error {
 		body = bs
 	}
 
-	res, err := mqp.Producer.SendSync(context.Background(), &primitive.Message{
+	message := primitive.Message{
 		Topic: string(msg.Topic),
 		Body:  body,
-	})
+	}
+	message.WithTag(config.Cfg.Common.RegionName)
+
+	res, err := mqp.Producer.SendSync(context.Background(), &message)
 	if err != nil {
 		return err
 	}
@@ -89,10 +92,10 @@ func NewMQPublisher() (*MQPublisher, error) {
 
 func initMQProducer() (rocketmq.Producer, error) {
 	cfg := config.Cfg.Rocketmq
-	addrs := strings.Split(cfg.NameServer, ";")
+	addresses := strings.Split(cfg.NameServer, ";")
 	var err error
 	p, err := rocketmq.NewProducer(
-		producer.WithNsResolver(primitive.NewPassthroughResolver(addrs)),
+		producer.WithNsResolver(primitive.NewPassthroughResolver(addresses)),
 		producer.WithRetry(2),
 	)
 	if err != nil {

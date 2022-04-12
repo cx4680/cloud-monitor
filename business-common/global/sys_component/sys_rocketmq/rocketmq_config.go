@@ -97,14 +97,17 @@ func getBrokerAddrs(cfg config.Rocketmq) ([]string, error) {
 }
 
 func StartConsumersScribe(group Group, consumers []*Consumer) error {
-	addrs := strings.Split(config.Cfg.Rocketmq.NameServer, ";")
+	addresses := strings.Split(config.Cfg.Rocketmq.NameServer, ";")
 	c, _ := rocketmq.NewPushConsumer(
 		consumer.WithGroupName(string(group)),
-		consumer.WithNsResolver(primitive.NewPassthroughResolver(addrs)),
+		consumer.WithNsResolver(primitive.NewPassthroughResolver(addresses)),
 	)
 	for _, o := range consumers {
 		m := *o
-		err := c.Subscribe(string(m.Topic), consumer.MessageSelector{}, func(ctx context.Context, msg ...*primitive.MessageExt) (consumer.ConsumeResult, error) {
+		err := c.Subscribe(string(m.Topic), consumer.MessageSelector{
+			Type:       consumer.SQL92,
+			Expression: "TAGS <> '" + config.Cfg.Common.RegionName + "'",
+		}, func(ctx context.Context, msg ...*primitive.MessageExt) (consumer.ConsumeResult, error) {
 			m.Handler(msg)
 			return consumer.ConsumeSuccess, nil
 		})
