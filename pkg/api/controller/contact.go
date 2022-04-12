@@ -27,7 +27,7 @@ var contactService = service.NewContactService(service.NewContactGroupService(se
 	service.NewContactInformationService(commonService.NewMessageService(message_center.NewService())), service.NewContactGroupRelService())
 
 func (acl *ContactCtl) GetContact(c *gin.Context) {
-	var param form.ContactParam
+	var param = form.ContactParam{PageCurrent: 1, PageSize: 10}
 	err := c.ShouldBindQuery(&param)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, global.NewError(translate.GetErrorMsg(err)))

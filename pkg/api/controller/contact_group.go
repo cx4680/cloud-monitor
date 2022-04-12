@@ -23,7 +23,7 @@ func NewContactGroupCtl(service service.ContactGroupService) *ContactGroupCtl {
 var contactGroupService = service.NewContactGroupService(service.NewContactGroupRelService())
 
 func (acgc *ContactGroupCtl) GetContactGroup(c *gin.Context) {
-	var param form.ContactParam
+	var param = form.ContactParam{PageCurrent: 1, PageSize: 10}
 	err := c.ShouldBindQuery(&param)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, global.NewError(translate.GetErrorMsg(err)))
@@ -39,7 +39,7 @@ func (acgc *ContactGroupCtl) GetContactGroup(c *gin.Context) {
 }
 
 func (acgc *ContactGroupCtl) GetGroupContact(c *gin.Context) {
-	var param form.ContactParam
+	var param = form.ContactParam{PageCurrent: 1, PageSize: 10}
 	err := c.ShouldBindQuery(&param)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, global.NewError(translate.GetErrorMsg(err)))

@@ -104,7 +104,7 @@ func (s *ContactService) PersistenceLocal(db *gorm.DB, param interface{}) (strin
 		return jsonutil.ToString(msg), nil
 	case enum.ActivateContact:
 		tenantId := s.dao.ActivateContact(db, p.ActiveCode)
-		if strutil.IsBlank(tenantId) {
+		if strutil.IsBlank(p.ActiveCode) || strutil.IsBlank(tenantId) {
 			return "", errors.NewBusinessError("无效激活码")
 		}
 		msg := form.MqMsg{

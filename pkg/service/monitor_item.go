@@ -29,15 +29,15 @@ func (s *MonitorItemService) GetMonitorItem(param form.MonitorItemParam) []model
 	return s.dao.GetMonitorItem(param.ProductBizId, param.OsType, param.Display)
 }
 
-func (s *MonitorItemService) ChangeDisplay(param form.MonitorItemParam) {
-	s.dao.ChangeDisplay(param.ProductBizId, param.Display, param.BizIdList)
+func (s *MonitorItemService) ChangeDisplay(db *gorm.DB, param form.MonitorItemParam) {
+	s.dao.ChangeDisplay(db, param.ProductBizId, param.Display, param.BizIdList)
 }
 
 func (s *MonitorItemService) PersistenceLocal(db *gorm.DB, param interface{}) (string, error) {
 	p := param.(commonForm.MonitorItemParam)
 	switch p.EventEum {
 	case enum.ChangeMonitorItemDisplay:
-		s.ChangeDisplay(p)
+		s.ChangeDisplay(db, p)
 		msg := commonForm.MqMsg{
 			EventEum: enum.ChangeMonitorItemDisplay,
 			Data:     param,

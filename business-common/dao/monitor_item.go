@@ -9,6 +9,7 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/jsonutil"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/strutil"
+	"gorm.io/gorm"
 	"strconv"
 	"text/template"
 	"time"
@@ -39,8 +40,8 @@ func (d *MonitorItemDao) GetMonitorItem(productBizId, osType, display string) []
 	return newMonitorItemList
 }
 
-func (d *MonitorItemDao) ChangeDisplay(productBizId, display string, bizIdList []string) {
-	global.DB.Model(&model.MonitorItem{}).Where("product_biz_id = ? AND biz_id IN (?)", productBizId, bizIdList).Update("display", display)
+func (d *MonitorItemDao) ChangeDisplay(db *gorm.DB, productBizId, display string, bizIdList []string) {
+	db.Model(&model.MonitorItem{}).Where("product_biz_id = ? AND biz_id IN (?)", productBizId, bizIdList).Update("display", display)
 }
 
 func (d *MonitorItemDao) GetMonitorItemCacheByName(name string) model.MonitorItem {
