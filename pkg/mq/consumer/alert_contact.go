@@ -15,49 +15,43 @@ import (
 
 func ContactHandler(msgs []*primitive.MessageExt) {
 	for i := range msgs {
-		var MsgErr error
-		var MqMsg form.MqMsg
+		var msgErr error
+		var mqMsg form.MqMsg
 		fmt.Printf("subscribe callback: %v \n", msgs[i])
-		MsgErr = json.Unmarshal(msgs[i].Body, &MqMsg)
-		switch MqMsg.EventEum {
+		msgErr = json.Unmarshal(msgs[i].Body, &mqMsg)
+		switch mqMsg.EventEum {
 		case enum.InsertContact:
-			data, _ := json.Marshal(MqMsg.Data)
-			var contactMsg *service.ContactMsg
-			MsgErr = json.Unmarshal(data, &contactMsg)
-			MsgErr = global.DB.Transaction(func(db *gorm.DB) error {
+			contactMsg := buildContactData(mqMsg.Data)
+			msgErr = global.DB.Transaction(func(db *gorm.DB) error {
 				dao.Contact.Insert(db, contactMsg.Contact)
 				dao.ContactInformation.InsertBatch(db, contactMsg.ContactInformationList)
 				dao.ContactGroupRel.InsertBatch(db, contactMsg.ContactGroupRelList)
 				return nil
 			})
 		case enum.UpdateContact:
-			data, _ := json.Marshal(MqMsg.Data)
-			var contactMsg *service.ContactMsg
-			MsgErr = json.Unmarshal(data, &contactMsg)
-			MsgErr = global.DB.Transaction(func(db *gorm.DB) error {
+			contactMsg := buildContactData(mqMsg.Data)
+			msgErr = global.DB.Transaction(func(db *gorm.DB) error {
 				dao.Contact.Update(db, contactMsg.Contact)
 				dao.ContactInformation.Update(db, contactMsg.ContactInformationList)
 				dao.ContactGroupRel.Update(db, contactMsg.ContactGroupRelList, contactMsg.Param)
 				return nil
 			})
 		case enum.DeleteContact:
-			data, _ := json.Marshal(MqMsg.Data)
-			var contactMsg *service.ContactMsg
-			MsgErr = json.Unmarshal(data, &contactMsg)
-			MsgErr = global.DB.Transaction(func(db *gorm.DB) error {
+			contactMsg := buildContactData(mqMsg.Data)
+			msgErr = global.DB.Transaction(func(db *gorm.DB) error {
 				dao.Contact.Delete(db, contactMsg.Contact)
 				dao.ContactInformation.Delete(db, contactMsg.ContactInformation)
 				dao.ContactGroupRel.Delete(db, contactMsg.ContactGroupRel)
 				return nil
 			})
 		case enum.ActivateContact:
-			data, _ := json.Marshal(MqMsg.Data)
+			data, _ := json.Marshal(mqMsg.Data)
 			var activeCode string
-			MsgErr = json.Unmarshal(data, &activeCode)
+			msgErr = json.Unmarshal(data, &activeCode)
 			dao.Contact.ActivateContact(global.DB, activeCode)
 		}
-		if MsgErr != nil {
-			logger.Logger().Errorf("%v", MsgErr)
+		if msgErr != nil {
+			logger.Logger().Errorf("%v", msgErr)
 		}
 	}
 }
@@ -65,40 +59,67 @@ func ContactHandler(msgs []*primitive.MessageExt) {
 func ContactGroupHandler(msgs []*primitive.MessageExt) {
 	for i := range msgs {
 		fmt.Printf("subscribe callback: %v \n", msgs[i])
-		var MsgErr error
-		var MqMsg form.MqMsg
-		MsgErr = json.Unmarshal(msgs[i].Body, &MqMsg)
-		switch MqMsg.EventEum {
+		var msgErr error
+		var mqMsg form.MqMsg
+		msgErr = json.Unmarshal(msgs[i].Body, &mqMsg)
+		switch mqMsg.EventEum {
 		case enum.InsertContactGroup:
-			data, _ := json.Marshal(MqMsg.Data)
-			var contactGroupMsg *service.ContactGroupMsg
-			MsgErr = json.Unmarshal(data, &contactGroupMsg)
-			MsgErr = global.DB.Transaction(func(db *gorm.DB) error {
+			contactGroupMsg := buildContactGroupData(mqMsg.Data)
+			msgErr = global.DB.Transaction(func(db *gorm.DB) error {
 				dao.ContactGroup.Insert(db, contactGroupMsg.ContactGroup)
 				dao.ContactGroupRel.InsertBatch(db, contactGroupMsg.ContactGroupRelList)
 				return nil
 			})
 		case enum.UpdateContactGroup:
-			data, _ := json.Marshal(MqMsg.Data)
-			var contactGroupMsg *service.ContactGroupMsg
-			MsgErr = json.Unmarshal(data, &contactGroupMsg)
-			MsgErr = global.DB.Transaction(func(db *gorm.DB) error {
+			contactGroupMsg := buildContactGroupData(mqMsg.Data)
+			msgErr = global.DB.Transaction(func(db *gorm.DB) error {
 				dao.ContactGroup.Update(db, contactGroupMsg.ContactGroup)
 				dao.ContactGroupRel.Update(db, contactGroupMsg.ContactGroupRelList, contactGroupMsg.Param)
 				return nil
 			})
 		case enum.DeleteContactGroup:
-			data, _ := json.Marshal(MqMsg.Data)
-			var contactGroupMsg *service.ContactGroupMsg
-			MsgErr = json.Unmarshal(data, &contactGroupMsg)
-			MsgErr = global.DB.Transaction(func(db *gorm.DB) error {
+			contactGroupMsg := buildContactGroupData(mqMsg.Data)
+			msgErr = global.DB.Transaction(func(db *gorm.DB) error {
 				dao.ContactGroup.Delete(db, contactGroupMsg.ContactGroup)
 				dao.ContactGroupRel.Delete(db, contactGroupMsg.ContactGroupRel)
 				return nil
 			})
 		}
-		if MsgErr != nil {
-			logger.Logger().Errorf("%v", MsgErr)
+		if msgErr != nil {
+			logger.Logger().Errorf("%v", msgErr)
 		}
 	}
+}
+
+func buildContactData(msgData interface{}) *service.ContactMsg {
+	data, _ := json.Marshal(msgData)
+	var contactMsg *service.ContactMsg
+	err := json.Unmarshal(data, &contactMsg)
+	if err != nil {
+		logger.Logger().Error(err)
+		return nil
+	}
+	contactMsg.Contact.Id = 0
+	for _, v := range contactMsg.ContactInformationList {
+		v.Id = 0
+	}
+	for _, v := range contactMsg.ContactGroupRelList {
+		v.Id = 0
+	}
+	return contactMsg
+}
+
+func buildContactGroupData(msgData interface{}) *service.ContactGroupMsg {
+	data, _ := json.Marshal(msgData)
+	var contactGroupMsg *service.ContactGroupMsg
+	err := json.Unmarshal(data, &contactGroupMsg)
+	if err != nil {
+		logger.Logger().Error(err)
+		return nil
+	}
+	contactGroupMsg.ContactGroup.Id = 0
+	for _, v := range contactGroupMsg.ContactGroupRelList {
+		v.Id = 0
+	}
+	return contactGroupMsg
 }

@@ -110,7 +110,6 @@ func (d *ContactGroupDao) SelectGroupContact(db *gorm.DB, param form.ContactPara
 }
 
 func (d *ContactGroupDao) Insert(db *gorm.DB, entity *model.ContactGroup) {
-	entity.Id = 0
 	db.Create(entity)
 }
 

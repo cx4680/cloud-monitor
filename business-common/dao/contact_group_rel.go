@@ -73,7 +73,6 @@ func (d *ContactGroupRelDao) InsertBatch(db *gorm.DB, list []*model.ContactGroup
 	}
 	currentTime := util.GetNow()
 	for _, v := range list {
-		v.Id = 0
 		v.CreateTime = currentTime
 		v.UpdateTime = currentTime
 	}
