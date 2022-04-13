@@ -102,8 +102,8 @@ func alertRecordRouters() {
 	group := Router.Group("/hawkeye/alarmRecord/")
 	{
 		group.POST("/page", logs.GinTrailzap(false, Read, logs.INFO, logs.AlertRecord), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetAlertRecordPageList", ResourceType: "*", ResourceId: "*"}), ctl.GetPageList)
-		group.GET("/contactInfos", logs.GinTrailzap(false, Read, logs.INFO, logs.AlertRecord), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetContactInfoList", ResourceType: "*", ResourceId: "*"}), ctl.GetAlarmContactInfo)
-		group.GET("/total", logs.GinTrailzap(false, Read, logs.INFO, logs.AlertRecord), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetAlarmRecordTotal", ResourceType: "*", ResourceId: "*"}), ctl.GetAlarmRecordTotal)
+		group.GET("/contactInfos", logs.GinTrailzap(false, Read, logs.INFO, logs.AlertRecord), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetAlertRecordDetail", ResourceType: "*", ResourceId: "*"}), ctl.GetAlarmContactInfo)
+		group.GET("/total", logs.GinTrailzap(false, Read, logs.INFO, logs.AlertRecord), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetAlertRecordTotal", ResourceType: "*", ResourceId: "*"}), ctl.GetAlarmRecordTotal)
 		group.GET("/recordNumHistory", logs.GinTrailzap(false, Read, logs.INFO, logs.AlertRecord), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetAlertRecordNumHistory", ResourceType: "*", ResourceId: "*"}), ctl.GetRecordNumHistory)
 	}
 
@@ -131,14 +131,14 @@ func configItemRouters() {
 	ctl := controller.NewConfigItemCtl()
 	group := Router.Group("/hawkeye/configItem/")
 	{
-		group.GET("/getStatisticalPeriodList", logs.GinTrailzap(false, Read, logs.INFO, logs.MonitorItem), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetStatisticalPeriodList", ResourceType: "*", ResourceId: "*"}), ctl.GetStatisticalPeriodList)
-		group.GET("/getContinuousCycleList", logs.GinTrailzap(false, Read, logs.INFO, logs.MonitorItem), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetContinuousCycleList", ResourceType: "*", ResourceId: "*"}), ctl.GetContinuousCycleList)
-		group.GET("/getStatisticalMethodsList", logs.GinTrailzap(false, Read, logs.INFO, logs.MonitorItem), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetStatisticalMethodsList", ResourceType: "*", ResourceId: "*"}), ctl.GetStatisticalMethodsList)
-		group.GET("/getComparisonMethodList", logs.GinTrailzap(false, Read, logs.INFO, logs.MonitorItem), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetComparisonMethodList", ResourceType: "*", ResourceId: "*"}), ctl.GetComparisonMethodList)
-		group.GET("/getOverviewItemList", logs.GinTrailzap(false, Read, logs.INFO, logs.MonitorItem), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetOverviewItemList", ResourceType: "*", ResourceId: "*"}), ctl.GetOverviewItemList)
-		group.GET("/getRegionList", logs.GinTrailzap(false, Read, logs.INFO, logs.MonitorItem), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetRegionList", ResourceType: "*", ResourceId: "*"}), ctl.GetRegionList)
-		group.GET("/getMonitorRange", logs.GinTrailzap(false, Read, logs.INFO, logs.MonitorItem), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetMonitorRangeList", ResourceType: "*", ResourceId: "*"}), ctl.GetMonitorRange)
-		group.GET("/getNoticeChannel", logs.GinTrailzap(false, Read, logs.INFO, logs.MonitorItem), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetNoticeChannelList", ResourceType: "*", ResourceId: "*"}), ctl.GetNoticeChannel)
+		group.GET("/getStatisticalPeriodList", logs.GinTrailzap(false, Read, logs.INFO, logs.ConfigItem), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetStatisticalPeriodList", ResourceType: "*", ResourceId: "*"}), ctl.GetStatisticalPeriodList)
+		group.GET("/getContinuousCycleList", logs.GinTrailzap(false, Read, logs.INFO, logs.ConfigItem), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetContinuousCycleList", ResourceType: "*", ResourceId: "*"}), ctl.GetContinuousCycleList)
+		group.GET("/getStatisticalMethodsList", logs.GinTrailzap(false, Read, logs.INFO, logs.ConfigItem), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetStatisticalMethodsList", ResourceType: "*", ResourceId: "*"}), ctl.GetStatisticalMethodsList)
+		group.GET("/getComparisonMethodList", logs.GinTrailzap(false, Read, logs.INFO, logs.ConfigItem), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetComparisonMethodList", ResourceType: "*", ResourceId: "*"}), ctl.GetComparisonMethodList)
+		group.GET("/getOverviewItemList", logs.GinTrailzap(false, Read, logs.INFO, logs.ConfigItem), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetOverviewItemList", ResourceType: "*", ResourceId: "*"}), ctl.GetOverviewItemList)
+		group.GET("/getRegionList", logs.GinTrailzap(false, Read, logs.INFO, logs.ConfigItem), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetRegionList", ResourceType: "*", ResourceId: "*"}), ctl.GetRegionList)
+		group.GET("/getMonitorRange", logs.GinTrailzap(false, Read, logs.INFO, logs.ConfigItem), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetMonitorRangeList", ResourceType: "*", ResourceId: "*"}), ctl.GetMonitorRange)
+		group.GET("/getNoticeChannel", logs.GinTrailzap(false, Read, logs.INFO, logs.ConfigItem), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetNoticeChannelList", ResourceType: "*", ResourceId: "*"}), ctl.GetNoticeChannel)
 	}
 }
 
