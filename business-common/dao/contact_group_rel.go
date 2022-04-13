@@ -73,13 +73,14 @@ func (d *ContactGroupRelDao) InsertBatch(db *gorm.DB, list []*model.ContactGroup
 	}
 	currentTime := util.GetNow()
 	for _, v := range list {
+		v.Id = 0
 		v.CreateTime = currentTime
 		v.UpdateTime = currentTime
 	}
 	db.Create(list)
 }
 
-func (d *ContactGroupRelDao) Update(db *gorm.DB, list []*model.ContactGroupRel, param form.ContactParam) {
+func (d *ContactGroupRelDao) Update(db *gorm.DB, list []*model.ContactGroupRel, param *form.ContactParam) {
 	if strutil.IsNotBlank(param.ContactBizId) {
 		db.Where("tenant_id = ? AND contact_biz_id = ?", param.TenantId, param.ContactBizId).Delete(model.ContactGroupRel{})
 	} else {

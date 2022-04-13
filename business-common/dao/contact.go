@@ -88,6 +88,7 @@ func (d *ContactDao) Select(db *gorm.DB, param form.ContactParam) *form.ContactF
 }
 
 func (d *ContactDao) Insert(db *gorm.DB, entity *model.Contact) {
+	entity.Id = 0
 	db.Create(entity)
 }
 

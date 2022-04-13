@@ -7,7 +7,6 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/errors"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/form"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/sys_component/sys_rocketmq"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/model"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/service"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/util"
@@ -63,14 +62,15 @@ func (s *ContactGroupService) PersistenceLocal(db *gorm.DB, param interface{}) (
 		if err != nil {
 			return "", err
 		}
-		//保存联系人组关联
 		p.GroupBizId = contactGroup.BizId
-		if err := s.contactGroupRelService.PersistenceInner(db, s.contactGroupRelService, sys_rocketmq.ContactGroupTopic, p); err != nil {
+		//创建联系人组关联
+		relList, err := s.contactGroupRelService.InsertContactGroupRel(db, p)
+		if err != nil {
 			return "", err
 		}
 		return jsonutil.ToString(form.MqMsg{
 			EventEum: enum.InsertContactGroup,
-			Data:     contactGroup,
+			Data:     ContactGroupMsg{ContactGroup: contactGroup, ContactGroupRelList: relList},
 		}), nil
 	case enum.UpdateContactGroup:
 		//参数校验
@@ -89,25 +89,27 @@ func (s *ContactGroupService) PersistenceLocal(db *gorm.DB, param interface{}) (
 			return "", err
 		}
 		//更新联系人组关联
-		if err := s.contactGroupRelService.PersistenceInner(db, s.contactGroupRelService, sys_rocketmq.ContactGroupTopic, p); err != nil {
+		relList, err := s.contactGroupRelService.UpdateContactGroupRel(db, p)
+		if err != nil {
 			return "", err
 		}
 		return jsonutil.ToString(form.MqMsg{
 			EventEum: enum.UpdateContactGroup,
-			Data:     contactGroup,
+			Data:     ContactGroupMsg{ContactGroup: contactGroup, ContactGroupRelList: relList},
 		}), nil
 	case enum.DeleteContactGroup:
 		contactGroup, err := s.deleteContactGroup(db, *p)
 		if err != nil {
 			return "", err
 		}
-		//更新联系人组关联
-		if err := s.contactGroupRelService.PersistenceInner(db, s.contactGroupRelService, sys_rocketmq.ContactGroupTopic, p); err != nil {
+		//删除联系人组关联
+		relList, err := s.contactGroupRelService.UpdateContactGroupRel(db, p)
+		if err != nil {
 			return "", err
 		}
 		return jsonutil.ToString(form.MqMsg{
 			EventEum: enum.DeleteContactGroup,
-			Data:     contactGroup,
+			Data:     ContactGroupMsg{ContactGroup: contactGroup, ContactGroupRelList: relList},
 		}), nil
 	default:
 		return "", errors.NewBusinessError("系统异常")
@@ -178,4 +180,11 @@ func (s *ContactGroupService) checkGroupName(groupName string) bool {
 		return true
 	}
 	return false
+}
+
+type ContactGroupMsg struct {
+	Param               *form.ContactParam
+	ContactGroup        *model.ContactGroup
+	ContactGroupRel     *model.ContactGroupRel
+	ContactGroupRelList []*model.ContactGroupRel
 }

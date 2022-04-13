@@ -16,17 +16,15 @@ import (
 )
 
 type ContactCtl struct {
-	service service.ContactService
+	service *service.ContactService
 }
 
-func NewContactCtl(service service.ContactService) *ContactCtl {
-	return &ContactCtl{service}
+func NewContactCtl() *ContactCtl {
+	return &ContactCtl{service.NewContactService(service.NewContactGroupService(service.NewContactGroupRelService()),
+		service.NewContactInformationService(commonService.NewMessageService(message_center.NewService())), service.NewContactGroupRelService())}
 }
 
-var contactService = service.NewContactService(service.NewContactGroupService(service.NewContactGroupRelService()),
-	service.NewContactInformationService(commonService.NewMessageService(message_center.NewService())), service.NewContactGroupRelService())
-
-func (acl *ContactCtl) GetContact(c *gin.Context) {
+func (ctl *ContactCtl) GetContact(c *gin.Context) {
 	var param = form.ContactParam{PageCurrent: 1, PageSize: 10}
 	err := c.ShouldBindQuery(&param)
 	if err != nil {
@@ -39,10 +37,10 @@ func (acl *ContactCtl) GetContact(c *gin.Context) {
 		return
 	}
 	param.TenantId = tenantId
-	c.JSON(http.StatusOK, global.NewSuccess("查询成功", acl.service.SelectContact(param)))
+	c.JSON(http.StatusOK, global.NewSuccess("查询成功", ctl.service.SelectContact(param)))
 }
 
-func (acl *ContactCtl) AddContact(c *gin.Context) {
+func (ctl *ContactCtl) CreateContact(c *gin.Context) {
 	var param form.ContactParam
 	err := c.ShouldBindJSON(&param)
 	if err != nil {
@@ -56,7 +54,7 @@ func (acl *ContactCtl) AddContact(c *gin.Context) {
 	}
 	param.TenantId = tenantId
 	param.EventEum = enum.InsertContact
-	err = contactService.Persistence(contactService, sys_rocketmq.ContactTopic, &param)
+	err = ctl.service.Persistence(ctl.service, sys_rocketmq.ContactTopic, &param)
 	if err != nil {
 		c.JSON(http.StatusOK, global.NewError(err.Error()))
 	} else {
@@ -64,7 +62,7 @@ func (acl *ContactCtl) AddContact(c *gin.Context) {
 	}
 }
 
-func (acl *ContactCtl) UpdateContact(c *gin.Context) {
+func (ctl *ContactCtl) UpdateContact(c *gin.Context) {
 	var param form.ContactParam
 	err := c.ShouldBindJSON(&param)
 	if err != nil {
@@ -78,7 +76,7 @@ func (acl *ContactCtl) UpdateContact(c *gin.Context) {
 	}
 	param.TenantId = tenantId
 	param.EventEum = enum.UpdateContact
-	err = contactService.Persistence(contactService, sys_rocketmq.ContactTopic, &param)
+	err = ctl.service.Persistence(ctl.service, sys_rocketmq.ContactTopic, &param)
 	if err != nil {
 		c.JSON(http.StatusOK, global.NewError(err.Error()))
 	} else {
@@ -86,7 +84,7 @@ func (acl *ContactCtl) UpdateContact(c *gin.Context) {
 	}
 }
 
-func (acl *ContactCtl) DeleteContact(c *gin.Context) {
+func (ctl *ContactCtl) DeleteContact(c *gin.Context) {
 	var param form.ContactParam
 	err := c.ShouldBindJSON(&param)
 	if err != nil {
@@ -100,7 +98,7 @@ func (acl *ContactCtl) DeleteContact(c *gin.Context) {
 	}
 	param.TenantId = tenantId
 	param.EventEum = enum.DeleteContact
-	err = contactService.Persistence(contactService, sys_rocketmq.ContactTopic, &param)
+	err = ctl.service.Persistence(ctl.service, sys_rocketmq.ContactTopic, &param)
 	if err != nil {
 		c.JSON(http.StatusOK, global.NewError(err.Error()))
 	} else {
@@ -108,7 +106,7 @@ func (acl *ContactCtl) DeleteContact(c *gin.Context) {
 	}
 }
 
-func (acl *ContactCtl) ActivateContact(c *gin.Context) {
+func (ctl *ContactCtl) ActivateContact(c *gin.Context) {
 	var param form.ContactParam
 	err := c.ShouldBindQuery(&param)
 	if err != nil {
@@ -116,17 +114,17 @@ func (acl *ContactCtl) ActivateContact(c *gin.Context) {
 		return
 	}
 	param.EventEum = enum.ActivateContact
-	err = contactService.Persistence(contactService, sys_rocketmq.ContactTopic, &param)
+	err = ctl.service.Persistence(ctl.service, sys_rocketmq.ContactTopic, &param)
 	if err != nil {
 		c.JSON(http.StatusOK, global.NewError(err.Error()))
 	} else {
-		c.JSON(http.StatusOK, global.NewSuccess("激活成功", getTenantName(param.ActiveCode)))
+		c.JSON(http.StatusOK, global.NewSuccess("激活成功", ctl.getTenantName(param.ActiveCode)))
 	}
 }
 
 //获取租户姓名
-func getTenantName(activeCode string) string {
-	tenantName := commonService.NewTenantService().GetTenantInfo(contactService.GetTenantId(activeCode)).Name
+func (ctl *ContactCtl) getTenantName(activeCode string) string {
+	tenantName := commonService.NewTenantService().GetTenantInfo(ctl.service.GetTenantId(activeCode)).Name
 	if strutil.IsBlank(tenantName) {
 		return "未命名"
 	}

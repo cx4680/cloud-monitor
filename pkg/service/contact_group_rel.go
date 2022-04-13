@@ -3,12 +3,10 @@ package service
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/constant"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/dao"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/enum"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/errors"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/form"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/model"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/service"
-	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/jsonutil"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/strutil"
 	"gorm.io/gorm"
 	"strconv"
@@ -26,47 +24,7 @@ func NewContactGroupRelService() *ContactGroupRelService {
 	}
 }
 
-func (s *ContactGroupRelService) PersistenceLocal(db *gorm.DB, param interface{}) (string, error) {
-	p := param.(*form.ContactParam)
-	switch p.EventEum {
-	case enum.InsertContact, enum.InsertContactGroup:
-		relList, err := s.insertContactRel(db, *p)
-		if err != nil {
-			return "", err
-		}
-		msg := form.MqMsg{
-			EventEum: enum.InsertContactGroupRel,
-			Data:     relList,
-		}
-		return jsonutil.ToString(msg), nil
-	case enum.UpdateContact, enum.UpdateContactGroup:
-		List, err := s.updateContactGroupRel(db, *p)
-		if err != nil {
-			return "", err
-		}
-		var date = model.UpdateContactGroupRel{
-			RelList: List,
-			Param:   *p,
-		}
-		return jsonutil.ToString(form.MqMsg{
-			EventEum: enum.UpdateContactGroupRel,
-			Data:     date,
-		}), nil
-	case enum.DeleteContact, enum.DeleteContactGroup:
-		contactGroupRel, err := s.deleteContactGroupRel(db, *p)
-		if err != nil {
-			return "", err
-		}
-		return jsonutil.ToString(form.MqMsg{
-			EventEum: enum.DeleteContactGroupRel,
-			Data:     contactGroupRel,
-		}), nil
-	default:
-		return "", errors.NewBusinessError("系统异常")
-	}
-}
-
-func (s *ContactGroupRelService) insertContactRel(db *gorm.DB, p form.ContactParam) ([]*model.ContactGroupRel, error) {
+func (s *ContactGroupRelService) InsertContactGroupRel(db *gorm.DB, p *form.ContactParam) ([]*model.ContactGroupRel, error) {
 	list, err := s.buildRelList(db, p)
 	if err != nil {
 		return nil, err
@@ -75,7 +33,7 @@ func (s *ContactGroupRelService) insertContactRel(db *gorm.DB, p form.ContactPar
 	return list, nil
 }
 
-func (s *ContactGroupRelService) updateContactGroupRel(db *gorm.DB, p form.ContactParam) ([]*model.ContactGroupRel, error) {
+func (s *ContactGroupRelService) UpdateContactGroupRel(db *gorm.DB, p *form.ContactParam) ([]*model.ContactGroupRel, error) {
 	list, err := s.buildRelList(db, p)
 	if err != nil {
 		return nil, err
@@ -84,7 +42,7 @@ func (s *ContactGroupRelService) updateContactGroupRel(db *gorm.DB, p form.Conta
 	return list, nil
 }
 
-func (s *ContactGroupRelService) deleteContactGroupRel(db *gorm.DB, p form.ContactParam) (*model.ContactGroupRel, error) {
+func (s *ContactGroupRelService) DeleteContactGroupRel(db *gorm.DB, p *form.ContactParam) *model.ContactGroupRel {
 	var contactGroupRel = &model.ContactGroupRel{}
 	if strutil.IsNotBlank(p.ContactBizId) {
 		contactGroupRel.TenantId = p.TenantId
@@ -94,11 +52,11 @@ func (s *ContactGroupRelService) deleteContactGroupRel(db *gorm.DB, p form.Conta
 		contactGroupRel.GroupBizId = p.GroupBizId
 	}
 	s.dao.Delete(db, contactGroupRel)
-	return contactGroupRel, nil
+	return contactGroupRel
 }
 
 //构建组关联关系
-func (s *ContactGroupRelService) buildRelList(db *gorm.DB, p form.ContactParam) ([]*model.ContactGroupRel, error) {
+func (s *ContactGroupRelService) buildRelList(db *gorm.DB, p *form.ContactParam) ([]*model.ContactGroupRel, error) {
 	var relList []*model.ContactGroupRel
 	var err error
 	if len(p.ContactBizIdList) > 0 {
@@ -114,7 +72,7 @@ func (s *ContactGroupRelService) buildRelList(db *gorm.DB, p form.ContactParam) 
 	return relList, nil
 }
 
-func (s *ContactGroupRelService) buildContactRelList(db *gorm.DB, p form.ContactParam) ([]*model.ContactGroupRel, error) {
+func (s *ContactGroupRelService) buildContactRelList(db *gorm.DB, p *form.ContactParam) ([]*model.ContactGroupRel, error) {
 	if len(p.ContactBizIdList) > constant.MaxContactNum {
 		return nil, errors.NewBusinessError("联系组限制添加" + strconv.Itoa(constant.MaxContactNum) + "个联系人")
 	}
@@ -141,7 +99,7 @@ func (s *ContactGroupRelService) buildContactRelList(db *gorm.DB, p form.Contact
 	return list, nil
 }
 
-func (s *ContactGroupRelService) buildGroupRelList(db *gorm.DB, p form.ContactParam) ([]*model.ContactGroupRel, error) {
+func (s *ContactGroupRelService) buildGroupRelList(db *gorm.DB, p *form.ContactParam) ([]*model.ContactGroupRel, error) {
 	if len(p.GroupBizIdList) > constant.MaxContactGroup {
 		return nil, errors.NewBusinessError("每个联系人最多加入" + strconv.Itoa(constant.MaxContactGroup) + "个联系组")
 	}

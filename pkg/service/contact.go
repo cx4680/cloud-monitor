@@ -7,7 +7,6 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/errors"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/form"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/sys_component/sys_rocketmq"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/model"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/service"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/util"
@@ -52,21 +51,25 @@ func (s *ContactService) PersistenceLocal(db *gorm.DB, param interface{}) (strin
 		if !s.checkContactName(p.ContactName) {
 			return "", errors.NewBusinessError("联系人名字格式错误")
 		}
-		contact, err := s.insertContact(db, *p)
+		contact, err := s.insertContact(db, p)
 		if err != nil {
 			return "", err
 		}
 		p.ContactBizId = contact.BizId
-
-		//保存 联系方式 和 联系人组关联
-		if err := s.persistenceInner(db, p); err != nil {
+		//创建联系方式
+		informationList, err := s.contactInformationService.InsertContactInformation(db, p)
+		if err != nil {
 			return "", err
 		}
-		msg := form.MqMsg{
-			EventEum: enum.InsertContact,
-			Data:     contact,
+		//创建联系人组关联
+		relList, err := s.contactGroupRelService.InsertContactGroupRel(db, p)
+		if err != nil {
+			return "", err
 		}
-		return jsonutil.ToString(msg), nil
+		return jsonutil.ToString(form.MqMsg{
+			EventEum: enum.InsertContact,
+			Data:     ContactMsg{Contact: contact, ContactInformationList: informationList, ContactGroupRelList: relList},
+		}), nil
 	case enum.UpdateContact:
 		//参数校验
 		if strutil.IsBlank(p.ContactName) {
@@ -79,27 +82,32 @@ func (s *ContactService) PersistenceLocal(db *gorm.DB, param interface{}) (strin
 		if err != nil {
 			return "", err
 		}
-		//更新 联系方式 和 联系人组关联
-		if err := s.persistenceInner(db, p); err != nil {
+		//更新联系方式
+		informationList, err := s.contactInformationService.UpdateContactInformation(db, p)
+		if err != nil {
 			return "", err
 		}
-		msg := form.MqMsg{
-			EventEum: enum.UpdateContact,
-			Data:     contact,
+		//更新联系人组关联
+		relList, err := s.contactGroupRelService.UpdateContactGroupRel(db, p)
+		if err != nil {
+			return "", err
 		}
-		return jsonutil.ToString(msg), nil
+		return jsonutil.ToString(form.MqMsg{
+			EventEum: enum.UpdateContact,
+			Data:     ContactMsg{Contact: contact, ContactInformationList: informationList, ContactGroupRelList: relList},
+		}), nil
 	case enum.DeleteContact:
 		contact, err := s.deleteContact(db, *p)
 		if err != nil {
 			return "", err
 		}
-		//删除 联系方式 和 联系人组关联
-		if err := s.persistenceInner(db, p); err != nil {
-			return "", err
-		}
+		//删除联系方式
+		informationList := s.contactInformationService.DeleteContactInformation(db, p)
+		//删除联系人组关联
+		relList := s.contactGroupRelService.DeleteContactGroupRel(db, p)
 		msg := form.MqMsg{
 			EventEum: enum.DeleteContact,
-			Data:     contact,
+			Data:     ContactMsg{Contact: contact, ContactInformation: informationList, ContactGroupRel: relList, Param: p},
 		}
 		return jsonutil.ToString(msg), nil
 	case enum.ActivateContact:
@@ -107,11 +115,10 @@ func (s *ContactService) PersistenceLocal(db *gorm.DB, param interface{}) (strin
 		if strutil.IsBlank(p.ActiveCode) || strutil.IsBlank(tenantId) {
 			return "", errors.NewBusinessError("无效激活码")
 		}
-		msg := form.MqMsg{
+		return jsonutil.ToString(form.MqMsg{
 			EventEum: enum.ActivateContact,
 			Data:     p.ActiveCode,
-		}
-		return jsonutil.ToString(msg), nil
+		}), nil
 	default:
 		return "", errors.NewBusinessError("系统异常")
 	}
@@ -121,7 +128,7 @@ func (s *ContactService) SelectContact(param form.ContactParam) *form.ContactFor
 	return s.dao.Select(global.DB, param)
 }
 
-func (s *ContactService) insertContact(db *gorm.DB, p form.ContactParam) (*model.Contact, error) {
+func (s *ContactService) insertContact(db *gorm.DB, p *form.ContactParam) (*model.Contact, error) {
 	//每个账号限制创建100个联系人
 	if s.dao.GetContactCount(p.TenantId) >= constant.MaxContactNum {
 		return nil, errors.NewBusinessError("联系人限制创建" + strconv.Itoa(constant.MaxContactNum) + "个")
@@ -176,18 +183,6 @@ func (s *ContactService) deleteContact(db *gorm.DB, p form.ContactParam) (*model
 	return contact, nil
 }
 
-func (s *ContactService) persistenceInner(db *gorm.DB, p *form.ContactParam) error {
-	//联系人组关联
-	if err := s.contactGroupRelService.PersistenceInner(db, s.contactGroupRelService, sys_rocketmq.ContactGroupTopic, p); err != nil {
-		return err
-	}
-	//联系方式
-	if err := s.contactInformationService.PersistenceInner(db, s.contactInformationService, sys_rocketmq.ContactTopic, p); err != nil {
-		return err
-	}
-	return nil
-}
-
 func (s *ContactService) GetTenantId(activeCode string) string {
 	return s.dao.GetTenantIdByActiveCode(activeCode)
 }
@@ -197,4 +192,13 @@ func (s *ContactService) checkContactName(contactName string) bool {
 		return true
 	}
 	return false
+}
+
+type ContactMsg struct {
+	Param                  *form.ContactParam
+	Contact                *model.Contact
+	ContactInformation     *model.ContactInformation
+	ContactGroupRel        *model.ContactGroupRel
+	ContactInformationList []*model.ContactInformation
+	ContactGroupRelList    []*model.ContactGroupRel
 }

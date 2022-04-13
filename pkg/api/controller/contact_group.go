@@ -13,16 +13,14 @@ import (
 )
 
 type ContactGroupCtl struct {
-	service service.ContactGroupService
+	service *service.ContactGroupService
 }
 
-func NewContactGroupCtl(service service.ContactGroupService) *ContactGroupCtl {
-	return &ContactGroupCtl{service}
+func NewContactGroupCtl() *ContactGroupCtl {
+	return &ContactGroupCtl{service.NewContactGroupService(service.NewContactGroupRelService())}
 }
 
-var contactGroupService = service.NewContactGroupService(service.NewContactGroupRelService())
-
-func (acgc *ContactGroupCtl) GetContactGroup(c *gin.Context) {
+func (ctl *ContactGroupCtl) GetContactGroup(c *gin.Context) {
 	var param = form.ContactParam{PageCurrent: 1, PageSize: 10}
 	err := c.ShouldBindQuery(&param)
 	if err != nil {
@@ -35,7 +33,7 @@ func (acgc *ContactGroupCtl) GetContactGroup(c *gin.Context) {
 		return
 	}
 	param.TenantId = tenantId
-	c.JSON(http.StatusOK, global.NewSuccess("查询成功", acgc.service.SelectContactGroup(param)))
+	c.JSON(http.StatusOK, global.NewSuccess("查询成功", ctl.service.SelectContactGroup(param)))
 }
 
 func (acgc *ContactGroupCtl) GetGroupContact(c *gin.Context) {
@@ -54,7 +52,7 @@ func (acgc *ContactGroupCtl) GetGroupContact(c *gin.Context) {
 	c.JSON(http.StatusOK, global.NewSuccess("查询成功", acgc.service.SelectAlertGroupContact(param)))
 }
 
-func (acgc *ContactGroupCtl) AddContactGroup(c *gin.Context) {
+func (ctl *ContactGroupCtl) CreateContactGroup(c *gin.Context) {
 	var param form.ContactParam
 	err := c.ShouldBindJSON(&param)
 	if err != nil {
@@ -68,7 +66,7 @@ func (acgc *ContactGroupCtl) AddContactGroup(c *gin.Context) {
 	}
 	param.TenantId = tenantId
 	param.EventEum = enum.InsertContactGroup
-	err = contactGroupService.Persistence(contactGroupService, sys_rocketmq.ContactGroupTopic, &param)
+	err = ctl.service.Persistence(ctl.service, sys_rocketmq.ContactGroupTopic, &param)
 	if err != nil {
 		c.JSON(http.StatusOK, global.NewError(err.Error()))
 	} else {
@@ -76,7 +74,7 @@ func (acgc *ContactGroupCtl) AddContactGroup(c *gin.Context) {
 	}
 }
 
-func (acgc *ContactGroupCtl) UpdateContactGroup(c *gin.Context) {
+func (ctl *ContactGroupCtl) UpdateContactGroup(c *gin.Context) {
 	var param form.ContactParam
 	err := c.ShouldBindJSON(&param)
 	if err != nil {
@@ -90,7 +88,7 @@ func (acgc *ContactGroupCtl) UpdateContactGroup(c *gin.Context) {
 	}
 	param.TenantId = tenantId
 	param.EventEum = enum.UpdateContactGroup
-	err = contactGroupService.Persistence(contactGroupService, sys_rocketmq.ContactGroupTopic, &param)
+	err = ctl.service.Persistence(ctl.service, sys_rocketmq.ContactGroupTopic, &param)
 	if err != nil {
 		c.JSON(http.StatusOK, global.NewError(err.Error()))
 	} else {
@@ -98,7 +96,7 @@ func (acgc *ContactGroupCtl) UpdateContactGroup(c *gin.Context) {
 	}
 }
 
-func (acgc *ContactGroupCtl) DeleteContactGroup(c *gin.Context) {
+func (ctl *ContactGroupCtl) DeleteContactGroup(c *gin.Context) {
 	var param form.ContactParam
 	err := c.ShouldBindJSON(&param)
 	if err != nil {
@@ -112,7 +110,7 @@ func (acgc *ContactGroupCtl) DeleteContactGroup(c *gin.Context) {
 	}
 	param.TenantId = tenantId
 	param.EventEum = enum.DeleteContactGroup
-	err = contactGroupService.Persistence(contactGroupService, sys_rocketmq.ContactGroupTopic, &param)
+	err = ctl.service.Persistence(ctl.service, sys_rocketmq.ContactGroupTopic, &param)
 	if err != nil {
 		c.JSON(http.StatusOK, global.NewError(err.Error()))
 	} else {
