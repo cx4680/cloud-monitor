@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
+	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/openapi"
 	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/util"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
@@ -86,8 +87,11 @@ func GinTrailzap(utc bool, requestType string, eventLevel EventLevel, resourceTy
 		c.Request.Body = ioutil.NopCloser(bytes.NewBuffer(data))
 		requestID := c.GetHeader("X-Request-ID")
 		if len(requestID) == 0 {
-			if newUUID, err := uuid.NewUUID(); err == nil {
-				requestID = newUUID.String()
+			requestID = c.GetHeader(openapi.RequestId)
+			if  len(requestID) == 0{
+				if newUUID, err := uuid.NewUUID(); err == nil {
+					requestID = newUUID.String()
+				}
 			}
 		}
 		ctx := context.WithValue(context.Background(), "X-Request-ID", requestID)
@@ -127,12 +131,8 @@ func GinTrailzap(utc bool, requestType string, eventLevel EventLevel, resourceTy
 				errMessage = fmt.Sprint(err)
 				resError = err
 			}
-			var eventId string
-			if newUUID, err := uuid.NewUUID(); err == nil {
-				eventId = newUUID.String()
-			}
 			logger.GetTrailLogger().Info("[ACTION_TRAIL_LOG]",
-				zap.String("event_id", eventId),
+				zap.String("event_id", requestID),
 				zap.String("event_version", "1"),
 				zap.String("event_source", eventSource),
 				zap.String("source_ip_address", c.ClientIP()),
