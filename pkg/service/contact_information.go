@@ -67,7 +67,9 @@ func (s *ContactInformationService) UpdateContactInformation(db *gorm.DB, p *for
 	list := s.getInformationList(p)
 	s.dao.Update(db, list)
 	for _, information := range list {
-		s.sendActivateMsg(information.TenantId, information.Address, information.Type, information.ActiveCode, information.ContactBizId)
+		if strutil.IsNotBlank(information.ActiveCode) {
+			s.sendActivateMsg(information.TenantId, information.Address, information.Type, information.ActiveCode, information.ContactBizId)
+		}
 	}
 	return list, nil
 }
