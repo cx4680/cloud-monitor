@@ -58,7 +58,10 @@ func ContactHandler(msgs []*primitive.MessageExt) {
 		case enum.ActivateContact:
 			data := jsonutil.ToString(mqMsg.Data)
 			var activeCode string
-			msgErr = jsonutil.ToObjectWithError(data, &activeCode)
+			err := jsonutil.ToObjectWithError(data, &activeCode)
+			if err != nil {
+				continue
+			}
 			dao.Contact.ActivateContact(global.DB, activeCode)
 		}
 		if msgErr != nil {
