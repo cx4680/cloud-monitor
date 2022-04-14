@@ -16,9 +16,10 @@ func ContactHandler(msgs []*primitive.MessageExt) {
 	for i := range msgs {
 		var msgErr error
 		var mqMsg form.MqMsg
-		logger.Logger().Errorf("subscribe callback: %v \n", msgs[i])
+		logger.Logger().Infof("subscribe callback: %v \n", msgs[i])
 		msgErr = json.Unmarshal(msgs[i].Body, &mqMsg)
 		if msgErr != nil {
+			logger.Logger().Errorf("mqMsg error: %v \n", msgErr)
 			continue
 		}
 		switch mqMsg.EventEum {
@@ -60,11 +61,12 @@ func ContactHandler(msgs []*primitive.MessageExt) {
 
 func ContactGroupHandler(msgs []*primitive.MessageExt) {
 	for i := range msgs {
-		logger.Logger().Errorf("subscribe callback: %v \n", msgs[i])
+		logger.Logger().Infof("subscribe callback: %v \n", msgs[i])
 		var msgErr error
 		var mqMsg form.MqMsg
 		msgErr = json.Unmarshal(msgs[i].Body, &mqMsg)
 		if msgErr != nil {
+			logger.Logger().Errorf("mqMsg error: %v \n", msgErr)
 			continue
 		}
 		switch mqMsg.EventEum {
