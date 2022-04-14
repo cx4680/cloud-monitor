@@ -100,11 +100,11 @@ func buildContactData(msgData interface{}) *service.ContactMsg {
 		return nil
 	}
 	contactMsg.Contact.Id = 0
-	for _, v := range contactMsg.ContactInformationList {
-		v.Id = 0
+	for i := range contactMsg.ContactInformationList {
+		contactMsg.ContactInformationList[i].Id = 0
 	}
-	for _, v := range contactMsg.ContactGroupRelList {
-		v.Id = 0
+	for i := range contactMsg.ContactGroupRelList {
+		contactMsg.ContactGroupRelList[i].Id = 0
 	}
 	return contactMsg
 }
