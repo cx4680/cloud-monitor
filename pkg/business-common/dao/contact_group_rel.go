@@ -1,7 +1,6 @@
 package dao
 
 import (
-	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/strutil"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/form"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/model"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/util"
@@ -79,21 +78,22 @@ func (d *ContactGroupRelDao) InsertBatch(db *gorm.DB, list []*model.ContactGroup
 	db.Create(list)
 }
 
-func (d *ContactGroupRelDao) Update(db *gorm.DB, list []*model.ContactGroupRel, param *form.ContactParam) {
-	if strutil.IsNotBlank(param.ContactBizId) {
-		db.Where("tenant_id = ? AND contact_biz_id = ?", param.TenantId, param.ContactBizId).Delete(model.ContactGroupRel{})
-	} else {
-		db.Where("tenant_id = ? AND group_biz_id = ?", param.TenantId, param.GroupBizId).Delete(model.ContactGroupRel{})
-	}
+func (d *ContactGroupRelDao) UpdateByContact(db *gorm.DB, list []*model.ContactGroupRel, param *form.ContactParam) {
+	db.Where("tenant_id = ? AND contact_biz_id = ?", param.TenantId, param.ContactBizId).Delete(model.ContactGroupRel{})
 	d.InsertBatch(db, list)
 }
 
-func (d *ContactGroupRelDao) Delete(db *gorm.DB, entity *model.ContactGroupRel) {
-	if strutil.IsNotBlank(entity.ContactBizId) {
-		db.Model(&model.ContactGroupRel{}).Where("tenant_id = ? AND contact_biz_id = ?", entity.TenantId, entity.ContactBizId).Delete(model.ContactGroupRel{})
-	} else {
-		db.Model(&model.ContactGroupRel{}).Where("tenant_id = ? AND group_biz_id = ?", entity.TenantId, entity.GroupBizId).Delete(model.ContactGroupRel{})
-	}
+func (d *ContactGroupRelDao) UpdateByGroup(db *gorm.DB, list []*model.ContactGroupRel, param *form.ContactParam) {
+	db.Where("tenant_id = ? AND group_biz_id = ?", param.TenantId, param.GroupBizId).Delete(model.ContactGroupRel{})
+	d.InsertBatch(db, list)
+}
+
+func (d *ContactGroupRelDao) DeleteByContact(db *gorm.DB, entity *model.ContactGroupRel) {
+	db.Where("tenant_id = ? AND contact_biz_id = ?", entity.TenantId, entity.ContactBizId).Delete(model.ContactGroupRel{})
+}
+
+func (d *ContactGroupRelDao) DeleteByGroup(db *gorm.DB, entity *model.ContactGroupRel) {
+	db.Where("tenant_id = ? AND group_biz_id = ?", entity.TenantId, entity.GroupBizId).Delete(model.ContactGroupRel{})
 }
 
 func (d *ContactGroupRelDao) GetContact(db *gorm.DB, tenantId string, contactBizId string, groupBizId string) *[]form.ContactForm {

@@ -64,7 +64,7 @@ func (s *ContactGroupService) PersistenceLocal(db *gorm.DB, param interface{}) (
 		}
 		p.GroupBizId = contactGroup.BizId
 		//创建联系人组关联
-		relList, err := s.contactGroupRelService.InsertContactGroupRel(db, p)
+		relList, err := s.contactGroupRelService.InsertRelByGroup(db, p)
 		if err != nil {
 			return "", err
 		}
@@ -89,7 +89,7 @@ func (s *ContactGroupService) PersistenceLocal(db *gorm.DB, param interface{}) (
 			return "", err
 		}
 		//更新联系人组关联
-		relList, err := s.contactGroupRelService.UpdateContactGroupRel(db, p)
+		relList, err := s.contactGroupRelService.UpdateRelGroup(db, p)
 		if err != nil {
 			return "", err
 		}
@@ -103,13 +103,10 @@ func (s *ContactGroupService) PersistenceLocal(db *gorm.DB, param interface{}) (
 			return "", err
 		}
 		//删除联系人组关联
-		relList, err := s.contactGroupRelService.UpdateContactGroupRel(db, p)
-		if err != nil {
-			return "", err
-		}
+		rel := s.contactGroupRelService.DeleteRelByGroup(db, p)
 		return jsonutil.ToString(form.MqMsg{
 			EventEum: enum.DeleteContactGroup,
-			Data:     ContactGroupMsg{ContactGroup: contactGroup, ContactGroupRelList: relList},
+			Data:     ContactGroupMsg{ContactGroup: contactGroup, ContactGroupRel: rel},
 		}), nil
 	default:
 		return "", errors.NewBusinessError("系统异常")

@@ -62,7 +62,7 @@ func (s *ContactService) PersistenceLocal(db *gorm.DB, param interface{}) (strin
 			return "", err
 		}
 		//创建联系人组关联
-		relList, err := s.contactGroupRelService.InsertContactGroupRel(db, p)
+		relList, err := s.contactGroupRelService.InsertRelByContact(db, p)
 		if err != nil {
 			return "", err
 		}
@@ -88,13 +88,13 @@ func (s *ContactService) PersistenceLocal(db *gorm.DB, param interface{}) (strin
 			return "", err
 		}
 		//更新联系人组关联
-		relList, err := s.contactGroupRelService.UpdateContactGroupRel(db, p)
+		relList, err := s.contactGroupRelService.UpdateRelContact(db, p)
 		if err != nil {
 			return "", err
 		}
 		return jsonutil.ToString(form.MqMsg{
 			EventEum: enum.UpdateContact,
-			Data:     ContactMsg{Contact: contact, ContactInformationList: informationList, ContactGroupRelList: relList},
+			Data:     ContactMsg{Contact: contact, ContactInformationList: informationList, ContactGroupRelList: relList, Param: p},
 		}), nil
 	case enum.DeleteContact:
 		contact, err := s.deleteContact(db, *p)
@@ -102,12 +102,12 @@ func (s *ContactService) PersistenceLocal(db *gorm.DB, param interface{}) (strin
 			return "", err
 		}
 		//删除联系方式
-		informationList := s.contactInformationService.DeleteContactInformation(db, p)
+		information := s.contactInformationService.DeleteContactInformation(db, p)
 		//删除联系人组关联
-		relList := s.contactGroupRelService.DeleteContactGroupRel(db, p)
+		rel := s.contactGroupRelService.DeleteRelByContact(db, p)
 		msg := form.MqMsg{
 			EventEum: enum.DeleteContact,
-			Data:     ContactMsg{Contact: contact, ContactInformation: informationList, ContactGroupRel: relList, Param: p},
+			Data:     ContactMsg{Contact: contact, ContactInformation: information, ContactGroupRel: rel},
 		}
 		return jsonutil.ToString(msg), nil
 	case enum.ActivateContact:
