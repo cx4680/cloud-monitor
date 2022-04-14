@@ -95,7 +95,7 @@ func (s *ContactGroupService) PersistenceLocal(db *gorm.DB, param interface{}) (
 		}
 		return jsonutil.ToString(form.MqMsg{
 			EventEum: enum.UpdateContactGroup,
-			Data:     ContactGroupMsg{ContactGroup: contactGroup, ContactGroupRelList: relList},
+			Data:     ContactGroupMsg{ContactGroup: contactGroup, ContactGroupRelList: relList, Param: p},
 		}), nil
 	case enum.DeleteContactGroup:
 		contactGroup, err := s.deleteContactGroup(db, *p)
@@ -140,20 +140,16 @@ func (s *ContactGroupService) updateContactGroup(db *gorm.DB, p form.ContactPara
 	if strutil.IsBlank(p.GroupBizId) {
 		return nil, errors.NewBusinessError("联系组ID不能为空")
 	}
-	var oldContactGroup = s.dao.GetGroup(p.TenantId, p.GroupBizId)
-	if oldContactGroup == (model.ContactGroup{}) {
+	if !s.dao.CheckGroupId(p.TenantId, p.GroupBizId) {
 		return nil, errors.NewBusinessError("该租户无此联系组")
 	}
 	currentTime := util.GetNow()
 	var contactGroup = &model.ContactGroup{
-		Id:          oldContactGroup.Id,
 		BizId:       p.GroupBizId,
 		TenantId:    p.TenantId,
 		Name:        p.GroupName,
 		Description: p.Description,
 		UpdateTime:  currentTime,
-		CreateTime:  oldContactGroup.CreateTime,
-		CreateUser:  oldContactGroup.CreateUser,
 	}
 	s.dao.Update(db, contactGroup)
 	return contactGroup, nil

@@ -114,11 +114,11 @@ func (d *ContactGroupDao) Insert(db *gorm.DB, entity *model.ContactGroup) {
 }
 
 func (d *ContactGroupDao) Update(db *gorm.DB, entity *model.ContactGroup) {
-	db.Save(entity)
+	db.Select("name", "description", "update_time").Where("tenant_id = ? AND biz_id = ?", entity.TenantId, entity.BizId).Updates(entity)
 }
 
 func (d *ContactGroupDao) Delete(db *gorm.DB, entity *model.ContactGroup) {
-	db.Model(&model.ContactGroup{}).Where("tenant_id = ? AND biz_id = ?", entity.TenantId, entity.BizId).Delete(model.ContactGroup{})
+	db.Where("tenant_id = ? AND biz_id = ?", entity.TenantId, entity.BizId).Delete(entity)
 }
 
 //查询组

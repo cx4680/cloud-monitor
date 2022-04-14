@@ -92,16 +92,16 @@ func (d *ContactDao) Insert(db *gorm.DB, entity *model.Contact) {
 }
 
 func (d *ContactDao) Update(db *gorm.DB, entity *model.Contact) {
-	db.Model(&model.Contact{}).Where("tenant_id = ? AND biz_id = ?", entity.TenantId, entity.BizId).Updates(entity)
+	db.Where("tenant_id = ? AND biz_id = ?", entity.TenantId, entity.BizId).Updates(entity)
 }
 
 func (d *ContactDao) Delete(db *gorm.DB, entity *model.Contact) {
-	db.Where("tenant_id = ? AND biz_id = ?", entity.TenantId, entity.BizId).Delete(model.Contact{})
+	db.Where("tenant_id = ? AND biz_id = ?", entity.TenantId, entity.BizId).Delete(entity)
 }
 
 func (d *ContactDao) ActivateContact(db *gorm.DB, activeCode string) string {
 	var entity = &model.ContactInformation{}
-	db.Model(entity).Where("active_code = ?", activeCode).Update("state", 1).Find(entity)
+	db.Where("active_code = ?", activeCode).Update("state", 1).Find(entity)
 	return entity.TenantId
 }
 
