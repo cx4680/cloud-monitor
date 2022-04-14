@@ -23,9 +23,17 @@ func ContactHandler(msgs []*primitive.MessageExt) {
 		}
 		switch mqMsg.EventEum {
 		case enum.InsertContact:
-			contactMsg, err := buildContactData(mqMsg.Data)
+			var contactMsg *service.ContactMsg
+			err := jsonutil.ToObjectWithError(jsonutil.ToString(mqMsg.Data), &contactMsg)
 			if err != nil {
 				continue
+			}
+			contactMsg.Contact.Id = 0
+			for i := range contactMsg.ContactInformationList {
+				contactMsg.ContactInformationList[i].Id = 0
+			}
+			for i := range contactMsg.ContactGroupRelList {
+				contactMsg.ContactGroupRelList[i].Id = 0
 			}
 			msgErr = global.DB.Transaction(func(db *gorm.DB) error {
 				dao.Contact.Insert(db, contactMsg.Contact)
@@ -34,7 +42,8 @@ func ContactHandler(msgs []*primitive.MessageExt) {
 				return nil
 			})
 		case enum.UpdateContact:
-			contactMsg, err := buildContactData(mqMsg.Data)
+			var contactMsg *service.ContactMsg
+			err := jsonutil.ToObjectWithError(jsonutil.ToString(mqMsg.Data), &contactMsg)
 			if err != nil {
 				continue
 			}
@@ -45,7 +54,8 @@ func ContactHandler(msgs []*primitive.MessageExt) {
 				return nil
 			})
 		case enum.DeleteContact:
-			contactMsg, err := buildContactData(mqMsg.Data)
+			var contactMsg *service.ContactMsg
+			err := jsonutil.ToObjectWithError(jsonutil.ToString(mqMsg.Data), &contactMsg)
 			if err != nil {
 				continue
 			}
@@ -80,9 +90,14 @@ func ContactGroupHandler(msgs []*primitive.MessageExt) {
 		}
 		switch mqMsg.EventEum {
 		case enum.InsertContactGroup:
-			contactGroupMsg, err := buildContactGroupData(mqMsg.Data)
+			var contactGroupMsg *service.ContactGroupMsg
+			err := jsonutil.ToObjectWithError(jsonutil.ToString(mqMsg.Data), &contactGroupMsg)
 			if err != nil {
 				continue
+			}
+			contactGroupMsg.ContactGroup.Id = 0
+			for _, v := range contactGroupMsg.ContactGroupRelList {
+				v.Id = 0
 			}
 			msgErr = global.DB.Transaction(func(db *gorm.DB) error {
 				dao.ContactGroup.Insert(db, contactGroupMsg.ContactGroup)
@@ -90,7 +105,8 @@ func ContactGroupHandler(msgs []*primitive.MessageExt) {
 				return nil
 			})
 		case enum.UpdateContactGroup:
-			contactGroupMsg, err := buildContactGroupData(mqMsg.Data)
+			var contactGroupMsg *service.ContactGroupMsg
+			err := jsonutil.ToObjectWithError(jsonutil.ToString(mqMsg.Data), &contactGroupMsg)
 			if err != nil {
 				continue
 			}
@@ -100,7 +116,8 @@ func ContactGroupHandler(msgs []*primitive.MessageExt) {
 				return nil
 			})
 		case enum.DeleteContactGroup:
-			contactGroupMsg, err := buildContactGroupData(mqMsg.Data)
+			var contactGroupMsg *service.ContactGroupMsg
+			err := jsonutil.ToObjectWithError(jsonutil.ToString(mqMsg.Data), &contactGroupMsg)
 			if err != nil {
 				continue
 			}
@@ -114,33 +131,4 @@ func ContactGroupHandler(msgs []*primitive.MessageExt) {
 			logger.Logger().Errorf("%v", msgErr)
 		}
 	}
-}
-
-func buildContactData(msgData interface{}) (*service.ContactMsg, error) {
-	var contactMsg *service.ContactMsg
-	err := jsonutil.ToObjectWithError(jsonutil.ToString(msgData), &contactMsg)
-	if err != nil {
-		return nil, err
-	}
-	contactMsg.Contact.Id = 0
-	for i := range contactMsg.ContactInformationList {
-		contactMsg.ContactInformationList[i].Id = 0
-	}
-	for i := range contactMsg.ContactGroupRelList {
-		contactMsg.ContactGroupRelList[i].Id = 0
-	}
-	return contactMsg, nil
-}
-
-func buildContactGroupData(msgData interface{}) (*service.ContactGroupMsg, error) {
-	var contactGroupMsg *service.ContactGroupMsg
-	err := jsonutil.ToObjectWithError(jsonutil.ToString(msgData), &contactGroupMsg)
-	if err != nil {
-		return nil, err
-	}
-	contactGroupMsg.ContactGroup.Id = 0
-	for _, v := range contactGroupMsg.ContactGroupRelList {
-		v.Id = 0
-	}
-	return contactGroupMsg, nil
 }
