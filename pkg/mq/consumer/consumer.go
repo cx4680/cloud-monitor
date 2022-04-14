@@ -10,7 +10,6 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/service"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/service/external/message_center"
 	"encoding/json"
-	"fmt"
 	"github.com/apache/rocketmq-client-go/v2/primitive"
 	"gorm.io/gorm"
 )
@@ -19,7 +18,7 @@ func InstanceHandler(msgs []*primitive.MessageExt) {
 	alarmInstanceDao := dao.AlarmInstance
 	for i := range msgs {
 		var instances []*model.AlarmInstance
-		fmt.Printf("subscribe callback: %v \n", msgs[i])
+		logger.Logger().Infof("subscribe callback: %v \n", msgs[i])
 		err := json.Unmarshal(msgs[i].Body, &instances)
 		if err != nil {
 			continue
@@ -40,7 +39,7 @@ func DeleteInstanceHandler(msgs []*primitive.MessageExt) {
 	alarmInstanceDao := dao.AlarmInstance
 	for i := range msgs {
 		instance := dto.Instance{}
-		fmt.Printf("subscribe callback: %v \n", msgs[i])
+		logger.Logger().Infof("subscribe callback: %v \n", msgs[i])
 		err := json.Unmarshal(msgs[i].Body, &instance)
 		if err != nil {
 			continue
@@ -53,7 +52,7 @@ func AlarmAddHandler(msgs []*primitive.MessageExt) {
 	for _, msg := range msgs {
 		var data dto.AlarmSyncData
 		if err := jsonutil.ToObjectWithError(string(msg.Body), &data); err != nil {
-			logger.Logger().Errorf("序列化数据失败, %v", msg)
+			continue
 		}
 		if err := global.DB.Transaction(func(tx *gorm.DB) error {
 			if len(data.RecordList) > 0 {
