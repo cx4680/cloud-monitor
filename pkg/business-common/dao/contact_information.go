@@ -47,7 +47,7 @@ func (d *ContactInformationDao) Update(db *gorm.DB, list []*model.ContactInforma
 }
 
 func (d *ContactInformationDao) Delete(db *gorm.DB, entity *model.ContactInformation) {
-	db.Model(&model.ContactInformation{}).Where("tenant_id = ? AND contact_biz_id = ?", entity.TenantId, entity.ContactBizId).Delete(&model.ContactInformation{})
+	db.Where("tenant_id = ? AND contact_biz_id = ?", entity.TenantId, entity.ContactBizId).Delete(&model.ContactInformation{})
 }
 
 //判断新增的联系方式是否已存在

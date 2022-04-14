@@ -47,6 +47,12 @@ func ContactHandler(msgs []*primitive.MessageExt) {
 			if err != nil {
 				continue
 			}
+			for i := range contactMsg.ContactInformationList {
+				contactMsg.ContactInformationList[i].Id = 0
+			}
+			for i := range contactMsg.ContactGroupRelList {
+				contactMsg.ContactGroupRelList[i].Id = 0
+			}
 			msgErr = global.DB.Transaction(func(db *gorm.DB) error {
 				dao.Contact.Update(db, contactMsg.Contact)
 				dao.ContactInformation.Update(db, contactMsg.ContactInformationList)
@@ -96,8 +102,8 @@ func ContactGroupHandler(msgs []*primitive.MessageExt) {
 				continue
 			}
 			contactGroupMsg.ContactGroup.Id = 0
-			for _, v := range contactGroupMsg.ContactGroupRelList {
-				v.Id = 0
+			for i := range contactGroupMsg.ContactGroupRelList {
+				contactGroupMsg.ContactGroupRelList[i].Id = 0
 			}
 			msgErr = global.DB.Transaction(func(db *gorm.DB) error {
 				dao.ContactGroup.Insert(db, contactGroupMsg.ContactGroup)
@@ -109,6 +115,9 @@ func ContactGroupHandler(msgs []*primitive.MessageExt) {
 			err := jsonutil.ToObjectWithError(jsonutil.ToString(mqMsg.Data), &contactGroupMsg)
 			if err != nil {
 				continue
+			}
+			for i := range contactGroupMsg.ContactGroupRelList {
+				contactGroupMsg.ContactGroupRelList[i].Id = 0
 			}
 			msgErr = global.DB.Transaction(func(db *gorm.DB) error {
 				dao.ContactGroup.Update(db, contactGroupMsg.ContactGroup)
