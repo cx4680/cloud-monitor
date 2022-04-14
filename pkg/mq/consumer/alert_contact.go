@@ -57,7 +57,7 @@ func ContactHandler(msgs []*primitive.MessageExt) {
 			})
 		case enum.ActivateContact:
 			var activeCode string
-			err := jsonutil.ToObjectWithError(mqMsg.Data.(string), &activeCode)
+			err := jsonutil.ToObjectWithError(jsonutil.ToString(mqMsg), &activeCode)
 			if err != nil {
 				continue
 			}
@@ -118,7 +118,7 @@ func ContactGroupHandler(msgs []*primitive.MessageExt) {
 
 func buildContactData(msgData interface{}) (*service.ContactMsg, error) {
 	var contactMsg *service.ContactMsg
-	err := jsonutil.ToObjectWithError(msgData.(string), &contactMsg)
+	err := jsonutil.ToObjectWithError(jsonutil.ToString(msgData), &contactMsg)
 	if err != nil {
 		return nil, err
 	}
@@ -134,7 +134,7 @@ func buildContactData(msgData interface{}) (*service.ContactMsg, error) {
 
 func buildContactGroupData(msgData interface{}) (*service.ContactGroupMsg, error) {
 	var contactGroupMsg *service.ContactGroupMsg
-	err := jsonutil.ToObjectWithError(msgData.(string), &contactGroupMsg)
+	err := jsonutil.ToObjectWithError(jsonutil.ToString(msgData), &contactGroupMsg)
 	if err != nil {
 		return nil, err
 	}
