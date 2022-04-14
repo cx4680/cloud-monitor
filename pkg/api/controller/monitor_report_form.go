@@ -1,8 +1,8 @@
 package controller
 
 import (
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/util"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/util"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/form"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/service"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/validator/translate"

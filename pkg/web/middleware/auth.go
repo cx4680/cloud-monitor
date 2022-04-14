@@ -1,11 +1,11 @@
 package middleware
 
 import (
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/openapi"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/jsonutil"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/strutil"
+	global2 "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global"
+	openapi2 "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global/openapi"
 	"encoding/base64"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
@@ -30,27 +30,27 @@ func Auth() gin.HandlerFunc {
 		for _, i := range ignoreList {
 			match, err := path.Match(i, uri)
 			if err != nil {
-				if openapi.OpenApiRouter(c) {
-					c.JSON(http.StatusUnauthorized, openapi.NewRespError(openapi.AuthorizedFailed, c))
+				if openapi2.OpenApiRouter(c) {
+					c.JSON(http.StatusUnauthorized, openapi2.NewRespError(openapi2.AuthorizedFailed, c))
 				} else {
-					c.JSON(http.StatusUnauthorized, global.NewError("权限认证失败"))
+					c.JSON(http.StatusUnauthorized, global2.NewError("权限认证失败"))
 				}
 				c.Abort()
 			}
 			if match {
 				req := c.Request
 				tenantId := req.Header.Get("tenantId")
-				c.Set(global.TenantId, tenantId)
-				c.Set(global.UserId, tenantId)
+				c.Set(global2.TenantId, tenantId)
+				c.Set(global2.UserId, tenantId)
 				c.Next()
 				return
 			}
 		}
 		if err := ParsingAndSetUserInfo(c); err != nil {
-			if openapi.OpenApiRouter(c) {
-				c.JSON(http.StatusUnauthorized, openapi.NewRespError(openapi.AuthorizedFailed, c))
+			if openapi2.OpenApiRouter(c) {
+				c.JSON(http.StatusUnauthorized, openapi2.NewRespError(openapi2.AuthorizedFailed, c))
 			} else {
-				c.JSON(http.StatusUnauthorized, global.NewError("权限认证失败"))
+				c.JSON(http.StatusUnauthorized, global2.NewError("权限认证失败"))
 			}
 			c.Abort()
 		}
@@ -61,10 +61,10 @@ func Auth() gin.HandlerFunc {
 
 func ParsingAndSetUserInfo(c *gin.Context) error {
 	if config.Cfg.Common.Env == "local" {
-		c.Set(global.UserType, "1")
-		c.Set(global.TenantId, "1")
-		c.Set(global.UserId, "1")
-		c.Set(global.UserName, "jim")
+		c.Set(global2.UserType, "1")
+		c.Set(global2.TenantId, "1")
+		c.Set(global2.UserId, "1")
+		c.Set(global2.UserName, "jim")
 		return nil
 	}
 
@@ -78,19 +78,19 @@ func ParsingAndSetUserInfo(c *gin.Context) error {
 		}
 		if strutil.IsNotBlank(string(userInfoDecode)) {
 			jsonutil.ToObject(string(userInfoDecode), &userMap)
-			c.Set(global.UserType, userMap["userTypeCode"])
-			c.Set(global.TenantId, userMap["cloudLoginId"])
-			c.Set(global.UserId, userMap["loginId"])
-			c.Set(global.UserName, userMap["loginCode"])
+			c.Set(global2.UserType, userMap["userTypeCode"])
+			c.Set(global2.TenantId, userMap["cloudLoginId"])
+			c.Set(global2.UserId, userMap["loginId"])
+			c.Set(global2.UserName, userMap["loginCode"])
 			return nil
 		}
 	}
 	userIdentity := req.Header.Get("userIdentity")
 	if len(userIdentity) != 0 {
 		jsonutil.ToObject(userIdentity, &userMap)
-		c.Set(global.UserType, userMap["typeCode"])
-		c.Set(global.TenantId, userMap["accountId"])
-		c.Set(global.UserId, userMap["principalId"])
+		c.Set(global2.UserType, userMap["typeCode"])
+		c.Set(global2.TenantId, userMap["accountId"])
+		c.Set(global2.UserId, userMap["principalId"])
 		return nil
 	}
 	return errors.New("无用户信息")

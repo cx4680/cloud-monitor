@@ -1,11 +1,11 @@
 package task
 
 import (
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/sys_component/sys_db"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/sys_component/sys_redis"
-	commonTask "code.cestc.cn/ccos-ops/cloud-monitor/business-common/task"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global/sys_component/sys_db"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global/sys_component/sys_redis"
+	commonTask "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/task"
 	"fmt"
 	"os"
 	"testing"

@@ -1,15 +1,15 @@
 package v1_0
 
 import (
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/dao"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/enum/source_type"
-	commonError "code.cestc.cn/ccos-ops/cloud-monitor/business-common/errors"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/form"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/openapi"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/model"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/util"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
+	dao2 "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/dao"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/enum/source_type"
+	commonError "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/errors"
+	form2 "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/form"
+	global2 "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global"
+	openapi2 "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global/openapi"
+	model2 "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/model"
+	util2 "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/util"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/service"
 	"errors"
 	"fmt"
@@ -33,28 +33,28 @@ func (ctl *AlarmRuleCtl) SelectRulePageList(c *gin.Context) {
 	}
 	if err := c.ShouldBindQuery(&reqParam); err != nil {
 		logger.Logger().Info(err)
-		c.JSON(http.StatusBadRequest, openapi.NewRespError(openapi.GetErrorCode(err), c))
+		c.JSON(http.StatusBadRequest, openapi2.NewRespError(openapi2.GetErrorCode(err), c))
 		return
 	}
-	tenantId, err := util.GetTenantId(c)
+	tenantId, err := util2.GetTenantId(c)
 	if err != nil {
 		logger.Logger().Info(err)
-		c.JSON(http.StatusBadRequest, openapi.NewRespError(openapi.MissingParameter, c))
+		c.JSON(http.StatusBadRequest, openapi2.NewRespError(openapi2.MissingParameter, c))
 		return
 	}
-	pageParam := form.AlarmPageReqParam{
+	pageParam := form2.AlarmPageReqParam{
 		RuleName: reqParam.RuleName,
 		Status:   reqParam.Status,
 		TenantId: tenantId,
 		PageSize: reqParam.PageSize,
 		Current:  reqParam.PageNumber,
 	}
-	pageVo := dao.AlarmRule.SelectRulePageList(&pageParam)
+	pageVo := dao2.AlarmRule.SelectRulePageList(&pageParam)
 	var ruleList []RuleInfo
 	if pageVo.Records != nil {
-		listVo := pageVo.Records.([]form.AlarmRulePageDTO)
+		listVo := pageVo.Records.([]form2.AlarmRulePageDTO)
 		for _, ruleVo := range listVo {
-			product := dao.MonitorProduct.GetByName(global.DB, ruleVo.ProductType)
+			product := dao2.MonitorProduct.GetByName(global2.DB, ruleVo.ProductType)
 			ruleInfo := RuleInfo{
 				Name:                ruleVo.Name,
 				MonitorType:         ruleVo.MonitorType,
@@ -70,7 +70,7 @@ func (ctl *AlarmRuleCtl) SelectRulePageList(c *gin.Context) {
 		}
 	}
 	page := AlarmRulePageDTO{
-		ResCommonPage: *openapi.NewResCommonPage(c, pageVo),
+		ResCommonPage: *openapi2.NewResCommonPage(c, pageVo),
 		Rules:         ruleList,
 	}
 	c.JSON(http.StatusOK, page)
@@ -78,19 +78,19 @@ func (ctl *AlarmRuleCtl) SelectRulePageList(c *gin.Context) {
 
 func (ctl *AlarmRuleCtl) GetDetail(c *gin.Context) {
 	ruleId := c.Param("RuleId")
-	tenantId, err := util.GetTenantId(c)
+	tenantId, err := util2.GetTenantId(c)
 	if err != nil {
 		logger.Logger().Info("tenantId is nil")
-		c.JSON(http.StatusBadRequest, openapi.NewRespError(openapi.MissingParameter, c))
+		c.JSON(http.StatusBadRequest, openapi2.NewRespError(openapi2.MissingParameter, c))
 		return
 	}
-	detailVo, err := dao.AlarmRule.GetDetail(global.DB, ruleId, tenantId)
+	detailVo, err := dao2.AlarmRule.GetDetail(global2.DB, ruleId, tenantId)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, openapi.NewRespError(openapi.RuleIdInvalid, c))
+		c.JSON(http.StatusBadRequest, openapi2.NewRespError(openapi2.RuleIdInvalid, c))
 		return
 	}
 	res := RuleDetail{
-		RequestId: openapi.GetRequestId(c),
+		RequestId: openapi2.GetRequestId(c),
 	}
 	var scope string
 	if detailVo.Scope == "INSTANCE" {
@@ -134,41 +134,41 @@ func (ctl *AlarmRuleCtl) CreateRule(c *gin.Context) {
 	var reqParam AlarmRuleCreateReqDTO
 	addForm, errCode := buildAlarmRuleReqParam(c, &reqParam, nil)
 	if errCode != nil {
-		c.JSON(http.StatusBadRequest, openapi.NewRespError(errCode, c))
+		c.JSON(http.StatusBadRequest, openapi2.NewRespError(errCode, c))
 		return
 	}
-	err := util.Tx(addForm, service.CreateRule)
+	err := util2.Tx(addForm, service.CreateRule)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, openapi.NewRespError(openapi.SystemError, c))
+		c.JSON(http.StatusInternalServerError, openapi2.NewRespError(openapi2.SystemError, c))
 		return
 	}
 	res := struct {
 		RequestId string
 		RuleId    string
 	}{
-		RequestId: openapi.GetRequestId(c),
+		RequestId: openapi2.GetRequestId(c),
 		RuleId:    addForm.Id,
 	}
 	c.JSON(http.StatusOK, res)
 }
 
-func buildAlarmRuleReqParam(c *gin.Context, createParam *AlarmRuleCreateReqDTO, updateParam *AlarmRuleUpdateReqDTO) (*form.AlarmRuleAddReqDTO, *openapi.ErrorCode) {
+func buildAlarmRuleReqParam(c *gin.Context, createParam *AlarmRuleCreateReqDTO, updateParam *AlarmRuleUpdateReqDTO) (*form2.AlarmRuleAddReqDTO, *openapi2.ErrorCode) {
 	var param AlarmRuleCreateReqDTO
-	var productInfo = &model.MonitorProduct{}
+	var productInfo = &model2.MonitorProduct{}
 	if createParam != nil {
 		if err := c.ShouldBindJSON(&createParam); err != nil {
 			logger.Logger().Info(err)
-			return nil, openapi.GetErrorCode(err)
+			return nil, openapi2.GetErrorCode(err)
 		}
 		param = *createParam
-		productInfo = dao.MonitorProduct.GetByAbbreviation(global.DB, param.ProductAbbreviation)
+		productInfo = dao2.MonitorProduct.GetByAbbreviation(global2.DB, param.ProductAbbreviation)
 		if productInfo == nil || len(productInfo.BizId) == 0 {
-			return nil, openapi.ProductAbbreviationInvalid
+			return nil, openapi2.ProductAbbreviationInvalid
 		}
 	} else if updateParam != nil {
 		if err := c.ShouldBindJSON(&updateParam); err != nil {
 			logger.Logger().Info(err)
-			return nil, openapi.GetErrorCode(err)
+			return nil, openapi2.GetErrorCode(err)
 		}
 		param = AlarmRuleCreateReqDTO{
 			Scope:            updateParam.Scope,
@@ -183,29 +183,29 @@ func buildAlarmRuleReqParam(c *gin.Context, createParam *AlarmRuleCreateReqDTO, 
 	}
 	nameMatched, err := regexp.MatchString("^[a-z][a-z0-9_]{0,14}[a-z0-9]$", param.RuleName)
 	if !nameMatched {
-		return nil, openapi.RuleNameInvalid
+		return nil, openapi2.RuleNameInvalid
 	}
 
-	tenantId, err := util.GetTenantId(c)
+	tenantId, err := util2.GetTenantId(c)
 	if err != nil {
 		logger.Logger().Info("tenantId is nil")
-		return nil, openapi.MissingParameter
+		return nil, openapi2.MissingParameter
 	}
-	userId, err := util.GetUserId(c)
+	userId, err := util2.GetUserId(c)
 	if err != nil {
 		logger.Logger().Info("userId is nil")
-		return nil, openapi.MissingParameter
+		return nil, openapi2.MissingParameter
 	}
 	monitorItem, err1 := checkMetricName(param.TriggerCondition.MetricCode)
 	if err1 != nil {
-		return nil, openapi.MetricCodeInvalid
+		return nil, openapi2.MetricCodeInvalid
 	}
 	productBizId, _ := strconv.Atoi(productInfo.BizId)
 	var scope string
 	if param.Scope == "Resource" {
 		scope = "INSTANCE"
 	}
-	addForm := form.AlarmRuleAddReqDTO{
+	addForm := form2.AlarmRuleAddReqDTO{
 		RuleName:     param.RuleName,
 		MonitorType:  "云产品监控",
 		ProductType:  productInfo.Name,
@@ -218,30 +218,30 @@ func buildAlarmRuleReqParam(c *gin.Context, createParam *AlarmRuleCreateReqDTO, 
 		SourceType:   source_type.Front,
 	}
 	for _, resource := range param.Resources {
-		addForm.ResourceList = append(addForm.ResourceList, &form.InstanceInfo{
+		addForm.ResourceList = append(addForm.ResourceList, &form2.InstanceInfo{
 			InstanceId: resource.ResourceId,
 		})
 	}
 	for _, channel := range param.NoticeChannels {
-		addForm.AlarmHandlerList = append(addForm.AlarmHandlerList, &form.Handler{HandleType: channel.HandlerType})
+		addForm.AlarmHandlerList = append(addForm.AlarmHandlerList, &form2.Handler{HandleType: channel.HandlerType})
 	}
 	addForm.GroupList = param.GroupList
 	matched, err := regexp.MatchString("^[0-9\\.]+$", param.TriggerCondition.Threshold)
 	if !matched {
-		return nil, openapi.ThresholdInvalid
+		return nil, openapi2.ThresholdInvalid
 	}
 	threshold, err := strconv.ParseFloat(param.TriggerCondition.Threshold, 64)
 	if err != nil {
 		logger.Logger().Infof("Threshold is parsefloat error:%v", err)
-		return nil, openapi.InvalidParameter
+		return nil, openapi2.InvalidParameter
 	}
-	addForm.RuleCondition = &form.RuleCondition{
+	addForm.RuleCondition = &form2.RuleCondition{
 		MetricName:         param.TriggerCondition.MetricCode,
 		Period:             param.TriggerCondition.Period,
 		Times:              param.TriggerCondition.Times,
 		Statistics:         param.TriggerCondition.Statistics,
 		ComparisonOperator: param.TriggerCondition.ComparisonOperator,
-		Threshold:          util.FormatFloat(threshold, 2),
+		Threshold:          util2.FormatFloat(threshold, 2),
 		Unit:               monitorItem.Unit,
 		Labels:             monitorItem.Labels,
 		MonitorItemName:    monitorItem.Name,
@@ -253,45 +253,45 @@ func (ctl *AlarmRuleCtl) UpdateRule(c *gin.Context) {
 	var reqParam AlarmRuleUpdateReqDTO
 	updateForm, errCode := buildAlarmRuleReqParam(c, nil, &reqParam)
 	if errCode != nil {
-		c.JSON(http.StatusBadRequest, openapi.NewRespError(errCode, c))
+		c.JSON(http.StatusBadRequest, openapi2.NewRespError(errCode, c))
 		return
 	}
 	ruleId := c.Param("RuleId")
 	updateForm.Id = ruleId
-	err := util.Tx(updateForm, service.UpdateRule)
+	err := util2.Tx(updateForm, service.UpdateRule)
 	if err != nil {
 		if _, ok := err.(*commonError.BusinessError); ok {
-			c.JSON(http.StatusBadRequest, openapi.NewRespError(openapi.RuleIdInvalid, c))
+			c.JSON(http.StatusBadRequest, openapi2.NewRespError(openapi2.RuleIdInvalid, c))
 			return
 		}
-		c.JSON(http.StatusInternalServerError, openapi.NewRespError(openapi.SystemError, c))
+		c.JSON(http.StatusInternalServerError, openapi2.NewRespError(openapi2.SystemError, c))
 		return
 	}
-	c.JSON(http.StatusOK, openapi.NewResSuccess(c))
+	c.JSON(http.StatusOK, openapi2.NewResSuccess(c))
 }
 
 func (ctl *AlarmRuleCtl) DeleteRule(c *gin.Context) {
 	ruleId := c.Param("RuleId")
-	tenantId, err := util.GetTenantId(c)
+	tenantId, err := util2.GetTenantId(c)
 	if err != nil {
 		logger.Logger().Info(err)
-		c.JSON(http.StatusBadRequest, openapi.NewRespError(openapi.MissingParameter, c))
+		c.JSON(http.StatusBadRequest, openapi2.NewRespError(openapi2.MissingParameter, c))
 		return
 	}
-	reqParam := form.RuleReqDTO{
+	reqParam := form2.RuleReqDTO{
 		Id:       ruleId,
 		TenantId: tenantId,
 	}
-	err = util.Tx(&reqParam, service.DeleteRule)
+	err = util2.Tx(&reqParam, service.DeleteRule)
 	if err != nil {
 		if _, ok := err.(*commonError.BusinessError); ok {
-			c.JSON(http.StatusBadRequest, openapi.NewRespError(openapi.RuleIdInvalid, c))
+			c.JSON(http.StatusBadRequest, openapi2.NewRespError(openapi2.RuleIdInvalid, c))
 			return
 		}
-		c.JSON(http.StatusInternalServerError, global.NewError(err.Error()))
+		c.JSON(http.StatusInternalServerError, global2.NewError(err.Error()))
 		return
 	}
-	c.JSON(http.StatusOK, openapi.NewResSuccess(c))
+	c.JSON(http.StatusOK, openapi2.NewResSuccess(c))
 }
 
 func (ctl *AlarmRuleCtl) ChangeRuleStatus(c *gin.Context) {
@@ -299,35 +299,35 @@ func (ctl *AlarmRuleCtl) ChangeRuleStatus(c *gin.Context) {
 	var status StatusBody
 	if err := c.ShouldBindJSON(&status); err != nil {
 		logger.Logger().Info(err)
-		c.JSON(http.StatusBadRequest, openapi.NewRespError(openapi.GetErrorCode(err), c))
+		c.JSON(http.StatusBadRequest, openapi2.NewRespError(openapi2.GetErrorCode(err), c))
 		return
 	}
-	tenantId, err := util.GetTenantId(c)
+	tenantId, err := util2.GetTenantId(c)
 	if err != nil {
 		logger.Logger().Info("tenantId is nil")
-		c.JSON(http.StatusBadRequest, openapi.NewRespError(openapi.MissingParameter, c))
+		c.JSON(http.StatusBadRequest, openapi2.NewRespError(openapi2.MissingParameter, c))
 		return
 	}
-	reqParam := form.RuleReqDTO{
+	reqParam := form2.RuleReqDTO{
 		TenantId: tenantId,
 		Id:       ruleId,
 		Status:   status.Enable,
 	}
-	err = util.Tx(&reqParam, service.ChangeRuleStatus)
+	err = util2.Tx(&reqParam, service.ChangeRuleStatus)
 	if err != nil {
 		if _, ok := err.(*commonError.BusinessError); ok {
-			c.JSON(http.StatusBadRequest, openapi.NewRespError(openapi.RuleIdInvalid, c))
+			c.JSON(http.StatusBadRequest, openapi2.NewRespError(openapi2.RuleIdInvalid, c))
 			return
 		}
 		logger.Logger().Info(err)
-		c.JSON(http.StatusInternalServerError, openapi.NewRespError(openapi.SystemError, c))
+		c.JSON(http.StatusInternalServerError, openapi2.NewRespError(openapi2.SystemError, c))
 		return
 	}
-	c.JSON(http.StatusOK, openapi.NewResSuccess(c))
+	c.JSON(http.StatusOK, openapi2.NewResSuccess(c))
 }
 
-func checkMetricName(metricCode string) (*model.MonitorItem, error) {
-	item := dao.AlarmRule.GetMonitorItem(metricCode)
+func checkMetricName(metricCode string) (*model2.MonitorItem, error) {
+	item := dao2.AlarmRule.GetMonitorItem(metricCode)
 	if item == nil || len(item.MetricName) == 0 {
 		return nil, errors.New("指标不存在")
 	}
@@ -342,7 +342,7 @@ type AlarmPageReqParam struct {
 }
 
 type AlarmRulePageDTO struct {
-	openapi.ResCommonPage
+	openapi2.ResCommonPage
 	Rules []RuleInfo
 }
 type RuleInfo struct {

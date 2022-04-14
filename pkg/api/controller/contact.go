@@ -1,14 +1,14 @@
 package controller
 
 import (
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/enum"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/form"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/sys_component/sys_rocketmq"
-	commonService "code.cestc.cn/ccos-ops/cloud-monitor/business-common/service"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/service/external/message_center"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/util"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/strutil"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/enum"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/form"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global/sys_component/sys_rocketmq"
+	service2 "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/service"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/service/external/message_center"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/util"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/service"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/validator/translate"
 	"github.com/gin-gonic/gin"
@@ -21,7 +21,7 @@ type ContactCtl struct {
 
 func NewContactCtl() *ContactCtl {
 	return &ContactCtl{service.NewContactService(service.NewContactGroupService(service.NewContactGroupRelService()),
-		service.NewContactInformationService(commonService.NewMessageService(message_center.NewService())), service.NewContactGroupRelService())}
+		service.NewContactInformationService(service2.NewMessageService(message_center.NewService())), service.NewContactGroupRelService())}
 }
 
 func (ctl *ContactCtl) GetContact(c *gin.Context) {
@@ -124,7 +124,7 @@ func (ctl *ContactCtl) ActivateContact(c *gin.Context) {
 
 //获取租户姓名
 func (ctl *ContactCtl) getTenantName(activeCode string) string {
-	tenantName := commonService.NewTenantService().GetTenantInfo(ctl.service.GetTenantId(activeCode)).Name
+	tenantName := service2.NewTenantService().GetTenantInfo(ctl.service.GetTenantId(activeCode)).Name
 	if strutil.IsBlank(tenantName) {
 		return "未命名"
 	}

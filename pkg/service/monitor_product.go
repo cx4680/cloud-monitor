@@ -1,15 +1,15 @@
 package service
 
 import (
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/dao"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/enum"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/errors"
-	commonForm "code.cestc.cn/ccos-ops/cloud-monitor/business-common/form"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/model"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/service"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/vo"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/jsonutil"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/dao"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/enum"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/errors"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/form"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/model"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/service"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/vo"
 	"gorm.io/gorm"
 )
 
@@ -32,16 +32,16 @@ func (s *MonitorProductService) GetAllMonitorProduct() *[]model.MonitorProduct {
 	return s.dao.GetAllMonitorProduct()
 }
 
-func (s *MonitorProductService) ChangeStatus(param commonForm.MonitorProductParam) {
+func (s *MonitorProductService) ChangeStatus(param form.MonitorProductParam) {
 	s.dao.ChangeStatus(param.BizIdList, param.Status)
 }
 
 func (s *MonitorProductService) PersistenceLocal(db *gorm.DB, param interface{}) (string, error) {
-	p := param.(commonForm.MonitorProductParam)
+	p := param.(form.MonitorProductParam)
 	switch p.EventEum {
 	case enum.ChangeMonitorProductStatus:
 		s.ChangeStatus(p)
-		msg := commonForm.MqMsg{
+		msg := form.MqMsg{
 			EventEum: enum.ChangeMonitorProductStatus,
 			Data:     param,
 		}

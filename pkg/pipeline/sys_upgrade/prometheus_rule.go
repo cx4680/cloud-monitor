@@ -1,8 +1,8 @@
 package sys_upgrade
 
 import (
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/sys_component/sys_db"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global/sys_component/sys_db"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/service"
 )
 

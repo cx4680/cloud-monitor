@@ -1,8 +1,8 @@
 package v1_0
 
 import (
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/openapi"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/model"
+	openapi2 "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global/openapi"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/model"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/service"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -17,9 +17,9 @@ func NewMonitorProductCtl(service service.MonitorProductService) *MonitorProduct
 }
 
 func (mpc *MonitorProductCtl) GetMonitorProduct(c *gin.Context) {
-	pageQuery := openapi.NewPageQuery()
+	pageQuery := openapi2.NewPageQuery()
 	if err := c.ShouldBindQuery(pageQuery); err != nil {
-		c.JSON(http.StatusBadRequest, openapi.NewRespError(openapi.GetErrorCode(err), c))
+		c.JSON(http.StatusBadRequest, openapi2.NewRespError(openapi2.GetErrorCode(err), c))
 		return
 	}
 	productPageVo := mpc.service.GetMonitorProductPage(pageQuery.PageSize, pageQuery.PageNumber)
@@ -35,7 +35,7 @@ func (mpc *MonitorProductCtl) GetMonitorProduct(c *gin.Context) {
 		productMetaList = append(productMetaList, productMeta)
 	}
 	page := ProductPage{
-		ResCommonPage: *openapi.NewResCommonPage(c, productPageVo),
+		ResCommonPage: *openapi2.NewResCommonPage(c, productPageVo),
 		Resources:     productMetaList,
 	}
 	c.JSON(http.StatusOK, page)
@@ -49,6 +49,6 @@ type ProductMeta struct {
 }
 
 type ProductPage struct {
-	openapi.ResCommonPage
+	openapi2.ResCommonPage
 	Resources []ProductMeta
 }

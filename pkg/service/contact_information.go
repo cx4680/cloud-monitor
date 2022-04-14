@@ -1,17 +1,17 @@
 package service
 
 import (
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/constant"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/dao"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/errors"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/form"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/model"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/service"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/service/external/message_center"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/jsonutil"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/strutil"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/constant"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/dao"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/errors"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/form"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/model"
+	service2 "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/service"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/service/external/message_center"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 	"regexp"
@@ -19,14 +19,14 @@ import (
 )
 
 type ContactInformationService struct {
-	service.AbstractSyncServiceImpl
-	messageSvc *service.MessageService
+	service2.AbstractSyncServiceImpl
+	messageSvc *service2.MessageService
 	dao        *dao.ContactInformationDao
 }
 
-func NewContactInformationService(messageSvc *service.MessageService) *ContactInformationService {
+func NewContactInformationService(messageSvc *service2.MessageService) *ContactInformationService {
 	return &ContactInformationService{
-		AbstractSyncServiceImpl: service.AbstractSyncServiceImpl{},
+		AbstractSyncServiceImpl: service2.AbstractSyncServiceImpl{},
 		messageSvc:              messageSvc,
 		dao:                     dao.ContactInformation,
 	}
@@ -98,7 +98,7 @@ func (s *ContactInformationService) sendActivateMsg(tenantId string, address str
 		return
 	}
 	params := make(map[string]string)
-	params["userName"] = service.NewTenantService().GetTenantInfo(tenantId).Name
+	params["userName"] = service2.NewTenantService().GetTenantInfo(tenantId).Name
 	params["verifyBtn"] = config.Cfg.Common.ActivateInformationUrl + activeCode
 	params["activationdomain"] = config.Cfg.Common.ActivateInformationUrl + activeCode
 

@@ -1,10 +1,10 @@
 package external
 
 import (
-	commonService "code.cestc.cn/ccos-ops/cloud-monitor/business-common/service"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/httputil"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/jsonutil"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/strutil"
+	commonService "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/service"
 	"strconv"
 	"strings"
 )

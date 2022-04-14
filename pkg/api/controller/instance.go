@@ -1,11 +1,11 @@
 package controller
 
 import (
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/dao"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/form"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/util"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/dao"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/form"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global"
+	util2 "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/util"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/service"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/validator/translate"
 	"github.com/gin-gonic/gin"
@@ -33,14 +33,14 @@ func (ctl *InstanceCtl) Unbind(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, global.NewError(translate.GetErrorMsg(err)))
 		return
 	}
-	tenantId, err2 := util.GetTenantId(c)
+	tenantId, err2 := util2.GetTenantId(c)
 	if err2 != nil {
 		logger.Logger().Info("tenantId is nil")
 		c.JSON(http.StatusBadRequest, global.NewError(err2.Error()))
 		return
 	}
 	param.TenantId = tenantId
-	err := util.Tx(&param, service.UnbindInstance)
+	err := util2.Tx(&param, service.UnbindInstance)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, global.NewError(err.Error()))
 		return
@@ -54,13 +54,13 @@ func (ctl *InstanceCtl) Bind(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, global.NewError(translate.GetErrorMsg(err)))
 		return
 	}
-	tenantId, err := util.GetTenantId(c)
+	tenantId, err := util2.GetTenantId(c)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, global.NewError(err.Error()))
 		return
 	}
 	param.TenantId = tenantId
-	err = util.Tx(&param, service.BindInstance)
+	err = util2.Tx(&param, service.BindInstance)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, global.NewError(err.Error()))
 		return
@@ -74,7 +74,7 @@ func (ctl *InstanceCtl) GetRuleList(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, global.NewError(translate.GetErrorMsg(err)))
 		return
 	}
-	tenantId, err := util.GetTenantId(c)
+	tenantId, err := util2.GetTenantId(c)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, global.NewError(err.Error()))
 		return

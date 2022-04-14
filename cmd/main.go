@@ -1,13 +1,13 @@
 package main
 
 import (
-	cp "code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/pipeline"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/sys_component/sys_db"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/sys_component/sys_redis"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/task"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/run_time"
+	cp "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global/pipeline"
+	sys_db2 "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global/sys_component/sys_db"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global/sys_component/sys_redis"
+	task2 "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/task"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/k8s"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/pipeline/sys_upgrade"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/service"
@@ -33,7 +33,7 @@ func main() {
 	})
 
 	loader.AddStage(func(*context.Context) error {
-		if err := sys_db.InitDb(config.Cfg.Db); err != nil {
+		if err := sys_db2.InitDb(config.Cfg.Db); err != nil {
 			logger.Logger().Errorf("init database error: %v\n", err)
 			return err
 		}
@@ -49,24 +49,25 @@ func main() {
 	})
 
 	loader.AddStage(func(*context.Context) error {
-		return sync.InitSync(config.Cfg.Common.IsSingleRegion)
+		return sys_db2.InitData(config.Cfg.Db, "hawkeye", "file://./migrations")
 	})
 
 	loader.AddStage(func(*context.Context) error {
-		return sys_db.InitData(config.Cfg.Db, "hawkeye", "file://./migrations")
+		return sync.InitSync(config.Cfg.Common.IsSingleRegion)
 	})
+
 	loader.AddStage(func(*context.Context) error {
 		return translate.InitTrans("zh")
 	})
 
 	loader.AddStage(func(*context.Context) error {
-		bt := task.NewBusinessTaskImpl()
-		err := bt.Add(task.BusinessTaskDTO{
+		bt := task2.NewBusinessTaskImpl()
+		err := bt.Add(task2.BusinessTaskDTO{
 			Cron: "0 0 0/1 * * ?",
 			Name: "clearAlarmRecordJob",
-			Task: task.Clear,
+			Task: task2.Clear,
 		})
-		err = task.AddSyncJobs(bt)
+		err = task2.AddSyncJobs(bt)
 		bt.Start()
 		return err
 	})

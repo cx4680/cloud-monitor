@@ -1,16 +1,16 @@
 package service
 
 import (
-	commonConstant "code.cestc.cn/ccos-ops/cloud-monitor/business-common/constant"
-	dao2 "code.cestc.cn/ccos-ops/cloud-monitor/business-common/dao"
-	dtos2 "code.cestc.cn/ccos-ops/cloud-monitor/business-common/dto"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/enum/calc_mode"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/enum/source_type"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/errors"
-	forms2 "code.cestc.cn/ccos-ops/cloud-monitor/business-common/form"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global/sys_component/sys_redis"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
+	commonConstant "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/constant"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/dao"
+	dtos2 "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/dto"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/enum/calc_mode"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/enum/source_type"
+	errors2 "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/errors"
+	form2 "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/form"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global/sys_component/sys_redis"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/constant"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/dto"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/form"
@@ -73,8 +73,8 @@ func (service *K8sPrometheusService) GenerateUserPrometheusRule(tenantId string)
 
 func (service *K8sPrometheusService) deleteK8sRule(tenantId string, err error, router *k8s2.AlertManagerConfig) {
 	log.Printf(err.Error())
-	businessError := err.(*errors.BusinessError)
-	if businessError != nil && businessError.Code == errors.NoResource {
+	businessError := err.(*errors2.BusinessError)
+	if businessError != nil && businessError.Code == errors2.NoResource {
 		err := k8s2.DeleteAlertRule(tenantId)
 		if err != nil {
 			logger.Logger().Errorf("调用rule api delete 规格失败 %+v", err)
@@ -103,7 +103,7 @@ func (service *K8sPrometheusService) buildPrometheusRule(region string, zone str
 	}
 	router := buildAlertManagerRouter(alertList, tenantId)
 	if len(alertList) == 0 {
-		return nil, router, errors.NewBusinessErrorCode(errors.NoResource, "instanceList 为空")
+		return nil, router, errors2.NewBusinessErrorCode(errors2.NoResource, "instanceList 为空")
 	}
 	group := &form.SpecGroups{Name: tenantId, AlertList: alertList}
 	var groups []*form.SpecGroups
@@ -118,7 +118,7 @@ func (service *K8sPrometheusService) buildAlertRuleListByResource(wg *sync.WaitG
 	var alertList []*form.AlertDTO
 	global.DB.Raw("SELECT   t1.name as ruleName ,t1.`level`, t1.trigger_condition as ruleCondition, t1.biz_id as ruleId,t1.product_name as product_type, t1.monitor_type ,t2.resource_id,t1.silences_time,t1.source_type FROM  t_alarm_rule t1,  t_alarm_rule_resource_rel t2   WHERE  t2.alarm_rule_id = t1.biz_id   AND t2.tenant_id = ?   AND t1.deleted = 0   AND t1.enabled = 1", tenantId).Scan(&resRuleList)
 	for _, ruleExpress := range resRuleList {
-		ruleExpress.NoticeGroupIds = dao2.AlarmRule.GetNoticeGroupList(global.DB, ruleExpress.RuleId)
+		ruleExpress.NoticeGroupIds = dao.AlarmRule.GetNoticeGroupList(global.DB, ruleExpress.RuleId)
 		ruleExpress.TenantId = tenantId
 		rule, err := service.buildAlertRule(ruleExpress, ruleExpress.ResourceId)
 		if err != nil {
@@ -136,8 +136,8 @@ func (service *K8sPrometheusService) buildAlertRuleListByResourceGroup(wg *sync.
 	var alertList []*form.AlertDTO
 	global.DB.Raw("SELECT   t1.name as ruleName ,t1.`source` ,t1.`level`, t1.trigger_condition as ruleCondition, t1.biz_id as ruleId,t1.product_name as  product_type, t1.monitor_type ,t2.resource_group_id,t2.calc_mode ,t1.silences_time ,t1.source_type FROM  t_alarm_rule t1,  t_alarm_rule_group_rel t2   WHERE  t2.alarm_rule_id = t1.biz_id   AND t2.tenant_id = ?   AND t1.deleted = 0   AND t1.enabled = 1", tenantId).Scan(&groupRuleList)
 	for _, ruleExpress := range groupRuleList {
-		ruleExpress.NoticeGroupIds = dao2.AlarmRule.GetNoticeGroupList(global.DB, ruleExpress.RuleId)
-		instanceList := dao2.AlarmRule.GetResourceListByGroup(global.DB, ruleExpress.ResGroupId)
+		ruleExpress.NoticeGroupIds = dao.AlarmRule.GetNoticeGroupList(global.DB, ruleExpress.RuleId)
+		instanceList := dao.AlarmRule.GetResourceListByGroup(global.DB, ruleExpress.ResGroupId)
 		ruleExpress.TenantId = tenantId
 		if calc_mode.Resource != ruleExpress.CalcMode {
 			rule, err := service.buildAlertRule(ruleExpress, service.joinResourceId(instanceList, "|"))
@@ -154,7 +154,7 @@ func (service *K8sPrometheusService) buildAlertRuleListByResourceGroup(wg *sync.
 	resultChan <- alertList
 }
 
-func (service *K8sPrometheusService) buildAlertRuleList(instanceList []*forms2.InstanceInfo, ruleExpress *dto.RuleExpress) []*form.AlertDTO {
+func (service *K8sPrometheusService) buildAlertRuleList(instanceList []*form2.InstanceInfo, ruleExpress *dto.RuleExpress) []*form.AlertDTO {
 	var alertList []*form.AlertDTO
 	for _, instance := range instanceList {
 		rule, err := service.buildAlertRule(ruleExpress, instance.InstanceId)
@@ -184,7 +184,7 @@ func (service *K8sPrometheusService) buildAlertRule(ruleExpress *dto.RuleExpress
 	alert.ForTime = util.SecToTime(ruleExpress.RuleCondition.Times * ruleExpress.RuleCondition.Period)
 	alert.Summary = service.getTemplateLabels(ruleExpress.RuleCondition.Labels, ruleExpress.CalcMode)
 	labelMaps := map[string]interface{}{}
-	labelMaps["severity"] = dao2.ConfigItem.GetConfigItem(ruleExpress.Level, dao2.AlarmLevel, "").Name
+	labelMaps["severity"] = dao.ConfigItem.GetConfigItem(ruleExpress.Level, dao.AlarmLevel, "").Name
 	labelMaps["app"] = ProductLabel
 	source := "front"
 	if source_type.AutoScaling == ruleExpress.SourceType {
@@ -213,7 +213,7 @@ func (service *K8sPrometheusService) buildAlertRule(ruleExpress *dto.RuleExpress
 		Time:               ruleExpress.RuleCondition.Times,
 		Period:             ruleExpress.RuleCondition.Period,
 		Unit:               ruleExpress.RuleCondition.Unit,
-		Express:            dao2.GetExpress(ruleExpress.RuleCondition),
+		Express:            dao.GetExpress(ruleExpress.RuleCondition),
 		Level:              ruleExpress.Level,
 		MonitorItem:        ruleExpress.RuleCondition.MonitorItemName,
 		MonitorType:        ruleExpress.MonitorType,
@@ -231,16 +231,16 @@ func (service *K8sPrometheusService) buildAlertRule(ruleExpress *dto.RuleExpress
 	return alert, nil
 }
 
-func (service *K8sPrometheusService) generateExpr(ruleCondition *forms2.RuleCondition, instanceId string, mode int) string {
-	monitorItem := dao2.MonitorItem.GetMonitorItemByName(ruleCondition.MetricName)
+func (service *K8sPrometheusService) generateExpr(ruleCondition *form2.RuleCondition, instanceId string, mode int) string {
+	monitorItem := dao.MonitorItem.GetMonitorItemByName(ruleCondition.MetricName)
 	metric := strings.ReplaceAll(monitorItem.MetricsLinux, constant.MetricLabel, service.getLabels(instanceId, monitorItem.Labels))
 	if calc_mode.ResourceGroup == mode {
-		expr := fmt.Sprintf("%s_over_time((%s)[%s:1m])", dao2.ConfigItem.GetConfigItem(ruleCondition.Statistics, dao2.StatisticalMethodsPid, "").Data,
+		expr := fmt.Sprintf("%s_over_time((%s)[%s:1m])", dao.ConfigItem.GetConfigItem(ruleCondition.Statistics, dao.StatisticalMethodsPid, "").Data,
 			metric, util.SecToTime(ruleCondition.Period))
-		return fmt.Sprintf("%s(%s)%s%v", dao2.ConfigItem.GetConfigItem(ruleCondition.Statistics, dao2.StatisticalMethodsPid, "").Data, expr, dao2.ConfigItem.GetConfigItem(ruleCondition.ComparisonOperator, dao2.ComparisonMethodPid, "").Data, ruleCondition.Threshold)
+		return fmt.Sprintf("%s(%s)%s%v", dao.ConfigItem.GetConfigItem(ruleCondition.Statistics, dao.StatisticalMethodsPid, "").Data, expr, dao.ConfigItem.GetConfigItem(ruleCondition.ComparisonOperator, dao.ComparisonMethodPid, "").Data, ruleCondition.Threshold)
 	}
-	return fmt.Sprintf("%s_over_time((%s)[%s:1m])%s%v", dao2.ConfigItem.GetConfigItem(ruleCondition.Statistics, dao2.StatisticalMethodsPid, "").Data,
-		metric, util.SecToTime(ruleCondition.Period), dao2.ConfigItem.GetConfigItem(ruleCondition.ComparisonOperator, dao2.ComparisonMethodPid, "").Data,
+	return fmt.Sprintf("%s_over_time((%s)[%s:1m])%s%v", dao.ConfigItem.GetConfigItem(ruleCondition.Statistics, dao.StatisticalMethodsPid, "").Data,
+		metric, util.SecToTime(ruleCondition.Period), dao.ConfigItem.GetConfigItem(ruleCondition.ComparisonOperator, dao.ComparisonMethodPid, "").Data,
 		ruleCondition.Threshold)
 }
 
@@ -273,7 +273,7 @@ func (service *K8sPrometheusService) getTemplateLabels(labelStr string, mode int
 	return s[0:strings.LastIndex(s, ",")]
 }
 
-func (service *K8sPrometheusService) joinResourceId(elems []*forms2.InstanceInfo, sep string) string {
+func (service *K8sPrometheusService) joinResourceId(elems []*form2.InstanceInfo, sep string) string {
 	size := len(elems)
 	switch size {
 	case 0:

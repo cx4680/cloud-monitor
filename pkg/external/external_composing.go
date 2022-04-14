@@ -1,6 +1,8 @@
 package external
 
-import commonService "code.cestc.cn/ccos-ops/cloud-monitor/business-common/service"
+import (
+	commonService "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/service"
+)
 
 //已接入的产品简称
 const (

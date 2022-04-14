@@ -1,7 +1,7 @@
 package vo
 
 import (
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global"
 )
 
 type AlarmRecordPageVO struct {

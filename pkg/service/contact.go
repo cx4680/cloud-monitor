@@ -1,18 +1,18 @@
 package service
 
 import (
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/constant"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/dao"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/enum"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/errors"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/form"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/model"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/service"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/util"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/jsonutil"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/snowflake"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/strutil"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/constant"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/dao"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/enum"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/errors"
+	form2 "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/form"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global"
+	model2 "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/model"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/service"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/util"
 	"gorm.io/gorm"
 	"regexp"
 	"strconv"
@@ -37,7 +37,7 @@ func NewContactService(contactGroupService *ContactGroupService, contactInformat
 }
 
 func (s *ContactService) PersistenceLocal(db *gorm.DB, param interface{}) (string, error) {
-	p := param.(*form.ContactParam)
+	p := param.(*form2.ContactParam)
 	//每个联系人最多加入5个联系组
 	if len(p.GroupBizIdList) > constant.MaxContactGroup {
 		return "", errors.NewBusinessError("每个联系人最多加入" + strconv.Itoa(constant.MaxContactGroup) + "个联系组")
@@ -66,7 +66,7 @@ func (s *ContactService) PersistenceLocal(db *gorm.DB, param interface{}) (strin
 		if err != nil {
 			return "", err
 		}
-		return jsonutil.ToString(form.MqMsg{
+		return jsonutil.ToString(form2.MqMsg{
 			EventEum: enum.InsertContact,
 			Data:     ContactMsg{Contact: contact, ContactInformationList: informationList, ContactGroupRelList: relList},
 		}), nil
@@ -92,7 +92,7 @@ func (s *ContactService) PersistenceLocal(db *gorm.DB, param interface{}) (strin
 		if err != nil {
 			return "", err
 		}
-		return jsonutil.ToString(form.MqMsg{
+		return jsonutil.ToString(form2.MqMsg{
 			EventEum: enum.UpdateContact,
 			Data:     ContactMsg{Contact: contact, ContactInformationList: informationList, ContactGroupRelList: relList},
 		}), nil
@@ -105,7 +105,7 @@ func (s *ContactService) PersistenceLocal(db *gorm.DB, param interface{}) (strin
 		informationList := s.contactInformationService.DeleteContactInformation(db, p)
 		//删除联系人组关联
 		relList := s.contactGroupRelService.DeleteContactGroupRel(db, p)
-		msg := form.MqMsg{
+		msg := form2.MqMsg{
 			EventEum: enum.DeleteContact,
 			Data:     ContactMsg{Contact: contact, ContactInformation: informationList, ContactGroupRel: relList, Param: p},
 		}
@@ -115,7 +115,7 @@ func (s *ContactService) PersistenceLocal(db *gorm.DB, param interface{}) (strin
 		if strutil.IsBlank(p.ActiveCode) || strutil.IsBlank(tenantId) {
 			return "", errors.NewBusinessError("无效激活码")
 		}
-		return jsonutil.ToString(form.MqMsg{
+		return jsonutil.ToString(form2.MqMsg{
 			EventEum: enum.ActivateContact,
 			Data:     p.ActiveCode,
 		}), nil
@@ -124,17 +124,17 @@ func (s *ContactService) PersistenceLocal(db *gorm.DB, param interface{}) (strin
 	}
 }
 
-func (s *ContactService) SelectContact(param form.ContactParam) *form.ContactFormPage {
+func (s *ContactService) SelectContact(param form2.ContactParam) *form2.ContactFormPage {
 	return s.dao.Select(global.DB, param)
 }
 
-func (s *ContactService) insertContact(db *gorm.DB, p *form.ContactParam) (*model.Contact, error) {
+func (s *ContactService) insertContact(db *gorm.DB, p *form2.ContactParam) (*model2.Contact, error) {
 	//每个账号限制创建100个联系人
 	if s.dao.GetContactCount(p.TenantId) >= constant.MaxContactNum {
 		return nil, errors.NewBusinessError("联系人限制创建" + strconv.Itoa(constant.MaxContactNum) + "个")
 	}
 	currentTime := util.GetNow()
-	contact := &model.Contact{
+	contact := &model2.Contact{
 		BizId:       strconv.FormatInt(snowflake.GetWorker().NextId(), 10),
 		TenantId:    p.TenantId,
 		Name:        p.ContactName,
@@ -148,7 +148,7 @@ func (s *ContactService) insertContact(db *gorm.DB, p *form.ContactParam) (*mode
 	return contact, nil
 }
 
-func (s *ContactService) updateContact(db *gorm.DB, p form.ContactParam) (*model.Contact, error) {
+func (s *ContactService) updateContact(db *gorm.DB, p form2.ContactParam) (*model2.Contact, error) {
 	if !s.dao.CheckContact(p.TenantId, p.ContactBizId) {
 		return nil, errors.NewBusinessError("该租户无此联系人")
 	}
@@ -156,7 +156,7 @@ func (s *ContactService) updateContact(db *gorm.DB, p form.ContactParam) (*model
 		return nil, errors.NewBusinessError("联系人ID不能为空")
 	}
 	currentTime := util.GetNow()
-	var contact = &model.Contact{
+	var contact = &model2.Contact{
 		BizId:       p.ContactBizId,
 		TenantId:    p.TenantId,
 		Name:        p.ContactName,
@@ -168,14 +168,14 @@ func (s *ContactService) updateContact(db *gorm.DB, p form.ContactParam) (*model
 	return contact, nil
 }
 
-func (s *ContactService) deleteContact(db *gorm.DB, p form.ContactParam) (*model.Contact, error) {
+func (s *ContactService) deleteContact(db *gorm.DB, p form2.ContactParam) (*model2.Contact, error) {
 	if !s.dao.CheckContact(p.TenantId, p.ContactBizId) {
 		return nil, errors.NewBusinessError("该租户无此联系人")
 	}
 	if strutil.IsBlank(p.ContactBizId) {
 		return nil, errors.NewBusinessError("联系人ID不能为空")
 	}
-	var contact = &model.Contact{
+	var contact = &model2.Contact{
 		BizId:    p.ContactBizId,
 		TenantId: p.TenantId,
 	}
@@ -195,10 +195,10 @@ func (s *ContactService) checkContactName(contactName string) bool {
 }
 
 type ContactMsg struct {
-	Param                  *form.ContactParam
-	Contact                *model.Contact
-	ContactInformation     *model.ContactInformation
-	ContactGroupRel        *model.ContactGroupRel
-	ContactInformationList []*model.ContactInformation
-	ContactGroupRelList    []*model.ContactGroupRel
+	Param                  *form2.ContactParam
+	Contact                *model2.Contact
+	ContactInformation     *model2.ContactInformation
+	ContactGroupRel        *model2.ContactGroupRel
+	ContactInformationList []*model2.ContactInformation
+	ContactGroupRelList    []*model2.ContactGroupRel
 }

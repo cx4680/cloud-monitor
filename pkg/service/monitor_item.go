@@ -1,16 +1,15 @@
 package service
 
 import (
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/dao"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/enum"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/errors"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/form"
-	commonForm "code.cestc.cn/ccos-ops/cloud-monitor/business-common/form"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/model"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/service"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/util"
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/vo"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/jsonutil"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/dao"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/enum"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/errors"
+	form2 "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/form"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/model"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/service"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/util"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/vo"
 	"gorm.io/gorm"
 )
 
@@ -25,20 +24,20 @@ func NewMonitorItemService(dao *dao.MonitorItemDao) *MonitorItemService {
 		AbstractSyncServiceImpl: service.AbstractSyncServiceImpl{}}
 }
 
-func (s *MonitorItemService) GetMonitorItem(param form.MonitorItemParam) []model.MonitorItem {
+func (s *MonitorItemService) GetMonitorItem(param form2.MonitorItemParam) []model.MonitorItem {
 	return s.dao.GetMonitorItem(param.ProductBizId, param.OsType, param.Display)
 }
 
-func (s *MonitorItemService) ChangeDisplay(db *gorm.DB, param form.MonitorItemParam) {
+func (s *MonitorItemService) ChangeDisplay(db *gorm.DB, param form2.MonitorItemParam) {
 	s.dao.ChangeDisplay(db, param.ProductBizId, param.Display, param.BizIdList)
 }
 
 func (s *MonitorItemService) PersistenceLocal(db *gorm.DB, param interface{}) (string, error) {
-	p := param.(commonForm.MonitorItemParam)
+	p := param.(form2.MonitorItemParam)
 	switch p.EventEum {
 	case enum.ChangeMonitorItemDisplay:
 		s.ChangeDisplay(db, p)
-		msg := commonForm.MqMsg{
+		msg := form2.MqMsg{
 			EventEum: enum.ChangeMonitorItemDisplay,
 			Data:     param,
 		}

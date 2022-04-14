@@ -1,9 +1,9 @@
 package external
 
 import (
-	"code.cestc.cn/ccos-ops/cloud-monitor/business-common/service"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/httputil"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/jsonutil"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/service"
 )
 
 type NatInstanceService struct {
