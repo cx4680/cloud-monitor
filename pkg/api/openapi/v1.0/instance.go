@@ -5,7 +5,7 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/dao"
 	commonError "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/errors"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/form"
-	openapi2 "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global/openapi"
+	openapi "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global/openapi"
 	util2 "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/util"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/vo"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/service"
@@ -20,10 +20,10 @@ func NewInstanceCtl() *InstanceCtl {
 }
 
 func (ctl *InstanceCtl) Page(c *gin.Context) {
-	reqParam := openapi2.NewPageQuery()
+	reqParam := openapi.NewPageQuery()
 	if err := c.ShouldBindQuery(&reqParam); err != nil {
 		logger.Logger().Infof("param valid error %+v", err)
-		c.JSON(http.StatusBadRequest, openapi2.NewRespError(openapi2.GetErrorCode(err), c))
+		c.JSON(http.StatusBadRequest, openapi.NewRespError(openapi.GetErrorCode(err), c))
 		return
 	}
 	resourceId := c.Param("ResourceId")
@@ -47,7 +47,7 @@ func (ctl *InstanceCtl) Page(c *gin.Context) {
 		ruleList = append(ruleList, ruleInfo)
 	}
 	rulePage := InstanceRulePage{
-		ResCommonPage: *openapi2.NewResCommonPage(c, pageVO),
+		ResCommonPage: *openapi.NewResCommonPage(c, pageVO),
 		Rules:         ruleList,
 	}
 	c.JSON(http.StatusOK, rulePage)
@@ -57,13 +57,13 @@ func (ctl *InstanceCtl) Unbind(c *gin.Context) {
 	var reqParam UnBindBodyParam
 	if err := c.ShouldBindJSON(&reqParam); err != nil {
 		logger.Logger().Infof("param valid error %+v", err)
-		c.JSON(http.StatusBadRequest, openapi2.NewRespError(openapi2.GetErrorCode(err), c))
+		c.JSON(http.StatusBadRequest, openapi.NewRespError(openapi.GetErrorCode(err), c))
 		return
 	}
 	tenantId, err2 := util2.GetTenantId(c)
 	if err2 != nil {
 		logger.Logger().Info("tenantId is nil")
-		c.JSON(http.StatusBadRequest, openapi2.NewRespError(openapi2.MissingParameter, c))
+		c.JSON(http.StatusBadRequest, openapi.NewRespError(openapi.MissingParameter, c))
 		return
 	}
 	resourceId := c.Param("ResourceId")
@@ -76,26 +76,26 @@ func (ctl *InstanceCtl) Unbind(c *gin.Context) {
 	if err != nil {
 		logger.Logger().Info(err)
 		if _, ok := err.(*commonError.BusinessError); ok {
-			c.JSON(http.StatusBadRequest, openapi2.NewRespError(openapi2.RuleIdInvalid, c))
+			c.JSON(http.StatusBadRequest, openapi.NewRespError(openapi.RuleIdInvalid, c))
 			return
 		}
-		c.JSON(http.StatusInternalServerError, openapi2.NewRespError(openapi2.SystemError, c))
+		c.JSON(http.StatusInternalServerError, openapi.NewRespError(openapi.SystemError, c))
 		return
 	}
-	c.JSON(http.StatusOK, openapi2.NewResSuccess(c))
+	c.JSON(http.StatusOK, openapi.NewResSuccess(c))
 }
 
 func (ctl *InstanceCtl) Bind(c *gin.Context) {
 	var reqParam BindBodyParam
 	if err := c.ShouldBindJSON(&reqParam); err != nil {
 		logger.Logger().Infof("param valid error %+v", err)
-		c.JSON(http.StatusBadRequest, openapi2.NewRespError(openapi2.GetErrorCode(err), c))
+		c.JSON(http.StatusBadRequest, openapi.NewRespError(openapi.GetErrorCode(err), c))
 		return
 	}
 	tenantId, err := util2.GetTenantId(c)
 	if err != nil {
 		logger.Logger().Info("tenantId is nil")
-		c.JSON(http.StatusBadRequest, openapi2.NewRespError(openapi2.MissingParameter, c))
+		c.JSON(http.StatusBadRequest, openapi.NewRespError(openapi.MissingParameter, c))
 		return
 	}
 	resourceId := c.Param("ResourceId")
@@ -110,13 +110,13 @@ func (ctl *InstanceCtl) Bind(c *gin.Context) {
 	if err != nil {
 		logger.Logger().Info(err)
 		if _, ok := err.(*commonError.BusinessError); ok {
-			c.JSON(http.StatusBadRequest, openapi2.NewRespError(openapi2.InvalidParameter, c))
+			c.JSON(http.StatusBadRequest, openapi.NewRespError(openapi.InvalidParameter, c))
 			return
 		}
-		c.JSON(http.StatusInternalServerError, openapi2.NewRespError(openapi2.SystemError, c))
+		c.JSON(http.StatusInternalServerError, openapi.NewRespError(openapi.SystemError, c))
 		return
 	}
-	c.JSON(http.StatusOK, openapi2.NewResSuccess(c))
+	c.JSON(http.StatusOK, openapi.NewResSuccess(c))
 }
 
 type InstanceRuleInfo struct {
@@ -128,7 +128,7 @@ type InstanceRuleInfo struct {
 }
 
 type InstanceRulePage struct {
-	openapi2.ResCommonPage
+	openapi.ResCommonPage
 	Rules []InstanceRuleInfo
 }
 

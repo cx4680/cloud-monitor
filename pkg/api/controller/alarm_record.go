@@ -4,7 +4,7 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/jsonutil"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/strutil"
 	commonDtos "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/dto"
-	global2 "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global"
 	util2 "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/util"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/dao"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/form"
@@ -25,39 +25,39 @@ func NewAlarmRecordController() *AlarmRecordController {
 func (a *AlarmRecordController) GetPageList(c *gin.Context) {
 	var f form.AlarmRecordPageQueryForm
 	if err := c.ShouldBindJSON(&f); err != nil {
-		c.JSON(http.StatusBadRequest, global2.NewError(translate.GetErrorMsg(err)))
+		c.JSON(http.StatusBadRequest, global.NewError(translate.GetErrorMsg(err)))
 		return
 	}
 	tenantId, _ := util2.GetTenantId(c)
-	page := dao.AlarmRecord.GetPageList(global2.DB, tenantId, f)
-	c.JSON(http.StatusOK, global2.NewSuccess("查询成功", page))
+	page := dao.AlarmRecord.GetPageList(global.DB, tenantId, f)
+	c.JSON(http.StatusOK, global.NewSuccess("查询成功", page))
 }
 
 func (a *AlarmRecordController) GetAlarmContactInfo(c *gin.Context) {
 	bizId := c.Query("bizId")
 	if strutil.IsBlank(bizId) {
-		c.JSON(http.StatusBadRequest, global2.NewError("参数错误"))
+		c.JSON(http.StatusBadRequest, global.NewError("参数错误"))
 		return
 	}
 	tenantId, err := util2.GetTenantId(c)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, global2.NewError("身份获取错误"))
+		c.JSON(http.StatusUnauthorized, global.NewError("身份获取错误"))
 		return
 	}
-	r := dao.AlarmRecord.GetByBizIdAndTenantId(global2.DB, bizId, tenantId)
+	r := dao.AlarmRecord.GetByBizIdAndTenantId(global.DB, bizId, tenantId)
 	if strutil.IsBlank(r.ContactInfo) {
-		c.JSON(http.StatusOK, global2.NewSuccess("查询成功", nil))
+		c.JSON(http.StatusOK, global.NewSuccess("查询成功", nil))
 		return
 	}
 	var contactGroups []*commonDtos.ContactGroupInfo
 	jsonutil.ToObject(r.ContactInfo, &contactGroups)
-	c.JSON(http.StatusOK, global2.NewSuccess("查询成功", contactGroups))
+	c.JSON(http.StatusOK, global.NewSuccess("查询成功", contactGroups))
 }
 
 func (a *AlarmRecordController) GetAlarmRecordTotal(c *gin.Context) {
 	var f form.AlarmRecordPageQueryForm
 	if err := c.ShouldBindQuery(&f); err != nil {
-		c.JSON(http.StatusBadRequest, global2.NewError(translate.GetErrorMsg(err)))
+		c.JSON(http.StatusBadRequest, global.NewError(translate.GetErrorMsg(err)))
 		return
 	}
 	tenantId, _ := util2.GetTenantId(c)
@@ -73,14 +73,14 @@ func (a *AlarmRecordController) GetAlarmRecordTotal(c *gin.Context) {
 		start = util2.TimeToStr(util2.StrToTime(util2.FullTimeFmt, f.StartTime), util2.DayTimeFmt)
 		end = util2.TimeToStr(util2.StrToTime(util2.FullTimeFmt, f.EndTime).Add(d), util2.DayTimeFmt)
 	}
-	total := dao.AlarmRecord.GetAlarmRecordTotal(global2.DB, tenantId, f.Region, start, end)
-	c.JSON(http.StatusOK, global2.NewSuccess("查询成功", total))
+	total := dao.AlarmRecord.GetAlarmRecordTotal(global.DB, tenantId, f.Region, start, end)
+	c.JSON(http.StatusOK, global.NewSuccess("查询成功", total))
 }
 
 func (a *AlarmRecordController) GetRecordNumHistory(c *gin.Context) {
 	var f form.AlarmRecordPageQueryForm
 	if err := c.ShouldBindQuery(&f); err != nil {
-		c.JSON(http.StatusBadRequest, global2.NewError(translate.GetErrorMsg(err)))
+		c.JSON(http.StatusBadRequest, global.NewError(translate.GetErrorMsg(err)))
 		return
 	}
 	tenantId, _ := util2.GetTenantId(c)
@@ -90,7 +90,7 @@ func (a *AlarmRecordController) GetRecordNumHistory(c *gin.Context) {
 
 	start := util2.TimeToStr(startDate, util2.DayTimeFmt)
 	end := util2.TimeToStr(endDate, util2.DayTimeFmt)
-	numList := dao.AlarmRecord.GetRecordNumHistory(global2.DB, tenantId, f.Region, start, end)
+	numList := dao.AlarmRecord.GetRecordNumHistory(global.DB, tenantId, f.Region, start, end)
 	//补充无数据的日期，该日期的历史数据为0
 	resultMap := make(map[string]int)
 	for _, v := range numList {
@@ -105,5 +105,5 @@ func (a *AlarmRecordController) GetRecordNumHistory(c *gin.Context) {
 		data = append(data, recordNumHistory)
 		startDate = startDate.Add(d)
 	}
-	c.JSON(http.StatusOK, global2.NewSuccess("查询成功", data))
+	c.JSON(http.StatusOK, global.NewSuccess("查询成功", data))
 }

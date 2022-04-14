@@ -3,16 +3,10 @@ package enum
 type EventEum string
 
 const (
-	InsertContact            EventEum = "insertContact"
-	UpdateContact            EventEum = "updateContact"
-	DeleteContact            EventEum = "deleteContact"
-	ActivateContact          EventEum = "activateContact"
-	InsertContactInformation EventEum = "insertContactInformation"
-	UpdateContactInformation EventEum = "updateContactInformation"
-	DeleteContactInformation EventEum = "deleteContactInformation"
-	InsertContactGroupRel    EventEum = "insertContactGroupRel"
-	UpdateContactGroupRel    EventEum = "updateContactGroupRel"
-	DeleteContactGroupRel    EventEum = "DeleteContactGroupRel"
+	InsertContact   EventEum = "insertContact"
+	UpdateContact   EventEum = "updateContact"
+	DeleteContact   EventEum = "deleteContact"
+	ActivateContact EventEum = "activateContact"
 
 	InsertContactGroup EventEum = "insertContactGroup"
 	UpdateContactGroup EventEum = "updateContactGroup"

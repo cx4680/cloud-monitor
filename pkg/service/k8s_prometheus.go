@@ -2,12 +2,11 @@ package service
 
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
-	commonConstant "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/constant"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/dao"
 	dtos2 "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/dto"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/enum/calc_mode"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/enum/source_type"
-	errors2 "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/errors"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/errors"
 	form2 "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/form"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global/sys_component/sys_redis"
@@ -35,7 +34,7 @@ const ProductNamespaceLabel = "product-cec-hawkeye"
 
 func (service *K8sPrometheusService) GenerateUserPrometheusRule(tenantId string) {
 	ctxLock := context.Background()
-	key := fmt.Sprintf(commonConstant.TenantRuleKey, tenantId)
+	key := fmt.Sprintf(constant.TenantRuleKey, tenantId)
 	err := sys_redis.Lock(ctxLock, key, sys_redis.DefaultLease, true)
 	if err != nil {
 		log.Printf("获取 rule lock error  %+v", err)
@@ -73,8 +72,8 @@ func (service *K8sPrometheusService) GenerateUserPrometheusRule(tenantId string)
 
 func (service *K8sPrometheusService) deleteK8sRule(tenantId string, err error, router *k8s2.AlertManagerConfig) {
 	log.Printf(err.Error())
-	businessError := err.(*errors2.BusinessError)
-	if businessError != nil && businessError.Code == errors2.NoResource {
+	businessError := err.(*errors.BusinessError)
+	if businessError != nil && businessError.Code == errors.NoResource {
 		err := k8s2.DeleteAlertRule(tenantId)
 		if err != nil {
 			logger.Logger().Errorf("调用rule api delete 规格失败 %+v", err)
@@ -103,7 +102,7 @@ func (service *K8sPrometheusService) buildPrometheusRule(region string, zone str
 	}
 	router := buildAlertManagerRouter(alertList, tenantId)
 	if len(alertList) == 0 {
-		return nil, router, errors2.NewBusinessErrorCode(errors2.NoResource, "instanceList 为空")
+		return nil, router, errors.NewBusinessErrorCode(errors.NoResource, "instanceList 为空")
 	}
 	group := &form.SpecGroups{Name: tenantId, AlertList: alertList}
 	var groups []*form.SpecGroups

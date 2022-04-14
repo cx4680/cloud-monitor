@@ -4,7 +4,7 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/strutil"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/dao"
 	commonForm "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/form"
-	openapi2 "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global/openapi"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global/openapi"
 	commonService "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/service"
 	util2 "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/util"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/constant"
@@ -29,7 +29,7 @@ func NewMonitorReportFormController() *MonitorReportFormCtl {
 func (mpc *MonitorReportFormCtl) GetMonitorDatas(c *gin.Context) {
 	tenantId, err := util2.GetTenantId(c)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, openapi2.NewRespError(openapi2.MissingParameter, c))
+		c.JSON(http.StatusBadRequest, openapi.NewRespError(openapi.MissingParameter, c))
 		return
 	}
 	resourceId := c.Param("ResourceId")
@@ -37,18 +37,18 @@ func (mpc *MonitorReportFormCtl) GetMonitorDatas(c *gin.Context) {
 	var param = MonitorDataParam{Step: 60}
 	err = c.ShouldBindQuery(&param)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, openapi2.NewRespError(openapi2.GetErrorCode(err), c))
+		c.JSON(http.StatusBadRequest, openapi.NewRespError(openapi.GetErrorCode(err), c))
 		return
 	}
 	if param.StartTime == 0 || param.EndTime == 0 || param.StartTime > param.EndTime {
-		c.JSON(http.StatusBadRequest, openapi2.NewRespError(openapi2.TimeParameterError, c))
+		c.JSON(http.StatusBadRequest, openapi.NewRespError(openapi.TimeParameterError, c))
 		return
 	}
 	monitorItem := getMonitorItemByMetricCode(metricCode)
 	//校验参数
 	errCode := checkParam(resourceId, monitorItem.Metric, monitorItem.ProductAbbreviation, tenantId)
 	if errCode != nil {
-		c.JSON(http.StatusBadRequest, openapi2.NewRespError(errCode, c))
+		c.JSON(http.StatusBadRequest, openapi.NewRespError(errCode, c))
 		return
 	}
 	//查询Prometheus
@@ -63,7 +63,7 @@ func (mpc *MonitorReportFormCtl) GetMonitorDatas(c *gin.Context) {
 	}
 	label := getLabel(monitorItem.Labels)
 	result := MonitorRangeData{
-		RequestId:           openapi2.GetRequestId(c),
+		RequestId:           openapi.GetRequestId(c),
 		MetricCode:          metricCode,
 		ProductAbbreviation: monitorItem.ProductAbbreviation,
 		Times:               timeList,
@@ -79,7 +79,7 @@ func (mpc *MonitorReportFormCtl) GetMonitorDatas(c *gin.Context) {
 func (mpc *MonitorReportFormCtl) GetMonitorData(c *gin.Context) {
 	tenantId, err := util2.GetTenantId(c)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, openapi2.NewRespError(openapi2.MissingParameter, c))
+		c.JSON(http.StatusBadRequest, openapi.NewRespError(openapi.MissingParameter, c))
 		return
 	}
 	resourceId := c.Param("ResourceId")
@@ -88,7 +88,7 @@ func (mpc *MonitorReportFormCtl) GetMonitorData(c *gin.Context) {
 	//校验参数
 	errCode := checkParam(resourceId, monitorItem.Metric, monitorItem.ProductAbbreviation, tenantId)
 	if errCode != nil {
-		c.JSON(http.StatusBadRequest, openapi2.NewRespError(errCode, c))
+		c.JSON(http.StatusBadRequest, openapi.NewRespError(errCode, c))
 		return
 	}
 	//查询Prometheus
@@ -96,7 +96,7 @@ func (mpc *MonitorReportFormCtl) GetMonitorData(c *gin.Context) {
 	prometheusResult := service.Query(pql, "").Data.Result
 	label := getLabel(monitorItem.Labels)
 	result := MonitorData{
-		RequestId:           openapi2.GetRequestId(c),
+		RequestId:           openapi.GetRequestId(c),
 		MetricCode:          metricCode,
 		ProductAbbreviation: monitorItem.ProductAbbreviation,
 		Dimension:           label,
@@ -109,19 +109,19 @@ func (mpc *MonitorReportFormCtl) GetMonitorData(c *gin.Context) {
 func (mpc *MonitorReportFormCtl) GetMonitorDataTop(c *gin.Context) {
 	tenantId, err := util2.GetTenantId(c)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, openapi2.NewRespError(openapi2.MissingParameter, c))
+		c.JSON(http.StatusBadRequest, openapi.NewRespError(openapi.MissingParameter, c))
 		return
 	}
 	metricCode := c.Param("MetricCode")
 	n := c.Param("N")
 	i, err := strconv.Atoi(n)
 	if err != nil || i <= 0 {
-		c.JSON(http.StatusBadRequest, openapi2.NewRespError(openapi2.InvalidParameter, c))
+		c.JSON(http.StatusBadRequest, openapi.NewRespError(openapi.InvalidParameter, c))
 		return
 	}
 	monitorItem := getMonitorItemByMetricCode(metricCode)
 	if strutil.IsBlank(monitorItem.Metric) {
-		c.JSON(http.StatusBadRequest, openapi2.NewRespError(openapi2.MetricCodeInvalid, c))
+		c.JSON(http.StatusBadRequest, openapi.NewRespError(openapi.MetricCodeInvalid, c))
 		return
 	}
 	instances := getInstances(tenantId, monitorItem.ProductAbbreviation)
@@ -130,7 +130,7 @@ func (mpc *MonitorReportFormCtl) GetMonitorDataTop(c *gin.Context) {
 	prometheusResult := service.Query(pql, "").Data.Result
 	label := getLabel(monitorItem.Labels)
 	result := MonitorTopData{
-		RequestId:           openapi2.GetRequestId(c),
+		RequestId:           openapi.GetRequestId(c),
 		MetricCode:          metricCode,
 		ProductAbbreviation: monitorItem.ProductAbbreviation,
 		Dimension:           label,
@@ -144,15 +144,15 @@ func (mpc *MonitorReportFormCtl) GetMonitorDataTop(c *gin.Context) {
 }
 
 //检验参数
-func checkParam(resourceId, metric, product, tenantId string) *openapi2.ErrorCode {
+func checkParam(resourceId, metric, product, tenantId string) *openapi.ErrorCode {
 	if strutil.IsBlank(resourceId) {
-		return openapi2.MissingResource
+		return openapi.MissingResource
 	}
 	if strutil.IsBlank(metric) {
-		return openapi2.MetricCodeInvalid
+		return openapi.MetricCodeInvalid
 	}
 	if !checkUserInstanceList(tenantId, product, resourceId) {
-		return openapi2.ResourceError
+		return openapi.ResourceError
 	}
 	return nil
 }

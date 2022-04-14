@@ -4,14 +4,14 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/jsonutil"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/strutil"
-	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/constant"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/dao"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/errors"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/form"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/model"
-	service2 "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/service"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/service"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/service/external/message_center"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/constant"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 	"regexp"
@@ -19,14 +19,14 @@ import (
 )
 
 type ContactInformationService struct {
-	service2.AbstractSyncServiceImpl
-	messageSvc *service2.MessageService
+	service.AbstractSyncServiceImpl
+	messageSvc *service.MessageService
 	dao        *dao.ContactInformationDao
 }
 
-func NewContactInformationService(messageSvc *service2.MessageService) *ContactInformationService {
+func NewContactInformationService(messageSvc *service.MessageService) *ContactInformationService {
 	return &ContactInformationService{
-		AbstractSyncServiceImpl: service2.AbstractSyncServiceImpl{},
+		AbstractSyncServiceImpl: service.AbstractSyncServiceImpl{},
 		messageSvc:              messageSvc,
 		dao:                     dao.ContactInformation,
 	}
@@ -98,7 +98,7 @@ func (s *ContactInformationService) sendActivateMsg(tenantId string, address str
 		return
 	}
 	params := make(map[string]string)
-	params["userName"] = service2.NewTenantService().GetTenantInfo(tenantId).Name
+	params["userName"] = service.NewTenantService().GetTenantInfo(tenantId).Name
 	params["verifyBtn"] = config.Cfg.Common.ActivateInformationUrl + activeCode
 	params["activationdomain"] = config.Cfg.Common.ActivateInformationUrl + activeCode
 

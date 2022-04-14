@@ -5,7 +5,7 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/dao"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/enum"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/errors"
-	form2 "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/form"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/form"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/model"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/service"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/util"
@@ -24,20 +24,20 @@ func NewMonitorItemService(dao *dao.MonitorItemDao) *MonitorItemService {
 		AbstractSyncServiceImpl: service.AbstractSyncServiceImpl{}}
 }
 
-func (s *MonitorItemService) GetMonitorItem(param form2.MonitorItemParam) []model.MonitorItem {
+func (s *MonitorItemService) GetMonitorItem(param form.MonitorItemParam) []model.MonitorItem {
 	return s.dao.GetMonitorItem(param.ProductBizId, param.OsType, param.Display)
 }
 
-func (s *MonitorItemService) ChangeDisplay(db *gorm.DB, param form2.MonitorItemParam) {
+func (s *MonitorItemService) ChangeDisplay(db *gorm.DB, param form.MonitorItemParam) {
 	s.dao.ChangeDisplay(db, param.ProductBizId, param.Display, param.BizIdList)
 }
 
 func (s *MonitorItemService) PersistenceLocal(db *gorm.DB, param interface{}) (string, error) {
-	p := param.(form2.MonitorItemParam)
+	p := param.(form.MonitorItemParam)
 	switch p.EventEum {
 	case enum.ChangeMonitorItemDisplay:
 		s.ChangeDisplay(db, p)
-		msg := form2.MqMsg{
+		msg := form.MqMsg{
 			EventEum: enum.ChangeMonitorItemDisplay,
 			Data:     param,
 		}

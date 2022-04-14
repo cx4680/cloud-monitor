@@ -5,7 +5,6 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/jsonutil"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/snowflake"
-	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/constant"
 	commonDao "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/dao"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/dto"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/errors"
@@ -14,6 +13,7 @@ import (
 	commonModels "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/model"
 	message_center2 "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/service/external/message_center"
 	util2 "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/util"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/constant"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/sync/publisher"
 	"strconv"
 )

@@ -3,7 +3,7 @@ package web
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global"
-	openapi2 "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global/openapi"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global/openapi"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/web/middleware"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -27,8 +27,8 @@ func Start(cfg config.Serve) error {
 
 func doStart(cfg config.Serve) error {
 	Router.NoRoute(func(c *gin.Context) {
-		if openapi2.OpenApiRouter(c) {
-			c.JSON(http.StatusNotFound, openapi2.NewRespError(openapi2.PathNotFound, c))
+		if openapi.OpenApiRouter(c) {
+			c.JSON(http.StatusNotFound, openapi.NewRespError(openapi.PathNotFound, c))
 			return
 		}
 		c.JSON(http.StatusNotFound, global.NewError("接口不存在"))

@@ -2,7 +2,7 @@ package iam
 
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global"
-	openapi2 "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global/openapi"
+	openapi "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global/openapi"
 	"net/http"
 
 	"code.cestc.cn/yyptb-group_tech/iam-sdk-go/pkg/middleware"
@@ -19,8 +19,8 @@ func AuthIdentify(identity *models.Identity) gin.HandlerFunc {
 		// IAM鉴权接口
 		err := middleware.AuthIdentify(c, identity, "")
 		if err != nil {
-			if openapi2.OpenApiRouter(c) {
-				c.JSON(http.StatusOK, openapi2.NewRespError(openapi2.AuthorizedNoPermission, c))
+			if openapi.OpenApiRouter(c) {
+				c.JSON(http.StatusOK, openapi.NewRespError(openapi.AuthorizedNoPermission, c))
 			} else {
 				c.JSON(http.StatusOK, global.NewError("对不起，您没有操作权限"))
 			}

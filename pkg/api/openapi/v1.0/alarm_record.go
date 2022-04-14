@@ -6,7 +6,7 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/strutil"
 	commonDtos "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/dto"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global"
-	openapi2 "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global/openapi"
+	openapi "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global/openapi"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global/openapi/channel_type"
 	util2 "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/util"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/dao"
@@ -31,13 +31,13 @@ func (a *AlarmRecordController) GetPageList(c *gin.Context) {
 	}
 	if err := c.ShouldBindQuery(&reqParam); err != nil {
 		logger.Logger().Info(err)
-		c.JSON(http.StatusBadRequest, openapi2.NewRespError(openapi2.GetErrorCode(err), c))
+		c.JSON(http.StatusBadRequest, openapi.NewRespError(openapi.GetErrorCode(err), c))
 		return
 	}
 	tenantId, err := util2.GetTenantId(c)
 	if err != nil {
 		logger.Logger().Info(err)
-		c.JSON(http.StatusBadRequest, openapi2.NewRespError(openapi2.InvalidParameter, c))
+		c.JSON(http.StatusBadRequest, openapi.NewRespError(openapi.InvalidParameter, c))
 		return
 	}
 	voParam := form.AlarmRecordPageQueryForm{
@@ -52,7 +52,7 @@ func (a *AlarmRecordController) GetPageList(c *gin.Context) {
 	}
 	pageVo := dao.AlarmRecord.GetPageList(global.DB, tenantId, voParam)
 	result := AlarmHistoryPage{
-		ResCommonPage: *openapi2.NewResCommonPage(c, pageVo),
+		ResCommonPage: *openapi.NewResCommonPage(c, pageVo),
 		Histories:     nil,
 	}
 	records := pageVo.Records.([]vo.AlarmRecordPageVO)
@@ -89,12 +89,12 @@ func (a *AlarmRecordController) GetAlarmContactInfo(c *gin.Context) {
 	bizId := c.Param("AlarmBizId")
 	tenantId, err := util2.GetTenantId(c)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, openapi2.NewRespError(openapi2.InvalidParameter, c))
+		c.JSON(http.StatusBadRequest, openapi.NewRespError(openapi.InvalidParameter, c))
 		return
 	}
 	r := dao.AlarmRecord.GetByBizIdAndTenantId(global.DB, bizId, tenantId)
 	if strutil.IsBlank(r.ContactInfo) {
-		c.JSON(http.StatusOK, openapi2.NewResSuccess(c))
+		c.JSON(http.StatusOK, openapi.NewResSuccess(c))
 		return
 	}
 	var contactGroupsVo []*commonDtos.ContactGroupInfo
@@ -102,7 +102,7 @@ func (a *AlarmRecordController) GetAlarmContactInfo(c *gin.Context) {
 	var result []ContactGroupInfo
 	for _, item := range contactGroupsVo {
 		group := ContactGroupInfo{
-			RequestId: openapi2.GetRequestId(c),
+			RequestId: openapi.GetRequestId(c),
 			GroupId:   item.GroupId,
 			GroupName: item.GroupName,
 		}
@@ -143,7 +143,7 @@ type AlarmRecordPageQueryForm struct {
 }
 
 type AlarmHistoryPage struct {
-	openapi2.ResCommonPage
+	openapi.ResCommonPage
 	Histories []AlarmHistory
 }
 

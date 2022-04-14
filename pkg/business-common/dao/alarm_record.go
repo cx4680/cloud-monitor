@@ -3,7 +3,7 @@ package dao
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/dto"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global"
-	model2 "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/model"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/model"
 	"gorm.io/gorm"
 )
 
@@ -12,7 +12,7 @@ type AlarmRecordDao struct {
 
 var AlarmRecord = new(AlarmRecordDao)
 
-func (dao *AlarmRecordDao) InsertBatch(db *gorm.DB, records []model2.AlarmRecord) {
+func (dao *AlarmRecordDao) InsertBatch(db *gorm.DB, records []model.AlarmRecord) {
 	db.Create(&records)
 }
 
@@ -39,8 +39,8 @@ func (dao *AlarmRecordDao) FindContactInfoByGroupIds(groupIds []string) []*dto.C
 	return groupList
 }
 
-func (dao *AlarmRecordDao) FindFirstInstanceInfo(instanceId string) *model2.AlarmInstance {
-	var alarmInstance model2.AlarmInstance
+func (dao *AlarmRecordDao) FindFirstInstanceInfo(instanceId string) *model.AlarmInstance {
+	var alarmInstance model.AlarmInstance
 	global.DB.Raw("select * from t_resource where instance_id=? limit 1", instanceId).Scan(&alarmInstance)
 	//todo 实例是否关联规则 或直接判断规则是否存在
 	return &alarmInstance

@@ -3,8 +3,8 @@ package consumer
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/jsonutil"
-	dao2 "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/dao"
-	dto2 "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/dto"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/dao"
+	dto "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/dto"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/model"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/service"
@@ -16,7 +16,7 @@ import (
 )
 
 func InstanceHandler(msgs []*primitive.MessageExt) {
-	alarmInstanceDao := dao2.AlarmInstance
+	alarmInstanceDao := dao.AlarmInstance
 	for i := range msgs {
 		var instances []*model.AlarmInstance
 		fmt.Printf("subscribe callback: %v \n", msgs[i])
@@ -37,9 +37,9 @@ func SmsMarginReminderConsumer(msgs []*primitive.MessageExt) {
 }
 
 func DeleteInstanceHandler(msgs []*primitive.MessageExt) {
-	alarmInstanceDao := dao2.AlarmInstance
+	alarmInstanceDao := dao.AlarmInstance
 	for i := range msgs {
-		instance := dto2.Instance{}
+		instance := dto.Instance{}
 		fmt.Printf("subscribe callback: %v \n", msgs[i])
 		err := json.Unmarshal(msgs[i].Body, &instance)
 		if err != nil {
@@ -51,7 +51,7 @@ func DeleteInstanceHandler(msgs []*primitive.MessageExt) {
 
 func AlarmAddHandler(msgs []*primitive.MessageExt) {
 	for _, msg := range msgs {
-		var data dto2.AlarmSyncData
+		var data dto.AlarmSyncData
 		if err := jsonutil.ToObjectWithError(string(msg.Body), &data); err != nil {
 			logger.Logger().Errorf("序列化数据失败, %v", msg)
 		}
@@ -60,13 +60,13 @@ func AlarmAddHandler(msgs []*primitive.MessageExt) {
 				for i, _ := range data.RecordList {
 					data.RecordList[i].Id = 0
 				}
-				dao2.AlarmRecord.InsertBatch(tx, data.RecordList)
+				dao.AlarmRecord.InsertBatch(tx, data.RecordList)
 			}
 			if len(data.InfoList) > 0 {
 				for i, _ := range data.InfoList {
 					data.InfoList[i].Id = 0
 				}
-				dao2.AlarmInfo.InsertBatch(tx, data.InfoList)
+				dao.AlarmInfo.InsertBatch(tx, data.InfoList)
 			}
 			return nil
 		}); err != nil {

@@ -1,7 +1,7 @@
 package v1_0
 
 import (
-	openapi2 "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global/openapi"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global/openapi"
 	commonService "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/service"
 	commonUtil "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/util"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/external"
@@ -19,23 +19,23 @@ func NewResourceController() *ResourceCtl {
 func (ctl *ResourceCtl) GetResourceList(c *gin.Context) {
 	tenantId, err := commonUtil.GetTenantId(c)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, openapi2.NewRespError(openapi2.MissingParameter, c))
+		c.JSON(http.StatusBadRequest, openapi.NewRespError(openapi.MissingParameter, c))
 	}
-	param := openapi2.NewPageQuery()
+	param := openapi.NewPageQuery()
 	if err := c.ShouldBindQuery(&param); err != nil {
-		c.JSON(http.StatusBadRequest, openapi2.NewRespError(openapi2.GetErrorCode(err), c))
+		c.JSON(http.StatusBadRequest, openapi.NewRespError(openapi.GetErrorCode(err), c))
 		return
 	}
 	productAbbreviation := c.Param("ProductAbbreviation")
 	f := commonService.InstancePageForm{Product: productAbbreviation, TenantId: tenantId, PageSize: param.PageSize, Current: param.PageNumber}
 	instanceService := external.ProductInstanceServiceMap[f.Product]
 	if instanceService == nil {
-		c.JSON(http.StatusBadRequest, openapi2.NewRespError(openapi2.ProductAbbreviationInvalid, c))
+		c.JSON(http.StatusBadRequest, openapi.NewRespError(openapi.ProductAbbreviationInvalid, c))
 		return
 	}
 	page, err := instanceService.GetPage(f, instanceService.(commonService.InstanceStage))
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, openapi2.NewRespError(openapi2.SystemError, c))
+		c.JSON(http.StatusInternalServerError, openapi.NewRespError(openapi.SystemError, c))
 		return
 	}
 	var resources []ResourceInfo
@@ -49,9 +49,9 @@ func (ctl *ResourceCtl) GetResourceList(c *gin.Context) {
 	}
 
 	resourcePage := ResourcePage{
-		ResCommonPage: &openapi2.ResCommonPage{
-			ResCommon: openapi2.ResCommon{
-				RequestId: openapi2.GetRequestId(c),
+		ResCommonPage: &openapi.ResCommonPage{
+			ResCommon: openapi.ResCommon{
+				RequestId: openapi.GetRequestId(c),
 			},
 			TotalCount: page.Total,
 			PageSize:   page.Size,
@@ -63,7 +63,7 @@ func (ctl *ResourceCtl) GetResourceList(c *gin.Context) {
 }
 
 type ResourcePage struct {
-	*openapi2.ResCommonPage
+	*openapi.ResCommonPage
 	Resources []ResourceInfo
 }
 

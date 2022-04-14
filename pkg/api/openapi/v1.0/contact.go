@@ -2,15 +2,15 @@ package v1_0
 
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/strutil"
-	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/constant"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/enum"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/errors"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/form"
-	openapi2 "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global/openapi"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global/openapi"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global/sys_component/sys_rocketmq"
 	service2 "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/service"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/service/external/message_center"
 	util2 "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/util"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/constant"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/service"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -29,13 +29,13 @@ func NewContactCtl() *ContactCtl {
 func (acl *ContactCtl) SelectContactPage(c *gin.Context) {
 	tenantId, err := util2.GetTenantId(c)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, openapi2.NewRespError(openapi2.MissingParameter, c))
+		c.JSON(http.StatusBadRequest, openapi.NewRespError(openapi.MissingParameter, c))
 		return
 	}
 	var param = ContactParam{PageNumber: 1, PageSize: 10}
 	err = c.ShouldBindQuery(&param)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, openapi2.NewRespError(openapi2.GetErrorCode(err), c))
+		c.JSON(http.StatusBadRequest, openapi.NewRespError(openapi.GetErrorCode(err), c))
 		return
 	}
 	result := acl.service.SelectContact(form.ContactParam{
@@ -75,7 +75,7 @@ func (acl *ContactCtl) SelectContactPage(c *gin.Context) {
 		contacts = append(contacts, contact)
 	}
 	contactPage := ContactPage{
-		RequestId:  openapi2.GetRequestId(c),
+		RequestId:  openapi.GetRequestId(c),
 		PageNumber: result.Current,
 		PageSize:   result.Size,
 		TotalCount: result.Total,
@@ -87,13 +87,13 @@ func (acl *ContactCtl) SelectContactPage(c *gin.Context) {
 func (acl *ContactCtl) CreateContact(c *gin.Context) {
 	tenantId, err := util2.GetTenantId(c)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, openapi2.NewRespError(openapi2.MissingParameter, c))
+		c.JSON(http.StatusBadRequest, openapi.NewRespError(openapi.MissingParameter, c))
 		return
 	}
 	var param = ContactParam{}
 	err = c.ShouldBindJSON(&param)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, openapi2.NewRespError(openapi2.InvalidParameter, c))
+		c.JSON(http.StatusBadRequest, openapi.NewRespError(openapi.InvalidParameter, c))
 		return
 	}
 	request := &form.ContactParam{
@@ -108,13 +108,13 @@ func (acl *ContactCtl) CreateContact(c *gin.Context) {
 	}
 	err = acl.service.Persistence(acl.service, sys_rocketmq.ContactTopic, request)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, openapi2.NewRespError(getErrorCode(err), c))
+		c.JSON(http.StatusInternalServerError, openapi.NewRespError(getErrorCode(err), c))
 		return
 	} else {
 		result := struct {
 			RequestId string
 			ContactId string
-		}{RequestId: openapi2.GetRequestId(c), ContactId: request.ContactBizId}
+		}{RequestId: openapi.GetRequestId(c), ContactId: request.ContactBizId}
 		c.JSON(http.StatusOK, result)
 	}
 }
@@ -122,13 +122,13 @@ func (acl *ContactCtl) CreateContact(c *gin.Context) {
 func (acl *ContactCtl) UpdateContact(c *gin.Context) {
 	tenantId, err := util2.GetTenantId(c)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, openapi2.NewRespError(openapi2.MissingParameter, c))
+		c.JSON(http.StatusBadRequest, openapi.NewRespError(openapi.MissingParameter, c))
 		return
 	}
 	var param = ContactParam{}
 	err = c.ShouldBindJSON(&param)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, openapi2.NewRespError(openapi2.InvalidParameter, c))
+		c.JSON(http.StatusBadRequest, openapi.NewRespError(openapi.InvalidParameter, c))
 		return
 	}
 	request := &form.ContactParam{
@@ -144,10 +144,10 @@ func (acl *ContactCtl) UpdateContact(c *gin.Context) {
 	}
 	err = acl.service.Persistence(acl.service, sys_rocketmq.ContactTopic, request)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, openapi2.NewRespError(getErrorCode(err), c))
+		c.JSON(http.StatusInternalServerError, openapi.NewRespError(getErrorCode(err), c))
 		return
 	} else {
-		result := struct{ RequestId string }{RequestId: openapi2.GetRequestId(c)}
+		result := struct{ RequestId string }{RequestId: openapi.GetRequestId(c)}
 		c.JSON(http.StatusOK, result)
 	}
 }
@@ -155,7 +155,7 @@ func (acl *ContactCtl) UpdateContact(c *gin.Context) {
 func (acl *ContactCtl) DeleteContact(c *gin.Context) {
 	tenantId, err := util2.GetTenantId(c)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, openapi2.NewRespError(openapi2.MissingParameter, c))
+		c.JSON(http.StatusBadRequest, openapi.NewRespError(openapi.MissingParameter, c))
 		return
 	}
 	request := &form.ContactParam{
@@ -165,10 +165,10 @@ func (acl *ContactCtl) DeleteContact(c *gin.Context) {
 	}
 	err = acl.service.Persistence(acl.service, sys_rocketmq.ContactTopic, request)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, openapi2.NewRespError(getErrorCode(err), c))
+		c.JSON(http.StatusInternalServerError, openapi.NewRespError(getErrorCode(err), c))
 		return
 	} else {
-		result := struct{ RequestId string }{RequestId: openapi2.GetRequestId(c)}
+		result := struct{ RequestId string }{RequestId: openapi.GetRequestId(c)}
 		c.JSON(http.StatusOK, result)
 	}
 }
@@ -176,7 +176,7 @@ func (acl *ContactCtl) DeleteContact(c *gin.Context) {
 func (acl *ContactCtl) ActivateContact(c *gin.Context) {
 	tenantId, err := util2.GetTenantId(c)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, openapi2.NewRespError(openapi2.MissingParameter, c))
+		c.JSON(http.StatusBadRequest, openapi.NewRespError(openapi.MissingParameter, c))
 		return
 	}
 	request := &form.ContactParam{
@@ -186,21 +186,21 @@ func (acl *ContactCtl) ActivateContact(c *gin.Context) {
 	}
 	err = acl.service.Persistence(acl.service, sys_rocketmq.ContactTopic, request)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, openapi2.NewRespError(getErrorCode(err), c))
+		c.JSON(http.StatusInternalServerError, openapi.NewRespError(getErrorCode(err), c))
 		return
 	} else {
 		result := struct {
 			RequestId  string
 			TenantName string
 		}{
-			RequestId:  openapi2.GetRequestId(c),
+			RequestId:  openapi.GetRequestId(c),
 			TenantName: service2.NewTenantService().GetTenantInfo(tenantId).Name,
 		}
 		c.JSON(http.StatusOK, result)
 	}
 }
 
-func getErrorCode(err error) *openapi2.ErrorCode {
+func getErrorCode(err error) *openapi.ErrorCode {
 	return ContactErrorMap[err.(*errors.BusinessError).Message]
 }
 
@@ -239,24 +239,24 @@ type Channel struct {
 	Status  int    `json:"Status"`
 }
 
-var ContactErrorMap = map[string]*openapi2.ErrorCode{
-	"手机号格式错误":      openapi2.PhoneFormatError,
-	"邮箱格式错误":       openapi2.MailFormatError,
-	"手机号和邮箱必须填写一项": openapi2.InformationMissing,
-	"联系人名字不能为空":    openapi2.MissingContactName,
-	"联系人ID不能为空":    openapi2.MissingContactId,
-	"联系组名字不能为空":    openapi2.MissingGroupName,
-	"联系组ID不能为空":    openapi2.MissingGroupId,
-	"联系人名字格式错误":    openapi2.ContactNameFormatError,
-	"联系组名字格式错误":    openapi2.GroupNameFormatError,
-	"请至少选择一位联系人":   openapi2.MissingContact,
-	"该租户无此联系人":     openapi2.TenantHaveNotContact,
-	"该租户无此联系组":     openapi2.TenantHaveNotGroup,
-	"联系组名重复":       openapi2.GroupNameRepeat,
-	"无效激活码":        openapi2.InvalidActivationCode,
-	"每个联系人最多加入" + strconv.Itoa(constant.MaxContactGroup) + "个联系组": openapi2.ContactGroupNumberExceeded,
-	"有联系人已加入" + strconv.Itoa(constant.MaxContactGroup) + "个联系组":   openapi2.ContactGroupNumberExceeded,
-	"有联系组已有" + strconv.Itoa(constant.MaxContactNum) + "个联系人":      openapi2.GroupContactNumberExceeded,
-	"联系人限制创建" + strconv.Itoa(constant.MaxContactNum) + "个":        openapi2.ContactNumberExceeded,
-	"联系组限制创建" + strconv.Itoa(constant.MaxGroupNum) + "个":          openapi2.GroupNumberExceeded,
+var ContactErrorMap = map[string]*openapi.ErrorCode{
+	"手机号格式错误":      openapi.PhoneFormatError,
+	"邮箱格式错误":       openapi.MailFormatError,
+	"手机号和邮箱必须填写一项": openapi.InformationMissing,
+	"联系人名字不能为空":    openapi.MissingContactName,
+	"联系人ID不能为空":    openapi.MissingContactId,
+	"联系组名字不能为空":    openapi.MissingGroupName,
+	"联系组ID不能为空":    openapi.MissingGroupId,
+	"联系人名字格式错误":    openapi.ContactNameFormatError,
+	"联系组名字格式错误":    openapi.GroupNameFormatError,
+	"请至少选择一位联系人":   openapi.MissingContact,
+	"该租户无此联系人":     openapi.TenantHaveNotContact,
+	"该租户无此联系组":     openapi.TenantHaveNotGroup,
+	"联系组名重复":       openapi.GroupNameRepeat,
+	"无效激活码":        openapi.InvalidActivationCode,
+	"每个联系人最多加入" + strconv.Itoa(constant.MaxContactGroup) + "个联系组": openapi.ContactGroupNumberExceeded,
+	"有联系人已加入" + strconv.Itoa(constant.MaxContactGroup) + "个联系组":   openapi.ContactGroupNumberExceeded,
+	"有联系组已有" + strconv.Itoa(constant.MaxContactNum) + "个联系人":      openapi.GroupContactNumberExceeded,
+	"联系人限制创建" + strconv.Itoa(constant.MaxContactNum) + "个":        openapi.ContactNumberExceeded,
+	"联系组限制创建" + strconv.Itoa(constant.MaxGroupNum) + "个":          openapi.GroupNumberExceeded,
 }

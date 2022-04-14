@@ -5,7 +5,7 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/enum"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/errors"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/form"
-	openapi2 "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global/openapi"
+	openapi "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global/openapi"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global/sys_component/sys_rocketmq"
 	commonService "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/service"
 	util2 "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/util"
@@ -25,13 +25,13 @@ func NewContactGroupCtl() *ContactGroupCtl {
 func (acgc *ContactGroupCtl) SelectContactGroupPage(c *gin.Context) {
 	tenantId, err := util2.GetTenantId(c)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, openapi2.NewRespError(openapi2.MissingParameter, c))
+		c.JSON(http.StatusBadRequest, openapi.NewRespError(openapi.MissingParameter, c))
 		return
 	}
 	var param = ContactGroupParam{PageNumber: 1, PageSize: 10}
 	err = c.ShouldBindQuery(&param)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, openapi2.NewRespError(openapi2.GetErrorCode(err), c))
+		c.JSON(http.StatusBadRequest, openapi.NewRespError(openapi.GetErrorCode(err), c))
 		return
 	}
 	result := acgc.service.SelectContactGroup(form.ContactParam{
@@ -53,7 +53,7 @@ func (acgc *ContactGroupCtl) SelectContactGroupPage(c *gin.Context) {
 		contactGroups = append(contactGroups, contactGroup)
 	}
 	contactPage := ContactGroupPage{
-		RequestId:     openapi2.GetRequestId(c),
+		RequestId:     openapi.GetRequestId(c),
 		PageNumber:    result.Current,
 		PageSize:      result.Size,
 		TotalCount:    result.Total,
@@ -65,7 +65,7 @@ func (acgc *ContactGroupCtl) SelectContactGroupPage(c *gin.Context) {
 func (acgc *ContactGroupCtl) SelectContactPageByGroupId(c *gin.Context) {
 	tenantId, err := util2.GetTenantId(c)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, openapi2.NewRespError(openapi2.MissingParameter, c))
+		c.JSON(http.StatusBadRequest, openapi.NewRespError(openapi.MissingParameter, c))
 		return
 	}
 	var param = ContactGroupParam{PageNumber: 1, PageSize: 10}
@@ -104,7 +104,7 @@ func (acgc *ContactGroupCtl) SelectContactPageByGroupId(c *gin.Context) {
 		contacts = append(contacts, contact)
 	}
 	contactPage := ContactPage{
-		RequestId:  openapi2.GetRequestId(c),
+		RequestId:  openapi.GetRequestId(c),
 		PageNumber: result.Current,
 		PageSize:   result.Size,
 		TotalCount: result.Total,
@@ -116,13 +116,13 @@ func (acgc *ContactGroupCtl) SelectContactPageByGroupId(c *gin.Context) {
 func (acgc *ContactGroupCtl) CreateContactGroup(c *gin.Context) {
 	tenantId, err := util2.GetTenantId(c)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, openapi2.NewRespError(openapi2.MissingParameter, c))
+		c.JSON(http.StatusBadRequest, openapi.NewRespError(openapi.MissingParameter, c))
 		return
 	}
 	var param = ContactGroupParam{}
 	err = c.ShouldBindJSON(&param)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, openapi2.NewRespError(openapi2.InvalidParameter, c))
+		c.JSON(http.StatusBadRequest, openapi.NewRespError(openapi.InvalidParameter, c))
 		return
 	}
 	request := &form.ContactParam{
@@ -135,13 +135,13 @@ func (acgc *ContactGroupCtl) CreateContactGroup(c *gin.Context) {
 	}
 	err = acgc.service.Persistence(acgc.service, sys_rocketmq.ContactGroupTopic, request)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, openapi2.NewRespError(ContactErrorMap[err.(*errors.BusinessError).Message], c))
+		c.JSON(http.StatusInternalServerError, openapi.NewRespError(ContactErrorMap[err.(*errors.BusinessError).Message], c))
 		return
 	} else {
 		result := struct {
 			RequestId string
 			GroupId   string
-		}{RequestId: openapi2.GetRequestId(c), GroupId: request.GroupBizId}
+		}{RequestId: openapi.GetRequestId(c), GroupId: request.GroupBizId}
 		c.JSON(http.StatusOK, result)
 	}
 }
@@ -149,13 +149,13 @@ func (acgc *ContactGroupCtl) CreateContactGroup(c *gin.Context) {
 func (acgc *ContactGroupCtl) UpdateContactGroup(c *gin.Context) {
 	tenantId, err := util2.GetTenantId(c)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, openapi2.NewRespError(openapi2.MissingParameter, c))
+		c.JSON(http.StatusBadRequest, openapi.NewRespError(openapi.MissingParameter, c))
 		return
 	}
 	var param = ContactGroupParam{}
 	err = c.ShouldBindJSON(&param)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, openapi2.NewRespError(openapi2.InvalidParameter, c))
+		c.JSON(http.StatusBadRequest, openapi.NewRespError(openapi.InvalidParameter, c))
 		return
 	}
 	request := &form.ContactParam{
@@ -169,10 +169,10 @@ func (acgc *ContactGroupCtl) UpdateContactGroup(c *gin.Context) {
 	}
 	err = acgc.service.Persistence(acgc.service, sys_rocketmq.ContactGroupTopic, request)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, openapi2.NewRespError(ContactErrorMap[err.(*errors.BusinessError).Message], c))
+		c.JSON(http.StatusInternalServerError, openapi.NewRespError(ContactErrorMap[err.(*errors.BusinessError).Message], c))
 		return
 	} else {
-		result := struct{ RequestId string }{RequestId: openapi2.GetRequestId(c)}
+		result := struct{ RequestId string }{RequestId: openapi.GetRequestId(c)}
 		c.JSON(http.StatusOK, result)
 	}
 }
@@ -180,7 +180,7 @@ func (acgc *ContactGroupCtl) UpdateContactGroup(c *gin.Context) {
 func (acgc *ContactGroupCtl) DeleteContactGroup(c *gin.Context) {
 	tenantId, err := util2.GetTenantId(c)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, openapi2.NewRespError(openapi2.MissingParameter, c))
+		c.JSON(http.StatusBadRequest, openapi.NewRespError(openapi.MissingParameter, c))
 		return
 	}
 	request := &form.ContactParam{
@@ -190,10 +190,10 @@ func (acgc *ContactGroupCtl) DeleteContactGroup(c *gin.Context) {
 	}
 	err = acgc.service.Persistence(acgc.service, sys_rocketmq.ContactGroupTopic, request)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, openapi2.NewRespError(ContactErrorMap[err.(*errors.BusinessError).Message], c))
+		c.JSON(http.StatusInternalServerError, openapi.NewRespError(ContactErrorMap[err.(*errors.BusinessError).Message], c))
 		return
 	} else {
-		result := struct{ RequestId string }{RequestId: openapi2.GetRequestId(c)}
+		result := struct{ RequestId string }{RequestId: openapi.GetRequestId(c)}
 		c.JSON(http.StatusOK, result)
 	}
 }

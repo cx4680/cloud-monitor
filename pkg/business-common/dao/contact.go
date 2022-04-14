@@ -4,7 +4,7 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/strutil"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/form"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global"
-	model2 "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/model"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/model"
 	"fmt"
 	"gorm.io/gorm"
 	"strconv"
@@ -87,20 +87,20 @@ func (d *ContactDao) Select(db *gorm.DB, param form.ContactParam) *form.ContactF
 	return contactFormPage
 }
 
-func (d *ContactDao) Insert(db *gorm.DB, entity *model2.Contact) {
+func (d *ContactDao) Insert(db *gorm.DB, entity *model.Contact) {
 	db.Create(entity)
 }
 
-func (d *ContactDao) Update(db *gorm.DB, entity *model2.Contact) {
-	db.Model(&model2.Contact{}).Where("tenant_id = ? AND biz_id = ?", entity.TenantId, entity.BizId).Updates(entity)
+func (d *ContactDao) Update(db *gorm.DB, entity *model.Contact) {
+	db.Model(&model.Contact{}).Where("tenant_id = ? AND biz_id = ?", entity.TenantId, entity.BizId).Updates(entity)
 }
 
-func (d *ContactDao) Delete(db *gorm.DB, entity *model2.Contact) {
-	db.Where("tenant_id = ? AND biz_id = ?", entity.TenantId, entity.BizId).Delete(model2.Contact{})
+func (d *ContactDao) Delete(db *gorm.DB, entity *model.Contact) {
+	db.Where("tenant_id = ? AND biz_id = ?", entity.TenantId, entity.BizId).Delete(model.Contact{})
 }
 
 func (d *ContactDao) ActivateContact(db *gorm.DB, activeCode string) string {
-	var entity = &model2.ContactInformation{}
+	var entity = &model.ContactInformation{}
 	db.Model(entity).Where("active_code = ?", activeCode).Update("state", 1).Find(entity)
 	return entity.TenantId
 }
@@ -108,14 +108,14 @@ func (d *ContactDao) ActivateContact(db *gorm.DB, activeCode string) string {
 //查询租户下的联系人数量
 func (d *ContactDao) GetContactCount(tenantId string) int64 {
 	var count int64
-	global.DB.Model(&model2.Contact{}).Where("tenant_id = ?", tenantId).Count(&count)
+	global.DB.Model(&model.Contact{}).Where("tenant_id = ?", tenantId).Count(&count)
 	return count
 }
 
 //校验联系人
 func (d *ContactDao) CheckContact(tenantId, contactBizId string) bool {
 	var count int64
-	global.DB.Model(&model2.Contact{}).Where("tenant_id = ? AND biz_id = ?", tenantId, contactBizId).Count(&count)
+	global.DB.Model(&model.Contact{}).Where("tenant_id = ? AND biz_id = ?", tenantId, contactBizId).Count(&count)
 	if count > 0 {
 		return true
 	}
@@ -124,7 +124,7 @@ func (d *ContactDao) CheckContact(tenantId, contactBizId string) bool {
 
 //根据激活码获取租户ID
 func (d *ContactDao) GetTenantIdByActiveCode(activeCode string) string {
-	var entity = &model2.ContactInformation{}
+	var entity = &model.ContactInformation{}
 	global.DB.Where("active_code = ?", activeCode).First(entity)
 	return entity.TenantId
 }

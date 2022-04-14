@@ -4,7 +4,7 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/strutil"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/form"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global"
-	model2 "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/model"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/model"
 	"gorm.io/gorm"
 	"strconv"
 )
@@ -94,7 +94,7 @@ func (d *ContactGroupDao) SelectContactGroup(db *gorm.DB, param form.ContactPara
 func (d *ContactGroupDao) SelectGroupContact(db *gorm.DB, param form.ContactParam) *form.ContactFormPage {
 	var modelList []form.ContactForm
 	var total int64
-	db.Model(&model2.ContactGroupRel{}).Where("tenant_id = ? AND group_biz_id = ?", param.TenantId, param.GroupBizId).Count(&total)
+	db.Model(&model.ContactGroupRel{}).Where("tenant_id = ? AND group_biz_id = ?", param.TenantId, param.GroupBizId).Count(&total)
 	var contactFormPage = &form.ContactFormPage{
 		Records: modelList,
 		Current: param.PageCurrent,
@@ -109,21 +109,21 @@ func (d *ContactGroupDao) SelectGroupContact(db *gorm.DB, param form.ContactPara
 	return contactFormPage
 }
 
-func (d *ContactGroupDao) Insert(db *gorm.DB, entity *model2.ContactGroup) {
+func (d *ContactGroupDao) Insert(db *gorm.DB, entity *model.ContactGroup) {
 	db.Create(entity)
 }
 
-func (d *ContactGroupDao) Update(db *gorm.DB, entity *model2.ContactGroup) {
+func (d *ContactGroupDao) Update(db *gorm.DB, entity *model.ContactGroup) {
 	db.Save(entity)
 }
 
-func (d *ContactGroupDao) Delete(db *gorm.DB, entity *model2.ContactGroup) {
-	db.Model(&model2.ContactGroup{}).Where("tenant_id = ? AND biz_id = ?", entity.TenantId, entity.BizId).Delete(model2.ContactGroup{})
+func (d *ContactGroupDao) Delete(db *gorm.DB, entity *model.ContactGroup) {
+	db.Model(&model.ContactGroup{}).Where("tenant_id = ? AND biz_id = ?", entity.TenantId, entity.BizId).Delete(model.ContactGroup{})
 }
 
 //查询组
-func (d *ContactGroupDao) GetGroup(tenantId, groupBizId string) model2.ContactGroup {
-	var contactGroup model2.ContactGroup
+func (d *ContactGroupDao) GetGroup(tenantId, groupBizId string) model.ContactGroup {
+	var contactGroup model.ContactGroup
 	global.DB.Where("tenant_id = ? AND biz_id = ?", tenantId, groupBizId).First(&contactGroup)
 	return contactGroup
 }
@@ -131,7 +131,7 @@ func (d *ContactGroupDao) GetGroup(tenantId, groupBizId string) model2.ContactGr
 //查询租户下的联系组数量
 func (d *ContactGroupDao) GetGroupCount(tenantId string) int64 {
 	var groupCount int64
-	global.DB.Model(&model2.ContactGroup{}).Where("tenant_id = ?", tenantId).Count(&groupCount)
+	global.DB.Model(&model.ContactGroup{}).Where("tenant_id = ?", tenantId).Count(&groupCount)
 	return groupCount
 }
 
@@ -139,9 +139,9 @@ func (d *ContactGroupDao) GetGroupCount(tenantId string) int64 {
 func (d *ContactGroupDao) CheckGroupName(tenantId, groupName, groupBizId string) bool {
 	var count int64
 	if strutil.IsBlank(groupBizId) {
-		global.DB.Model(&model2.ContactGroup{}).Where("tenant_id = ? AND name = ?", tenantId, groupName).Count(&count)
+		global.DB.Model(&model.ContactGroup{}).Where("tenant_id = ? AND name = ?", tenantId, groupName).Count(&count)
 	} else {
-		global.DB.Model(&model2.ContactGroup{}).Where("tenant_id = ? AND name = ? AND biz_id != ?", tenantId, groupName, groupBizId).Count(&count)
+		global.DB.Model(&model.ContactGroup{}).Where("tenant_id = ? AND name = ? AND biz_id != ?", tenantId, groupName, groupBizId).Count(&count)
 	}
 	if count > 0 {
 		return true
@@ -152,7 +152,7 @@ func (d *ContactGroupDao) CheckGroupName(tenantId, groupName, groupBizId string)
 //检验组ID是否存在
 func (d *ContactGroupDao) CheckGroupId(tenantId, groupBizId string) bool {
 	var count int64
-	global.DB.Model(&model2.ContactGroup{}).Where("tenant_id = ? AND biz_id = ?", tenantId, groupBizId).Count(&count)
+	global.DB.Model(&model.ContactGroup{}).Where("tenant_id = ? AND biz_id = ?", tenantId, groupBizId).Count(&count)
 	if count > 0 {
 		return true
 	}

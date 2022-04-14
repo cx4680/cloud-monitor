@@ -12,7 +12,7 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global/sys_component/sys_rocketmq"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/model"
-	service2 "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/service"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/service"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/service/external/message_center"
 	util2 "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/util"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/form"
@@ -31,12 +31,12 @@ type filter func(*form.AlarmRecordAlertsBean) (bool, error)
 type AlarmRecordAddService struct {
 	FilterChain     []filter
 	AlarmRecordSvc  *AlarmRecordService
-	AlarmHandlerSvc *service2.AlarmHandlerService
-	TenantSvc       *service2.TenantService
+	AlarmHandlerSvc *service.AlarmHandlerService
+	TenantSvc       *service.TenantService
 	AlarmRecordDao  *dao.AlarmRecordDao
 }
 
-func NewAlarmRecordAddService(AlarmRecordSvc *AlarmRecordService, AlarmHandlerSvc *service2.AlarmHandlerService, TenantSvc *service2.TenantService) *AlarmRecordAddService {
+func NewAlarmRecordAddService(AlarmRecordSvc *AlarmRecordService, AlarmHandlerSvc *service.AlarmHandlerService, TenantSvc *service.TenantService) *AlarmRecordAddService {
 	return &AlarmRecordAddService{
 		FilterChain: []filter{func(alert *form.AlarmRecordAlertsBean) (bool, error) {
 			rule := &dto.RuleDesc{}
@@ -233,7 +233,7 @@ func (s *AlarmRecordAddService) buildAutoScalingData(alert *form.AlarmRecordAler
 }
 
 func (s *AlarmRecordAddService) buildNoticeData(alert *form.AlarmRecordAlertsBean, record *model.AlarmRecord, ruleDesc *dto.RuleDesc,
-	contactGroups []*dto.ContactGroupInfo, resourceInfo map[string]string, ht int) *service2.AlertMsgSendDTO {
+	contactGroups []*dto.ContactGroupInfo, resourceInfo map[string]string, ht int) *service.AlertMsgSendDTO {
 	source := message_center.ALERT_OPEN
 	if "resolved" == alert.Status {
 		source = message_center.ALERT_CANCEL
@@ -286,7 +286,7 @@ func (s *AlarmRecordAddService) buildNoticeData(alert *form.AlarmRecordAlertsBea
 		}
 	}
 
-	var msgList []service2.AlertMsgDTO
+	var msgList []service.AlertMsgDTO
 	if ht == handler_type.Sms {
 		msg := s.buildNoticeMsg(contactGroups, message_center.Phone, objMap)
 		if msg != nil {
@@ -298,7 +298,7 @@ func (s *AlarmRecordAddService) buildNoticeData(alert *form.AlarmRecordAlertsBea
 			msgList = append(msgList, *msg)
 		}
 	}
-	return &service2.AlertMsgSendDTO{
+	return &service.AlertMsgSendDTO{
 		AlertId:    record.BizId,
 		SenderId:   ruleDesc.TenantId,
 		SourceType: source,
@@ -306,7 +306,7 @@ func (s *AlarmRecordAddService) buildNoticeData(alert *form.AlarmRecordAlertsBea
 	}
 }
 
-func (s *AlarmRecordAddService) buildNoticeMsg(contactGroups []*dto.ContactGroupInfo, rt message_center.ReceiveType, objMap map[string]string) *service2.AlertMsgDTO {
+func (s *AlarmRecordAddService) buildNoticeMsg(contactGroups []*dto.ContactGroupInfo, rt message_center.ReceiveType, objMap map[string]string) *service.AlertMsgDTO {
 	var ts []string
 	for _, group := range contactGroups {
 		for _, contact := range group.Contacts {
@@ -324,7 +324,7 @@ func (s *AlarmRecordAddService) buildNoticeMsg(contactGroups []*dto.ContactGroup
 	if len(ts) <= 0 {
 		return nil
 	}
-	return &service2.AlertMsgDTO{
+	return &service.AlertMsgDTO{
 		Type:    rt,
 		Targets: ts,
 		Content: jsonutil.ToString(objMap),

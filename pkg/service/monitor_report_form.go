@@ -3,7 +3,7 @@ package service
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/strutil"
-	dao2 "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/dao"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/dao"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/errors"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/model"
 	commonService "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/service"
@@ -157,7 +157,7 @@ func changeDecimal(value string) string {
 
 //根据监控名查询监控项
 func getMonitorItemByName(name string) model.MonitorItem {
-	return dao2.MonitorItem.GetMonitorItemCacheByName(name)
+	return dao.MonitorItem.GetMonitorItemCacheByName(name)
 }
 
 //查询租户的ECS实例列表
@@ -188,7 +188,7 @@ func checkUserInstanceIdentity(tenantId, productBizId, instanceId string) bool {
 func getInstanceList(productBizId string, tenantId string) ([]string, error) {
 	f := commonService.InstancePageForm{
 		TenantId: tenantId,
-		Product:  dao2.MonitorProduct.GetMonitorProductByBizId(productBizId).Abbreviation,
+		Product:  dao.MonitorProduct.GetMonitorProductByBizId(productBizId).Abbreviation,
 		Current:  1,
 		PageSize: 10000,
 	}

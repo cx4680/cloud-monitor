@@ -3,7 +3,7 @@ package v1_0
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/dao"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global"
-	openapi2 "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global/openapi"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global/openapi"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/model"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/service"
 	"github.com/gin-gonic/gin"
@@ -19,15 +19,15 @@ func NewMonitorItemCtl(service service.MonitorItemService) *MonitorItemCtl {
 }
 
 func (mic *MonitorItemCtl) GetMonitorItemsByProductAbbr(c *gin.Context) {
-	param := openapi2.NewPageQuery()
+	param := openapi.NewPageQuery()
 	if err := c.ShouldBindQuery(&param); err != nil {
-		c.JSON(http.StatusBadRequest, openapi2.NewRespError(openapi2.GetErrorCode(err), c))
+		c.JSON(http.StatusBadRequest, openapi.NewRespError(openapi.GetErrorCode(err), c))
 		return
 	}
 	productAbbreviation := c.Param("ProductAbbreviation")
 	abbreviation := dao.MonitorProduct.GetByAbbreviation(global.DB, productAbbreviation)
 	if len(abbreviation.BizId) == 0 {
-		c.JSON(http.StatusBadRequest, openapi2.NewRespError(openapi2.ProductAbbreviationInvalid, c))
+		c.JSON(http.StatusBadRequest, openapi.NewRespError(openapi.ProductAbbreviationInvalid, c))
 		return
 	}
 	pageVo := mic.service.GetMonitorItemPage(param.PageSize, param.PageNumber, productAbbreviation)
@@ -45,7 +45,7 @@ func (mic *MonitorItemCtl) GetMonitorItemsByProductAbbr(c *gin.Context) {
 		metricMetaList = append(metricMetaList, metricMeta)
 	}
 	metricPage := MetricPage{
-		ResCommonPage: *openapi2.NewResCommonPage(c, pageVo),
+		ResCommonPage: *openapi.NewResCommonPage(c, pageVo),
 		Metrics:       metricMetaList,
 	}
 	c.JSON(http.StatusOK, metricPage)
@@ -61,6 +61,6 @@ type MetricMeta struct {
 }
 
 type MetricPage struct {
-	openapi2.ResCommonPage
+	openapi.ResCommonPage
 	Metrics []MetricMeta
 }

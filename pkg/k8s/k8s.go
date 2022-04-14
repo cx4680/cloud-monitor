@@ -4,7 +4,7 @@ import (
 	"bytes"
 	c "code.cestc.cn/ccos-ops/cloud-monitor/common/config"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
-	errors2 "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/errors"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/errors"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/form"
 	"context"
 	"encoding/json"
@@ -67,7 +67,7 @@ func DeleteAlertRule(alertRuleId string) error {
 	err := client.Resource(*resource).Namespace(namespace).Delete(context.TODO(), alertRuleId, metav1.DeleteOptions{})
 	if err != nil {
 		logger.Logger().Error("调用api删除规则失败", err)
-		return errors2.NewBusinessErrorCode(errors2.DeleteError, "调用api删除规则失败")
+		return errors.NewBusinessErrorCode(errors.DeleteError, "调用api删除规则失败")
 	}
 	return nil
 }
@@ -116,7 +116,7 @@ func ApplyAlertRule(alertRuleDTO *form.AlertRuleDTO) error {
 	requestObj, err2 := json.Marshal(rules)
 	if err2 != nil {
 		logger.Logger().Errorf("调用api更新规则失败%v", err2)
-		return errors2.NewBusinessErrorCode(errors2.ApplyFail, "调用api更新规则失败")
+		return errors.NewBusinessErrorCode(errors.ApplyFail, "调用api更新规则失败")
 	}
 	_, err := client.Resource(*resource).Namespace(namespace).Patch(context.TODO(), alertRuleDTO.TenantId, types.ApplyPatchType, requestObj, metav1.ApplyOptions{FieldManager: "application/apply-patch", Force: true}.ToPatchOptions())
 	if err != nil {
@@ -154,7 +154,7 @@ func DeleteAlertManagerConfig(configName string) error {
 	err := client.Resource(*alertManagerResource).Namespace(namespace).Delete(context.TODO(), configName, metav1.DeleteOptions{})
 	if err != nil {
 		logger.Logger().Error("调用api删除AlertManagerConfig失败, ", err)
-		return errors2.NewBusinessErrorCode(errors2.DeleteError, "调用api删除AlertManagerConfig失败")
+		return errors.NewBusinessErrorCode(errors.DeleteError, "调用api删除AlertManagerConfig失败")
 	}
 	return nil
 }

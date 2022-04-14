@@ -5,7 +5,7 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/jsonutil"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/strutil"
-	dao2 "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/dao"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/dao"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/dto"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global/sys_component/sys_redis"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global/sys_component/sys_rocketmq"
@@ -20,7 +20,7 @@ import (
 )
 
 func AddSyncJobs(bt *BusinessTaskImpl) error {
-	list := dao2.MonitorProduct.GetMonitorProduct()
+	list := dao.MonitorProduct.GetMonitorProduct()
 	for _, product := range *list {
 		if strutil.IsNotBlank(product.Cron) {
 			abbreviation := product.Abbreviation
@@ -47,14 +47,14 @@ func Run(productType string) error {
 	)
 
 	for current <= totalPage {
-		tenantPage := dao2.AlarmInstance.SelectTenantIdList(productType, current, size)
+		tenantPage := dao.AlarmInstance.SelectTenantIdList(productType, current, size)
 		if tenantPage.Total <= 0 {
 			break
 		}
 		totalPage = tenantPage.Pages
 		tenantIds := tenantPage.Records.(*[]string)
 		for _, tenantId := range *tenantIds {
-			dbInstanceList := dao2.AlarmInstance.SelectInstanceList(tenantId, productType)
+			dbInstanceList := dao.AlarmInstance.SelectInstanceList(tenantId, productType)
 			remoteInstanceList, err := GetRemoteProductInstanceList(productType, tenantId)
 			logger.Logger().Infof(" sync list ,db: %+v,remote:%+v", dbInstanceList, remoteInstanceList)
 			if err != nil {
@@ -113,7 +113,7 @@ func syncInstanceName(list []*model.AlarmInstance) {
 		info := GetRegionInfo(instance.RegionCode)
 		instance.RegionName = info.Name
 	}
-	dao2.AlarmInstance.UpdateBatchInstanceName(list)
+	dao.AlarmInstance.UpdateBatchInstanceName(list)
 
 	producer.SendInstanceJobMsg(sys_rocketmq.InstanceTopic, list)
 }
@@ -137,7 +137,7 @@ func deleteNotExistsInstances(tenantId string, dbInstanceList []*model.AlarmInst
 	}
 	logger.Logger().Infof(" delete list :%+v", deletedList)
 	if len(deletedList) != 0 {
-		dao2.AlarmInstance.DeleteInstanceList(tenantId, deletedList)
+		dao.AlarmInstance.DeleteInstanceList(tenantId, deletedList)
 		instance := &dto.Instance{
 			TenantId: tenantId,
 			List:     deletedList,
