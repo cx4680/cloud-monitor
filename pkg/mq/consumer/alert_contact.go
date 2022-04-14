@@ -8,7 +8,6 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/service"
 	"encoding/json"
-	"fmt"
 	"github.com/apache/rocketmq-client-go/v2/primitive"
 	"gorm.io/gorm"
 )
@@ -17,8 +16,11 @@ func ContactHandler(msgs []*primitive.MessageExt) {
 	for i := range msgs {
 		var msgErr error
 		var mqMsg form.MqMsg
-		fmt.Printf("subscribe callback: %v \n", msgs[i])
+		logger.Logger().Errorf("subscribe callback: %v \n", msgs[i])
 		msgErr = json.Unmarshal(msgs[i].Body, &mqMsg)
+		if msgErr != nil {
+			continue
+		}
 		switch mqMsg.EventEum {
 		case enum.InsertContact:
 			contactMsg := buildContactData(mqMsg.Data)
@@ -58,10 +60,13 @@ func ContactHandler(msgs []*primitive.MessageExt) {
 
 func ContactGroupHandler(msgs []*primitive.MessageExt) {
 	for i := range msgs {
-		fmt.Printf("subscribe callback: %v \n", msgs[i])
+		logger.Logger().Errorf("subscribe callback: %v \n", msgs[i])
 		var msgErr error
 		var mqMsg form.MqMsg
 		msgErr = json.Unmarshal(msgs[i].Body, &mqMsg)
+		if msgErr != nil {
+			continue
+		}
 		switch mqMsg.EventEum {
 		case enum.InsertContactGroup:
 			contactGroupMsg := buildContactGroupData(mqMsg.Data)
