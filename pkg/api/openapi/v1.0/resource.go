@@ -1,7 +1,6 @@
 package v1_0
 
 import (
-	_ "code.cestc.cn/ccos-ops/cloud-monitor/business-common/global"
 	openapi2 "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global/openapi"
 	commonService "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/service"
 	commonUtil "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/util"
