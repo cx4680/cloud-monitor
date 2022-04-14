@@ -102,6 +102,9 @@ func StartConsumersScribe(group Group, consumers []*Consumer) error {
 		consumer.WithGroupName(string(group)),
 		consumer.WithNsResolver(primitive.NewPassthroughResolver(addresses)),
 	)
+	primitive.PanicHandler = func(err interface{}) {
+		logger.Logger().Errorf("rocketmq runtime error, %v\n", err)
+	}
 	for _, o := range consumers {
 		m := *o
 		err := c.Subscribe(string(m.Topic), consumer.MessageSelector{
