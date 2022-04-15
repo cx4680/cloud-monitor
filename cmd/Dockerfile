@@ -9,8 +9,8 @@ ENV GO111MODULE=on \
 WORKDIR /build
 # 将代码复制到容器中
 COPY .. .
-
-RUN go build -o app .
+RUN ls
+RUN go build -o app ./cmd/
 
 
 FROM  harbor.ceclouddyn.com/baseos/centos:8.4.2105-0.0.1
@@ -27,4 +27,4 @@ RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime &&\
 EXPOSE 80
 
 # 启动容器时运行的命令
-ENTRYPOINT ["/bin/sh", "-c", "ls && ls migrations && source /opt/cecloud/.appEnv && ./app -config /conf/center.yaml"]
+ENTRYPOINT ["/bin/sh", "-c", "source /opt/cecloud/.appEnv && ./app -config /conf/center.yaml"]
