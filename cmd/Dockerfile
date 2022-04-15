@@ -9,7 +9,6 @@ ENV GO111MODULE=on \
 WORKDIR /build
 # 将代码复制到容器中
 COPY .. .
-RUN ls
 RUN go build -o app ./cmd/
 
 
