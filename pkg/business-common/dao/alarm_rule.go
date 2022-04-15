@@ -208,6 +208,9 @@ func (dao *AlarmRuleDao) saveAlarmNotice(tx *gorm.DB, ruleReqDTO *form.AlarmRule
 			ContractGroupID: group,
 		})
 	}
+	if len(list) == 0 {
+		return
+	}
 	tx.Create(&list)
 }
 
