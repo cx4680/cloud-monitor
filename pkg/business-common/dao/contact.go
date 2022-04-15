@@ -101,7 +101,7 @@ func (d *ContactDao) Delete(db *gorm.DB, entity *model.Contact) {
 
 func (d *ContactDao) ActivateContact(db *gorm.DB, activeCode string) string {
 	var entity = &model.ContactInformation{}
-	db.Where("active_code = ?", activeCode).Update("state", 1).Find(entity)
+	db.Model(entity).Where("active_code = ?", activeCode).Update("state", 1).Find(entity)
 	return entity.TenantId
 }
 
