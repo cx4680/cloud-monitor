@@ -1,6 +1,7 @@
 package config
 
 import (
+	"github.com/google/uuid"
 	"gopkg.in/yaml.v3"
 	"io/ioutil"
 	"os"
@@ -27,7 +28,6 @@ type CommonConfig struct {
 	TenantUrl              string `yaml:"tenantUrl"`
 	SmsCenterPath          string `yaml:"smsCenterPath"`
 	ActivateInformationUrl string `yaml:"activateInformationUrl"`
-	HawkeyeCenterPath      string `yaml:"hawkeyeCenterPath"`
 	MsgIsOpen              string `yaml:"msgIsOpen"`
 	MsgChannel             string `yaml:"msgChannel"`
 	RegionName             string `yaml:"regionName"`
@@ -112,10 +112,9 @@ func defaultAppConfig() AppConfig {
 			TenantUrl:              "",
 			SmsCenterPath:          "",
 			ActivateInformationUrl: "",
-			HawkeyeCenterPath:      "",
 			MsgIsOpen:              MsgOpen,
 			MsgChannel:             MsgChannelEmail,
-			RegionName:             "local",
+			RegionName:             uuid.New().String(),
 			EcsInnerGateway:        "",
 		},
 	}
