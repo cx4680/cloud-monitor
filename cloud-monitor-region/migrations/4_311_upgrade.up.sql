@@ -2,7 +2,7 @@ ALTER TABLE t_monitor_product ADD COLUMN monitor_type varchar(50);
 
 UPDATE t_monitor_product SET monitor_type = '云产品监控';
 
-UPDATE t_monitor_product SET status = '1' WHERE abbreviation IN ('bms','kafka','dm','postgresql');
+UPDATE t_monitor_product SET status = '1' WHERE abbreviation IN ('bms','dm','postgresql');
 
 UPDATE t_monitor_item SET type = '1' WHERE biz_id IN ('68','69','70','71','72','73','74','75','76','77','78','79','80','81','82','83','84','85');
 
