@@ -1,6 +1,6 @@
 ALTER TABLE t_monitor_product DROP COLUMN monitor_type;
 
-UPDATE t_monitor_product SET status = '0' WHERE abbreviation IN ('bms','dm','postgresql');
+UPDATE t_monitor_product SET status = '0' WHERE abbreviation IN ('dm','postgresql');
 
 UPDATE t_monitor_item SET type = null WHERE biz_id IN ('68','69','70','71','72','73','74','75','76','77','78','79','80','81','82','83','84','85');
 
