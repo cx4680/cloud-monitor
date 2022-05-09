@@ -31,6 +31,7 @@ func (mic *MonitorItemCtl) GetMonitorItemsByProductAbbr(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, openapi.NewRespError(openapi.ProductAbbreviationInvalid, c))
 		return
 	}
+	c.Set(global.ResourceName, productAbbreviation)
 	pageVo := mic.service.GetMonitorItemPage(param.PageSize, param.PageNumber, productAbbreviation)
 	var metricMetaList []MetricMeta
 	metricListVo := *pageVo.Records.(*[]model.MonitorItem)
