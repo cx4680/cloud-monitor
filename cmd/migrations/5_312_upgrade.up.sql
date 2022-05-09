@@ -156,3 +156,4 @@ INSERT INTO `t_alarm_item_template` (`rule_template_biz_id`, `metric_code`, `tri
 
 
 ALTER TABLE t_alarm_record MODIFY COLUMN source_type varchar(100) COMMENT '资源类型';
+ALTER TABLE t_alarm_record MODIFY COLUMN rule_id varchar(50) COMMENT '规则id';
