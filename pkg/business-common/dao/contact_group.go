@@ -158,3 +158,12 @@ func (d *ContactGroupDao) CheckGroupId(tenantId, groupBizId string) bool {
 	}
 	return false
 }
+
+func (d *ContactGroupDao) GetGroupBizIdByName(tenantId, groupName string) string {
+	var group model.ContactGroup
+	global.DB.Model(&model.ContactGroup{}).Where("tenant_id = ? AND name = ?", tenantId, groupName).First(&group)
+	if group == (model.ContactGroup{}) {
+		return ""
+	}
+	return group.BizId
+}

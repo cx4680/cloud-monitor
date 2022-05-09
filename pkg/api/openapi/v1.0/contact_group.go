@@ -5,10 +5,11 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/enum"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/errors"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/form"
-	openapi "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global/openapi"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global/openapi"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global/sys_component/sys_rocketmq"
 	commonService "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/service"
-	util2 "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/util"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/util"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/service"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -23,7 +24,7 @@ func NewContactGroupCtl() *ContactGroupCtl {
 }
 
 func (acgc *ContactGroupCtl) SelectContactGroupPage(c *gin.Context) {
-	tenantId, err := util2.GetTenantId(c)
+	tenantId, err := util.GetTenantId(c)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, openapi.NewRespError(openapi.MissingParameter, c))
 		return
@@ -46,8 +47,8 @@ func (acgc *ContactGroupCtl) SelectContactGroupPage(c *gin.Context) {
 			GroupId:      v.GroupBizId,
 			GroupName:    v.GroupName,
 			ContactCount: v.ContactCount,
-			CreateTime:   util2.TimeToStr(v.CreateTime, util2.FullTimeFmt),
-			UpdateTime:   util2.TimeToStr(v.UpdateTime, util2.FullTimeFmt),
+			CreateTime:   util.TimeToStr(v.CreateTime, util.FullTimeFmt),
+			UpdateTime:   util.TimeToStr(v.UpdateTime, util.FullTimeFmt),
 			Description:  v.Description,
 		}
 		contactGroups = append(contactGroups, contactGroup)
@@ -63,7 +64,7 @@ func (acgc *ContactGroupCtl) SelectContactGroupPage(c *gin.Context) {
 }
 
 func (acgc *ContactGroupCtl) SelectContactPageByGroupId(c *gin.Context) {
-	tenantId, err := util2.GetTenantId(c)
+	tenantId, err := util.GetTenantId(c)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, openapi.NewRespError(openapi.MissingParameter, c))
 		return
@@ -81,8 +82,8 @@ func (acgc *ContactGroupCtl) SelectContactPageByGroupId(c *gin.Context) {
 			ContactId:   v.ContactBizId,
 			ContactName: v.ContactName,
 			GroupNames:  v.GroupName,
-			CreateTime:  util2.TimeToStr(v.CreateTime, util2.FullTimeFmt),
-			UpdateTime:  util2.TimeToStr(v.UpdateTime, util2.FullTimeFmt),
+			CreateTime:  util.TimeToStr(v.CreateTime, util.FullTimeFmt),
+			UpdateTime:  util.TimeToStr(v.UpdateTime, util.FullTimeFmt),
 			Description: v.Description,
 		}
 		if strutil.IsNotBlank(v.Phone) {
@@ -114,7 +115,7 @@ func (acgc *ContactGroupCtl) SelectContactPageByGroupId(c *gin.Context) {
 }
 
 func (acgc *ContactGroupCtl) CreateContactGroup(c *gin.Context) {
-	tenantId, err := util2.GetTenantId(c)
+	tenantId, err := util.GetTenantId(c)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, openapi.NewRespError(openapi.MissingParameter, c))
 		return
@@ -142,12 +143,13 @@ func (acgc *ContactGroupCtl) CreateContactGroup(c *gin.Context) {
 			RequestId string
 			GroupId   string
 		}{RequestId: openapi.GetRequestId(c), GroupId: request.GroupBizId}
+		c.Set(global.ResourceName, request.GroupBizId)
 		c.JSON(http.StatusOK, result)
 	}
 }
 
 func (acgc *ContactGroupCtl) UpdateContactGroup(c *gin.Context) {
-	tenantId, err := util2.GetTenantId(c)
+	tenantId, err := util.GetTenantId(c)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, openapi.NewRespError(openapi.MissingParameter, c))
 		return
@@ -167,6 +169,7 @@ func (acgc *ContactGroupCtl) UpdateContactGroup(c *gin.Context) {
 		ContactBizIdList: param.ContactIdList,
 		EventEum:         enum.UpdateContactGroup,
 	}
+	c.Set(global.ResourceName, request.GroupBizId)
 	err = acgc.service.Persistence(acgc.service, sys_rocketmq.ContactGroupTopic, request)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, openapi.NewRespError(ContactErrorMap[err.(*errors.BusinessError).Message], c))
@@ -178,7 +181,7 @@ func (acgc *ContactGroupCtl) UpdateContactGroup(c *gin.Context) {
 }
 
 func (acgc *ContactGroupCtl) DeleteContactGroup(c *gin.Context) {
-	tenantId, err := util2.GetTenantId(c)
+	tenantId, err := util.GetTenantId(c)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, openapi.NewRespError(openapi.MissingParameter, c))
 		return
@@ -188,6 +191,7 @@ func (acgc *ContactGroupCtl) DeleteContactGroup(c *gin.Context) {
 		GroupBizId: c.Param("GroupId"),
 		EventEum:   enum.DeleteContactGroup,
 	}
+	c.Set(global.ResourceName, request.GroupBizId)
 	err = acgc.service.Persistence(acgc.service, sys_rocketmq.ContactGroupTopic, request)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, openapi.NewRespError(ContactErrorMap[err.(*errors.BusinessError).Message], c))

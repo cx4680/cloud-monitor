@@ -13,14 +13,12 @@ import (
 )
 
 type MonitorProductCtl struct {
-	service service.MonitorProductService
+	service *service.MonitorProductService
 }
 
-func NewMonitorProductCtl(service service.MonitorProductService) *MonitorProductCtl {
-	return &MonitorProductCtl{service}
+func NewMonitorProductCtl() *MonitorProductCtl {
+	return &MonitorProductCtl{service.NewMonitorProductService(dao.MonitorProduct)}
 }
-
-var MonitorProductService = service.NewMonitorProductService(dao.MonitorProduct)
 
 func (mpc *MonitorProductCtl) GetMonitorProduct(c *gin.Context) {
 	c.JSON(http.StatusOK, global.NewSuccess("查询成功", mpc.service.GetMonitorProduct()))
@@ -37,8 +35,9 @@ func (mpc *MonitorProductCtl) ChangeStatus(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, global.NewError(translate.GetErrorMsg(err)))
 		return
 	}
+	c.Set(global.ResourceName, param.BizIdList)
 	param.EventEum = enum.ChangeMonitorProductStatus
-	err = mpc.service.Persistence(MonitorProductService, sys_rocketmq.MonitorProductTopic, param)
+	err = mpc.service.Persistence(mpc.service, sys_rocketmq.MonitorProductTopic, param)
 	if err != nil {
 		c.JSON(http.StatusOK, global.NewError(err.Error()))
 	} else {

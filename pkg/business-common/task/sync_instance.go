@@ -13,8 +13,8 @@ import (
 	commonService "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/service"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/service/external/region"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/external"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/k8s"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/mq/producer"
-	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/service"
 	"github.com/pkg/errors"
 	"log"
 )
@@ -69,8 +69,8 @@ func Run(productType string) error {
 
 }
 
-func GetRemoteProductInstanceList(productType string, tenantId string) ([]*model.AlarmInstance, error) {
-	var is = external.ProductInstanceServiceMap[productType]
+func GetRemoteProductInstanceList(abbreviation string, tenantId string) ([]*model.AlarmInstance, error) {
+	var is = external.ProductInstanceServiceMap[abbreviation]
 	if is == nil {
 		return nil, errors.New("未配置instanceService")
 	}
@@ -83,7 +83,7 @@ func GetRemoteProductInstanceList(productType string, tenantId string) ([]*model
 	stage := is.(commonService.InstanceStage)
 	var instances []*model.AlarmInstance
 	for current <= totalPage {
-		page, err := is.GetPage(commonService.InstancePageForm{Current: current, PageSize: size, Product: productType, TenantId: tenantId}, stage)
+		page, err := is.GetPage(commonService.InstancePageForm{Current: current, PageSize: size, Product: abbreviation, TenantId: tenantId}, stage)
 		if err != nil {
 			return nil, err
 		}
@@ -143,7 +143,7 @@ func deleteNotExistsInstances(tenantId string, dbInstanceList []*model.AlarmInst
 			List:     deletedList,
 		}
 		producer.SendInstanceJobMsg(sys_rocketmq.DeleteInstanceTopic, instance)
-		service.PrometheusRule.GenerateUserPrometheusRule(tenantId)
+		k8s.PrometheusRule.GenerateUserPrometheusRule(tenantId)
 	}
 }
 

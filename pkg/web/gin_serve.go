@@ -43,8 +43,8 @@ func doStart(cfg config.Serve) error {
 	s := &http.Server{
 		Addr:           ":" + port,
 		Handler:        Router,
-		ReadTimeout:    10 * time.Second,
-		WriteTimeout:   10 * time.Second,
+		ReadTimeout:    30 * time.Second,
+		WriteTimeout:   30 * time.Second,
 		MaxHeaderBytes: 1 << 20,
 	}
 

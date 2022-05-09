@@ -5,7 +5,7 @@ import (
 	c "code.cestc.cn/ccos-ops/cloud-monitor/common/config"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/errors"
-	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/form"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/inhibit"
 	"context"
 	"encoding/json"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -66,13 +66,13 @@ func InitK8s() error {
 func DeleteAlertRule(alertRuleId string) error {
 	err := client.Resource(*resource).Namespace(namespace).Delete(context.TODO(), alertRuleId, metav1.DeleteOptions{})
 	if err != nil {
-		logger.Logger().Error("调用api删除规则失败", err)
+		logger.Logger().Error("调用api删除规则失败, name=", alertRuleId, err)
 		return errors.NewBusinessErrorCode(errors.DeleteError, "调用api删除规则失败")
 	}
 	return nil
 }
 
-func alertRuleToObject(alertRuleDTO *form.AlertRuleDTO) *map[string]interface{} {
+func alertRuleToObject(alertRuleDTO *AlertRuleDTO) *map[string]interface{} {
 	result := map[string]interface{}{}
 	result["apiVersion"] = "monitoring.coreos.com/v1"
 	result["kind"] = "PrometheusRule"
@@ -111,7 +111,7 @@ func alertRuleToObject(alertRuleDTO *form.AlertRuleDTO) *map[string]interface{} 
 	return &result
 }
 
-func ApplyAlertRule(alertRuleDTO *form.AlertRuleDTO) error {
+func ApplyAlertRule(alertRuleDTO *AlertRuleDTO) error {
 	rules := alertRuleToObject(alertRuleDTO)
 	requestObj, err2 := json.Marshal(rules)
 	if err2 != nil {
@@ -153,8 +153,41 @@ func ApplyAlertManagerConfig(cfg AlertManagerConfig) error {
 func DeleteAlertManagerConfig(configName string) error {
 	err := client.Resource(*alertManagerResource).Namespace(namespace).Delete(context.TODO(), configName, metav1.DeleteOptions{})
 	if err != nil {
-		logger.Logger().Error("调用api删除AlertManagerConfig失败, ", err)
+		logger.Logger().Warn("调用api删除AlertManagerConfig失败, name=", configName, err)
 		return errors.NewBusinessErrorCode(errors.DeleteError, "调用api删除AlertManagerConfig失败")
+	}
+	return nil
+}
+
+const LevelInhibitName = "hawkeye-level-inhibit"
+
+func ApplyInhibitRules(levels []uint8) error {
+	rules := inhibit.BuildRules(levels)
+	tpl, err := template.ParseFiles("templates/inhibit_rules.tpl")
+	if err != nil {
+		return err
+	}
+	var buf bytes.Buffer
+	err = tpl.ExecuteTemplate(&buf, "inhibitRulesConfig", struct {
+		Name      string
+		Namespace string
+		Rules     []inhibit.InhibitRule
+	}{
+		Name:      LevelInhibitName,
+		Namespace: namespace,
+		Rules:     rules,
+	})
+	if err != nil {
+		logger.Logger().Errorf(err.Error())
+		return err
+	}
+	_, err = client.Resource(*alertManagerResource).
+		Namespace(namespace).
+		Patch(context.TODO(), LevelInhibitName, types.ApplyPatchType,
+			[]byte(buf.String()), metav1.ApplyOptions{FieldManager: "application/apply-patch", Force: true}.ToPatchOptions())
+	if err != nil {
+		logger.Logger().Errorf(err.Error())
+		return err
 	}
 	return nil
 }

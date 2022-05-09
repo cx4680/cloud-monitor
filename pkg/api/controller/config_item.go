@@ -1,9 +1,9 @@
 package controller
 
 import (
-	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/dao"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/service/external/message_center"
 	external "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/service/external/region"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -47,9 +47,6 @@ func (ctl *ConfigItemCtl) GetMonitorRange(c *gin.Context) {
 }
 
 func (ctl *ConfigItemCtl) GetNoticeChannel(c *gin.Context) {
-	if config.Cfg.Common.MsgIsOpen == config.MsgClose {
-		c.JSON(http.StatusOK, global.NewSuccess("查询成功", nil))
-		return
-	}
-	c.JSON(http.StatusOK, global.NewSuccess("查询成功", global.NoticeChannelList))
+	var noticeChannelList = message_center.NewService().GetRemoteChannels()
+	c.JSON(http.StatusOK, global.NewSuccess("查询成功", noticeChannelList))
 }

@@ -34,6 +34,7 @@ type tenantResult struct {
 type tenantLogin struct {
 	LoginCode    string `json:"loginCode"`
 	SerialNumber string `json:"serialNumber"`
+	Email        string `json:"email"`
 }
 
 func (s *TenantService) GetTenantInfo(tenantId string) dto.TenantDTO {
@@ -69,17 +70,20 @@ func getTenantFromServer(tenantId string) *dto.TenantDTO {
 		return nil
 	}
 	var result tenantResponse
-	var loginName, serialNumber string
+	var loginName, serialNumber, email string
 	jsonutil.ToObject(resp, &result)
 	if result.Result != (tenantResult{}) {
 		loginName = result.Result.Login.LoginCode
 		serialNumber = result.Result.Login.SerialNumber
+		email = result.Result.Login.Email
 	} else {
 		loginName = result.Module.Login.LoginCode
 		serialNumber = result.Module.Login.SerialNumber
+		email = result.Module.Login.Email
 	}
 	return &dto.TenantDTO{
 		Name:  loginName,
 		Phone: serialNumber,
+		Email: email,
 	}
 }

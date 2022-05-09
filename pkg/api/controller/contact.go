@@ -58,6 +58,7 @@ func (ctl *ContactCtl) CreateContact(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusOK, global.NewError(err.Error()))
 	} else {
+		c.Set(global.ResourceName, param.ContactBizId)
 		c.JSON(http.StatusOK, global.NewSuccess("创建成功", true))
 	}
 }
@@ -69,6 +70,7 @@ func (ctl *ContactCtl) UpdateContact(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, global.NewError(translate.GetErrorMsg(err)))
 		return
 	}
+	c.Set(global.ResourceName, param.ContactBizId)
 	tenantId, err := util.GetTenantId(c)
 	if err != nil {
 		c.JSON(http.StatusOK, global.NewError(err.Error()))
@@ -91,6 +93,7 @@ func (ctl *ContactCtl) DeleteContact(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, global.NewError(translate.GetErrorMsg(err)))
 		return
 	}
+	c.Set(global.ResourceName, param.ContactBizId)
 	tenantId, err := util.GetTenantId(c)
 	if err != nil {
 		c.JSON(http.StatusOK, global.NewError(err.Error()))
@@ -113,6 +116,7 @@ func (ctl *ContactCtl) ActivateContact(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, global.NewError(translate.GetErrorMsg(err)))
 		return
 	}
+	c.Set(global.ResourceName, param.ActiveCode)
 	param.EventEum = enum.ActivateContact
 	err = ctl.service.Persistence(ctl.service, sys_rocketmq.ContactTopic, &param)
 	if err != nil {

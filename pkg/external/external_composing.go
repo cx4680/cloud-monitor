@@ -17,6 +17,9 @@ const (
 	DM         = "dm"
 	POSTGRESQL = "postgresql"
 	KAFKA      = "kafka"
+	REDIS      = "redis"
+	MONGO      = "mongo"
+	CGW        = "cgw"
 )
 
 var ProductInstanceServiceMap = map[string]commonService.InstanceService{
@@ -51,6 +54,15 @@ var ProductInstanceServiceMap = map[string]commonService.InstanceService{
 		InstanceServiceImpl: commonService.InstanceServiceImpl{},
 	},
 	KAFKA: &KafkaInstanceService{
+		InstanceServiceImpl: commonService.InstanceServiceImpl{},
+	},
+	REDIS: &RedisInstanceService{
+		InstanceServiceImpl: commonService.InstanceServiceImpl{},
+	},
+	MONGO: &MongoInstanceService{
+		InstanceServiceImpl: commonService.InstanceServiceImpl{},
+	},
+	CGW: &CgwInstanceService{
 		InstanceServiceImpl: commonService.InstanceServiceImpl{},
 	},
 }

@@ -6,6 +6,7 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/dao"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/enum"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/form"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global"
 	"encoding/json"
 	"fmt"
 	"github.com/apache/rocketmq-client-go/v2/primitive"
@@ -24,7 +25,7 @@ func MonitorProductHandler(msgs []*primitive.MessageExt) {
 			data := jsonutil.ToString(MqMsg.Data)
 			var param form.MonitorProductParam
 			jsonutil.ToObject(data, &param)
-			dao.MonitorProduct.ChangeStatus(param.BizIdList, param.Status)
+			dao.MonitorProduct.ChangeStatus(global.DB, param.BizIdList, param.Status)
 		}
 	}
 }

@@ -1,15 +1,12 @@
 package controller
 
 import (
-	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/strutil"
-	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/form"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/service"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/constant"
 	"github.com/gin-gonic/gin"
 	"net/http"
-	"strings"
 )
 
 type NoticeCtl struct {
@@ -50,32 +47,6 @@ func (nc *NoticeCtl) GetCenterUsage(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, global.NewSuccess("查询成功", num))
-}
-
-func (nc *NoticeCtl) ChangeNoticeChannel(c *gin.Context) {
-	if config.Cfg.Common.MsgIsOpen == config.MsgClose || strutil.IsBlank(config.Cfg.Common.MsgChannel) {
-		c.JSON(http.StatusOK, global.NewSuccess("该环境无告警渠道", false))
-		return
-	}
-	var noticeChannelVO NoticeChannelVO
-	err := c.ShouldBindJSON(&noticeChannelVO)
-	if err != nil {
-		c.JSON(http.StatusOK, global.NewError(err.Error()))
-		return
-	}
-	global.NoticeChannelList = []form.NoticeChannel{}
-	for _, v := range noticeChannelVO.ChannelList {
-		if !strings.Contains(config.Cfg.Common.MsgChannel, v) {
-			continue
-		}
-		switch v {
-		case config.MsgChannelEmail:
-			global.NoticeChannelList = append(global.NoticeChannelList, form.NoticeChannel{Name: "邮箱", Code: v, Data: 1})
-		case config.MsgChannelSms:
-			global.NoticeChannelList = append(global.NoticeChannelList, form.NoticeChannel{Name: "短信", Code: v, Data: 2})
-		}
-	}
-	c.JSON(http.StatusOK, global.NewSuccess("修改成功", true))
 }
 
 type NoticeUsageVO struct {

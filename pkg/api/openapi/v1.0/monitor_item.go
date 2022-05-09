@@ -25,6 +25,7 @@ func (mic *MonitorItemCtl) GetMonitorItemsByProductAbbr(c *gin.Context) {
 		return
 	}
 	productAbbreviation := c.Param("ProductAbbreviation")
+	c.Set(global.ResourceName, productAbbreviation)
 	abbreviation := dao.MonitorProduct.GetByAbbreviation(global.DB, productAbbreviation)
 	if len(abbreviation.BizId) == 0 {
 		c.JSON(http.StatusBadRequest, openapi.NewRespError(openapi.ProductAbbreviationInvalid, c))

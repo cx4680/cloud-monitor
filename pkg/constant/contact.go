@@ -13,4 +13,6 @@ const (
 
 	PhoneSize    = 11  //手机号长度限制
 	MaxEmailSize = 100 //邮箱最大长度限制
+
+	DefaultContact = "云账号告警联系人" //默认联系人/组
 )

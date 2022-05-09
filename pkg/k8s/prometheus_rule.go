@@ -1,4 +1,6 @@
-package form
+package k8s
+
+import "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/model"
 
 type AlertRuleDTO struct {
 	AlertRuleId    string        `json:"alertRuleId"`
@@ -9,8 +11,8 @@ type AlertRuleDTO struct {
 }
 
 type SpecGroups struct {
-	Name      string      `json:"name"`
-	AlertList []*AlertDTO `json:"alertList"`
+	Name      string     `json:"name"`
+	AlertList []AlertDTO `json:"alertList"`
 }
 
 type AlertDTO struct {
@@ -24,4 +26,14 @@ type AlertDTO struct {
 	Labels       map[string]interface{} `json:"labels"`
 	SilencesTime string                 `json:"silencesTime"`
 	SourceType   uint8                  `json:"source_type"`
+}
+
+type AlarmDescription struct {
+	Expr            string
+	ExprDetail      string
+	Rule            model.AlarmRule
+	RuleItems       []model.AlarmItem
+	ContactGroupIds []string
+	ResourceId      string
+	ResourceGroupId string
 }

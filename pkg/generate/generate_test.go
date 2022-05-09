@@ -5,5 +5,5 @@ import (
 )
 
 func TestGenerate(t *testing.T) {
-	generate("t_a", "a.go")
+	generate("t_alarm_item", "alarm_item.go")
 }

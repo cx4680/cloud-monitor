@@ -1,7 +1,6 @@
 package service
 
 import (
-	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/jsonutil"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/snowflake"
@@ -67,10 +66,12 @@ func (s *MessageService) TargetFilter(targetList []string, rt message_center2.Re
 }
 
 func (s *MessageService) SendAlarmNotice(msgList []interface{}) error {
-	if config.MsgOpen != config.Cfg.Common.MsgIsOpen {
+	channels := s.MCS.GetRemoteChannels()
+	if len(channels) == 0 {
 		logger.Logger().Info("There is no message center for this env")
 		return nil
 	}
+
 	if msgList == nil || len(msgList) <= 0 {
 		return nil
 	}

@@ -5,11 +5,12 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/enum"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/errors"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/form"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global/openapi"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global/sys_component/sys_rocketmq"
 	service2 "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/service"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/service/external/message_center"
-	util2 "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/util"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/util"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/constant"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/service"
 	"github.com/gin-gonic/gin"
@@ -27,7 +28,7 @@ func NewContactCtl() *ContactCtl {
 }
 
 func (acl *ContactCtl) SelectContactPage(c *gin.Context) {
-	tenantId, err := util2.GetTenantId(c)
+	tenantId, err := util.GetTenantId(c)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, openapi.NewRespError(openapi.MissingParameter, c))
 		return
@@ -52,8 +53,8 @@ func (acl *ContactCtl) SelectContactPage(c *gin.Context) {
 			ContactId:   v.ContactBizId,
 			ContactName: v.ContactName,
 			GroupNames:  v.GroupName,
-			CreateTime:  util2.TimeToStr(v.CreateTime, util2.FullTimeFmt),
-			UpdateTime:  util2.TimeToStr(v.UpdateTime, util2.FullTimeFmt),
+			CreateTime:  util.TimeToStr(v.CreateTime, util.FullTimeFmt),
+			UpdateTime:  util.TimeToStr(v.UpdateTime, util.FullTimeFmt),
 			Description: v.Description,
 		}
 		if strutil.IsNotBlank(v.Phone) {
@@ -85,7 +86,7 @@ func (acl *ContactCtl) SelectContactPage(c *gin.Context) {
 }
 
 func (acl *ContactCtl) CreateContact(c *gin.Context) {
-	tenantId, err := util2.GetTenantId(c)
+	tenantId, err := util.GetTenantId(c)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, openapi.NewRespError(openapi.MissingParameter, c))
 		return
@@ -115,12 +116,13 @@ func (acl *ContactCtl) CreateContact(c *gin.Context) {
 			RequestId string
 			ContactId string
 		}{RequestId: openapi.GetRequestId(c), ContactId: request.ContactBizId}
+		c.Set(global.ResourceName, request.ContactBizId)
 		c.JSON(http.StatusOK, result)
 	}
 }
 
 func (acl *ContactCtl) UpdateContact(c *gin.Context) {
-	tenantId, err := util2.GetTenantId(c)
+	tenantId, err := util.GetTenantId(c)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, openapi.NewRespError(openapi.MissingParameter, c))
 		return
@@ -142,6 +144,7 @@ func (acl *ContactCtl) UpdateContact(c *gin.Context) {
 		GroupBizIdList: param.GroupIdList,
 		EventEum:       enum.UpdateContact,
 	}
+	c.Set(global.ResourceName, request.ContactBizId)
 	err = acl.service.Persistence(acl.service, sys_rocketmq.ContactTopic, request)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, openapi.NewRespError(getErrorCode(err), c))
@@ -153,7 +156,7 @@ func (acl *ContactCtl) UpdateContact(c *gin.Context) {
 }
 
 func (acl *ContactCtl) DeleteContact(c *gin.Context) {
-	tenantId, err := util2.GetTenantId(c)
+	tenantId, err := util.GetTenantId(c)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, openapi.NewRespError(openapi.MissingParameter, c))
 		return
@@ -163,6 +166,7 @@ func (acl *ContactCtl) DeleteContact(c *gin.Context) {
 		ContactBizId: c.Param("ContactId"),
 		EventEum:     enum.DeleteContact,
 	}
+	c.Set(global.ResourceName, request.ContactBizId)
 	err = acl.service.Persistence(acl.service, sys_rocketmq.ContactTopic, request)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, openapi.NewRespError(getErrorCode(err), c))
@@ -174,7 +178,7 @@ func (acl *ContactCtl) DeleteContact(c *gin.Context) {
 }
 
 func (acl *ContactCtl) ActivateContact(c *gin.Context) {
-	tenantId, err := util2.GetTenantId(c)
+	tenantId, err := util.GetTenantId(c)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, openapi.NewRespError(openapi.MissingParameter, c))
 		return
@@ -184,6 +188,7 @@ func (acl *ContactCtl) ActivateContact(c *gin.Context) {
 		ActiveCode: c.Param("ActiveCode"),
 		EventEum:   enum.ActivateContact,
 	}
+	c.Set(global.ResourceName, request.ActiveCode)
 	err = acl.service.Persistence(acl.service, sys_rocketmq.ContactTopic, request)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, openapi.NewRespError(getErrorCode(err), c))

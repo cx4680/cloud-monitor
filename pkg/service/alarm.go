@@ -15,12 +15,13 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/service"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/service/external/message_center"
 	util2 "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/util"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/constant"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/form"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/k8s"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/sync/publisher"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/util"
 	"context"
 	"errors"
-	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -39,34 +40,32 @@ type AlarmRecordAddService struct {
 func NewAlarmRecordAddService(AlarmRecordSvc *AlarmRecordService, AlarmHandlerSvc *service.AlarmHandlerService, TenantSvc *service.TenantService) *AlarmRecordAddService {
 	return &AlarmRecordAddService{
 		FilterChain: []filter{func(alert *form.AlarmRecordAlertsBean) (bool, error) {
-			rule := &dto.RuleDesc{}
-			if err := jsonutil.ToObjectWithError(alert.Annotations.Description, rule); err != nil {
+			ruleDesc := &k8s.AlarmDescription{}
+			if err := jsonutil.ToObjectWithError(alert.Annotations.Description, ruleDesc); err != nil {
 				return false, errors.New("requestId=" + alert.RequestId + ", 序列化告警数据失败")
 			}
 			// 判断该告警对应的规则是否有变化 资源组
-			if strutil.IsNotBlank(rule.ResourceGroupId) {
-				if num := dao.AlarmRecord.FindAlertRuleBindGroupNum(rule.RuleId, rule.ResourceGroupId); num <= 0 {
+			if strutil.IsNotBlank(ruleDesc.ResourceGroupId) {
+				if num := dao.AlarmRecord.FindAlertRuleBindGroupNum(ruleDesc.Rule.BizId, ruleDesc.ResourceGroupId); num <= 0 {
 					logger.Logger().Info("requestId=" + alert.RequestId + ",此告警规则已删除/禁用/解绑")
 					return false, nil
 				}
-			} else if strutil.IsNotBlank(rule.ResourceId) {
-				if num := dao.AlarmRecord.FindAlertRuleBindResourceNum(rule.RuleId, rule.ResourceId); num <= 0 {
+			} else if strutil.IsNotBlank(ruleDesc.ResourceId) {
+				if num := dao.AlarmRecord.FindAlertRuleBindResourceNum(ruleDesc.Rule.BizId, ruleDesc.ResourceId); num <= 0 {
 					logger.Logger().Info("requestId=" + alert.RequestId + ",此告警规则已删除/禁用/解绑")
 					return false, nil
 				}
 			}
-			dbRule := dao.AlarmRule.GetById(global.DB, rule.RuleId)
-			cond := dbRule.RuleCondition
-			if !(cond.MetricName == rule.MetricName &&
-				cond.Period == rule.Period &&
-				cond.Times == rule.Time &&
-				cond.Statistics == rule.Statistic &&
-				cond.ComparisonOperator == rule.ComparisonOperator &&
-				cond.Threshold == rule.TargetValue) {
-				logger.Logger().Info("requestId=", alert.RequestId, "此告警触发条件改变")
+			items := dao.AlarmItem.GetItemListByRuleBizId(global.DB, ruleDesc.Rule.BizId)
+			conditionId, err := util.MD5(items)
+			if err != nil {
+				logger.Logger().Info("requestId=", alert.RequestId, "告警触发条件MD5失败，此告警触发条件改变")
 				return false, nil
 			}
-
+			if conditionId != strings.Split(alert.Labels.Alertname, "#")[2] {
+				logger.Logger().Info("requestId=", alert.RequestId, "此告警触发条件改变, Alertname=", alert.Labels.Alertname, ", conditionId=", conditionId)
+				return false, nil
+			}
 			return true, nil
 		}},
 		AlarmHandlerSvc: AlarmHandlerSvc,
@@ -120,15 +119,15 @@ func (s *AlarmRecordAddService) checkAndBuild(requestId string, alerts []*form.A
 			continue
 		}
 		//解析告警规则信息
-		ruleDesc := &dto.RuleDesc{}
+		ruleDesc := &k8s.AlarmDescription{}
 		if err := jsonutil.ToObjectWithError(a.Annotations.Description, ruleDesc); err != nil {
 			logger.Logger().Error("requestId=", a.RequestId, ", 序列化告警数据失败, ", jsonutil.ToString(a))
 			continue
 		}
 		//获取告警联系人信息
 		var contactGroups []*dto.ContactGroupInfo
-		if ruleDesc.GroupList != nil && len(ruleDesc.GroupList) > 0 {
-			contactGroups = s.AlarmRecordDao.FindContactInfoByGroupIds(ruleDesc.GroupList)
+		if ruleDesc.ContactGroupIds != nil && len(ruleDesc.ContactGroupIds) > 0 {
+			contactGroups = s.AlarmRecordDao.FindContactInfoByGroupIds(ruleDesc.ContactGroupIds)
 		}
 		summaryData := s.parseSummary(a.Annotations.Summary)
 
@@ -139,7 +138,7 @@ func (s *AlarmRecordAddService) checkAndBuild(requestId string, alerts []*form.A
 		infoList = append(infoList, *alarmInfo)
 
 		//告警处理
-		handlerList := s.AlarmHandlerSvc.GetAlarmHandlerListByRuleId(ruleDesc.RuleId)
+		handlerList := s.AlarmHandlerSvc.GetAlarmHandlerListByRuleId(ruleDesc.Rule.BizId)
 		if handlerList == nil || len(handlerList) <= 0 {
 			continue
 		}
@@ -171,19 +170,29 @@ func (s *AlarmRecordAddService) getDurationTime(now, startTime time.Time, period
 	return util.GetDateDiff(int(sub.Round(time.Second).Milliseconds()) + period*1000)
 }
 
-func (s *AlarmRecordAddService) buildAlarmInfo(alert *form.AlarmRecordAlertsBean, alarmBizId string, ruleDesc *dto.RuleDesc, contactGroups []*dto.ContactGroupInfo) *model.AlarmInfo {
+func (s *AlarmRecordAddService) buildAlarmInfo(alert *form.AlarmRecordAlertsBean, alarmBizId string, ruleDesc *k8s.AlarmDescription, contactGroups []*dto.ContactGroupInfo) *model.AlarmInfo {
 	return &model.AlarmInfo{
 		AlarmBizId:  alarmBizId,
 		Summary:     alert.Annotations.Summary,
-		Expression:  ruleDesc.Express,
+		Expression:  ruleDesc.ExprDetail,
 		ContactInfo: jsonutil.ToString(contactGroups),
 	}
 }
 
-func (s *AlarmRecordAddService) buildAlertRecord(alert *form.AlarmRecordAlertsBean, ruleDesc *dto.RuleDesc, cv string) *model.AlarmRecord {
+func (s *AlarmRecordAddService) buildAlertRecord(alert *form.AlarmRecordAlertsBean, ruleDesc *k8s.AlarmDescription, cv string) *model.AlarmRecord {
 	now := util2.GetNow()
 	startTime := util2.TimeParseForZone(alert.StartsAt)
-	val := strconv.FormatFloat(ruleDesc.TargetValue, 'f', 2, 64)
+	ruleType := ruleDesc.Rule.Type
+
+	period := ruleDesc.Rule.Period
+	times := ruleDesc.Rule.Times
+	level := ruleDesc.Rule.Level
+	if constant.AlarmRuleTypeSingleMetric == ruleType {
+		item := ruleDesc.RuleItems[0]
+		period = item.TriggerCondition.Period
+		times = item.TriggerCondition.Times
+		level = item.Level
+	}
 	sourceId := ruleDesc.ResourceId
 	if strutil.IsBlank(sourceId) {
 		sourceId = ruleDesc.ResourceGroupId
@@ -192,28 +201,26 @@ func (s *AlarmRecordAddService) buildAlertRecord(alert *form.AlarmRecordAlertsBe
 		BizId:          strconv.FormatInt(snowflake.GetWorker().NextId(), 10),
 		RequestId:      alert.RequestId,
 		Status:         alert.Status,
-		TenantId:       ruleDesc.TenantId,
-		RuleId:         ruleDesc.RuleId,
-		RuleName:       ruleDesc.RuleName,
-		RuleSourceId:   ruleDesc.Source,
-		RuleSourceType: ruleDesc.SourceType,
-		MonitorType:    ruleDesc.MonitorType,
-		SourceType:     ruleDesc.Product,
+		TenantId:       ruleDesc.Rule.TenantID,
+		RuleId:         ruleDesc.Rule.BizId,
+		RuleName:       ruleDesc.Rule.Name,
+		RuleSourceId:   ruleDesc.Rule.Source,
+		RuleSourceType: ruleDesc.Rule.SourceType,
+		MonitorType:    ruleDesc.Rule.MonitorType,
+		SourceType:     ruleDesc.Rule.ProductName,
 		SourceId:       sourceId,
 		CurrentValue:   cv,
 		StartTime:      util2.TimeToStr(startTime, util2.FullTimeFmt),
 		EndTime:        util2.TimeToStr(util2.TimeParseForZone(alert.EndsAt), util2.FullTimeFmt),
-		TargetValue:    val,
-		Duration:       s.getDurationTime(now, startTime, ruleDesc.Period*ruleDesc.Time),
-		Level:          ruleDesc.Level,
-		AlarmKey:       ruleDesc.MetricName,
+		Duration:       s.getDurationTime(now, startTime, period*times),
+		Level:          level,
 		Region:         config.Cfg.Common.RegionName,
 		CreateTime:     now,
 		UpdateTime:     now,
 	}
 }
 
-func (s *AlarmRecordAddService) buildAutoScalingData(alert *form.AlarmRecordAlertsBean, ruleDesc *dto.RuleDesc, param string) *dto.AutoScalingData {
+func (s *AlarmRecordAddService) buildAutoScalingData(alert *form.AlarmRecordAlertsBean, ruleDesc *k8s.AlarmDescription, param string) *dto.AutoScalingData {
 	if "resolved" == alert.Status {
 		//告警恢复不需要通知弹性伸缩
 		return nil
@@ -225,14 +232,30 @@ func (s *AlarmRecordAddService) buildAutoScalingData(alert *form.AlarmRecordAler
 	}
 
 	return &dto.AutoScalingData{
-		TenantId:        ruleDesc.TenantId,
-		RuleId:          ruleDesc.RuleId,
+		TenantId:        ruleDesc.Rule.TenantID,
+		RuleId:          ruleDesc.Rule.BizId,
 		ResourceGroupId: ruleDesc.ResourceGroupId,
 		Param:           param,
 	}
 }
 
-func (s *AlarmRecordAddService) buildNoticeData(alert *form.AlarmRecordAlertsBean, record *model.AlarmRecord, ruleDesc *dto.RuleDesc,
+//func (s *AlarmRecordAddService) genExprDetails(rule model.AlarmRule, items []model.AlarmItem) string {
+//	ss := make([]string, len(items))
+//	for i, item := range items {
+//		ss[i] = dao.GetExpress2(*item.TriggerCondition)
+//	}
+//	if constant.AlarmRuleTypeSingleMetric == rule.Type {
+//		return ss[0]
+//	}
+//
+//	if constant.AlarmRuleCombinationAnd == rule.Combination {
+//		return strings.Join(ss, " 并且 ")
+//	}
+//	return strings.Join(ss, " 或者 ")
+//
+//}
+
+func (s *AlarmRecordAddService) buildNoticeData(alert *form.AlarmRecordAlertsBean, record *model.AlarmRecord, ruleDesc *k8s.AlarmDescription,
 	contactGroups []*dto.ContactGroupInfo, resourceInfo map[string]string, ht int) *service.AlertMsgSendDTO {
 	source := message_center.ALERT_OPEN
 	if "resolved" == alert.Status {
@@ -242,48 +265,57 @@ func (s *AlarmRecordAddService) buildNoticeData(alert *form.AlarmRecordAlertsBea
 	instanceInfo := s.getInstanceInfo(ruleDesc.ResourceId, resourceInfo)
 	logger.Logger().Info("instanceId=", ruleDesc.ResourceId, ", get instanceInfo=", jsonutil.ToString(instanceInfo))
 
+	//period := ruleDesc.Rule.Period
+	//times := ruleDesc.Rule.Times
+	//if constant.AlarmRuleTypeSingleMetric == ruleDesc.Rule.Type {
+	//item := ruleDesc.RuleItems[0]
+	//period = item.TriggerCondition.Period
+	//times = item.TriggerCondition.Times
+	//}
+
 	objMap := make(map[string]string)
 	objMap["duration"] = record.Duration
 	objMap["instanceInfo"] = instanceInfo
-	objMap["product"] = ruleDesc.Product
+	objMap["product"] = ruleDesc.Rule.ProductName
 	objMap["regionName"] = record.Region
-	objMap["metricName"] = ruleDesc.MonitorItem
-	objMap["Name"] = ruleDesc.RuleName
-	objMap["userName"] = s.TenantSvc.GetTenantInfo(ruleDesc.TenantId).Name
+	//objMap["metricName"] = ruleDesc.MonitorItem
+	objMap["Name"] = ruleDesc.Rule.Name
+	objMap["userName"] = s.TenantSvc.GetTenantInfo(ruleDesc.Rule.TenantID).Name
 	objMap["alertTime"] = record.StartTime
 	objMap["recoveryTime"] = record.EndTime
-	f, _ := strconv.ParseFloat(record.CurrentValue, 64)
-	cv := fmt.Sprintf("%.2f", f)
-	objMap["currentValue"] = cv + ruleDesc.Unit
+	objMap["exprDetails"] = ruleDesc.ExprDetail
+	//f, _ := strconv.ParseFloat(record.CurrentValue, 64)
+	//cv := fmt.Sprintf("%.2f", f)
+	//objMap["currentValue"] = cv + ruleDesc.Unit
 
-	val := strconv.FormatFloat(ruleDesc.TargetValue, 'f', 0, 64)
+	//val := strconv.FormatFloat(ruleDesc.TargetValue, 'f', 0, 64)
 
 	if handler_type.Email == ht {
 		objMap["instanceAmount"] = "1"
-		objMap["period"] = util.GetDateDiff(ruleDesc.Period * 1000)
-		objMap["times"] = "持续" + strconv.Itoa(ruleDesc.Time) + "个周期"
-		objMap["time"] = util.GetDateDiff(ruleDesc.Period * 1000)
-		objMap["calType"] = dao.GetAlarmStatisticsText(ruleDesc.Statistic)
-		objMap["expression"] = dao.GetComparisonOperator(ruleDesc.ComparisonOperator)
-		if source == message_center.ALERT_CANCEL {
-			targetValue := ""
-			if strutil.IsNotBlank(ruleDesc.Unit) {
-				targetValue = ruleDesc.Unit
-			}
-			targetValue = val + targetValue
-			objMap["targetValue"] = targetValue
-		} else if source == message_center.ALERT_OPEN {
-			objMap["targetValue"] = val
-		}
+		//objMap["period"] = util.GetDateDiff(period * 1000)
+		//objMap["times"] = "持续" + strconv.Itoa(times) + "个周期"
+		//objMap["time"] = util.GetDateDiff(period * 1000)
+		//objMap["calType"] = dao.GetAlarmStatisticsText(ruleDesc.Statistic)
+		//objMap["expression"] = dao.GetComparisonOperator(ruleDesc.ComparisonOperator)
+		//if source == message_center.ALERT_CANCEL {
+		//targetValue := ""
+		//if strutil.IsNotBlank(ruleDesc.Unit) {
+		//	targetValue = ruleDesc.Unit
+		//}
+		//targetValue = val + targetValue
+		//objMap["targetValue"] = targetValue
+		//} else if source == message_center.ALERT_OPEN {
+		//objMap["targetValue"] = val
+		//}
 
-		objMap["evaluationCount"] = "持续" + strconv.Itoa(ruleDesc.Time) + "个周期"
+		//objMap["evaluationCount"] = "持续" + strconv.Itoa(times) + "个周期"
 		// 暂不支持资源组
 		objMap["InstanceID"] = ruleDesc.ResourceId
-		if strutil.IsBlank(ruleDesc.Unit) {
-			objMap["unit"] = ""
-		} else {
-			objMap["unit"] = ruleDesc.Unit
-		}
+		//if strutil.IsBlank(ruleDesc.Unit) {
+		//	objMap["unit"] = ""
+		//} else {
+		//	objMap["unit"] = ruleDesc.Unit
+		//}
 	}
 
 	var msgList []service.AlertMsgDTO
@@ -300,7 +332,7 @@ func (s *AlarmRecordAddService) buildNoticeData(alert *form.AlarmRecordAlertsBea
 	}
 	return &service.AlertMsgSendDTO{
 		AlertId:    record.BizId,
-		SenderId:   ruleDesc.TenantId,
+		SenderId:   ruleDesc.Rule.TenantID,
 		SourceType: source,
 		Msgs:       msgList,
 	}

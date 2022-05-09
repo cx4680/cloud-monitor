@@ -4,10 +4,11 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/run_time"
-	cp "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global/pipeline"
-	sys_db2 "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global/sys_component/sys_db"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/dao"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global/pipeline"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global/sys_component/sys_db"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global/sys_component/sys_redis"
-	task2 "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/task"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/task"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/k8s"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/pipeline/sys_upgrade"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/service"
@@ -18,6 +19,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strconv"
 )
 
 // @title Swagger Example API
@@ -25,7 +27,7 @@ import (
 // @description  This is a sample server Petstore server.
 // @BasePath /
 func main() {
-	loader := cp.NewMainLoader()
+	loader := pipeline.NewMainLoader()
 	loader.AddStage(func(*context.Context) error {
 		cfg := config.Cfg.Iam
 		middleware.InitIamConfig(cfg.Site, cfg.Region, cfg.Log)
@@ -33,7 +35,7 @@ func main() {
 	})
 
 	loader.AddStage(func(*context.Context) error {
-		if err := sys_db2.InitDb(config.Cfg.Db); err != nil {
+		if err := sys_db.InitDb(config.Cfg.Db); err != nil {
 			logger.Logger().Errorf("init database error: %v\n", err)
 			return err
 		}
@@ -49,7 +51,7 @@ func main() {
 	})
 
 	loader.AddStage(func(*context.Context) error {
-		return sys_db2.InitData(config.Cfg.Db, "hawkeye", "file://./migrations")
+		return sys_db.InitData(config.Cfg.Db, "hawkeye", "file://./migrations")
 	})
 
 	loader.AddStage(func(*context.Context) error {
@@ -61,19 +63,34 @@ func main() {
 	})
 
 	loader.AddStage(func(*context.Context) error {
-		bt := task2.NewBusinessTaskImpl()
-		err := bt.Add(task2.BusinessTaskDTO{
+		bt := task.NewBusinessTaskImpl()
+		err := bt.Add(task.BusinessTaskDTO{
 			Cron: "0 0 0/1 * * ?",
 			Name: "clearAlarmRecordJob",
-			Task: task2.Clear,
+			Task: task.Clear,
 		})
-		err = task2.AddSyncJobs(bt)
+		err = task.AddSyncJobs(bt)
 		bt.Start()
 		return err
 	})
 
 	loader.AddStage(func(*context.Context) error {
 		return k8s.InitK8s()
+	})
+
+	loader.AddStage(func(c *context.Context) error {
+		levelList := dao.ConfigItem.GetConfigItemList(dao.AlarmLevel)
+		ls := make([]uint8, len(levelList))
+		for i, l := range levelList {
+			v, err := strconv.Atoi(l.Code)
+			if err != nil {
+				return err
+			}
+			ls[i] = uint8(v)
+		}
+		_ = k8s.DeleteAlertManagerConfig(k8s.LevelInhibitName)
+
+		return k8s.ApplyInhibitRules(ls)
 	})
 
 	loader.AddStage(func(*context.Context) error {
