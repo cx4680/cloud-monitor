@@ -35,13 +35,14 @@ type CgwData struct {
 }
 
 type CgwRecords struct {
-	InstanceId   string `json:"instanceId"`
-	InstanceName string `json:"instanceName"`
-	InstanceSpec string `json:"instanceSpec"`
-	InstanceType int    `json:"instanceType"`
-	Status       int    `json:"status"`
-	VpcInfo      string `json:"vpcInfo"`
-	Eip          string `json:"eip"`
+	PaasInstanceId string `json:"paasInstanceId"`
+	InstanceId     string `json:"instanceId"`
+	InstanceName   string `json:"instanceName"`
+	InstanceSpec   string `json:"instanceSpec"`
+	InstanceType   int    `json:"instanceType"`
+	Status         int    `json:"status"`
+	VpcInfo        string `json:"vpcInfo"`
+	Eip            string `json:"eip"`
 }
 
 func (ecs *CgwInstanceService) ConvertRealForm(f commonService.InstancePageForm) interface{} {
@@ -83,7 +84,7 @@ func (ecs *CgwInstanceService) ConvertResp(realResp interface{}) (int, []commonS
 	if vo.Data.Total > 0 {
 		for _, d := range vo.Data.Records {
 			list = append(list, commonService.InstanceCommonVO{
-				InstanceId:   d.InstanceId,
+				InstanceId:   d.PaasInstanceId,
 				InstanceName: d.InstanceName,
 				Labels: []commonService.InstanceLabel{{
 					Name:  "status",
