@@ -18,9 +18,6 @@ func CreateRule(tx *gorm.DB, param interface{}) error {
 	if err := checkConditions(dto); err != nil {
 		return errors.NewBusinessError(err.Error())
 	}
-	if dao.AlarmRule.CheckRuleName(dto.TenantId, dto.RuleName, "") {
-		return errors.NewBusinessError("规则名称不能重复")
-	}
 	for i := range dto.GroupList {
 		if dto.GroupList[i] == "-1" {
 			contactService := NewContactService(NewContactGroupService(NewContactGroupRelService()), NewContactInformationService(nil), NewContactGroupRelService())
@@ -41,9 +38,6 @@ func UpdateRule(tx *gorm.DB, param interface{}) error {
 	dto := param.(*form.AlarmRuleAddReqDTO)
 	if err := checkConditions(dto); err != nil {
 		return errors.NewBusinessError(err.Error())
-	}
-	if dao.AlarmRule.CheckRuleName(dto.TenantId, dto.RuleName, dto.Id) {
-		return errors.NewBusinessError("规则名称不能重复")
 	}
 	if !dao.AlarmRule.CheckRuleType(dto.TenantId, dto.Id, dto.Type) {
 		return errors.NewBusinessError("规则类型不匹配")

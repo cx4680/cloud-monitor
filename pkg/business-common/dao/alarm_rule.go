@@ -3,7 +3,6 @@ package dao
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/snowflake"
-	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/strutil"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/enum/source_type"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/errors"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/form"
@@ -463,16 +462,6 @@ func (dao *AlarmRuleDao) GetResourceListByGroup(tx *gorm.DB, resGroup string) []
 	var instanceInfo []*form.InstanceInfo
 	tx.Raw(" SELECT  DISTINCT t2.instance_id  FROM   t_resource t2,   t_resource_resource_group_rel t1 WHERE   t1.resource_group_id = ? AND t1.resource_id = t2.instance_id", resGroup).Scan(&instanceInfo)
 	return instanceInfo
-}
-
-func (dao *AlarmRuleDao) CheckRuleName(tenantId, ruleName, ruleBizId string) bool {
-	var count int64
-	if strutil.IsBlank(ruleBizId) {
-		global.DB.Model(&model.AlarmRule{}).Where("deleted = 0 AND tenant_id = ? AND name = ?", tenantId, ruleName).Count(&count)
-	} else {
-		global.DB.Model(&model.AlarmRule{}).Where("deleted = 0 AND tenant_id = ? AND name = ? AND biz_id != ?", tenantId, ruleName, ruleBizId).Count(&count)
-	}
-	return count > 0
 }
 
 func (dao *AlarmRuleDao) CheckRuleType(tenantId, ruleBizId string, ruleType uint8) bool {
