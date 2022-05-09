@@ -153,3 +153,6 @@ INSERT INTO `t_alarm_item_template` (`rule_template_biz_id`, `metric_code`, `tri
 INSERT INTO `t_alarm_item_template` (`rule_template_biz_id`, `metric_code`, `trigger_condition`, `level`, `silences_time`) VALUES ('8', 'redis_cpu_usage', '{"unit": "%", "times": 1, "labels": "instance", "period": 300, "threshold": 80, "metricCode": "redis_cpu_usage", "metricName": "CPU使用率", "statistics": "Maximum"
 , "comparisonOperator": "greaterOrEqual"}', 3, '3小时');
 
+
+
+ALTER TABLE t_alarm_record MODIFY COLUMN source_type varchar(100) COMMENT '资源类型';
