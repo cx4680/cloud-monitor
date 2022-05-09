@@ -7,12 +7,11 @@ type InstanceRulePageReqParam struct {
 }
 
 type InstanceRuleDTO struct {
-	Id             string      `json:"id"`
-	Name           string      `json:"name"`
-	ProductType    string      `json:"productType"`
-	MonitorType    string      `json:"monitorType"`
-	Condition      string      `json:"condition"`
-	RuleConditions []Condition `json:"-" gorm:"column:ruleConditions"`
+	Id          string `json:"id"`
+	Name        string `json:"name"`
+	ProductType string `json:"productType"`
+	MonitorType string `json:"monitorType"`
+	Condition   string `json:"condition"`
 }
 
 type InstanceInfo struct {
