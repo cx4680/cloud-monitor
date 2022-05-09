@@ -10,7 +10,6 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/vo"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
-	"strings"
 )
 
 type InstanceDao struct {
@@ -28,7 +27,7 @@ func (dao *InstanceDao) SelectInstanceRulePage(param *form.InstanceRulePageReqPa
 		for i, item := range items {
 			expresses[i] = GetExpress2(*item.TriggerCondition)
 		}
-		instanceRuleDTO.Condition = strings.Join(expresses, "||")
+		instanceRuleDTO.Condition = expresses
 	}
 	return &vo.PageVO{
 		Records: ruleList,
@@ -92,7 +91,7 @@ func (dao *InstanceDao) GetRuleListByProductType(param *form.ProductRuleParam) *
 		for i, item := range items {
 			expresses[i] = GetExpress2(*item.TriggerCondition)
 		}
-		dto.Condition = strings.Join(expresses, "||")
+		dto.Condition = expresses
 	}
 
 	for _, dto := range list.UnbindRuleList {
@@ -101,7 +100,7 @@ func (dao *InstanceDao) GetRuleListByProductType(param *form.ProductRuleParam) *
 		for i, item := range items {
 			expresses[i] = GetExpress2(*item.TriggerCondition)
 		}
-		dto.Condition = strings.Join(expresses, "||")
+		dto.Condition = expresses
 	}
 	return list
 }
