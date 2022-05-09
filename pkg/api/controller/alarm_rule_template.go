@@ -8,6 +8,7 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/form"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/model"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/service/external/message_center"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/task"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/util"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/mq/handler"
@@ -20,10 +21,11 @@ import (
 )
 
 type AlarmRuleTemplateCtl struct {
+	MessageCenterSvc *message_center.Service
 }
 
-func NewAlarmRuleTemplateCtl() *AlarmRuleTemplateCtl {
-	return &AlarmRuleTemplateCtl{}
+func NewAlarmRuleTemplateCtl(MessageCenterSvc *message_center.Service) *AlarmRuleTemplateCtl {
+	return &AlarmRuleTemplateCtl{MessageCenterSvc: MessageCenterSvc}
 }
 
 func (ctl *AlarmRuleTemplateCtl) GetProductList(c *gin.Context) {
@@ -79,7 +81,7 @@ func (ctl *AlarmRuleTemplateCtl) Open(c *gin.Context) {
 		return
 	}
 
-	paramList, err := buildRuleReqs(productBizId, tenantId, userId)
+	paramList, err := ctl.buildRuleReqs(productBizId, tenantId, userId)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, global.NewError(err.Error()))
 		return
@@ -156,7 +158,7 @@ func (ctl *AlarmRuleTemplateCtl) Close(c *gin.Context) {
 	c.JSON(http.StatusOK, global.NewSuccess("关闭成功", nil))
 }
 
-func buildRuleReqs(productBizId string, tenantId string, userId string) ([]form.AlarmRuleAddReqDTO, error) {
+func (ctl *AlarmRuleTemplateCtl) buildRuleReqs(productBizId string, tenantId string, userId string) ([]form.AlarmRuleAddReqDTO, error) {
 	paramList := dao.AlarmRuleTemplate.QueryCreateRuleInfo(global.DB, productBizId)
 	if len(paramList) == 0 {
 		return nil, errors.NewBusinessError("该产品下无规则")
@@ -205,11 +207,15 @@ func buildRuleReqs(productBizId string, tenantId string, userId string) ([]form.
 		}
 		paramList[j].ResourceList = is
 
-		paramList[j].AlarmHandlerList = []*form.Handler{{
-			HandleType: 1,
-		}, {
-			HandleType: 2,
-		}}
+		//动态读取通知方式
+		var noticeChannelList = ctl.MessageCenterSvc.GetRemoteChannels()
+		if len(noticeChannelList) > 0 {
+			handlers := make([]*form.Handler, len(noticeChannelList))
+			for i, channel := range noticeChannelList {
+				handlers[i] = &form.Handler{HandleType: int(channel.Data)}
+			}
+			paramList[j].AlarmHandlerList = handlers
+		}
 
 		paramList[j].UserId = userId
 		paramList[j].TenantId = tenantId

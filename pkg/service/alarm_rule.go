@@ -103,7 +103,7 @@ func checkConditions(param *form.AlarmRuleAddReqDTO) error {
 		}
 		return nil
 	} else if param.Type == constant.AlarmRuleTypeMultipleMetric {
-		if len(param.Conditions) > 0 && len(param.Conditions) <= 10 {
+		if len(param.Conditions) == 0 || len(param.Conditions) > 10 {
 			return errors.NewBusinessError("至少添加1条，最多可添加10条触发条件")
 		}
 	} else {
