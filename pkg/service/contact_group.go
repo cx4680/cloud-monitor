@@ -70,7 +70,7 @@ func (s *ContactGroupService) PersistenceLocal(db *gorm.DB, param interface{}) (
 		}
 		return jsonutil.ToString(form.MqMsg{
 			EventEum: enum.InsertContactGroup,
-			Data:     ContactGroupMsg{ContactGroup: contactGroup, ContactGroupRelList: relList},
+			Data:     ContactMsg{ContactGroup: contactGroup, ContactGroupRelList: relList},
 		}), nil
 	case enum.UpdateContactGroup:
 		//参数校验
@@ -95,7 +95,7 @@ func (s *ContactGroupService) PersistenceLocal(db *gorm.DB, param interface{}) (
 		}
 		return jsonutil.ToString(form.MqMsg{
 			EventEum: enum.UpdateContactGroup,
-			Data:     ContactGroupMsg{ContactGroup: contactGroup, ContactGroupRelList: relList, Param: p},
+			Data:     ContactMsg{ContactGroup: contactGroup, ContactGroupRelList: relList, Param: p},
 		}), nil
 	case enum.DeleteContactGroup:
 		contactGroup, err := s.deleteContactGroup(db, *p)
@@ -106,7 +106,7 @@ func (s *ContactGroupService) PersistenceLocal(db *gorm.DB, param interface{}) (
 		rel := s.contactGroupRelService.DeleteRelByGroup(db, p)
 		return jsonutil.ToString(form.MqMsg{
 			EventEum: enum.DeleteContactGroup,
-			Data:     ContactGroupMsg{ContactGroup: contactGroup, ContactGroupRel: rel},
+			Data:     ContactMsg{ContactGroup: contactGroup, ContactGroupRel: rel},
 		}), nil
 	default:
 		return "", errors.NewBusinessError("系统异常")
@@ -173,11 +173,4 @@ func (s *ContactGroupService) checkGroupName(groupName string) bool {
 		return true
 	}
 	return false
-}
-
-type ContactGroupMsg struct {
-	Param               *form.ContactParam
-	ContactGroup        *model.ContactGroup
-	ContactGroupRel     *model.ContactGroupRel
-	ContactGroupRelList []*model.ContactGroupRel
 }

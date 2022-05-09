@@ -4,6 +4,7 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/strutil"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/dao"
 	commonForm "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/form"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global/openapi"
 	commonService "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/service"
 	util2 "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/util"
@@ -40,6 +41,7 @@ func (mpc *MonitorReportFormCtl) GetMonitorDatas(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, openapi.NewRespError(openapi.GetErrorCode(err), c))
 		return
 	}
+	c.Set(global.ResourceName, resourceId)
 	if param.StartTime == 0 || param.EndTime == 0 || param.StartTime > param.EndTime {
 		c.JSON(http.StatusBadRequest, openapi.NewRespError(openapi.TimeParameterError, c))
 		return
@@ -84,6 +86,7 @@ func (mpc *MonitorReportFormCtl) GetMonitorData(c *gin.Context) {
 	}
 	resourceId := c.Param("ResourceId")
 	metricCode := c.Param("MetricCode")
+	c.Set(global.ResourceName, resourceId)
 	monitorItem := getMonitorItemByMetricCode(metricCode)
 	//校验参数
 	errCode := checkParam(resourceId, monitorItem.Metric, monitorItem.ProductAbbreviation, tenantId)

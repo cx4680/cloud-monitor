@@ -146,21 +146,21 @@ func TestVale5(t *testing.T) {
 			{ResourceId: "11"}, {ResourceId: "22"},
 		},
 		RuleName: "TEST1",
-		TriggerCondition: struct {
-			MetricCode         string `binding:"required"`
-			Period             int    `binding:"required"`
-			Times              int    `binding:"required"`
-			Statistics         string `binding:"oneof=Maximum Minimum Average"`
-			ComparisonOperator string `binding:"oneof=greater greaterOrEqual less  lessOrEqual  equal notEqual"`
-			Threshold          string
-		}{
-			MetricCode:         "ecs_cpu_usage",
-			Period:             60,
-			Times:              1,
-			Statistics:         "Maximum",
-			ComparisonOperator: "greaterOrEqual",
-			Threshold:          "10",
-		},
+		//TriggerCondition: struct {
+		//	MetricCode         string `binding:"required"`
+		//	Period             int    `binding:"required"`
+		//	Times              int    `binding:"required"`
+		//	Statistics         string `binding:"oneof=Maximum Minimum Average"`
+		//	ComparisonOperator string `binding:"oneof=greater greaterOrEqual less  lessOrEqual  equal notEqual"`
+		//	Threshold          string
+		//}{
+		//	MetricCode:         "ecs_cpu_usage",
+		//	Period:             60,
+		//	Times:              1,
+		//	Statistics:         "Maximum",
+		//	ComparisonOperator: "greaterOrEqual",
+		//	Threshold:          "10",
+		//},
 		SilencesTime: "",
 		AlarmLevel:   1,
 		GroupList:    []string{"1", "2"},

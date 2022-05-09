@@ -1,6 +1,7 @@
 package util
 
 import (
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/strutil"
 	"crypto/md5"
 	"encoding/hex"
@@ -63,9 +64,12 @@ func MD5(v interface{}) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	logger.Logger().Infof("md5 source=%s", data)
 	h := md5.New()
 	h.Write(data)
-	return hex.EncodeToString(h.Sum(nil)), nil
+	ret := hex.EncodeToString(h.Sum(nil))
+	logger.Logger().Infof("md5 result=%s", ret)
+	return ret, nil
 }
 
 func SecToTime(seconds int) string {

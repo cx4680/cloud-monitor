@@ -29,6 +29,10 @@ func InitData(dbConfig config.DB, database, path string) error {
 	if !global.DB.Migrator().HasTable(&model.AlarmHandler{}) && global.DB.Migrator().HasColumn(&model.AlarmRule{}, "notify_channel") {
 		Update = true
 	}
+	//升级到 5_312 需要重新生成 prometheus rule
+	if !Update && !global.DB.Migrator().HasTable(&model.AlarmItem{}) && global.DB.Migrator().HasTable(&model.AlarmHandler{}) {
+		Update = true
+	}
 	var err error
 	pwd := os.Getenv("DB_PWD")
 	url := dbConfig.Username + ":" + pwd + "@" + dbConfig.Url + "&multiStatements=true"

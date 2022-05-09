@@ -9,10 +9,12 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/errors"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/form"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global/sys_component/sys_rocketmq"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/model"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/service"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/util"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/constant"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/mq"
 	"gorm.io/gorm"
 	"regexp"
 	"strconv"
@@ -194,9 +196,50 @@ func (s *ContactService) checkContactName(contactName string) bool {
 	return false
 }
 
+func (s *ContactService) CreateSysContact(tenantId string) (string, error) {
+	groupBizId := dao.ContactGroup.GetGroupBizIdByName(tenantId, constant.DefaultContact)
+	if strutil.IsNotBlank(groupBizId) {
+		return groupBizId, nil
+	}
+	tenantInfo := service.NewTenantService().GetTenantInfo(tenantId)
+	contactBizId := dao.Contact.GetContactBizIdByName(tenantId, tenantInfo.Name)
+	now := util.GetNow()
+	var contact = &model.Contact{}
+	var informationList []*model.ContactInformation
+	if strutil.IsBlank(contactBizId) {
+		contactBizId = strconv.FormatInt(snowflake.GetWorker().NextId(), 10)
+		contact = &model.Contact{BizId: contactBizId, TenantId: tenantId, Name: tenantInfo.Name, State: 1, CreateUser: "系统创建", CreateTime: now, UpdateTime: now}
+		informationList = []*model.ContactInformation{
+			{TenantId: tenantId, ContactBizId: contactBizId, Address: tenantInfo.Phone, Type: 1, State: 1, CreateUser: "系统创建"},
+			{TenantId: tenantId, ContactBizId: contactBizId, Address: tenantInfo.Email, Type: 2, State: 1, CreateUser: "系统创建"},
+		}
+	}
+	groupBizId = strconv.FormatInt(snowflake.GetWorker().NextId(), 10)
+	group := &model.ContactGroup{BizId: groupBizId, TenantId: tenantId, Name: constant.DefaultContact, CreateUser: "系统创建", CreateTime: now, UpdateTime: now}
+	rel := &model.ContactGroupRel{TenantId: tenantId, ContactBizId: contactBizId, GroupBizId: groupBizId, CreateUser: "系统创建"}
+	err := global.DB.Transaction(func(db *gorm.DB) error {
+		if contact != (&model.Contact{}) {
+			dao.Contact.Insert(db, contact)
+			dao.ContactInformation.InsertBatch(db, informationList)
+		}
+		dao.ContactGroup.Insert(db, group)
+		dao.ContactGroupRel.Insert(db, rel)
+		err := mq.SendMsg(sys_rocketmq.ContactTopic, enum.CreateSysContact, ContactMsg{Contact: contact, ContactGroup: group, ContactGroupRel: rel, ContactInformationList: informationList})
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+	if err != nil {
+		return "", err
+	}
+	return groupBizId, nil
+}
+
 type ContactMsg struct {
 	Param                  *form.ContactParam
 	Contact                *model.Contact
+	ContactGroup           *model.ContactGroup
 	ContactInformation     *model.ContactInformation
 	ContactGroupRel        *model.ContactGroupRel
 	ContactInformationList []*model.ContactInformation

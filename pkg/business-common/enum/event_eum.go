@@ -12,6 +12,8 @@ const (
 	UpdateContactGroup EventEum = "updateContactGroup"
 	DeleteContactGroup EventEum = "deleteContactGroup"
 
+	CreateSysContact EventEum = "createSysContact"
+
 	CreateRule   EventEum = "create"
 	UpdateRule   EventEum = "update"
 	ChangeStatus EventEum = "changeStatus"

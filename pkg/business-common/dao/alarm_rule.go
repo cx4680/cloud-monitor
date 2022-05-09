@@ -3,6 +3,7 @@ package dao
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/snowflake"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/strutil"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/enum/source_type"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/errors"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/form"
@@ -10,6 +11,7 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/model"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/util"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/vo"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/constant"
 	"fmt"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -34,7 +36,7 @@ func (dao *AlarmRuleDao) UpdateRule(tx *gorm.DB, ruleReqDTO *form.AlarmRuleAddRe
 		logger.Logger().Infof("%s %+v", errors.RuleNotExist, ruleReqDTO)
 		return errors.NewBusinessError(errors.RuleNotExist)
 	}
-	dao.deleteOthers(tx, ruleReqDTO.Id)
+	dao.deleteOthers(tx, ruleReqDTO.TenantId, ruleReqDTO.Id)
 	rule := buildAlarmRule(ruleReqDTO)
 	tx.Model(&rule).Where("biz_id=?", ruleReqDTO.Id).Updates(rule)
 	dao.saveRuleOthers(tx, ruleReqDTO, ruleReqDTO.Id)
@@ -43,7 +45,6 @@ func (dao *AlarmRuleDao) UpdateRule(tx *gorm.DB, ruleReqDTO *form.AlarmRuleAddRe
 
 func (dao *AlarmRuleDao) DeleteRule(tx *gorm.DB, ruleReqDTO *form.RuleReqDTO) error {
 	if !dao.CheckRuleExists(tx, ruleReqDTO.Id, ruleReqDTO.TenantId) {
-		logger.Logger().Infof("%s %+v", errors.RuleNotExist, ruleReqDTO)
 		return errors.NewBusinessError(errors.RuleNotExist)
 	}
 	rule := model.AlarmRule{
@@ -52,7 +53,7 @@ func (dao *AlarmRuleDao) DeleteRule(tx *gorm.DB, ruleReqDTO *form.RuleReqDTO) er
 		Deleted:  1,
 	}
 	tx.Where("biz_id=?", ruleReqDTO.Id).Updates(&rule)
-	dao.deleteOthers(tx, ruleReqDTO.Id)
+	dao.deleteOthers(tx, ruleReqDTO.TenantId, ruleReqDTO.Id)
 	return nil
 }
 
@@ -76,7 +77,7 @@ func (dao *AlarmRuleDao) SelectRulePageList(param *form.AlarmPageReqParam) *vo.P
 	var modelList []form.AlarmRulePageDTO
 	selectList := &strings.Builder{}
 	var sqlParam = []interface{}{param.TenantId}
-	selectList.WriteString("select * from ( SELECT    count(DISTINCT(t2.resource_id)) AS instanceNum,    t1.NAME  as name,    t1.monitor_type,    t1.product_name as product_type,    t1.metric_name,    t1.trigger_condition,    t1.enabled AS 'status',    t1.biz_id AS ruleId,    t1.create_time  FROM    t_alarm_rule t1  LEFT JOIN t_alarm_rule_resource_rel t2 ON t2.alarm_rule_id = t1.biz_id  WHERE    t1.tenant_id = ?  AND t1.deleted = 0  AND t1.source_type = 1  ")
+	selectList.WriteString("select * from ( SELECT count(DISTINCT(t2.resource_id)) AS instanceNum, t1.NAME  as name, t1.monitor_type, t1.product_name as product_type,   t1.enabled AS 'status', t1.biz_id AS ruleId,    t1.create_time  FROM    t_alarm_rule t1  LEFT JOIN t_alarm_rule_resource_rel t2 ON t2.alarm_rule_id = t1.biz_id  WHERE    t1.tenant_id = ?  AND t1.deleted = 0  AND t1.source_type = 1  ")
 	if len(param.Status) != 0 {
 		selectList.WriteString(" and t1.enabled = ?")
 		sqlParam = append(sqlParam, getAlarmStatusTextInt(param.Status))
@@ -88,8 +89,12 @@ func (dao *AlarmRuleDao) SelectRulePageList(param *form.AlarmPageReqParam) *vo.P
 	selectList.WriteString(" group by ruleId ) t order by t.create_time  desc ")
 	page := util.Paginate(param.PageSize, param.Current, selectList.String(), sqlParam, &modelList)
 	for i, v := range modelList {
-		modelList[i].MonitorItem = v.RuleCondition.MonitorItemName
-		modelList[i].Express = GetExpress(v.RuleCondition)
+		items := AlarmItem.GetItemListByRuleBizId(global.DB, v.RuleId)
+		var conditions = make([]*form.Condition, len(items))
+		for j, item := range items {
+			conditions[j] = dao.ParseFormCondition(item)
+		}
+		modelList[i].RuleConditions = conditions
 		modelList[i].Status = getAlarmStatusSqlText(v.Status)
 	}
 	return &vo.PageVO{
@@ -102,9 +107,27 @@ func (dao *AlarmRuleDao) SelectRulePageList(param *form.AlarmPageReqParam) *vo.P
 
 }
 
+func (dao *AlarmRuleDao) ParseFormCondition(item model.AlarmItem) *form.Condition {
+	cond := form.Condition{
+		MetricName:         item.TriggerCondition.MetricName,
+		MetricCode:         item.TriggerCondition.MetricCode,
+		Period:             item.TriggerCondition.Period,
+		Times:              item.TriggerCondition.Times,
+		Statistics:         item.TriggerCondition.Statistics,
+		ComparisonOperator: item.TriggerCondition.ComparisonOperator,
+		Threshold:          item.TriggerCondition.Threshold,
+		Unit:               item.TriggerCondition.Unit,
+		Labels:             item.TriggerCondition.Labels,
+		Level:              item.Level,
+		SilencesTime:       item.SilencesTime,
+		Express:            GetExpress2(*item.TriggerCondition),
+	}
+	return &cond
+}
+
 func (dao *AlarmRuleDao) GetDetail(tx *gorm.DB, id string, tenantId string) (*form.AlarmRuleDetailDTO, error) {
 	ruleDto := &form.AlarmRuleDetailDTO{}
-	tx.Raw("SELECT    biz_id as id ,    NAME  as ruleName,  enabled as status,  product_name as product_type,  monitor_type,   level as alarmLevel,  dimensions as scope,  trigger_condition as ruleCondition ,  silences_time,   effective_start,  effective_end    FROM t_alarm_rule        WHERE biz_id = ?          AND deleted = 0  and tenant_id=?", id, tenantId).Scan(ruleDto)
+	tx.Raw("SELECT    biz_id as id ,    NAME  as ruleName,  enabled as status,  product_name as product_type,  monitor_type,   level as alarmLevel,  dimensions as scope,  silences_time,   effective_start as effectiveStart,  effective_end as effectiveEnd,type, combination, period,times    FROM t_alarm_rule WHERE biz_id = ?  AND deleted = 0  and tenant_id=?", id, tenantId).Scan(ruleDto)
 	if len(ruleDto.Id) == 0 {
 		return ruleDto, errors.NewBusinessError(errors.RuleNotExist)
 	}
@@ -112,10 +135,31 @@ func (dao *AlarmRuleDao) GetDetail(tx *gorm.DB, id string, tenantId string) (*fo
 	ruleDto.InstanceList = dao.GetInstanceList(tx, id)
 	ruleDto.AlarmHandlerList = dao.GetHandlerList(tx, id)
 	ruleDto.Status = getAlarmStatusSqlText(ruleDto.Status)
-	ruleDto.Describe = GetExpress(ruleDto.RuleCondition)
+
+	items := dao.GetAlarmItemList(tx, id)
+	conditions := make([]*form.Condition, len(items))
+	describes := make([]string, len(items))
+	for i, item := range items {
+		conditions[i] = dao.ParseFormCondition(item)
+		describes[i] = conditions[i].Express
+	}
+	ruleDto.RuleConditions = conditions
+	if ruleDto.Type == constant.AlarmRuleTypeMultipleMetric {
+		if ruleDto.Combination == constant.AlarmRuleCombinationAnd {
+			ruleDto.Describe = strings.Join(describes, " 并且 ")
+		} else {
+			ruleDto.Describe = strings.Join(describes, " 或者 ")
+		}
+	}
 	scope, _ := strconv.Atoi(ruleDto.Scope)
 	ruleDto.Scope = getResourceScopeText(scope)
 	return ruleDto, nil
+}
+
+func (dao *AlarmRuleDao) GetRuleIdsByTemplateId(db *gorm.DB, tenantId, templateBizId string) []string {
+	var ids []string
+	db.Raw("select biz_id from t_alarm_rule where tenant_id=? and template_biz_id=?", tenantId, templateBizId).Scan(&ids)
+	return ids
 }
 
 func (dao *AlarmRuleDao) GetById(db *gorm.DB, id string) *model.AlarmRule {
@@ -139,6 +183,12 @@ func (dao *AlarmRuleDao) GetNoticeGroupList(tx *gorm.DB, ruleId string) []*form.
 	return noticeGroup
 }
 
+func (dao *AlarmRuleDao) GetAlarmItemList(db *gorm.DB, ruleId string) []model.AlarmItem {
+	var list []model.AlarmItem
+	db.Raw("select id,rule_biz_id,metric_code,trigger_condition,level,silences_time from t_alarm_item where rule_biz_id=? ", ruleId).Scan(&list)
+	return list
+}
+
 func (dao *AlarmRuleDao) GetUserList(tx *gorm.DB, groupId string) []*form.UserInfo {
 	var userInfo []*form.UserInfo
 	tx.Raw("select t2.`name` as userName  ,t2.biz_id as id, GROUP_CONCAT(CASE t3.type WHEN 1 THEN t3.address  END) as phone, GROUP_CONCAT(CASE t3.type WHEN 2 THEN t3.address  END) as email from t_contact_group_rel  t   LEFT JOIN t_contact t2 on t2.biz_id = t.contact_biz_id   LEFT JOIN t_contact_information t3 on (t3.contact_biz_id = t2.biz_id and t3.state=1)  where t.group_biz_id=?  and t2.state =1  GROUP BY id  order by userName", groupId).Scan(&userInfo)
@@ -147,41 +197,99 @@ func (dao *AlarmRuleDao) GetUserList(tx *gorm.DB, groupId string) []*form.UserIn
 
 func (dao *AlarmRuleDao) GetMonitorItem(metricName string) *model.MonitorItem {
 	item := &model.MonitorItem{}
-	global.DB.Raw("SELECT metrics_linux,metrics_windows,metric_name,unit,name  ,labels FROM t_monitor_item  where metric_name=? ", metricName).Scan(item)
+	global.DB.Raw("SELECT id,metrics_linux,metrics_windows,metric_name,unit,name  ,labels FROM t_monitor_item  where metric_name=? ", metricName).Scan(item)
 	return item
 }
 
 func buildAlarmRule(ruleReqDTO *form.AlarmRuleAddReqDTO) *model.AlarmRule {
-	return &model.AlarmRule{TenantID: ruleReqDTO.TenantId,
-		BizId:         ruleReqDTO.Id,
-		ProductName:   ruleReqDTO.ProductType,
-		Dimensions:    GetResourceScopeInt(ruleReqDTO.Scope),
-		Name:          ruleReqDTO.RuleName,
-		MetricName:    ruleReqDTO.RuleCondition.MetricName,
-		RuleCondition: ruleReqDTO.RuleCondition,
-		SilencesTime:  ruleReqDTO.SilencesTime,
-		Level:         ruleReqDTO.AlarmLevel,
-		CreateUser:    ruleReqDTO.UserId,
-		Source:        ruleReqDTO.Source,
-		SourceType:    ruleReqDTO.SourceType,
-		ProductBizId:  strconv.Itoa(ruleReqDTO.ProductId),
+	return &model.AlarmRule{
+		TenantID:       ruleReqDTO.TenantId,
+		TemplateBizId:  ruleReqDTO.TemplateBizId,
+		BizId:          ruleReqDTO.Id,
+		ProductName:    ruleReqDTO.ProductType,
+		Dimensions:     GetResourceScopeInt(ruleReqDTO.Scope),
+		Name:           ruleReqDTO.RuleName,
+		MetricCode:     ruleReqDTO.MetricCode,
+		SilencesTime:   ruleReqDTO.SilencesTime,
+		Level:          ruleReqDTO.Level,
+		CreateUser:     ruleReqDTO.UserId,
+		Source:         ruleReqDTO.Source,
+		SourceType:     ruleReqDTO.SourceType,
+		ProductBizId:   strconv.Itoa(ruleReqDTO.ProductId),
+		Type:           ruleReqDTO.Type,
+		Combination:    ruleReqDTO.Combination,
+		Period:         ruleReqDTO.Period,
+		Times:          ruleReqDTO.Times,
+		EffectiveStart: ruleReqDTO.EffectiveStart,
+		EffectiveEnd:   ruleReqDTO.EffectiveEnd,
 	}
 }
 
 func (dao *AlarmRuleDao) saveRuleOthers(tx *gorm.DB, ruleReqDTO *form.AlarmRuleAddReqDTO, ruleId string) {
+	dao.saveAlarmRuleItems(tx, ruleReqDTO, ruleId)
 	dao.saveAlarmNotice(tx, ruleReqDTO, ruleId)
 	dao.saveAlarmRuleResGroup(tx, ruleReqDTO)
 	dao.saveAlarmRuleResource(tx, ruleReqDTO)
 	dao.saveAlarmHandler(tx, ruleReqDTO)
 }
 
-func (dao *AlarmRuleDao) deleteOthers(tx *gorm.DB, ruleId string) {
+func (dao *AlarmRuleDao) saveAlarmRuleItems(tx *gorm.DB, ruleReqDTO *form.AlarmRuleAddReqDTO, ruleId string) {
+	var alarmItems []model.AlarmItem
+	if ruleReqDTO.Type == constant.AlarmRuleTypeSingleMetric {
+		for _, condition := range ruleReqDTO.Conditions {
+			item := model.AlarmItem{
+				RuleBizId:  ruleId,
+				MetricCode: condition.MetricCode,
+				TriggerCondition: &model.Condition{
+					MetricName:         condition.MetricName,
+					MetricCode:         condition.MetricCode,
+					Period:             condition.Period,
+					Times:              condition.Times,
+					Statistics:         condition.Statistics,
+					ComparisonOperator: condition.ComparisonOperator,
+					Threshold:          condition.Threshold,
+					Unit:               condition.Unit,
+					Labels:             condition.Labels,
+				},
+				Level:        condition.Level,
+				SilencesTime: condition.SilencesTime,
+			}
+			alarmItems = append(alarmItems, item)
+		}
+	} else {
+		for _, condition := range ruleReqDTO.Conditions {
+			item := model.AlarmItem{
+				RuleBizId:  ruleId,
+				MetricCode: condition.MetricCode,
+				TriggerCondition: &model.Condition{
+					MetricName:         condition.MetricName,
+					MetricCode:         condition.MetricCode,
+					Period:             ruleReqDTO.Period,
+					Times:              ruleReqDTO.Times,
+					Statistics:         condition.Statistics,
+					ComparisonOperator: condition.ComparisonOperator,
+					Threshold:          condition.Threshold,
+					Unit:               condition.Unit,
+					Labels:             condition.Labels,
+				},
+				Level:        ruleReqDTO.Level,
+				SilencesTime: ruleReqDTO.SilencesTime,
+			}
+			alarmItems = append(alarmItems, item)
+		}
+	}
+	AlarmItem.InsertBatch(tx, alarmItems)
+}
+
+func (dao *AlarmRuleDao) deleteOthers(tx *gorm.DB, tenantId, ruleId string) {
 	rule := &model.AlarmRule{}
 	tx.Where("biz_id=?", ruleId).Find(rule)
 	if rule.SourceType == source_type.AutoScaling {
 		tx.Exec("delete t2.* from t_alarm_rule_group_rel  t1 INNER JOIN  t_resource_group t2  where  t1.alarm_rule_id=? and t1.resource_group_id=t2.id", ruleId)
 		//todo 弹性伸缩删除资源组关联的资源
 	}
+	//删除规则条目数据
+	tx.Where("rule_biz_id=?", ruleId).Delete(&model.AlarmItem{})
 	//删除规则关联的联系组
 	tx.Where("alarm_rule_id=?", ruleId).Delete(&model.AlarmNotice{})
 	//删除规则关联与资源组的关系
@@ -190,6 +298,11 @@ func (dao *AlarmRuleDao) deleteOthers(tx *gorm.DB, ruleId string) {
 	tx.Where("alarm_rule_id=?", ruleId).Delete(&model.AlarmRuleResourceRel{})
 	//删除规则关联的告警处理
 	tx.Where("alarm_rule_id=?", ruleId).Delete(&model.AlarmHandler{})
+	//删除告警模板数据
+	if len(rule.TemplateBizId) > 0 {
+		tx.Where("tenant_id=? and template_biz_id=?", tenantId, rule.TemplateBizId).Delete(&model.TenantAlarmTemplateRel{})
+	}
+
 }
 
 // saveAlarmNotice 保存规则的告警联系组
@@ -352,6 +465,22 @@ func (dao *AlarmRuleDao) GetResourceListByGroup(tx *gorm.DB, resGroup string) []
 	return instanceInfo
 }
 
+func (dao *AlarmRuleDao) CheckRuleName(tenantId, ruleName, ruleBizId string) bool {
+	var count int64
+	if strutil.IsBlank(ruleBizId) {
+		global.DB.Model(&model.AlarmRule{}).Where("deleted = 0 AND tenant_id = ? AND name = ?", tenantId, ruleName).Count(&count)
+	} else {
+		global.DB.Model(&model.AlarmRule{}).Where("deleted = 0 AND tenant_id = ? AND name = ? AND biz_id != ?", tenantId, ruleName, ruleBizId).Count(&count)
+	}
+	return count > 0
+}
+
+func (dao *AlarmRuleDao) CheckRuleType(tenantId, ruleBizId string, ruleType uint8) bool {
+	var count int64
+	global.DB.Model(&model.AlarmRule{}).Where("deleted = 0 AND tenant_id = ? AND biz_id = ? AND type = ?", tenantId, ruleBizId, ruleType).Count(&count)
+	return count > 0
+}
+
 const (
 	ALL      = "ALL"
 	INSTANCE = "INSTANCE"
@@ -423,8 +552,12 @@ func GetComparisonOperator(s string) string {
 	return comparisonOperatorText[s]
 }
 
-func GetExpress(form *form.RuleCondition) string {
-	return fmt.Sprintf("%s%s%s%s%s 统计周期%s分钟 持续%s个周期", form.MonitorItemName, GetAlarmStatisticsText(form.Statistics), GetComparisonOperator(form.ComparisonOperator), fmt.Sprintf("%.f", form.Threshold), form.Unit, strconv.Itoa(form.Period/60), strconv.Itoa(form.Times))
+func GetExpress(form form.Condition) string {
+	return fmt.Sprintf("%s%s%s%s%s 统计周期%s分钟 持续%s个周期", form.MetricName, GetAlarmStatisticsText(form.Statistics), GetComparisonOperator(form.ComparisonOperator), fmt.Sprintf("%.f", form.Threshold), form.Unit, strconv.Itoa(form.Period/60), strconv.Itoa(form.Times))
+}
+
+func GetExpress2(c model.Condition) string {
+	return fmt.Sprintf("%s%s%s%s%s 统计周期%s分钟 持续%s个周期", c.MetricName, GetAlarmStatisticsText(c.Statistics), GetComparisonOperator(c.ComparisonOperator), fmt.Sprintf("%.f", c.Threshold), c.Unit, strconv.Itoa(c.Period/60), strconv.Itoa(c.Times))
 }
 
 var ResourceScopeInt = map[int]string{

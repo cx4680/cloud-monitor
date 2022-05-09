@@ -6,6 +6,7 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/httputil"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/jsonutil"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/strutil"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/form"
 	"github.com/google/uuid"
 	"strings"
 )
@@ -28,16 +29,16 @@ func (s *Service) SendBatch(msgList []MessageSendDTO) error {
 	return s.doSend(s.buildReq(msgList))
 }
 
-func checkChannelEnable(channel string, supportChannels []string) bool {
+func checkChannelEnable(channel string, supportChannels []form.NoticeChannel) bool {
 	for _, c := range supportChannels {
-		if channel == c {
+		if channel == c.Code {
 			return true
 		}
 	}
 	return false
 }
 
-func (s *Service) filter(msg MessageSendDTO, channelArr []string) bool {
+func (s *Service) filter(msg MessageSendDTO, channelArr []form.NoticeChannel) bool {
 	if msg.Targets == nil || len(msg.Targets) <= 0 {
 		logger.Logger().Info("send msg target is empty, ", jsonutil.ToString(msg))
 		return false
@@ -55,26 +56,39 @@ func (s *Service) filter(msg MessageSendDTO, channelArr []string) bool {
 	return true
 }
 
-func (s *Service) buildReq(msgList []MessageSendDTO) (req *SmsMessageReqDTO) {
-	if config.MsgOpen != config.Cfg.Common.MsgIsOpen {
-		logger.Logger().Info("this env message center is disable")
-		return nil
+func (s *Service) GetRemoteChannels() []form.NoticeChannel {
+	response, err := httputil.HttpGet(config.Cfg.Common.MsgUrl)
+	if err != nil {
+		logger.Logger().Errorf("消息中心服务异常：%v", err)
 	}
-	channels := config.Cfg.Common.MsgChannel
-	if strutil.IsBlank(channels) {
+	var noticeCenter form.NoticeCenter
+	jsonutil.ToObject(response, &noticeCenter)
+	var noticeChannelList []form.NoticeChannel
+	if noticeCenter.MsgIsOpen == config.MsgClose {
+		return noticeChannelList
+	}
+	msgChannelList := strings.Split(noticeCenter.MsgChannel, ",")
+	for _, v := range msgChannelList {
+		switch v {
+		case config.MsgChannelEmail:
+			noticeChannelList = append(noticeChannelList, form.NoticeChannel{Name: "邮箱", Code: v, Data: 1})
+		case config.MsgChannelSms:
+			noticeChannelList = append(noticeChannelList, form.NoticeChannel{Name: "短信", Code: v, Data: 2})
+		}
+	}
+	return noticeChannelList
+}
+
+func (s *Service) buildReq(msgList []MessageSendDTO) (req *SmsMessageReqDTO) {
+	channels := s.GetRemoteChannels()
+	if len(channels) == 0 {
 		logger.Logger().Info("this env message channels is empty")
 		return nil
 	}
-	channelArr := strings.Split(channels, ",")
-	if len(msgList) <= 0 {
-		logger.Logger().Info("send msg  is empty")
-		return nil
-	}
-
 	var list []MessagesBean
 	//获取消息模板
 	for _, msg := range msgList {
-		if !s.filter(msg, channelArr) {
+		if !s.filter(msg, channels) {
 			logger.Logger().Info("send msg target is empty, ", jsonutil.ToString(msg))
 			continue
 		}
@@ -102,10 +116,6 @@ func (s *Service) buildReq(msgList []MessageSendDTO) (req *SmsMessageReqDTO) {
 }
 
 func (s *Service) doSend(smsMessageReqDTO *SmsMessageReqDTO) error {
-	if config.Cfg.Common.MsgIsOpen != config.MsgOpen {
-		logger.Logger().Info("message center is not open")
-		return nil
-	}
 	if smsMessageReqDTO == nil {
 		logger.Logger().Info("send message is empty")
 		return nil

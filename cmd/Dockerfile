@@ -26,4 +26,4 @@ RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime &&\
 EXPOSE 80
 
 # 启动容器时运行的命令
-ENTRYPOINT ["/bin/sh", "-c", "source /opt/cecloud/.appEnv && ./app -config /conf/center.yaml"]
+ENTRYPOINT ["/bin/sh", "-c", "./app -config /conf/center.yaml"]

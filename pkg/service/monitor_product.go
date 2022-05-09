@@ -32,15 +32,11 @@ func (s *MonitorProductService) GetAllMonitorProduct() *[]model.MonitorProduct {
 	return s.dao.GetAllMonitorProduct()
 }
 
-func (s *MonitorProductService) ChangeStatus(param form.MonitorProductParam) {
-	s.dao.ChangeStatus(param.BizIdList, param.Status)
-}
-
 func (s *MonitorProductService) PersistenceLocal(db *gorm.DB, param interface{}) (string, error) {
 	p := param.(form.MonitorProductParam)
 	switch p.EventEum {
 	case enum.ChangeMonitorProductStatus:
-		s.ChangeStatus(p)
+		s.dao.ChangeStatus(db, p.BizIdList, p.Status)
 		msg := form.MqMsg{
 			EventEum: enum.ChangeMonitorProductStatus,
 			Data:     param,

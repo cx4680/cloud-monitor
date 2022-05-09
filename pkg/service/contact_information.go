@@ -2,12 +2,13 @@ package service
 
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/httputil"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/jsonutil"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/strutil"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/dao"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/errors"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/form"
-	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/model"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/service"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/service/external/message_center"
@@ -33,11 +34,19 @@ func NewContactInformationService(messageSvc *service.MessageService) *ContactIn
 }
 
 func (s *ContactInformationService) getActiveCode(addressType uint8) (string, uint8) {
-	if config.Cfg.Common.EnvType == config.ProprietaryCloud || config.Cfg.Common.MsgIsOpen == config.MsgClose {
+	response, err := httputil.HttpGet(config.Cfg.Common.MsgUrl)
+	if err != nil {
+		logger.Logger().Errorf("消息中心服务异常：%v", err)
 		return "", constant.Activated
 	}
-	for _, v := range global.NoticeChannelList {
-		if (v.Code == config.MsgChannelSms && addressType == constant.Phone) || (v.Code == config.MsgChannelEmail && addressType == constant.Email) {
+	var noticeCenter form.NoticeCenter
+	jsonutil.ToObject(response, &noticeCenter)
+	if config.Cfg.Common.EnvType == config.ProprietaryCloud || noticeCenter.MsgIsOpen == config.MsgClose {
+		return "", constant.Activated
+	}
+	msgChannelList := strings.Split(noticeCenter.MsgChannel, ",")
+	for _, v := range msgChannelList {
+		if (v == config.MsgChannelSms && addressType == constant.Phone) || (v == config.MsgChannelEmail && addressType == constant.Email) {
 			return strings.ReplaceAll(uuid.New().String(), "-", ""), constant.NotActive
 		}
 	}

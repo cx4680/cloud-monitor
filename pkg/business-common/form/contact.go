@@ -46,7 +46,6 @@ type ContactParam struct {
 	GroupName        string   `form:"groupName"`
 	Phone            string   `form:"phone"`
 	Email            string   `form:"email"`
-	Lanxin           string   `form:"lanxin"`
 	CreateUser       string   `form:"createUser"`
 	Description      string   `form:"description"`
 	ActiveCode       string   `form:"activeCode"`

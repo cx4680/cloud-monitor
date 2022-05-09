@@ -15,14 +15,12 @@ import (
 )
 
 type MonitorItemCtl struct {
-	service service.MonitorItemService
+	service *service.MonitorItemService
 }
 
-func NewMonitorItemCtl(service service.MonitorItemService) *MonitorItemCtl {
-	return &MonitorItemCtl{service}
+func NewMonitorItemCtl() *MonitorItemCtl {
+	return &MonitorItemCtl{service.NewMonitorItemService(dao.MonitorItem)}
 }
-
-var MonitorItemService = service.NewMonitorItemService(dao.MonitorItem)
 
 var displayList = []string{"chart", "rule", "scaling"}
 
@@ -33,6 +31,7 @@ func (mic *MonitorItemCtl) GetMonitorItemsById(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, global.NewError(translate.GetErrorMsg(err)))
 		return
 	}
+	c.Set(global.ResourceName, param.ProductBizId)
 	if strutil.IsNotBlank(param.Display) && !checkDisplay(param.Display) {
 		c.JSON(http.StatusOK, global.NewError("查询失败，展示参数错误"))
 		return
@@ -47,6 +46,7 @@ func (mic *MonitorItemCtl) ChangeDisplay(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, global.NewError(translate.GetErrorMsg(err)))
 		return
 	}
+	c.Set(global.ResourceName, param.ProductBizId)
 	for _, v := range strings.Split(param.Display, ",") {
 		if !checkDisplay(v) {
 			c.JSON(http.StatusOK, global.NewError("修改失败，展示参数错误"))
@@ -54,7 +54,7 @@ func (mic *MonitorItemCtl) ChangeDisplay(c *gin.Context) {
 		}
 	}
 	param.EventEum = enum.ChangeMonitorItemDisplay
-	err = mic.service.Persistence(MonitorItemService, sys_rocketmq.MonitorItemTopic, param)
+	err = mic.service.Persistence(mic.service, sys_rocketmq.MonitorItemTopic, param)
 	if err != nil {
 		c.JSON(http.StatusOK, global.NewError(err.Error()))
 	} else {

@@ -1,9 +1,8 @@
 package form
 
 import (
-	"database/sql/driver"
 	"encoding/json"
-	"github.com/pkg/errors"
+	"errors"
 )
 
 type AlarmPageReqParam struct {
@@ -15,16 +14,13 @@ type AlarmPageReqParam struct {
 }
 
 type AlarmRulePageDTO struct {
-	Name          string         `json:"name" `
-	MonitorType   string         `json:"monitorType" gorm:"monitor_type" `
-	ProductType   string         `json:"productType" gorm:"productName" `
-	MetricName    string         `json:"metricName" gorm:"metric_name" `
-	MonitorItem   string         `json:"monitorItem" gorm:"monitor_item" `
-	Express       string         `json:"express" gorm:"express"`
-	InstanceNum   int            `json:"instanceNum" gorm:"column:instanceNum"`
-	Status        string         `json:"status" gorm:"column:status"`
-	RuleId        string         `json:"ruleId" gorm:"column:ruleId"`
-	RuleCondition *RuleCondition `json:"ruleCondition" gorm:"column:trigger_condition"`
+	Name           string       `json:"name" `
+	MonitorType    string       `json:"monitorType" gorm:"monitor_type" `
+	ProductType    string       `json:"productType" gorm:"productName" `
+	InstanceNum    int          `json:"instanceNum" gorm:"column:instanceNum"`
+	Status         string       `json:"status" gorm:"column:status"`
+	RuleId         string       `json:"ruleId" gorm:"column:ruleId"`
+	RuleConditions []*Condition `json:"ruleConditions" gorm:"-"`
 }
 
 type AlarmRuleDetailDTO struct {
@@ -40,11 +36,15 @@ type AlarmRuleDetailDTO struct {
 	TenantId         string          `json:"tenantId" gorm:"column:tenantId"`
 	UserId           string          `json:"userId"`
 	Id               string          `json:"id"`
-	RuleCondition    *RuleCondition  `json:"ruleCondition" gorm:"column:ruleCondition"`
+	RuleConditions   []*Condition    `json:"ruleConditions" gorm:"-"`
 	Status           string          `json:"status"`
 	NoticeGroups     []*NoticeGroup  `json:"noticeGroups" gorm:"-"`
 	Describe         string          `json:"describe" gorm:"column:describe"`
 	AlarmHandlerList []*Handler      `json:"alarmHandlerList" gorm:"-"`
+	Type             uint8           `json:"type"`
+	Combination      uint8           `json:"combination"`
+	Period           int             `json:"period"`
+	Times            int             `json:"times"`
 }
 type NoticeGroup struct {
 	Id       string      `json:"id" gorm:"column:id"`
@@ -66,37 +66,61 @@ type ResGroupInfo struct {
 }
 
 type AlarmRuleAddReqDTO struct {
-	MonitorType       string `json:"monitorType"  binding:"required"`
-	ProductType       string `json:"productType"  binding:"required"`
-	ProductId         int    `json:"productId" `
-	Scope             string `json:"scope"`
-	TenantId          string `json:"tenantId"`
-	UserId            string `json:"userId"`
-	ResourceGroupList []*ResGroupInfo
-	ResourceList      []*InstanceInfo `json:"instanceList"`
-	AlarmHandlerList  []*Handler      `json:"alarmHandlerList"`
-	RuleName          string          `json:"ruleName"`
-	RuleCondition     *RuleCondition  `json:"triggerCondition"`
+	MonitorType       string          `json:"monitorType"  binding:"required"`
+	ProductType       string          `json:"productType"  binding:"required"`
+	ProductId         int             `json:"productId" `
+	Scope             string          `json:"scope"`
+	TenantId          string          `json:"tenantId"`
+	UserId            string          `json:"userId"`
+	MetricCode        string          `json:"metricCode"`
+	ResourceGroupList []*ResGroupInfo `gorm:"-"`
+	ResourceList      []*InstanceInfo `json:"instanceList" gorm:"-"`
+	AlarmHandlerList  []*Handler      `json:"alarmHandlerList" gorm:"-"`
+	RuleName          string          `json:"ruleName" binding:"required"`
 	SilencesTime      string          `json:"silencesTime"`
-	AlarmLevel        uint8           `json:"alarmLevel"  binding:"required"`
-	NoticeChannel     string          `json:"noticeChannel"`
-	GroupList         []string        `json:"groupList"`
+	Level             uint8           `json:"level"`
+	GroupList         []string        `json:"groupList" gorm:"-"`
 	Source            string          `json:"source"`
 	SourceType        uint8           `json:"sourceType"`
 	Id                string          `json:"id"`
+	Type              uint8           `json:"type" binding:"oneof=1 2"`
+	Combination       uint8           `json:"combination"`
+	Period            int             `json:"period"`
+	Times             int             `json:"times"`
+	Conditions        []Condition     `json:"conditions" binding:"required" gorm:"-"`
+	EffectiveStart    string          `json:"effectiveStart"`
+	EffectiveEnd      string          `json:"effectiveEnd"`
+	TemplateBizId     string
 }
 
-type RuleCondition struct {
-	MetricName         string  `json:"metricName"  binding:"required"`
-	Period             int     `json:"period"  binding:"required"`
-	Times              int     `json:"times"  binding:"required"`
+type Condition struct {
+	MetricName         string  `json:"metricName"`
+	MetricCode         string  `json:"metricCode"`
+	Period             int     `json:"period"`
+	Times              int     `json:"times"`
 	Statistics         string  `json:"statistics"  binding:"required"`
 	ComparisonOperator string  `json:"comparisonOperator"  binding:"required"`
-	Threshold          float64 `json:"threshold"`
+	Threshold          float64 `json:"threshold" binding:"required"`
 	Unit               string  `json:"unit"`
 	Labels             string  `json:"labels"`
-	MonitorItemName    string  `json:"monitorItemName"`
+	Level              uint8   `json:"level"`
+	SilencesTime       string  `json:"silencesTime"`
+	Express            string  `json:"express"`
 }
+
+func (c *Condition) Scan(v interface{}) error {
+	var err error
+	switch vt := v.(type) {
+	case string:
+		err = json.Unmarshal([]byte(vt), &c)
+	case []byte:
+		err = json.Unmarshal(vt, &c)
+	default:
+		return errors.New("rule condition 转换错误")
+	}
+	return err
+}
+
 type RuleReqDTO struct {
 	Id       string `json:"id"  binding:"required"`
 	Status   string `json:"status"`
@@ -105,21 +129,4 @@ type RuleReqDTO struct {
 type Handler struct {
 	HandleType   int    `json:"handleType" gorm:"column:handle_type"`     // 1邮件；2 短信；3弹性
 	HandleParams string `json:"handleParams" gorm:"column:handle_params"` //回调地址
-}
-
-func (p *RuleCondition) Value() (driver.Value, error) {
-	bs, err := json.Marshal(p)
-	return string(bs), errors.WithStack(err)
-}
-func (s *RuleCondition) Scan(v interface{}) error {
-	var err error
-	switch vt := v.(type) {
-	case string:
-		err = json.Unmarshal([]byte(vt), &s)
-	case []byte:
-		err = json.Unmarshal(vt, &s)
-	default:
-		return errors.New("rule condition 转换错误")
-	}
-	return err
 }

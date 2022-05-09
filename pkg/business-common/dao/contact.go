@@ -128,3 +128,12 @@ func (d *ContactDao) GetTenantIdByActiveCode(activeCode string) string {
 	global.DB.Where("active_code = ?", activeCode).First(entity)
 	return entity.TenantId
 }
+
+func (d *ContactDao) GetContactBizIdByName(tenantId, contactName string) string {
+	var contact = &model.Contact{}
+	global.DB.Where("tenant_id = ? AND name = ?", tenantId, contactName).First(contact)
+	if contact == (&model.Contact{}) {
+		return ""
+	}
+	return contact.BizId
+}

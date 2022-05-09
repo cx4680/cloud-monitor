@@ -1,6 +1,7 @@
 package v1_0
 
 import (
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global/openapi"
 	commonService "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/service"
 	commonUtil "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/util"
@@ -27,6 +28,7 @@ func (ctl *ResourceCtl) GetResourceList(c *gin.Context) {
 		return
 	}
 	productAbbreviation := c.Param("ProductAbbreviation")
+	c.Set(global.ResourceName, productAbbreviation)
 	f := commonService.InstancePageForm{Product: productAbbreviation, TenantId: tenantId, PageSize: param.PageSize, Current: param.PageNumber}
 	instanceService := external.ProductInstanceServiceMap[f.Product]
 	if instanceService == nil {

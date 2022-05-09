@@ -24,7 +24,7 @@ func generate(tableName, fileName string) {
 		// 指定某个表,如果不指定,则默认全部表都迁移
 		Table(tableName).
 		// 表前缀
-		Prefix("t_").
+		Prefix("").
 		// 是否添加json tag
 		EnableJsonTag(true).
 		// 生成struct的包名(默认为空的话, 则取名为: package model)
@@ -34,7 +34,7 @@ func generate(tableName, fileName string) {
 		// 是否添加结构体方法获取表名
 		RealNameMethod("TableName").
 		// 生成的结构体保存路径
-		SavePath("./business-common/model/" + fileName).
+		SavePath("../business-common/model/" + fileName).
 		// 数据库dsn,这里可以使用 t2t.db() 代替,参数为 *sql_script.db 对象
 		Dsn("root:123456@(127.0.0.1:3306)/hawkeye?charset=utf8mb4&parseTime=True&loc=Local").
 		// 执行
