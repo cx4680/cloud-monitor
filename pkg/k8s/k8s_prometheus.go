@@ -402,7 +402,7 @@ func generateGroupRuleExpression(items []model.AlarmItem, instanceStr string, ca
 }
 
 func (service *K8sPrometheusService) buildGroupAlarmInfo(ruleInfo GroupRuleInfo, alarmItems []model.AlarmItem) ([]AlertDTO, error) {
-	conditionId, err := util.MD5(ruleInfo)
+	conditionId, err := util.MD5(alarmItems)
 	if err != nil {
 		return nil, err
 	}
