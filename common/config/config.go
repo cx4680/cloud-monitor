@@ -1,9 +1,9 @@
 package config
 
 import (
+	"github.com/google/uuid"
 	"gopkg.in/yaml.v3"
 	"io/ioutil"
-	"os"
 	"time"
 )
 
@@ -27,11 +27,10 @@ type CommonConfig struct {
 	TenantUrl              string `yaml:"tenantUrl"`
 	SmsCenterPath          string `yaml:"smsCenterPath"`
 	ActivateInformationUrl string `yaml:"activateInformationUrl"`
-	HawkeyeCenterPath      string `yaml:"hawkeyeCenterPath"`
-	MsgIsOpen              string `yaml:"msgIsOpen"`
-	MsgChannel             string `yaml:"msgChannel"`
 	RegionName             string `yaml:"regionName"`
 	EcsInnerGateway        string `yaml:"ecs-inner-gateway"`
+	IsSingleRegion         bool   `yaml:"isSingleRegion"`
+	MsgUrl                 string `yaml:"msgUrl"`
 }
 
 type Serve struct {
@@ -111,10 +110,7 @@ func defaultAppConfig() AppConfig {
 			TenantUrl:              "",
 			SmsCenterPath:          "",
 			ActivateInformationUrl: "",
-			HawkeyeCenterPath:      "",
-			MsgIsOpen:              MsgOpen,
-			MsgChannel:             MsgChannelEmail,
-			RegionName:             "local",
+			RegionName:             uuid.New().String(),
 			EcsInnerGateway:        "",
 		},
 	}
@@ -128,8 +124,5 @@ func InitConfig(file string) error {
 	if e := yaml.Unmarshal(data, &Cfg); e != nil {
 		return e
 	}
-	//从环境变量中读取消息中心配置
-	Cfg.Common.MsgIsOpen = os.Getenv("GLOBAL_CBC_MSG_ISOPEN")
-	Cfg.Common.MsgChannel = os.Getenv("GLOBAL_CBC_MSG_CHANNEL")
 	return nil
 }
