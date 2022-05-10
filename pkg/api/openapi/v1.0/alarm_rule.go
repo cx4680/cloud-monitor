@@ -214,6 +214,9 @@ func buildAlarmRuleReqParam(c *gin.Context, createParam *AlarmRuleCreateReqDTO, 
 			Combination:       updateParam.Combination,
 		}
 	}
+	if len(param.Resources) == 0 {
+		return nil, openapi.MissingResources
+	}
 	nameMatched, err := regexp.MatchString("^[a-z][a-z0-9_]{0,14}[a-z0-9]$", param.RuleName)
 	if !nameMatched {
 		return nil, openapi.RuleNameInvalid
