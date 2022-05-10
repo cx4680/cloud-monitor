@@ -376,8 +376,9 @@ func generateRuleExpression(item model.AlarmItem, instanceStr string, calcMode i
 	if calc_mode.Resource == calcMode {
 		expr = fmt.Sprintf("%s((%s)[%s:1m])%s%v", funcName, innerExpr, util.SecToTime(item.TriggerCondition.Period), comparison, item.TriggerCondition.Threshold)
 	} else {
+		fun := dao.ConfigItem.GetConfigItem(item.TriggerCondition.Statistics, dao.StatisticalMethodsPid, "").Data
 		expr = fmt.Sprintf("%s((%s)[%s:1m])", funcName, innerExpr, util.SecToTime(item.TriggerCondition.Period))
-		expr = fmt.Sprintf("%s(%s)%s%v", funcName, expr, comparison, item.TriggerCondition.Threshold)
+		expr = fmt.Sprintf("%s(%s)%s%v", fun, expr, comparison, item.TriggerCondition.Threshold)
 	}
 	return expr, dao.GetExpress2(*item.TriggerCondition), nil
 }
