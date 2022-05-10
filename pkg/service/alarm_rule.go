@@ -80,6 +80,9 @@ func ChangeRuleStatus(tx *gorm.DB, param interface{}) error {
 }
 
 func checkConditions(param *form.AlarmRuleAddReqDTO) error {
+	if len(param.ResourceList) == 0 && len(param.ResourceGroupList) == 0 {
+		return errors.NewBusinessError("需要至少选择一个实例")
+	}
 	if param.Type == constant.AlarmRuleTypeSingleMetric {
 		if len(param.Conditions) == 0 {
 			return errors.NewBusinessError("至少选择一个告警级别来设定触发条件")

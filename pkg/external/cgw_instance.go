@@ -64,7 +64,7 @@ func (ecs *CgwInstanceService) DoRequest(url string, f interface{}) (interface{}
 		param += "&instanceName=" + form.InstanceName
 	}
 	if strutil.IsNotBlank(form.InstanceId) {
-		param += "&instanceId=" + form.InstanceId
+		param += "&paasInstanceId=" + form.InstanceId
 	}
 	if strutil.IsNotBlank(form.Status) {
 		param += "&status=" + form.Status

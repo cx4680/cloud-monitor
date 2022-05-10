@@ -4,6 +4,7 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/api/openapi/v1.0"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global/iam"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global/logs"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/service/external/message_center"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/service"
 	"code.cestc.cn/yyptb-group_tech/iam-sdk-go/pkg/models"
 	"github.com/gin-gonic/gin"
@@ -92,7 +93,7 @@ func ResourceOpenApiV1Routers(group *gin.RouterGroup) {
 }
 
 func alarmRuleTemplateOPIRouters(group *gin.RouterGroup) {
-	ctl := v1_0.NewAlarmRuleTemplateCtl()
+	ctl := v1_0.NewAlarmRuleTemplateCtl(message_center.NewService())
 	group.GET("ruleTemplates/products", logs.GinTrailzap(false, Read, logs.INFO, logs.AlertRuleTemplate), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetProductList", ResourceType: "*", ResourceId: "*"}), ctl.GetProductList)
 	group.GET("ruleTemplates/:ProductBizId/rules", logs.GinTrailzap(false, Read, logs.INFO, logs.AlertRuleTemplate), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetRuleListByProduct", ResourceType: "*", ResourceId: "*"}), ctl.GetRuleListByProduct)
 	group.POST("ruleTemplates/:ProductBizId/open", logs.GinTrailzap(false, Write, logs.Warn, logs.AlertRuleTemplate), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "Open", ResourceType: "*", ResourceId: "*"}), ctl.Open)

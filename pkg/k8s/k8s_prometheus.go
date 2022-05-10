@@ -376,8 +376,9 @@ func generateRuleExpression(item model.AlarmItem, instanceStr string, calcMode i
 	if calc_mode.Resource == calcMode {
 		expr = fmt.Sprintf("%s((%s)[%s:1m])%s%v", funcName, innerExpr, util.SecToTime(item.TriggerCondition.Period), comparison, item.TriggerCondition.Threshold)
 	} else {
+		fun := dao.ConfigItem.GetConfigItem(item.TriggerCondition.Statistics, dao.StatisticalMethodsPid, "").Data
 		expr = fmt.Sprintf("%s((%s)[%s:1m])", funcName, innerExpr, util.SecToTime(item.TriggerCondition.Period))
-		expr = fmt.Sprintf("%s(%s)%s%v", funcName, expr, comparison, item.TriggerCondition.Threshold)
+		expr = fmt.Sprintf("%s(%s)%s%v", fun, expr, comparison, item.TriggerCondition.Threshold)
 	}
 	return expr, dao.GetExpress2(*item.TriggerCondition), nil
 }
@@ -401,7 +402,7 @@ func generateGroupRuleExpression(items []model.AlarmItem, instanceStr string, ca
 }
 
 func (service *K8sPrometheusService) buildGroupAlarmInfo(ruleInfo GroupRuleInfo, alarmItems []model.AlarmItem) ([]AlertDTO, error) {
-	conditionId, err := util.MD5(ruleInfo)
+	conditionId, err := util.MD5(alarmItems)
 	if err != nil {
 		return nil, err
 	}
