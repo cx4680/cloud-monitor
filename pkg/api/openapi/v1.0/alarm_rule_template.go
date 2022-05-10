@@ -8,6 +8,7 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global/openapi"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/model"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/service/external/message_center"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/task"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/util"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/mq/handler"
@@ -19,10 +20,12 @@ import (
 	"time"
 )
 
-type AlarmRuleTemplateCtl struct{}
+type AlarmRuleTemplateCtl struct {
+	MessageCenterSvc *message_center.Service
+}
 
-func NewAlarmRuleTemplateCtl() *AlarmRuleTemplateCtl {
-	return &AlarmRuleTemplateCtl{}
+func NewAlarmRuleTemplateCtl(MessageCenterSvc *message_center.Service) *AlarmRuleTemplateCtl {
+	return &AlarmRuleTemplateCtl{MessageCenterSvc: MessageCenterSvc}
 }
 
 func (ctl *AlarmRuleTemplateCtl) GetProductList(c *gin.Context) {
@@ -94,7 +97,7 @@ func (ctl *AlarmRuleTemplateCtl) Open(c *gin.Context) {
 		return
 	}
 
-	paramList, errCode := buildRuleReqs(productBizId, tenantId, userId)
+	paramList, errCode := ctl.buildRuleReqs(productBizId, tenantId, userId)
 	if errCode != nil {
 		c.JSON(http.StatusInternalServerError, openapi.NewRespError(openapi.MissingParameter, c))
 		return
@@ -171,7 +174,7 @@ func (ctl *AlarmRuleTemplateCtl) Close(c *gin.Context) {
 	c.JSON(http.StatusOK, openapi.NewResSuccess(c))
 }
 
-func buildRuleReqs(productBizId string, tenantId string, userId string) ([]form.AlarmRuleAddReqDTO, *openapi.ErrorCode) {
+func (ctl *AlarmRuleTemplateCtl) buildRuleReqs(productBizId string, tenantId string, userId string) ([]form.AlarmRuleAddReqDTO, *openapi.ErrorCode) {
 	paramList := dao.AlarmRuleTemplate.QueryCreateRuleInfo(global.DB, productBizId)
 	if len(paramList) == 0 {
 		return nil, openapi.InvalidParameter
@@ -220,11 +223,15 @@ func buildRuleReqs(productBizId string, tenantId string, userId string) ([]form.
 		}
 		paramList[j].ResourceList = is
 
-		paramList[j].AlarmHandlerList = []*form.Handler{{
-			HandleType: 1,
-		}, {
-			HandleType: 2,
-		}}
+		//动态读取通知方式
+		var noticeChannelList = ctl.MessageCenterSvc.GetRemoteChannels()
+		if len(noticeChannelList) > 0 {
+			handlers := make([]*form.Handler, len(noticeChannelList))
+			for i, channel := range noticeChannelList {
+				handlers[i] = &form.Handler{HandleType: int(channel.Data)}
+			}
+			paramList[j].AlarmHandlerList = handlers
+		}
 
 		paramList[j].UserId = userId
 		paramList[j].TenantId = tenantId
