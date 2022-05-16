@@ -7,7 +7,7 @@ import (
 )
 
 func InitSync(isSingle string) error {
-	if len(isSingle) == 0 || strings.EqualFold(isSingle, "true") {
+	if !strings.EqualFold(isSingle, "false") {
 		publisher.GlobalPublisher = &publisher.NonePublisher{}
 		return nil
 	}
