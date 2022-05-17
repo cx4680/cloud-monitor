@@ -35,11 +35,8 @@ func (dao *AlarmRuleDao) UpdateRule(tx *gorm.DB, ruleReqDTO *form.AlarmRuleAddRe
 		logger.Logger().Infof("%s %+v", errors.RuleNotExist, ruleReqDTO)
 		return errors.NewBusinessError(errors.RuleNotExist)
 	}
-	dao.deleteOthers(tx, ruleReqDTO.TenantId, ruleReqDTO.Id)
+	dao.deleteOthers(tx, ruleReqDTO.TenantId, ruleReqDTO.Id, "update")
 	rule := buildAlarmRule(ruleReqDTO)
-	//set templateId
-	old := dao.GetById(tx, ruleReqDTO.Id)
-	rule.TemplateBizId = old.TemplateBizId
 
 	tx.Model(&rule).Where("biz_id=?", ruleReqDTO.Id).Updates(rule)
 	dao.saveRuleOthers(tx, ruleReqDTO, ruleReqDTO.Id)
@@ -56,7 +53,7 @@ func (dao *AlarmRuleDao) DeleteRule(tx *gorm.DB, ruleReqDTO *form.RuleReqDTO) er
 		Deleted:  1,
 	}
 	tx.Where("biz_id=?", ruleReqDTO.Id).Updates(&rule)
-	dao.deleteOthers(tx, ruleReqDTO.TenantId, ruleReqDTO.Id)
+	dao.deleteOthers(tx, ruleReqDTO.TenantId, ruleReqDTO.Id, "delete")
 	return nil
 }
 
@@ -284,7 +281,7 @@ func (dao *AlarmRuleDao) saveAlarmRuleItems(tx *gorm.DB, ruleReqDTO *form.AlarmR
 	AlarmItem.InsertBatch(tx, alarmItems)
 }
 
-func (dao *AlarmRuleDao) deleteOthers(tx *gorm.DB, tenantId, ruleId string) {
+func (dao *AlarmRuleDao) deleteOthers(tx *gorm.DB, tenantId, ruleId, active string) {
 	rule := &model.AlarmRule{}
 	tx.Where("biz_id=?", ruleId).Find(rule)
 	if rule.SourceType == source_type.AutoScaling {
@@ -302,10 +299,9 @@ func (dao *AlarmRuleDao) deleteOthers(tx *gorm.DB, tenantId, ruleId string) {
 	//删除规则关联的告警处理
 	tx.Where("alarm_rule_id=?", ruleId).Delete(&model.AlarmHandler{})
 	//删除告警模板数据
-	if len(rule.TemplateBizId) > 0 {
+	if active == "delete" && len(rule.TemplateBizId) > 0 {
 		tx.Where("tenant_id=? and template_biz_id=?", tenantId, rule.TemplateBizId).Delete(&model.TenantAlarmTemplateRel{})
 	}
-
 }
 
 // saveAlarmNotice 保存规则的告警联系组
