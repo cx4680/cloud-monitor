@@ -37,6 +37,10 @@ func (dao *AlarmRuleDao) UpdateRule(tx *gorm.DB, ruleReqDTO *form.AlarmRuleAddRe
 	}
 	dao.deleteOthers(tx, ruleReqDTO.TenantId, ruleReqDTO.Id)
 	rule := buildAlarmRule(ruleReqDTO)
+	//set templateId
+	old := dao.GetById(tx, ruleReqDTO.Id)
+	rule.TemplateBizId = old.TemplateBizId
+
 	tx.Model(&rule).Where("biz_id=?", ruleReqDTO.Id).Updates(rule)
 	dao.saveRuleOthers(tx, ruleReqDTO, ruleReqDTO.Id)
 	return nil
