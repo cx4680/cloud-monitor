@@ -48,7 +48,7 @@ func (ctl *AlarmRuleTemplateCtl) GetProductList(c *gin.Context) {
 }
 
 func (ctl *AlarmRuleTemplateCtl) GetRuleListByProduct(c *gin.Context) {
-	productBizId := c.Param("productBizId")
+	productBizId := c.Param("ProductBizId")
 	if len(productBizId) == 0 {
 		c.JSON(http.StatusBadRequest, openapi.NewRespError(openapi.MissingParameter, c))
 		return
@@ -80,7 +80,7 @@ func (ctl *AlarmRuleTemplateCtl) GetRuleListByProduct(c *gin.Context) {
 }
 
 func (ctl *AlarmRuleTemplateCtl) Open(c *gin.Context) {
-	productBizId := c.Param("productBizId")
+	productBizId := c.Param("ProductBizId")
 	if len(productBizId) == 0 {
 		c.JSON(http.StatusBadRequest, openapi.NewRespError(openapi.MissingParameter, c))
 		return
@@ -132,7 +132,7 @@ func (ctl *AlarmRuleTemplateCtl) Open(c *gin.Context) {
 }
 
 func (ctl *AlarmRuleTemplateCtl) Close(c *gin.Context) {
-	productBizId := c.Param("productBizId")
+	productBizId := c.Param("ProductBizId")
 	if len(productBizId) == 0 {
 		c.JSON(http.StatusBadRequest, openapi.NewRespError(openapi.MissingParameter, c))
 		return
