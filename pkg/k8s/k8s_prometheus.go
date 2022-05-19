@@ -340,10 +340,12 @@ func getLabels(ruleName string, sourceType uint8, level uint8) map[string]interf
 }
 
 func getSilenceTime(silencesTime string) string {
-	silenceTimeStr := defaultAlarmInterval
-	silenceTime, _ := strconv.Atoi(silencesTime)
-	silenceTimeStr = util.SecToTime(silenceTime - 1)
-	return silenceTimeStr
+	silenceTime, err := strconv.Atoi(silencesTime)
+	if err != nil {
+		return defaultAlarmInterval
+	} else {
+		return util.SecToTime(silenceTime - 1)
+	}
 }
 
 func (service *K8sPrometheusService) buildAlertRuleListByResourceGroup(wg *sync.WaitGroup, resultChan chan []AlertDTO, tenantId string) {

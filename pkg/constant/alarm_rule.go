@@ -11,3 +11,5 @@ const (
 	AlarmRuleCombinationOr  = 1
 	AlarmRuleCombinationAnd = 2
 )
+
+const SilencesTime = "3小时"
