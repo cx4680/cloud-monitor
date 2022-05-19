@@ -15,6 +15,9 @@ import (
 
 func CreateRule(tx *gorm.DB, param interface{}) error {
 	dto := param.(*form.AlarmRuleAddReqDTO)
+	//功能未开发，默认全天24小时
+	dto.EffectiveStart = "00:00"
+	dto.EffectiveEnd = "23:59"
 	if err := checkConditions(dto); err != nil {
 		return errors.NewBusinessError(err.Error())
 	}
