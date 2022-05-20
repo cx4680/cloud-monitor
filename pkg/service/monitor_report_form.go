@@ -86,12 +86,6 @@ func (s *MonitorReportFormService) GetAxisData(request form.PrometheusRequest) (
 	result := prometheusResponse.Data.Result
 
 	labels := strings.Split(monitorItem.Labels, ",")
-	var label string
-	for i := range labels {
-		if labels[i] != "instance" {
-			label = labels[i]
-		}
-	}
 	start := request.Start
 	end := request.End
 	step := request.Step
@@ -104,12 +98,12 @@ func (s *MonitorReportFormService) GetAxisData(request form.PrometheusRequest) (
 
 	prometheusAxis := &form.PrometheusAxis{
 		XAxis: timeList,
-		YAxis: yAxisFillEmptyData(result, timeList, label, request.Instance),
+		YAxis: yAxisFillEmptyData(result, timeList, labels, request.Instance),
 	}
 	return prometheusAxis, nil
 }
 
-func yAxisFillEmptyData(result []form.PrometheusResult, timeList []string, label string, instanceId string) map[string][]string {
+func yAxisFillEmptyData(result []form.PrometheusResult, timeList []string, labels []string, instanceId string) map[string][]string {
 	resultMap := make(map[string][]string)
 	for i := range result {
 		timeMap := map[string]string{}
@@ -117,15 +111,21 @@ func yAxisFillEmptyData(result []form.PrometheusResult, timeList []string, label
 			key := strconv.Itoa(int(result[i].Values[j][0].(float64)))
 			timeMap[key] = result[i].Values[j][1].(string)
 		}
+		var labelList []string
 		var key string
 		var arr []string
 		for k := range timeList {
 			arr = append(arr, changeDecimal(timeMap[timeList[k]]))
 		}
-		if strutil.IsBlank(result[i].Metric[label]) {
+		for _, v := range labels {
+			if v != "instance" {
+				labelList = append(labelList, result[i].Metric[v])
+			}
+		}
+		if len(labelList) == 0 {
 			key = instanceId
 		} else {
-			key = result[i].Metric[label]
+			key = strings.Join(labelList, "-")
 		}
 		resultMap[key] = arr
 	}
