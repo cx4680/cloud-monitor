@@ -250,7 +250,7 @@ func buildAlarmRuleReqParam(c *gin.Context, createParam *AlarmRuleCreateReqDTO, 
 		Scope:        scope,
 		TenantId:     tenantId,
 		UserId:       userId,
-		SilencesTime: "3h",
+		SilencesTime: constant.SilencesTime,
 		Level:        param.AlarmLevel,
 		MetricCode:   param.MetricCode,
 		SourceType:   source_type.Front,
@@ -402,7 +402,7 @@ func buildSingleAlarmRuleReqParam(param *AlarmRuleCreateReqDTO, addForm *form.Al
 			Unit:               monitorItem.Unit,
 			Labels:             monitorItem.Labels,
 			Level:              cond.Level,
-			SilencesTime:       "3h",
+			SilencesTime:       constant.SilencesTime,
 		}
 		if condition.Level == 0 && param.AlarmLevel > 0 {
 			condition.Level = param.AlarmLevel
@@ -444,7 +444,7 @@ func buildMultipleAlarmRuleReqParam(param *AlarmRuleCreateReqDTO, addForm *form.
 			Unit:               monitorItem.Unit,
 			Labels:             monitorItem.Labels,
 			Level:              param.AlarmLevel,
-			SilencesTime:       "3h",
+			SilencesTime:       constant.SilencesTime,
 		}
 		if condition.Level == 0 && param.AlarmLevel > 0 {
 			condition.Level = param.AlarmLevel
