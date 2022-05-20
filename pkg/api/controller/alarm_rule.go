@@ -64,9 +64,6 @@ func CreateRule(c *gin.Context, param form.AlarmRuleAddReqDTO) {
 		c.JSON(http.StatusBadRequest, global.NewError(translate.GetErrorMsg(err)))
 		return
 	}
-	//功能未开发，默认全天24小时
-	param.EffectiveStart = "00:00"
-	param.EffectiveEnd = "23:59"
 	tenantId, err := util.GetTenantId(c)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, global.NewError(err.Error()))
