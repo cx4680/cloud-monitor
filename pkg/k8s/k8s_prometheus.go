@@ -398,7 +398,7 @@ func generateGroupRuleExpression(items []model.AlarmItem, instanceStr string, ca
 	}
 
 	if constant.AlarmRuleCombinationAnd == combination {
-		return strings.Join(exprs, " and "), strings.Join(exprDetails, " 并且 "), nil
+		return strings.Join(exprs, " and on(instance) "), strings.Join(exprDetails, " 并且 "), nil
 	}
 	return strings.Join(exprs, " or "), strings.Join(exprDetails, " 或者 "), nil
 }
