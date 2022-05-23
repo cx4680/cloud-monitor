@@ -37,7 +37,6 @@ func loadRouters() {
 
 	instance()
 	MonitorReportForm()
-	NetworkData()
 	innerCtl()
 	remote()
 }
@@ -181,11 +180,13 @@ func innerMapping() {
 	ruleCtl := controller.NewAlarmRuleCtl()
 	innerRuleCtl := inner.NewAlarmRuleCtl()
 	noticeCtl := controller.NewNoticeCtl(service2.MessageService{})
+	monitorReportFormCtl := controller.NewMonitorReportFormController(service.NewMonitorReportFormService())
 	group := Router.Group(pathPrefix + "inner/")
 	{
 		group.GET("configItem/getItemList", configItemController.GetItemListById)
 		group.GET("monitorItem/getMonitorItemList", monitorItemController.GetMonitorItemsById)
 		group.GET("notice/getUsage", noticeCtl.GetCenterUsage)
+		group.GET("monitorChart/network", monitorReportFormCtl.GetNetworkData)
 
 		ruleGroup := group.Group("rule/")
 		ruleGroup.POST("create", innerRuleCtl.CreateRule)
@@ -202,14 +203,6 @@ func MonitorReportForm() {
 		group.GET("/getData", logs.GinTrailzap(false, Read, logs.INFO, logs.MonitorReportForm), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetMonitorReportData", ResourceType: "*", ResourceId: "*"}), monitorReportFormCtl.GetData)
 		group.GET("/getAxisData", logs.GinTrailzap(false, Read, logs.INFO, logs.MonitorReportForm), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetMonitorReportRangeData", ResourceType: "*", ResourceId: "*"}), monitorReportFormCtl.GetAxisData)
 		group.GET("/getTop", logs.GinTrailzap(false, Read, logs.INFO, logs.MonitorReportForm), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetMonitorReportTop", ResourceType: "*", ResourceId: "*"}), monitorReportFormCtl.GetTop)
-	}
-}
-
-func NetworkData() {
-	monitorReportFormCtl := controller.NewMonitorReportFormController(service.NewMonitorReportFormService())
-	group := Router.Group(pathPrefix + "monitorChart/")
-	{
-		group.GET("/getNetworkData", logs.GinTrailzap(false, Read, logs.INFO, logs.MonitorReportForm), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetMonitorReportRangeData", ResourceType: "*", ResourceId: "*"}), monitorReportFormCtl.GetNetworkData)
 	}
 }
 
