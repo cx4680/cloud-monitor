@@ -103,6 +103,34 @@ func (s *MonitorReportFormService) GetAxisData(request form.PrometheusRequest) (
 	return prometheusAxis, nil
 }
 
+func (s *MonitorReportFormService) GetNetworkData(request form.PrometheusRequest) (*form.NetworkData, error) {
+	instances, err := getEcsInstances(request.TenantId)
+	if err != nil {
+		return nil, err
+	}
+	monitorItem := getMonitorItemByName(request.Name)
+	if strutil.IsBlank(monitorItem.MetricsLinux) {
+		return nil, errors.NewBusinessError("指标不存在")
+	}
+	pql := strings.ReplaceAll(monitorItem.MetricsLinux, constant.MetricLabel, constant.INSTANCE+"=~'"+instances+"'")
+	prometheusResponse := QueryRange(pql, strconv.Itoa(request.Start), strconv.Itoa(request.End), strconv.Itoa(request.Step))
+	result := prometheusResponse.Data.Result
+	start := request.Start
+	end := request.End
+	step := request.Step
+	var timeList []string
+	if len(result) == 0 {
+		timeList = getTimeList(start, end, step, start)
+	} else {
+		timeList = getTimeList(start, end, step, int(result[0].Values[0][0].(float64)))
+	}
+	networkData := &form.NetworkData{
+		TimeAxis:  timeList,
+		ValueAxis: getValueAxis(result, timeList),
+	}
+	return networkData, nil
+}
+
 func yAxisFillEmptyData(result []form.PrometheusResult, timeList []string, labels []string, instanceId string) map[string][]string {
 	resultMap := make(map[string][]string)
 	for i := range result {
@@ -130,6 +158,21 @@ func yAxisFillEmptyData(result []form.PrometheusResult, timeList []string, label
 		resultMap[key] = arr
 	}
 	return resultMap
+}
+
+func getValueAxis(result []form.PrometheusResult, timeList []string) []string {
+	var valueAxis []string
+	for _, v := range result {
+		timeMap := map[string]string{}
+		for j := range v.Values {
+			key := strconv.Itoa(int(v.Values[j][0].(float64)))
+			timeMap[key] = v.Values[j][1].(string)
+		}
+		for k := range timeList {
+			valueAxis = append(valueAxis, changeDecimal(timeMap[timeList[k]]))
+		}
+	}
+	return valueAxis
 }
 
 func getTimeList(start int, end int, step int, firstTime int) []string {

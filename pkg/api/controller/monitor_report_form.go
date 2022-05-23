@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/strutil"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/util"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/form"
@@ -18,7 +19,7 @@ func NewMonitorReportFormController(service *service.MonitorReportFormService) *
 	return &MonitorReportFormCtl{service}
 }
 
-func (mpc *MonitorReportFormCtl) GetData(c *gin.Context) {
+func (mrc *MonitorReportFormCtl) GetData(c *gin.Context) {
 	var param form.PrometheusRequest
 	err := c.ShouldBindQuery(&param)
 	if err != nil {
@@ -31,9 +32,8 @@ func (mpc *MonitorReportFormCtl) GetData(c *gin.Context) {
 		c.JSON(http.StatusOK, global.NewError(err.Error()))
 		return
 	}
-	c.Set(global.ResourceName, param.Instance)
 	param.TenantId = tenantId
-	data, err := mpc.service.GetData(param)
+	data, err := mrc.service.GetData(param)
 	if err == nil {
 		c.JSON(http.StatusOK, global.NewSuccess("查询成功", data))
 	} else {
@@ -41,7 +41,7 @@ func (mpc *MonitorReportFormCtl) GetData(c *gin.Context) {
 	}
 }
 
-func (mpc *MonitorReportFormCtl) GetAxisData(c *gin.Context) {
+func (mrc *MonitorReportFormCtl) GetAxisData(c *gin.Context) {
 	var param = form.PrometheusRequest{Step: 60}
 	err := c.ShouldBindQuery(&param)
 	if err != nil {
@@ -54,9 +54,8 @@ func (mpc *MonitorReportFormCtl) GetAxisData(c *gin.Context) {
 		c.JSON(http.StatusOK, global.NewError(err.Error()))
 		return
 	}
-	c.Set(global.ResourceName, param.Instance)
 	param.TenantId = tenantId
-	data, err := mpc.service.GetAxisData(param)
+	data, err := mrc.service.GetAxisData(param)
 	if err == nil {
 		c.JSON(http.StatusOK, global.NewSuccess("查询成功", data))
 	} else {
@@ -64,7 +63,7 @@ func (mpc *MonitorReportFormCtl) GetAxisData(c *gin.Context) {
 	}
 }
 
-func (mpc *MonitorReportFormCtl) GetTop(c *gin.Context) {
+func (mrc *MonitorReportFormCtl) GetTop(c *gin.Context) {
 	var param form.PrometheusRequest
 	err := c.ShouldBindQuery(&param)
 	if err != nil {
@@ -77,9 +76,28 @@ func (mpc *MonitorReportFormCtl) GetTop(c *gin.Context) {
 		c.JSON(http.StatusOK, global.NewError(err.Error()))
 		return
 	}
-	c.Set(global.ResourceName, param.Name)
 	param.TenantId = tenantId
-	data, err := mpc.service.GetTop(param)
+	data, err := mrc.service.GetTop(param)
+	if err == nil {
+		c.JSON(http.StatusOK, global.NewSuccess("查询成功", data))
+	} else {
+		c.JSON(http.StatusOK, global.NewError(err.Error()))
+	}
+}
+
+func (mrc *MonitorReportFormCtl) GetNetworkData(c *gin.Context) {
+	var param form.PrometheusRequest
+	err := c.ShouldBindQuery(&param)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, global.NewError(translate.GetErrorMsg(err)))
+		return
+	}
+	if strutil.IsBlank(param.TenantId) {
+		c.JSON(http.StatusOK, global.NewError("租户ID不能为空"))
+		return
+	}
+	c.Set(global.ResourceName, param.Name)
+	data, err := mrc.service.GetNetworkData(param)
 	if err == nil {
 		c.JSON(http.StatusOK, global.NewSuccess("查询成功", data))
 	} else {
