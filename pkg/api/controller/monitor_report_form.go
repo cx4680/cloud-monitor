@@ -104,3 +104,18 @@ func (mrc *MonitorReportFormCtl) GetNetworkData(c *gin.Context) {
 		c.JSON(http.StatusOK, global.NewError(err.Error()))
 	}
 }
+
+func (mrc *MonitorReportFormCtl) GetAxisDataInner(c *gin.Context) {
+	var param form.PrometheusRequest
+	err := c.ShouldBindQuery(&param)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, global.NewError(translate.GetErrorMsg(err)))
+		return
+	}
+	data, err := mrc.service.GetAxisData(param)
+	if err == nil {
+		c.JSON(http.StatusOK, global.NewSuccess("查询成功", data))
+	} else {
+		c.JSON(http.StatusOK, global.NewError(err.Error()))
+	}
+}

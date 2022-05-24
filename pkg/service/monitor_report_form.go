@@ -104,6 +104,9 @@ func (s *MonitorReportFormService) GetAxisData(request form.PrometheusRequest) (
 }
 
 func (s *MonitorReportFormService) GetNetworkData(request form.PrometheusRequest) (*form.NetworkData, error) {
+	if request.Start == 0 || request.End == 0 || request.Start > request.End {
+		return nil, errors.NewBusinessError("时间参数错误")
+	}
 	instances, err := getEcsInstances(request.TenantId)
 	if err != nil {
 		return nil, err
@@ -214,6 +217,9 @@ func getEcsInstances(tenantId string) (string, error) {
 
 //校验该租户下是否拥有该实例
 func checkUserInstanceIdentity(tenantId, productBizId, instanceId string) bool {
+	if strutil.IsBlank(tenantId) {
+		return true
+	}
 	list, err := getInstanceList(productBizId, tenantId)
 	if err != nil {
 		logger.Logger().Error("获取实例列表失败")
