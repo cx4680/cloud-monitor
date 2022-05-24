@@ -5,7 +5,7 @@ import "time"
 type MonitorItem struct {
 	Id             uint64    `gorm:"column:id;primary_key;AUTO_INCREMENT" json:"id"`                    // ID
 	BizId          string    `gorm:"column:biz_id;size=50" json:"bizId"`                                // 关联ID
-	ProductBizID   string    `gorm:"column:product_biz_id" json:"productBizId"`                         // 监控产品ID
+	ProductBizId   string    `gorm:"column:product_biz_id" json:"productBizId"`                         // 监控产品ID
 	Name           string    `gorm:"column:name" json:"name"`                                           // 监控项名称
 	MetricName     string    `gorm:"column:metric_name" json:"metricName"`                              // 指标名
 	Labels         string    `gorm:"column:labels" json:"labels"`                                       // 标签名 分号隔开

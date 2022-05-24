@@ -41,27 +41,27 @@ UPDATE t_monitor_item SET metrics_linux = 'sum by (instance)(mysql_top_statememt
 UPDATE t_monitor_item SET metrics_linux = 'sum by (instance)(mysql_top_statememt_exec_err_rate{$INSTANCE})' WHERE biz_id = '118';
 UPDATE t_monitor_item SET metrics_linux = 'sum by (instance)(mysql_current_cons_num{$INSTANCE})' WHERE biz_id = '119';
 
-UPDATE t_monitor_item SET metrics_name = 'ebms_cpu_usage' WHERE biz_id = '68';
-UPDATE t_monitor_item SET metrics_name = 'ebms_load1' WHERE biz_id = '69';
-UPDATE t_monitor_item SET metrics_name = 'ebms_load5' WHERE biz_id = '70';
-UPDATE t_monitor_item SET metrics_name = 'ebms_load15' WHERE biz_id = '71';
-UPDATE t_monitor_item SET metrics_name = 'ebms_memory_used' WHERE biz_id = '72';
-UPDATE t_monitor_item SET metrics_name = 'ebms_memory_usage' WHERE biz_id = '73';
-UPDATE t_monitor_item SET metrics_name = 'ebms_disk_usage' WHERE biz_id = '74';
-UPDATE t_monitor_item SET metrics_name = 'ebms_disk_read_rate' WHERE biz_id = '75';
-UPDATE t_monitor_item SET metrics_name = 'ebms_disk_write_rate' WHERE biz_id = '76';
-UPDATE t_monitor_item SET metrics_name = 'ebms_disk_read_iops' WHERE biz_id = '77';
-UPDATE t_monitor_item SET metrics_name = 'ebms_disk_write_iops' WHERE biz_id = '78';
-UPDATE t_monitor_item SET metrics_name = 'ebms_network_receive_rate' WHERE biz_id = '79';
-UPDATE t_monitor_item SET metrics_name = 'ebms_network_transmit_rate' WHERE biz_id = '80';
-UPDATE t_monitor_item SET metrics_name = 'ebms_network_receive_packets_rate' WHERE biz_id = '81';
-UPDATE t_monitor_item SET metrics_name = 'ebms_network_transmit_packets_rate' WHERE biz_id = '82';
-UPDATE t_monitor_item SET metrics_name = 'ebms_filesystem_free_bytes' WHERE biz_id = '83';
-UPDATE t_monitor_item SET metrics_name = 'ebms_disk_used' WHERE biz_id = '84';
-UPDATE t_monitor_item SET metrics_name = 'ebms_filesystem_size_bytes' WHERE biz_id = '85';
+UPDATE t_monitor_item SET metric_name = 'ebms_cpu_usage' WHERE biz_id = '68';
+UPDATE t_monitor_item SET metric_name = 'ebms_load1' WHERE biz_id = '69';
+UPDATE t_monitor_item SET metric_name = 'ebms_load5' WHERE biz_id = '70';
+UPDATE t_monitor_item SET metric_name = 'ebms_load15' WHERE biz_id = '71';
+UPDATE t_monitor_item SET metric_name = 'ebms_memory_used' WHERE biz_id = '72';
+UPDATE t_monitor_item SET metric_name = 'ebms_memory_usage' WHERE biz_id = '73';
+UPDATE t_monitor_item SET metric_name = 'ebms_disk_usage' WHERE biz_id = '74';
+UPDATE t_monitor_item SET metric_name = 'ebms_disk_read_rate' WHERE biz_id = '75';
+UPDATE t_monitor_item SET metric_name = 'ebms_disk_write_rate' WHERE biz_id = '76';
+UPDATE t_monitor_item SET metric_name = 'ebms_disk_read_iops' WHERE biz_id = '77';
+UPDATE t_monitor_item SET metric_name = 'ebms_disk_write_iops' WHERE biz_id = '78';
+UPDATE t_monitor_item SET metric_name = 'ebms_network_receive_rate' WHERE biz_id = '79';
+UPDATE t_monitor_item SET metric_name = 'ebms_network_transmit_rate' WHERE biz_id = '80';
+UPDATE t_monitor_item SET metric_name = 'ebms_network_receive_packets_rate' WHERE biz_id = '81';
+UPDATE t_monitor_item SET metric_name = 'ebms_network_transmit_packets_rate' WHERE biz_id = '82';
+UPDATE t_monitor_item SET metric_name = 'ebms_filesystem_free_bytes' WHERE biz_id = '83';
+UPDATE t_monitor_item SET metric_name = 'ebms_disk_used' WHERE biz_id = '84';
+UPDATE t_monitor_item SET metric_name = 'ebms_filesystem_size_bytes' WHERE biz_id = '85';
 
-UPDATE t_monitor_item SET metrics_name = 'bms_network_receive_rate' WHERE biz_id = '178';
-UPDATE t_monitor_item SET metrics_name = 'bms_network_transmit_rate' WHERE biz_id = '179';
+UPDATE t_monitor_item SET metric_name = 'bms_network_receive_rate' WHERE biz_id = '178';
+UPDATE t_monitor_item SET metric_name = 'bms_network_transmit_rate' WHERE biz_id = '179';
 
 INSERT INTO `t_monitor_item` (biz_id, product_biz_id, name, metric_name, labels, metrics_linux, metrics_windows, statistics, unit, frequency, type, is_display, status, description, create_user, create_time, show_expression, display) VALUES ('220', '1', '进程CPU使用率', 'ecs_processes_top5Cpus', 'instance,cmd_line', 'sum by(instance,cmd_line)(ecs_processes_top5Cpus{cmd_line!="",$INSTANCE})', NULL, NULL, '%', NULL, 3, 1, 1, NULL, NULL, NULL, '{{ne .OSTYPE \"linux\"}}', 'chart');
 INSERT INTO `t_monitor_item` (biz_id, product_biz_id, name, metric_name, labels, metrics_linux, metrics_windows, statistics, unit, frequency, type, is_display, status, description, create_user, create_time, show_expression, display) VALUES ('221', '1', '进程内存使用率', 'ecs_processes_top5Mems', 'instance,cmd_line', 'sum by(instance,cmd_line)(ecs_processes_top5Mems{cmd_line!="",$INSTANCE})', NULL, NULL, '%', NULL, 3, 1, 1, NULL, NULL, NULL, '{{ne .OSTYPE \"linux\"}}', 'chart');
