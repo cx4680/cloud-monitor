@@ -41,7 +41,7 @@ const (
 type ResourceType = string
 
 const (
-	Product           ResourceType = "Product"
+	MonitorProduct    ResourceType = "MonitorProduct"
 	MonitorItem       ResourceType = "MonitorItem"
 	AlertContact      ResourceType = "AlertContact"
 	AlertContactGroup ResourceType = "AlertContactGroup"
@@ -52,7 +52,7 @@ const (
 	Notice            ResourceType = "Notice"
 	AlertRecord       ResourceType = "AlertRecord"
 	Resource          ResourceType = "Resource"
-	AlertRuleTemplate ResourceType = "alertRuleTemplate"
+	AlertRuleTemplate ResourceType = "AlertRuleTemplate"
 )
 
 func GinTrailzap(utc bool, requestType string, eventLevel EventLevel, resourceType ResourceType) gin.HandlerFunc {
