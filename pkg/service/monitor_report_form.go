@@ -106,15 +106,21 @@ func (s *MonitorReportFormService) GetNetworkData(request form.PrometheusRequest
 	if request.Start == 0 || request.End == 0 || request.Start > request.End {
 		return nil, errors.NewBusinessError("时间参数错误")
 	}
-	instances, err := getEcsInstances(request.TenantId)
-	if err != nil {
-		return nil, err
-	}
 	monitorItem := dao.MonitorItem.GetMonitorItemCacheByName(request.Name)
 	if strutil.IsBlank(monitorItem.MetricsLinux) {
 		return nil, errors.NewBusinessError("指标不存在")
 	}
-	pql := strings.ReplaceAll(monitorItem.MetricsLinux, constant.MetricLabel, constant.INSTANCE+"=~'"+instances+"'")
+	var instance string
+	if strutil.IsNotBlank(request.Instance) {
+		instance = constant.INSTANCE + "='" + request.Instance + "'"
+	} else if strutil.IsNotBlank(request.TenantId) {
+		list, err := getInstanceList("2", request.TenantId)
+		if err != nil {
+			return nil, err
+		}
+		instance = constant.INSTANCE + "=~'" + strings.Join(list, "|") + "'"
+	}
+	pql := strings.ReplaceAll(monitorItem.MetricsLinux, constant.MetricLabel, instance)
 	prometheusResponse := QueryRange(pql, strconv.Itoa(request.Start), strconv.Itoa(request.End), strconv.Itoa(request.Step))
 	result := prometheusResponse.Data.Result
 	start := request.Start

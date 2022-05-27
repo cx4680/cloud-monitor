@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/strutil"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/util"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/form"
@@ -92,11 +91,6 @@ func (mrc *MonitorReportFormCtl) GetNetworkData(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, global.NewError(translate.GetErrorMsg(err)))
 		return
 	}
-	if strutil.IsBlank(param.TenantId) {
-		c.JSON(http.StatusOK, global.NewError("租户ID不能为空"))
-		return
-	}
-	c.Set(global.ResourceName, param.Name)
 	data, err := mrc.service.GetNetworkData(param)
 	if err == nil {
 		c.JSON(http.StatusOK, global.NewSuccess("查询成功", data))
