@@ -63,7 +63,7 @@ func (mrc *MonitorReportFormCtl) GetAxisData(c *gin.Context) {
 }
 
 func (mrc *MonitorReportFormCtl) GetTop(c *gin.Context) {
-	var param form.PrometheusRequest
+	var param = &form.PrometheusRequest{TopNum: 5}
 	err := c.ShouldBindQuery(&param)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, global.NewError(translate.GetErrorMsg(err)))
@@ -76,7 +76,7 @@ func (mrc *MonitorReportFormCtl) GetTop(c *gin.Context) {
 		return
 	}
 	param.TenantId = tenantId
-	data, err := mrc.service.GetTop(param)
+	data, err := mrc.service.GetTop(*param)
 	if err == nil {
 		c.JSON(http.StatusOK, global.NewSuccess("查询成功", data))
 	} else {

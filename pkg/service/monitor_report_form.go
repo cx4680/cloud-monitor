@@ -46,14 +46,28 @@ func (s *MonitorReportFormService) GetData(request form.PrometheusRequest) (*for
 }
 
 func (s *MonitorReportFormService) GetTop(request form.PrometheusRequest) ([]form.PrometheusInstance, error) {
-	instances, err := getEcsInstances(request.TenantId)
+	monitorItem := dao.MonitorItem.GetMonitorItemCacheByName(request.Name)
+	var pql string
+	list, err := getInstanceList("1", request.TenantId)
 	if err != nil {
 		return nil, err
 	}
-	if strutil.IsBlank(instances) {
-		return nil, nil
+	if len(strings.Split(monitorItem.Labels, ",")) > 1 {
+		if len(list) == 0 {
+			return nil, nil
+		}
+		for i, v := range list {
+			list[i] = fmt.Sprintf(constant.TopExpr, "1", strings.ReplaceAll(monitorItem.MetricsLinux, constant.MetricLabel, constant.INSTANCE+"='"+v+"'"))
+		}
+
+		pql = fmt.Sprintf(constant.TopExpr, strconv.Itoa(request.TopNum), strings.Join(list, " or "))
+	} else {
+		instances := strings.Join(list, "|")
+		if strutil.IsBlank(instances) {
+			return nil, nil
+		}
+		pql = fmt.Sprintf(constant.TopExpr, strconv.Itoa(request.TopNum), strings.ReplaceAll(monitorItem.MetricsLinux, constant.MetricLabel, constant.INSTANCE+"=~'"+instances+"'"))
 	}
-	pql := fmt.Sprintf(constant.TopExpr, "5", strings.ReplaceAll(dao.MonitorItem.GetMonitorItemCacheByName(request.Name).MetricsLinux, constant.MetricLabel, constant.INSTANCE+"=~'"+instances+"'"))
 	result := Query(pql, request.Time).Data.Result
 	var instanceList []form.PrometheusInstance
 	for i := range result {
