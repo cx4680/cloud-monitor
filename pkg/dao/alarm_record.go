@@ -50,8 +50,8 @@ func (a *AlarmRecordDao) GetPageList(db *gorm.DB, tenantId string, f form.AlarmR
 		c.WriteString(" and ar.source_id=? ")
 		cv = append(cv, f.ResourceId)
 	}
-	if strutil.IsNotBlank(f.ResourceType) {
-		c.WriteString(" and ar.source_type=? ")
+	if len(f.ResourceType) > 0 {
+		c.WriteString(" and ar.source_type in (?) ")
 		cv = append(cv, f.ResourceType)
 	}
 	if strutil.IsNotBlank(f.RuleId) {
@@ -73,6 +73,10 @@ func (a *AlarmRecordDao) GetPageList(db *gorm.DB, tenantId string, f form.AlarmR
 	if strutil.IsNotBlank(f.EndTime) {
 		c.WriteString(" and ar.create_time<=? ")
 		cv = append(cv, f.EndTime)
+	}
+	if strutil.IsNotBlank(f.Expression) {
+		c.WriteString(" and ai.expression like concat('%', ?, '%') ")
+		cv = append(cv, f.Expression)
 	}
 	var total int64
 	db.Raw("select count(1) from ("+c.String()+" ) t", cv...).Scan(&total)
