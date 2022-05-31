@@ -72,3 +72,5 @@ UPDATE t_monitor_product SET status = '1' WHERE abbreviation = 'cgw';
 
 INSERT INTO `t_monitor_item` (biz_id, product_biz_id, name, metric_name, labels, metrics_linux, metrics_windows, statistics, unit, frequency, type, is_display, status, description, create_user, create_time, show_expression, display) VALUES ('224', '1', '上行流量', 'tenant_network_send_rate_sum', '', 'sum(eip_upstream_bits_rate{$INSTANCE})/8/1024', NULL, NULL, 'KB/s', NULL, NULL, 1, 1, NULL, NULL, NULL, NULL, NULL);
 INSERT INTO `t_monitor_item` (biz_id, product_biz_id, name, metric_name, labels, metrics_linux, metrics_windows, statistics, unit, frequency, type, is_display, status, description, create_user, create_time, show_expression, display) VALUES ('225', '1', '下行流量', 'tenant_network_receive_rate_sum', '', 'sum(eip_downstream_bits_rate{$INSTANCE})/8/1024', NULL, NULL, 'KB/s', NULL, NULL, 1, 1, NULL, NULL, NULL, NULL, NULL);
+
+INSERT INTO `t_config_item` (`biz_id`, `p_biz_id`, `name`, `code`, `data`, `sort_id`,`remark`) VALUES ('24', '21', '磁盘使用率（操作系统）', NULL, 'ecs_disk_usage', 2, NULL);
