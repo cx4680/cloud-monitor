@@ -61,13 +61,23 @@ func (ctl *AlarmRuleTemplateCtl) GetRuleListByProduct(c *gin.Context) {
 	}
 
 	ruleList := dao.AlarmRuleTemplate.QueryRuleTemplateListByProduct(global.DB, tenantId, productBizId)
-	for i, _ := range ruleList {
-		itemList := dao.AlarmItemTemplate.QueryItemListByTemplate(global.DB, ruleList[i].RuleTemplateId)
-		cs := make([]string, len(itemList))
-		for j, item := range itemList {
-			cs[j] = dao.GetExpress2(*item.TriggerCondition)
+	for i, v := range ruleList {
+		ruleDetail, _ := dao.AlarmRule.GetDetail(global.DB, v.RuleId, tenantId)
+		if ruleDetail != (&form.AlarmRuleDetailDTO{}) {
+			cs := make([]string, len(ruleDetail.RuleConditions))
+			for j, condition := range ruleDetail.RuleConditions {
+				cs[j] = dao.GetExpress(*condition)
+			}
+			ruleList[i].RuleName = ruleDetail.RuleName
+			ruleList[i].Conditions = cs
+		} else {
+			itemList := dao.AlarmItemTemplate.QueryItemListByTemplate(global.DB, v.RuleTemplateId)
+			cs := make([]string, len(itemList))
+			for j, item := range itemList {
+				cs[j] = dao.GetExpress2(*item.TriggerCondition)
+			}
+			ruleList[i].Conditions = cs
 		}
-		ruleList[i].Conditions = cs
 	}
 	ret := struct {
 		RequestId string

@@ -57,3 +57,8 @@ type PrometheusInstance struct {
 	Instance string `json:"instance"`
 	Value    string `json:"value"`
 }
+
+type NetworkData struct {
+	TimeAxis  []string `json:"timeAxis"`
+	ValueAxis []string `json:"ValueAxis"`
+}

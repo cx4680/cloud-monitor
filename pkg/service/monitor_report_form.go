@@ -5,7 +5,6 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/strutil"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/dao"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/errors"
-	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/model"
 	commonService "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/service"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/constant"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/external"
@@ -26,12 +25,12 @@ func (s *MonitorReportFormService) GetData(request form.PrometheusRequest) (*for
 	if strutil.IsBlank(request.Instance) {
 		return nil, errors.NewBusinessError("instance为空")
 	}
-	if !checkUserInstanceIdentity(request.TenantId, request.ProductBizId, request.Instance) {
-		return nil, errors.NewBusinessError("该租户无此实例")
-	}
-	monitorItem := getMonitorItemByName(request.Name)
+	monitorItem := dao.MonitorItem.GetMonitorItemCacheByName(request.Name)
 	if strutil.IsBlank(monitorItem.MetricsLinux) {
 		return nil, errors.NewBusinessError("指标不存在")
+	}
+	if !checkUserInstanceIdentity(request.TenantId, monitorItem.ProductBizId, request.Instance) {
+		return nil, errors.NewBusinessError("该租户无此实例")
 	}
 	pql := strings.ReplaceAll(monitorItem.MetricsLinux, constant.MetricLabel, constant.INSTANCE+"='"+request.Instance+"',"+constant.FILTER)
 	prometheusResponse := Query(pql, request.Time)
@@ -54,7 +53,7 @@ func (s *MonitorReportFormService) GetTop(request form.PrometheusRequest) ([]for
 	if strutil.IsBlank(instances) {
 		return nil, nil
 	}
-	pql := fmt.Sprintf(constant.TopExpr, "5", strings.ReplaceAll(getMonitorItemByName(request.Name).MetricsLinux, constant.MetricLabel, constant.INSTANCE+"=~'"+instances+"'"))
+	pql := fmt.Sprintf(constant.TopExpr, "5", strings.ReplaceAll(dao.MonitorItem.GetMonitorItemCacheByName(request.Name).MetricsLinux, constant.MetricLabel, constant.INSTANCE+"=~'"+instances+"'"))
 	result := Query(pql, request.Time).Data.Result
 	var instanceList []form.PrometheusInstance
 	for i := range result {
@@ -74,24 +73,18 @@ func (s *MonitorReportFormService) GetAxisData(request form.PrometheusRequest) (
 	if request.Start == 0 || request.End == 0 || request.Start > request.End {
 		return nil, errors.NewBusinessError("时间参数错误")
 	}
-	if !checkUserInstanceIdentity(request.TenantId, request.ProductBizId, request.Instance) {
-		return nil, errors.NewBusinessError("该租户无此实例")
-	}
-	monitorItem := getMonitorItemByName(request.Name)
+	monitorItem := dao.MonitorItem.GetMonitorItemCacheByName(request.Name)
 	if strutil.IsBlank(monitorItem.MetricsLinux) {
 		return nil, errors.NewBusinessError("指标不存在")
+	}
+	if !checkUserInstanceIdentity(request.TenantId, monitorItem.ProductBizId, request.Instance) {
+		return nil, errors.NewBusinessError("该租户无此实例")
 	}
 	pql := strings.ReplaceAll(monitorItem.MetricsLinux, constant.MetricLabel, constant.INSTANCE+"='"+request.Instance+"',"+constant.FILTER)
 	prometheusResponse := QueryRange(pql, strconv.Itoa(request.Start), strconv.Itoa(request.End), strconv.Itoa(request.Step))
 	result := prometheusResponse.Data.Result
 
 	labels := strings.Split(monitorItem.Labels, ",")
-	var label string
-	for i := range labels {
-		if labels[i] != "instance" {
-			label = labels[i]
-		}
-	}
 	start := request.Start
 	end := request.End
 	step := request.Step
@@ -104,12 +97,49 @@ func (s *MonitorReportFormService) GetAxisData(request form.PrometheusRequest) (
 
 	prometheusAxis := &form.PrometheusAxis{
 		XAxis: timeList,
-		YAxis: yAxisFillEmptyData(result, timeList, label, request.Instance),
+		YAxis: yAxisFillEmptyData(result, timeList, labels, request.Instance),
 	}
 	return prometheusAxis, nil
 }
 
-func yAxisFillEmptyData(result []form.PrometheusResult, timeList []string, label string, instanceId string) map[string][]string {
+func (s *MonitorReportFormService) GetNetworkData(request form.PrometheusRequest) (*form.NetworkData, error) {
+	if request.Start == 0 || request.End == 0 || request.Start > request.End {
+		return nil, errors.NewBusinessError("时间参数错误")
+	}
+	monitorItem := dao.MonitorItem.GetMonitorItemCacheByName(request.Name)
+	if strutil.IsBlank(monitorItem.MetricsLinux) {
+		return nil, errors.NewBusinessError("指标不存在")
+	}
+	var instance string
+	if strutil.IsNotBlank(request.Instance) {
+		instance = constant.INSTANCE + "='" + request.Instance + "'"
+	} else if strutil.IsNotBlank(request.TenantId) {
+		list, err := getInstanceList("2", request.TenantId)
+		if err != nil {
+			return nil, err
+		}
+		instance = constant.INSTANCE + "=~'" + strings.Join(list, "|") + "'"
+	}
+	pql := strings.ReplaceAll(monitorItem.MetricsLinux, constant.MetricLabel, instance)
+	prometheusResponse := QueryRange(pql, strconv.Itoa(request.Start), strconv.Itoa(request.End), strconv.Itoa(request.Step))
+	result := prometheusResponse.Data.Result
+	start := request.Start
+	end := request.End
+	step := request.Step
+	var timeList []string
+	if len(result) == 0 {
+		timeList = getTimeList(start, end, step, start)
+	} else {
+		timeList = getTimeList(start, end, step, int(result[0].Values[0][0].(float64)))
+	}
+	networkData := &form.NetworkData{
+		TimeAxis:  timeList,
+		ValueAxis: getValueAxis(result, timeList),
+	}
+	return networkData, nil
+}
+
+func yAxisFillEmptyData(result []form.PrometheusResult, timeList []string, labels []string, instanceId string) map[string][]string {
 	resultMap := make(map[string][]string)
 	for i := range result {
 		timeMap := map[string]string{}
@@ -117,19 +147,40 @@ func yAxisFillEmptyData(result []form.PrometheusResult, timeList []string, label
 			key := strconv.Itoa(int(result[i].Values[j][0].(float64)))
 			timeMap[key] = result[i].Values[j][1].(string)
 		}
+		var labelList []string
 		var key string
 		var arr []string
 		for k := range timeList {
 			arr = append(arr, changeDecimal(timeMap[timeList[k]]))
 		}
-		if strutil.IsBlank(result[i].Metric[label]) {
+		for _, v := range labels {
+			if v != "instance" {
+				labelList = append(labelList, result[i].Metric[v])
+			}
+		}
+		if len(labelList) == 0 {
 			key = instanceId
 		} else {
-			key = result[i].Metric[label]
+			key = strings.Join(labelList, "-")
 		}
 		resultMap[key] = arr
 	}
 	return resultMap
+}
+
+func getValueAxis(result []form.PrometheusResult, timeList []string) []string {
+	var valueAxis []string
+	for _, v := range result {
+		timeMap := map[string]string{}
+		for j := range v.Values {
+			key := strconv.Itoa(int(v.Values[j][0].(float64)))
+			timeMap[key] = v.Values[j][1].(string)
+		}
+		for k := range timeList {
+			valueAxis = append(valueAxis, changeDecimal(timeMap[timeList[k]]))
+		}
+	}
+	return valueAxis
 }
 
 func getTimeList(start int, end int, step int, firstTime int) []string {
@@ -155,11 +206,6 @@ func changeDecimal(value string) string {
 	return fmt.Sprintf("%.2f", v)
 }
 
-//根据监控名查询监控项
-func getMonitorItemByName(name string) model.MonitorItem {
-	return dao.MonitorItem.GetMonitorItemCacheByName(name)
-}
-
 //查询租户的ECS实例列表
 func getEcsInstances(tenantId string) (string, error) {
 	list, err := getInstanceList("1", tenantId)
@@ -171,6 +217,9 @@ func getEcsInstances(tenantId string) (string, error) {
 
 //校验该租户下是否拥有该实例
 func checkUserInstanceIdentity(tenantId, productBizId, instanceId string) bool {
+	if strutil.IsBlank(tenantId) {
+		return true
+	}
 	list, err := getInstanceList(productBizId, tenantId)
 	if err != nil {
 		logger.Logger().Error("获取实例列表失败")
