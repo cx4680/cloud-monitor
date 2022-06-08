@@ -62,7 +62,7 @@ func (ctl *AlarmRuleTemplateCtl) GetRuleListByProduct(c *gin.Context) {
 			}
 			ruleList[i].RuleName = ruleDetail.RuleName
 			ruleList[i].Conditions = cs
-		} else if v.Type == 2 {
+		} else if v.Type == 0 {
 			itemList := dao.AlarmItemTemplate.QueryItemListByTemplate(global.DB, v.RuleTemplateId)
 			cs := make([]string, len(itemList))
 			for j, item := range itemList {
