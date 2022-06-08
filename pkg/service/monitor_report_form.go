@@ -168,7 +168,7 @@ func yAxisFillEmptyData(result []form.PrometheusResult, timeList []string, label
 			arr = append(arr, changeDecimal(timeMap[timeList[k]]))
 		}
 		for _, v := range labels {
-			if v != "instance" {
+			if v != "instance" && strutil.IsNotBlank(result[i].Metric[v]) {
 				labelList = append(labelList, result[i].Metric[v])
 			}
 		}
