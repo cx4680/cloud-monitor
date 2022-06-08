@@ -1,5 +1,7 @@
 DELETE FROM t_monitor_item WHERE biz_id IN ('149','150','151','152','153','154','220','221','222','223','224','225');
 
+DELETE FROM t_config_item WHERE biz_id = '24' ;
+
 UPDATE t_monitor_product SET status = '0' WHERE abbreviation = 'cgw';
 
 INSERT INTO `t_monitor_item` (`biz_id`, `product_biz_id`, `name`, `metric_name`, `labels`, `metrics_linux`, `metrics_windows`, `statistics`, `unit`, `frequency`, `type`, `is_display`, `status`, `description`, `create_user`, `create_time`, `show_expression`, `display`) VALUES ('149', '11', 'Broker控制器', 'kafka_controller_kafkacontroller_activecontrollercount', 'instance', 'sum by (instance)(kafka_controller_kafkacontroller_activecontrollercount{$INSTANCE})', null, null, '个', null, '2', '1', '1', null, null, null, null, 'chart,rule');
