@@ -23,7 +23,7 @@ rocketmq:
   name-server: 10.56.4.19:9876
 
 prometheus:
-  url: http://10.253.4.74:31856//api/v1
+  url: http://10.253.6.67:32308/api/v1
   query: /query?query=
   queryRange: /query_range?query=
 
