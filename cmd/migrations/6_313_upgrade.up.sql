@@ -75,6 +75,10 @@ INSERT INTO `t_monitor_item` (biz_id, product_biz_id, name, metric_name, labels,
 
 INSERT INTO `t_config_item` (`biz_id`, `p_biz_id`, `name`, `code`, `data`, `sort_id`,`remark`) VALUES ('24', '21', '磁盘使用率（操作系统）', NULL, 'ecs_disk_usage', 2, NULL);
 
+UPDATE t_monitor_item SET metrics_linux = 'avg by(instance)(dm_global_status_mem_used{$INSTANCE})' WHERE biz_id = '130';
+UPDATE t_monitor_item SET metrics_linux = 'sum by(instance,service,route)(guard_http_apirequests{$INSTANCE})' WHERE biz_id = '218';
+UPDATE t_monitor_item SET metrics_linux = 'sum by(instance,service)(guard_http_apirequests{$INSTANCE})' WHERE biz_id = '219';
+
 UPDATE t_monitor_item SET type = '1' WHERE biz_id IN ('167','168','169','170','171','172','173','174','175','176','177','178','179','180','181','182','183','184');
 
 INSERT INTO t_monitor_item (biz_id, product_biz_id, name, metric_name, labels, metrics_linux, metrics_windows, statistics, unit, frequency, type, is_display, status, description, create_user, create_time, show_expression, display) VALUES ('226', '4', '物理机能耗', 'bms_total_power', 'instance', 'sum by(instance)(ipmi_sensor{name="total_power",$INSTANCE})', null, null, 'W', null, '2', '1', '1', null, null, null, null, 'chart');
