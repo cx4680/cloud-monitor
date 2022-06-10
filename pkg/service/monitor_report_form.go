@@ -70,10 +70,10 @@ func (s *MonitorReportFormService) GetTop(request form.PrometheusRequest) ([]for
 	}
 	result := Query(pql, request.Time).Data.Result
 	var instanceList []form.PrometheusInstance
-	for i := range result {
+	for _, v := range result {
 		instanceDTO := form.PrometheusInstance{
-			Instance: result[i].Metric[constant.INSTANCE],
-			Value:    changeDecimal(result[i].Value[1].(string)),
+			Instance: v.Metric[constant.INSTANCE],
+			Value:    changeDecimal(v.Value[1].(string)),
 		}
 		instanceList = append(instanceList, instanceDTO)
 	}
@@ -155,21 +155,21 @@ func (s *MonitorReportFormService) GetNetworkData(request form.PrometheusRequest
 
 func yAxisFillEmptyData(result []form.PrometheusResult, timeList []string, labels []string, instanceId string) map[string][]string {
 	resultMap := make(map[string][]string)
-	for i := range result {
+	for _, v1 := range result {
 		timeMap := map[string]string{}
-		for j := range result[i].Values {
-			key := strconv.Itoa(int(result[i].Values[j][0].(float64)))
-			timeMap[key] = result[i].Values[j][1].(string)
+		for _, v2 := range v1.Values {
+			key := strconv.Itoa(int(v2[0].(float64)))
+			timeMap[key] = v2[1].(string)
 		}
 		var labelList []string
 		var key string
 		var arr []string
-		for k := range timeList {
-			arr = append(arr, changeDecimal(timeMap[timeList[k]]))
+		for _, v3 := range timeList {
+			arr = append(arr, changeDecimal(timeMap[v3]))
 		}
-		for _, v := range labels {
-			if v != "instance" && strutil.IsNotBlank(result[i].Metric[v]) {
-				labelList = append(labelList, result[i].Metric[v])
+		for _, v4 := range labels {
+			if v4 != "instance" && strutil.IsNotBlank(v1.Metric[v4]) {
+				labelList = append(labelList, v1.Metric[v4])
 			}
 		}
 		if len(labelList) == 0 {
@@ -184,14 +184,14 @@ func yAxisFillEmptyData(result []form.PrometheusResult, timeList []string, label
 
 func getValueAxis(result []form.PrometheusResult, timeList []string) []string {
 	var valueAxis []string
-	for _, v := range result {
+	for _, v1 := range result {
 		timeMap := map[string]string{}
-		for j := range v.Values {
-			key := strconv.Itoa(int(v.Values[j][0].(float64)))
-			timeMap[key] = v.Values[j][1].(string)
+		for _, v2 := range v1.Values {
+			key := strconv.Itoa(int(v2[0].(float64)))
+			timeMap[key] = v2[1].(string)
 		}
-		for k := range timeList {
-			valueAxis = append(valueAxis, changeDecimal(timeMap[timeList[k]]))
+		for _, v3 := range timeList {
+			valueAxis = append(valueAxis, changeDecimal(timeMap[v3]))
 		}
 	}
 	return valueAxis
