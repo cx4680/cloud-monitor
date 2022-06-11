@@ -27,12 +27,12 @@ func loadOpenApiV1Routers() {
 
 func monitorProductOpenApiV1Routers(group *gin.RouterGroup) {
 	monitorProductCtl := v1_0.NewMonitorProductCtl(service.MonitorProductService{})
-	group.GET("products", logs.GinTrailzap(false, Read, logs.INFO, logs.Product), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetAllMonitorProductsList", ResourceType: "*", ResourceId: "*"}), monitorProductCtl.GetMonitorProduct)
+	group.GET("products", logs.GinTrailzap(false, Read, logs.INFO, logs.MonitorProduct), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetAllMonitorProductsList", ResourceType: "*", ResourceId: "*"}), monitorProductCtl.GetMonitorProduct)
 }
 
 func monitorItemOpenApiV1Routers(group *gin.RouterGroup) {
 	monitorItemCtl := v1_0.NewMonitorItemCtl(service.MonitorItemService{})
-	group.GET("products/:ProductAbbreviation/metrics", logs.GinTrailzap(false, Read, logs.INFO, logs.Product), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetMonitorItemsByIdList", ResourceType: "*", ResourceId: "*"}), monitorItemCtl.GetMonitorItemsByProductAbbr)
+	group.GET("products/:ProductAbbreviation/metrics", logs.GinTrailzap(false, Read, logs.INFO, logs.MonitorProduct), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetMonitorItemsByIdList", ResourceType: "*", ResourceId: "*"}), monitorItemCtl.GetMonitorItemsByProductAbbr)
 }
 
 func instanceOpenApiRouters(group *gin.RouterGroup) {

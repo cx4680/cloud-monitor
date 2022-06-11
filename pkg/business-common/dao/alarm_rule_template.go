@@ -37,6 +37,7 @@ type AlarmRuleTemplateRule struct {
 	Enabled        int      `json:"enabled" gorm:"column:enabled"`
 	GroupNames     string   `json:"groupNames" gorm:"column:groupNames"`
 	Conditions     []string `json:"conditions" gorm:"-"`
+	Type           int      `json:"type" gorm:"type"`
 }
 
 func (dao *AlarmRuleTemplateDao) QueryRuleTemplateListByProduct(db *gorm.DB, tenantId, productBizId string) []AlarmRuleTemplateRule {
@@ -48,9 +49,9 @@ func (dao *AlarmRuleTemplateDao) QueryRuleTemplateListByProduct(db *gorm.DB, ten
 	sql := "select t.name ruleName, t.biz_id ruleTemplateId, "
 
 	if len(relList) == 0 {
-		sql += "t.biz_id ruleId, 0 enabled, '" + constant.DefaultContact + "' groupNames FROM t_alarm_rule_template t "
+		sql += "0 type, t.biz_id ruleId, 0 enabled, '" + constant.DefaultContact + "' groupNames FROM t_alarm_rule_template t "
 	} else {
-		sql += "r.biz_id ruleId, r.enabled, GROUP_CONCAT(g.`name`) groupNames FROM t_alarm_rule_template t\n" +
+		sql += "1 type, r.biz_id ruleId, r.enabled, GROUP_CONCAT(g.`name`) groupNames FROM t_alarm_rule_template t\n" +
 			" join t_alarm_rule r on t.biz_id=r.template_biz_id and r.deleted=0 and r.tenant_id=?\n" +
 			"left join t_alarm_notice n on r.biz_id=n.alarm_rule_id\n" +
 			"left join t_contact_group g on n.contract_group_id=g.biz_id "

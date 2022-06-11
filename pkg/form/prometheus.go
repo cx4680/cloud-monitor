@@ -6,6 +6,7 @@ type PrometheusRequest struct {
 	Name         string `form:"name"`
 	Instance     string `form:"instance"`
 	Labels       string `form:"labels"`
+	TopNum       int    `form:"topNum"`
 	/**
 	 * 范围查询 s(秒)  m(分钟)  h(小时)  d(天)  w(周)  y(年)
 	 */
@@ -56,4 +57,9 @@ type PrometheusAxis struct {
 type PrometheusInstance struct {
 	Instance string `json:"instance"`
 	Value    string `json:"value"`
+}
+
+type NetworkData struct {
+	TimeAxis  []string `json:"timeAxis"`
+	ValueAxis []string `json:"ValueAxis"`
 }

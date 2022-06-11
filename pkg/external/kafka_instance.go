@@ -33,11 +33,12 @@ type KafkaPageVO struct {
 }
 
 type KafkaVO struct {
-	InstanceID  string `json:"instanceID"`
-	ClusterName string `json:"clusterName"`
-	Storage     int    `json:"storage"`
-	MqVersion   string `json:"mqVersion"`
-	State       string `json:"state"`
+	InstanceID    string `json:"instanceID"`
+	ClusterName   string `json:"clusterName"`
+	Storage       int    `json:"storage"`
+	MqVersion     string `json:"mqVersion"`
+	State         string `json:"state"`
+	ResourceClass string `json:"resourceClass"`
 }
 
 func (kafka *KafkaInstanceService) ConvertRealForm(form service.InstancePageForm) interface{} {
@@ -87,6 +88,9 @@ func (mysql *KafkaInstanceService) ConvertResp(realResp interface{}) (int, []ser
 				}, {
 					Name:  "storage",
 					Value: strconv.Itoa(d.Storage),
+				}, {
+					Name:  "resourceClass",
+					Value: d.ResourceClass,
 				}},
 			})
 		}
