@@ -55,7 +55,7 @@ func main() {
 	})
 
 	loader.AddStage(func(*context.Context) error {
-		return sync.InitSync(config.Cfg.Common.IsSingleRegion)
+		return sync.InitSync(config.Cfg.Common.RegionRole)
 	})
 
 	loader.AddStage(func(*context.Context) error {
