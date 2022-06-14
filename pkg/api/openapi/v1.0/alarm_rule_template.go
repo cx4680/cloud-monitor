@@ -44,7 +44,7 @@ func (ctl *AlarmRuleTemplateCtl) GetProductList(c *gin.Context) {
 		Products:  list,
 	}
 
-	c.JSON(http.StatusOK, global.NewSuccess("查询成功", ret))
+	c.JSON(http.StatusOK, ret)
 }
 
 func (ctl *AlarmRuleTemplateCtl) GetRuleListByProduct(c *gin.Context) {
@@ -86,7 +86,7 @@ func (ctl *AlarmRuleTemplateCtl) GetRuleListByProduct(c *gin.Context) {
 		RequestId: openapi.GetRequestId(c),
 		Rules:     ruleList,
 	}
-	c.JSON(http.StatusOK, global.NewSuccess("查询成功", ret))
+	c.JSON(http.StatusOK, ret)
 }
 
 func (ctl *AlarmRuleTemplateCtl) Open(c *gin.Context) {
