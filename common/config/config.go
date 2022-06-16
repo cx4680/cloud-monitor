@@ -29,7 +29,7 @@ type CommonConfig struct {
 	ActivateInformationUrl string `yaml:"activateInformationUrl"`
 	RegionName             string `yaml:"regionName"`
 	EcsInnerGateway        string `yaml:"ecs-inner-gateway"`
-	IsSingleRegion         string `yaml:"isSingleRegion"`
+	RegionRole             string `yaml:"regionRole"`
 	MsgUrl                 string `yaml:"msgUrl"`
 }
 
