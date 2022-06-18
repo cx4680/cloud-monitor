@@ -2,6 +2,8 @@ package snowflake
 
 import (
 	"errors"
+	"hash/fnv"
+	"os"
 	"strconv"
 	"sync"
 	"time"
@@ -132,11 +134,26 @@ var once sync.Once
 
 func GetWorker() *SnowflakeIdWorker {
 	once.Do(func() {
-		worker, err := createWorker(0, 0)
+		worker, err := createWorker(getWorkerId(), 0)
 		if err != nil {
 			panic(err)
 		}
 		instance = worker
 	})
 	return instance
+}
+
+func getWorkerId() int64 {
+	podName := os.Getenv("POD_NAME")
+	if podName != "" {
+		return hashcode(podName)
+	}
+	return 0
+}
+
+// hashcode 将字符串转化为整数
+func hashcode(s string) int64 {
+	h := fnv.New32a()
+	h.Write([]byte(s))
+	return int64(h.Sum32())
 }
