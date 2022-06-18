@@ -5,7 +5,9 @@ import (
 	"bytes"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/jsonutil"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global/openapi"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/util"
 	"context"
 	"encoding/json"
@@ -17,6 +19,7 @@ import (
 	"io/ioutil"
 	"net"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -59,7 +62,6 @@ func GinTrailzap(utc bool, requestType string, eventLevel EventLevel, resourceTy
 	return func(c *gin.Context) {
 		replaceResponseWriter(c)
 		serviceName := "CloudMonitor"
-		start := time.Now()
 		var data []byte
 		if http.MethodGet == c.Request.Method {
 			params := c.Request.URL.RawQuery
@@ -93,8 +95,6 @@ func GinTrailzap(utc bool, requestType string, eventLevel EventLevel, resourceTy
 		}
 		ctx := context.WithValue(context.Background(), "X-Request-ID", requestID)
 		c.Set("ctx", ctx)
-		sub := time.Now().Sub(start)
-		logger.Logger().Info("request log duration time, ", sub.Round(time.Second).Seconds())
 		c.Next()
 		defer func() {
 			accountId := c.GetString(global.TenantId)
@@ -107,6 +107,8 @@ func GinTrailzap(utc bool, requestType string, eventLevel EventLevel, resourceTy
 			eventSource := ""
 			if len(source) > 0 {
 				eventSource = source[0]
+			} else {
+				eventSource = c.Request.Host
 			}
 
 			end := time.Now()
@@ -114,14 +116,31 @@ func GinTrailzap(utc bool, requestType string, eventLevel EventLevel, resourceTy
 				end = end.UTC()
 			}
 			var response string
-			var errs map[string]string
+			var errs map[string]interface{}
 			if writer, ok := c.Writer.(*responseWriter); ok {
 				response = string(writer.response)
 				json.Unmarshal(writer.response, &errs)
 			}
 			resourceTypeNew := "CCS::CloudMonitor::" + resourceType
 			result := getResult(c.Writer.Status())
-			errMessage := errs["message"]
+
+			errMessage := ""
+			errCode := ""
+			if openapi.OpenApiRouter(c) {
+				var errMap map[string]string
+				err := jsonutil.ToObjectWithError(jsonutil.ToString(errs["Error"]), &errMap)
+				if err != nil {
+					errMessage = "error"
+				} else {
+					errMessage = errMap["Message"]
+
+				}
+				errCode = strconv.Itoa(c.Writer.Status())
+			} else {
+				errMessage = jsonutil.ToString(errs["errorMsg"])
+				errCode = jsonutil.ToString(errs["errorCode"])
+			}
+
 			var resError interface{}
 			if err := recover(); err != nil {
 				result = "Fail"
@@ -151,13 +170,14 @@ func GinTrailzap(utc bool, requestType string, eventLevel EventLevel, resourceTy
 				zap.String("request_parameters", string(requestParamJson)),
 				zap.String("result", result),
 				zap.String("response_elements", response),
-				zap.String("error_code", errs["code"]),
+				zap.String("error_code", errCode),
 				zap.String("error_message", errMessage),
 				zap.Namespace("user_info"),
 				zap.String("account_id", accountId),
 				zap.String("type", userTypeMap[userType]),
 				zap.String("user_name", userName),
 				zap.String("principal_id", loginId),
+				zap.String("access_key_id", "-"),
 			)
 			if resError != nil {
 				panic(resError)
