@@ -149,7 +149,7 @@ func GetWorker() *SnowflakeIdWorker {
 
 func getWorkerId(podName string) int64 {
 	if podName != "" {
-		return hashcode(podName) % maxWorkerId
+		return hashcode(podName) % (maxWorkerId + 1)
 	}
 	return 0
 }
