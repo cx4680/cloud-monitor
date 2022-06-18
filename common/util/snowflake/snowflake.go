@@ -1,6 +1,7 @@
 package snowflake
 
 import (
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
 	"errors"
 	"hash/fnv"
 	"os"
@@ -134,7 +135,10 @@ var once sync.Once
 
 func GetWorker() *SnowflakeIdWorker {
 	once.Do(func() {
-		worker, err := createWorker(getWorkerId(), 0)
+		podName := os.Getenv("POD_NAME")
+		wid := getWorkerId(podName)
+		logger.Logger().Infof("podName: %v, init worker id: %v", podName, wid)
+		worker, err := createWorker(wid, 0)
 		if err != nil {
 			panic(err)
 		}
@@ -143,8 +147,7 @@ func GetWorker() *SnowflakeIdWorker {
 	return instance
 }
 
-func getWorkerId() int64 {
-	podName := os.Getenv("POD_NAME")
+func getWorkerId(podName string) int64 {
 	if podName != "" {
 		return hashcode(podName)
 	}
