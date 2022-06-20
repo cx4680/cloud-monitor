@@ -159,6 +159,7 @@ func getWorkerId(podName string) int64 {
 func getDataCenterId() int64 {
 	var id int64 = 0
 	mac := getMac()
+	logger.Logger().Infof("mac: %v", string(mac))
 	if mac == nil {
 		id = 1
 	} else {
