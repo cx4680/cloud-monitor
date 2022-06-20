@@ -142,7 +142,7 @@ func GinTrailzap(utc bool, requestType string, eventLevel EventLevel, resourceTy
 				errCode = strconv.Itoa(c.Writer.Status())
 			} else {
 				errMessage = jsonutil.ToString(errs["errorMsg"])
-				errCode = jsonutil.ToString(errs["errorCode"])
+				errCode = errs["errorCode"].(string)
 			}
 
 			var resError interface{}
@@ -203,13 +203,29 @@ func getUserNameFromRemote(loginId string) string {
 		logger.Logger().Errorf("getUserNameFromRemote error, %v", err)
 		return ""
 	}
-	var respMap map[string]map[string]string
+
+	type userInfo struct {
+		LoginCode string `json:"loginCode"`
+		LoginId   string `json:"loginId"`
+	}
+
+	type respObj struct {
+		ErrorMsg  string    `json:"errorMsg"`
+		ErrorCode string    `json:"errorCode"`
+		Success   bool      `json:"success"`
+		Module    *userInfo `json:"module"`
+	}
+
+	var respMap respObj
 	err = jsonutil.ToObjectWithError(resp, &respMap)
 	if err != nil {
 		logger.Logger().Errorf("getUserNameFromRemote error, serialization, %v", err)
 		return ""
 	}
-	return respMap["module"]["loginCode"]
+	if respMap.Module == nil {
+		return ""
+	}
+	return respMap.Module.LoginCode
 }
 
 func getResult(status int) string {
