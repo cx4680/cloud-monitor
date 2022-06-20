@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/httputil"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/jsonutil"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global/openapi"
@@ -110,6 +111,9 @@ func GinTrailzap(utc bool, requestType string, eventLevel EventLevel, resourceTy
 			} else {
 				eventSource = c.Request.Host
 			}
+			if len(userName) == 0 {
+				userName = getUserNameFromRemote(loginId)
+			}
 
 			end := time.Now()
 			if utc {
@@ -185,6 +189,27 @@ func GinTrailzap(utc bool, requestType string, eventLevel EventLevel, resourceTy
 		}()
 	}
 
+}
+
+func getUserNameFromRemote(loginId string) string {
+	params := struct {
+		LoginId string `json:"loginId"`
+	}{
+		LoginId: loginId,
+	}
+
+	resp, err := httputil.HttpPostJson(config.Cfg.Common.AccountApiHost+"/api/outer/userinfo/login-info", params, nil)
+	if err != nil {
+		logger.Logger().Errorf("getUserNameFromRemote error, %v", err)
+		return ""
+	}
+	var respMap map[string]map[string]string
+	err = jsonutil.ToObjectWithError(resp, &respMap)
+	if err != nil {
+		logger.Logger().Errorf("getUserNameFromRemote error, serialization, %v", err)
+		return ""
+	}
+	return respMap["module"]["loginCode"]
 }
 
 func getResult(status int) string {
