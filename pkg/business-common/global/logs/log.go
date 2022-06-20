@@ -88,7 +88,12 @@ func GinTrailzap(utc bool, requestType string, eventLevel EventLevel, resourceTy
 		eventRegion := config.Cfg.Common.RegionName
 		requestParamJson, _ := json.Marshal(requestParameters)
 		c.Request.Body = ioutil.NopCloser(bytes.NewBuffer(data))
-		requestID := c.GetHeader("RequestId")
+		requestID := ""
+		if openapi.OpenApiRouter(c) {
+			requestID = c.GetHeader("RequestId")
+		} else {
+			requestID = c.GetHeader("X-Request-ID")
+		}
 		if len(requestID) == 0 {
 			if newUUID, err := uuid.NewUUID(); err == nil {
 				requestID = newUUID.String()
