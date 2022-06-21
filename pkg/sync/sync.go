@@ -17,13 +17,14 @@ func InitSync(regionRole string) error {
 		return nil
 	}
 	logger.Logger().Info("current run mode: multiple regions")
+	if isDefaultAddr() {
+		logger.Logger().Info("rocketmq name server is default, don't init mq component")
+		return nil
+	}
 
 	p, err := publisher.NewMQPublisher()
 	if err != nil {
 		logger.Logger().Errorf("init publisher error: %v\n", err)
-		if isDefaultAddr() {
-			return nil
-		}
 		return err
 	}
 	publisher.GlobalPublisher = p
@@ -31,9 +32,6 @@ func InitSync(regionRole string) error {
 	sub := new(subscriber.Subscriber)
 	if err := sub.Run(); err != nil {
 		logger.Logger().Errorf("init subscriber error: %v\n", err)
-		if isDefaultAddr() {
-			return nil
-		}
 		return err
 	}
 	return nil
