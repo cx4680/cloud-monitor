@@ -44,7 +44,7 @@ func (ctl *AlarmRuleTemplateCtl) GetProductList(c *gin.Context) {
 		Products:  list,
 	}
 
-	c.JSON(http.StatusOK, global.NewSuccess("查询成功", ret))
+	c.JSON(http.StatusOK, ret)
 }
 
 func (ctl *AlarmRuleTemplateCtl) GetRuleListByProduct(c *gin.Context) {
@@ -62,15 +62,15 @@ func (ctl *AlarmRuleTemplateCtl) GetRuleListByProduct(c *gin.Context) {
 
 	ruleList := dao.AlarmRuleTemplate.QueryRuleTemplateListByProduct(global.DB, tenantId, productBizId)
 	for i, v := range ruleList {
-		ruleDetail, _ := dao.AlarmRule.GetDetail(global.DB, v.RuleId, tenantId)
-		if ruleDetail != (&form.AlarmRuleDetailDTO{}) {
+		if v.Type == 1 {
+			ruleDetail, _ := dao.AlarmRule.GetDetail(global.DB, v.RuleId, tenantId)
 			cs := make([]string, len(ruleDetail.RuleConditions))
 			for j, condition := range ruleDetail.RuleConditions {
 				cs[j] = dao.GetExpress(*condition)
 			}
 			ruleList[i].RuleName = ruleDetail.RuleName
 			ruleList[i].Conditions = cs
-		} else {
+		} else if v.Type == 0 {
 			itemList := dao.AlarmItemTemplate.QueryItemListByTemplate(global.DB, v.RuleTemplateId)
 			cs := make([]string, len(itemList))
 			for j, item := range itemList {
@@ -86,7 +86,7 @@ func (ctl *AlarmRuleTemplateCtl) GetRuleListByProduct(c *gin.Context) {
 		RequestId: openapi.GetRequestId(c),
 		Rules:     ruleList,
 	}
-	c.JSON(http.StatusOK, global.NewSuccess("查询成功", ret))
+	c.JSON(http.StatusOK, ret)
 }
 
 func (ctl *AlarmRuleTemplateCtl) Open(c *gin.Context) {

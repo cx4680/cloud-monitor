@@ -31,6 +31,7 @@ type CommonConfig struct {
 	EcsInnerGateway        string `yaml:"ecs-inner-gateway"`
 	RegionRole             string `yaml:"regionRole"`
 	MsgUrl                 string `yaml:"msgUrl"`
+	AccountApiHost         string `yaml:"accountApiHost"`
 }
 
 type Serve struct {
