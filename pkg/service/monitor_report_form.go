@@ -246,7 +246,7 @@ func getInstanceList(productBizId, tenantId, instanceId string) ([]string, error
 	}
 	if strutil.IsNotBlank(instanceId) {
 		f.InstanceId = instanceId
-		f.PageSize = 5
+		f.PageSize = 1
 	}
 	instanceService := external.ProductInstanceServiceMap[f.Product]
 	stage, ok := instanceService.(commonService.InstanceStage)
