@@ -8,12 +8,14 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/inhibit"
 	"context"
 	"encoding/json"
+	k8sErrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
+	"strconv"
 	"strings"
 	"text/template"
 )
@@ -64,10 +66,21 @@ func InitK8s() error {
 }
 
 func DeleteAlertRule(alertRuleId string) error {
-	err := client.Resource(*resource).Namespace(namespace).Delete(context.TODO(), alertRuleId, metav1.DeleteOptions{})
-	if err != nil {
-		logger.Logger().Error("调用api删除规则失败, name=", alertRuleId, err)
-		return errors.NewBusinessErrorCode(errors.DeleteError, "调用api删除规则失败")
+	client.Resource(*resource).Namespace(namespace).Delete(context.TODO(), alertRuleId, metav1.DeleteOptions{})
+	i := 0
+	for true {
+		err := client.Resource(*resource).Namespace(namespace).Delete(context.TODO(), alertRuleId+"-"+strconv.Itoa(i), metav1.DeleteOptions{})
+		if err != nil {
+			if k8sErrors.IsNotFound(err) {
+				break
+			}
+			logger.Logger().Error("调用api删除规则失败, name=", alertRuleId, err)
+			return errors.NewBusinessErrorCode(errors.DeleteError, "调用api删除规则失败")
+		}
+		if i >= 100 {
+			break
+		}
+		i++
 	}
 	return nil
 }
@@ -112,15 +125,30 @@ func alertRuleToObject(alertRuleDTO *AlertRuleDTO) *map[string]interface{} {
 }
 
 func ApplyAlertRule(alertRuleDTO *AlertRuleDTO) error {
-	rules := alertRuleToObject(alertRuleDTO)
-	requestObj, err2 := json.Marshal(rules)
-	if err2 != nil {
-		logger.Logger().Errorf("调用api更新规则失败%v", err2)
-		return errors.NewBusinessErrorCode(errors.ApplyFail, "调用api更新规则失败")
-	}
-	_, err := client.Resource(*resource).Namespace(namespace).Patch(context.TODO(), alertRuleDTO.TenantId, types.ApplyPatchType, requestObj, metav1.ApplyOptions{FieldManager: "application/apply-patch", Force: true}.ToPatchOptions())
-	if err != nil {
-		return err
+	for i, v := range alertRuleDTO.SpecGroupsList {
+		num := len(v.AlertList)
+		j := 0
+		for num > 0 {
+			dto := &AlertRuleDTO{alertRuleDTO.AlertRuleId, alertRuleDTO.TenantId + "-" + strconv.Itoa(j), alertRuleDTO.Region, alertRuleDTO.Zone, alertRuleDTO.SpecGroupsList}
+			if num > 100 {
+				dto.SpecGroupsList[i].AlertList = append(v.AlertList[j*100 : (j+1)*100])
+			} else {
+				dto.SpecGroupsList[i].AlertList = append(v.AlertList[j*100:])
+			}
+			rules := alertRuleToObject(dto)
+			requestObj, err2 := json.Marshal(rules)
+			if err2 != nil {
+				logger.Logger().Errorf("调用api更新规则失败%v", err2)
+				return errors.NewBusinessErrorCode(errors.ApplyFail, "调用api更新规则失败")
+			}
+			_, err := client.Resource(*resource).Namespace(namespace).Patch(context.TODO(), dto.TenantId, types.ApplyPatchType, requestObj, metav1.ApplyOptions{FieldManager: "application/apply-patch", Force: true}.ToPatchOptions())
+			if err != nil {
+				logger.Logger().Errorf("调用api创建规则失败：%v", err)
+				return err
+			}
+			num -= 100
+			j++
+		}
 	}
 	return nil
 }
