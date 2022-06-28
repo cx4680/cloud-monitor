@@ -97,4 +97,4 @@ func isShow(exp string, os string) bool {
 	return isShowBool
 }
 
-var SelectMonitorItem = "SELECT mi.metrics_linux AS metric, mi.labels AS labels, mp.abbreviation AS product_abbreviation FROM t_monitor_item AS mi LEFT JOIN t_monitor_product mp ON mi.product_biz_id = mp.biz_id WHERE mi.metric_name = ?;"
+var SelectMonitorItem = "SELECT mi.name AS item_name, mi.metrics_linux AS metric, mi.labels AS labels, mp.abbreviation AS product_abbreviation FROM t_monitor_item AS mi LEFT JOIN t_monitor_product mp ON mi.product_biz_id = mp.biz_id WHERE mi.metric_name = ?;"

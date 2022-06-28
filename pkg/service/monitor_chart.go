@@ -14,14 +14,14 @@ import (
 	"strings"
 )
 
-type MonitorReportFormService struct {
+type MonitorChartService struct {
 }
 
-func NewMonitorReportFormService() *MonitorReportFormService {
-	return &MonitorReportFormService{}
+func NewMonitorChartService() *MonitorChartService {
+	return &MonitorChartService{}
 }
 
-func (s *MonitorReportFormService) GetData(request form.PrometheusRequest) (*form.PrometheusValue, error) {
+func (s *MonitorChartService) GetData(request form.PrometheusRequest) (*form.PrometheusValue, error) {
 	if strutil.IsBlank(request.Instance) {
 		return nil, errors.NewBusinessError("instance为空")
 	}
@@ -45,7 +45,7 @@ func (s *MonitorReportFormService) GetData(request form.PrometheusRequest) (*for
 	return prometheusValue, nil
 }
 
-func (s *MonitorReportFormService) GetTop(request form.PrometheusRequest) ([]form.PrometheusInstance, error) {
+func (s *MonitorChartService) GetTop(request form.PrometheusRequest) ([]form.PrometheusInstance, error) {
 	monitorItem := dao.MonitorItem.GetMonitorItemCacheByName(request.Name)
 	var pql string
 	list, err := getInstanceList("1", request.TenantId, "")
@@ -80,7 +80,7 @@ func (s *MonitorReportFormService) GetTop(request form.PrometheusRequest) ([]for
 	return instanceList, nil
 }
 
-func (s *MonitorReportFormService) GetAxisData(request form.PrometheusRequest) (*form.PrometheusAxis, error) {
+func (s *MonitorChartService) GetAxisData(request form.PrometheusRequest) (*form.PrometheusAxis, error) {
 	if strutil.IsBlank(request.Instance) {
 		return nil, errors.NewBusinessError("instance为空")
 	}
@@ -116,7 +116,7 @@ func (s *MonitorReportFormService) GetAxisData(request form.PrometheusRequest) (
 	return prometheusAxis, nil
 }
 
-func (s *MonitorReportFormService) GetNetworkData(request form.PrometheusRequest) (*form.NetworkData, error) {
+func (s *MonitorChartService) GetNetworkData(request form.PrometheusRequest) (*form.NetworkData, error) {
 	if request.Start == 0 || request.End == 0 || request.Start > request.End {
 		return nil, errors.NewBusinessError("时间参数错误")
 	}
