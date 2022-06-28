@@ -81,7 +81,7 @@ func alarmHistoryOpiRouters(group *gin.RouterGroup) {
 }
 
 func MonitorReportOpenApiV1Routers(group *gin.RouterGroup) {
-	monitorReportFormCtl := v1_0.NewMonitorReportFormController()
+	monitorReportFormCtl := v1_0.NewMonitorChartController()
 	group.GET("resources/:ResourceId/metrics/:MetricCode/datas", logs.GinTrailzap(false, Read, logs.INFO, logs.MonitorReportForm), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetMonitorReportRangeData", ResourceType: "*", ResourceId: "*"}), monitorReportFormCtl.GetMonitorDatas)
 	group.GET("resources/:ResourceId/metrics/:MetricCode/data", logs.GinTrailzap(false, Read, logs.INFO, logs.MonitorReportForm), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetMonitorReportData", ResourceType: "*", ResourceId: "*"}), monitorReportFormCtl.GetMonitorData)
 	group.GET("metrics/:MetricCode/:N/resources", logs.GinTrailzap(false, Read, logs.INFO, logs.MonitorReportForm), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetMonitorReportTop", ResourceType: "*", ResourceId: "*"}), monitorReportFormCtl.GetMonitorDataTop)

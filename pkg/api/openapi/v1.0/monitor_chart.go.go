@@ -19,15 +19,15 @@ import (
 	"strings"
 )
 
-type MonitorReportFormCtl struct {
-	service *service.MonitorReportFormService
+type MonitorChartCtl struct {
+	service *service.MonitorChartService
 }
 
-func NewMonitorReportFormController() *MonitorReportFormCtl {
-	return &MonitorReportFormCtl{service.NewMonitorReportFormService()}
+func NewMonitorChartController() *MonitorChartCtl {
+	return &MonitorChartCtl{service.NewMonitorChartService()}
 }
 
-func (mpc *MonitorReportFormCtl) GetMonitorDatas(c *gin.Context) {
+func (mcr *MonitorChartCtl) GetMonitorDatas(c *gin.Context) {
 	tenantId, err := util2.GetTenantId(c)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, openapi.NewRespError(openapi.MissingParameter, c))
@@ -78,7 +78,7 @@ func (mpc *MonitorReportFormCtl) GetMonitorDatas(c *gin.Context) {
 	c.JSON(http.StatusOK, result)
 }
 
-func (mpc *MonitorReportFormCtl) GetMonitorData(c *gin.Context) {
+func (mcr *MonitorChartCtl) GetMonitorData(c *gin.Context) {
 	tenantId, err := util2.GetTenantId(c)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, openapi.NewRespError(openapi.MissingParameter, c))
@@ -109,7 +109,7 @@ func (mpc *MonitorReportFormCtl) GetMonitorData(c *gin.Context) {
 	c.JSON(http.StatusOK, result)
 }
 
-func (mpc *MonitorReportFormCtl) GetMonitorDataTop(c *gin.Context) {
+func (mcr *MonitorChartCtl) GetMonitorDataTop(c *gin.Context) {
 	tenantId, err := util2.GetTenantId(c)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, openapi.NewRespError(openapi.MissingParameter, c))
