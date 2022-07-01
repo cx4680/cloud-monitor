@@ -2,8 +2,10 @@ package snowflake
 
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
+	crand "crypto/rand"
 	"errors"
 	"hash/fnv"
+	"math/big"
 	"net"
 	"os"
 	"strconv"
@@ -153,7 +155,8 @@ func getWorkerId(podName string) int64 {
 	if podName != "" {
 		return hashcode(podName) % (maxWorkerId + 1)
 	}
-	return 0
+	randId, _ := crand.Int(crand.Reader, big.NewInt(maxWorkerId+1))
+	return randId.Int64()
 }
 
 func getDataCenterId() int64 {
@@ -161,7 +164,8 @@ func getDataCenterId() int64 {
 	mac := getMac()
 	logger.Logger().Infof("mac: %v", string(mac))
 	if mac == nil {
-		id = 1
+		randId, _ := crand.Int(crand.Reader, big.NewInt(maxDatacenterId+1))
+		id = randId.Int64()
 	} else {
 		var i = 0x0000FF00 & (int64(mac[len(mac)-1]) << 8)
 		var j = 0x000000FF & int64(mac[len(mac)-2])
@@ -178,6 +182,7 @@ func getMac() []byte {
 		return nil
 	}
 	if len(interfaces) == 0 {
+		logger.Logger().Infof("get mac interfaces is nil")
 		return nil
 	}
 	return interfaces[0].HardwareAddr
