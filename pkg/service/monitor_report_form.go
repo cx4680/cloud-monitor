@@ -48,7 +48,7 @@ func (s *MonitorReportFormService) GetData(request form.PrometheusRequest) (*for
 func (s *MonitorReportFormService) GetTop(request form.PrometheusRequest) ([]form.PrometheusInstance, error) {
 	monitorItem := dao.MonitorItem.GetMonitorItemCacheByName(request.Name)
 	var pql string
-	list, err := getInstanceList("1", request.TenantId)
+	list, err := getInstanceList("1", request.TenantId, "")
 	if err != nil {
 		return nil, err
 	}
@@ -128,7 +128,7 @@ func (s *MonitorReportFormService) GetNetworkData(request form.PrometheusRequest
 	if strutil.IsNotBlank(request.Instance) {
 		instance = constant.INSTANCE + "='" + request.Instance + "'"
 	} else if strutil.IsNotBlank(request.TenantId) {
-		list, err := getInstanceList("2", request.TenantId)
+		list, err := getInstanceList("2", request.TenantId, "")
 		if err != nil {
 			return nil, err
 		}
@@ -220,40 +220,33 @@ func changeDecimal(value string) string {
 	return fmt.Sprintf("%.2f", v)
 }
 
-//查询租户的ECS实例列表
-func getEcsInstances(tenantId string) (string, error) {
-	list, err := getInstanceList("1", tenantId)
-	if err != nil {
-		return "", err
-	}
-	return strings.Join(list, "|"), nil
-}
-
 //校验该租户下是否拥有该实例
 func checkUserInstanceIdentity(tenantId, productBizId, instanceId string) bool {
 	if strutil.IsBlank(tenantId) {
 		return true
 	}
-	list, err := getInstanceList(productBizId, tenantId)
+	list, err := getInstanceList(productBizId, tenantId, instanceId)
 	if err != nil {
 		logger.Logger().Error("获取实例列表失败")
 		return false
 	}
-	for _, v := range list {
-		if instanceId == v {
-			return true
-		}
+	if len(list) == 0 {
+		return false
 	}
-	return false
+	return true
 }
 
 // GetInstanceList 获取实例ID列表
-func getInstanceList(productBizId string, tenantId string) ([]string, error) {
+func getInstanceList(productBizId, tenantId, instanceId string) ([]string, error) {
 	f := commonService.InstancePageForm{
 		TenantId: tenantId,
 		Product:  dao.MonitorProduct.GetMonitorProductByBizId(productBizId).Abbreviation,
 		Current:  1,
 		PageSize: 10000,
+	}
+	if strutil.IsNotBlank(instanceId) {
+		f.InstanceId = instanceId
+		f.PageSize = 1
 	}
 	instanceService := external.ProductInstanceServiceMap[f.Product]
 	stage, ok := instanceService.(commonService.InstanceStage)
