@@ -23,6 +23,7 @@ var ignoreList = []string{"/hawkeye/contact/activateContact?*", "/inner/alarmRec
 	"/hawkeye/inner/notice/*",
 	"/hawkeye/inner/monitorChart/*",
 	"/hawkeye/inner/reportForm/*",
+	"/hawkeye/inner/monitorResource/*",
 }
 
 func Auth() gin.HandlerFunc {
