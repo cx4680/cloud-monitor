@@ -178,8 +178,10 @@ func (s *ContactService) deleteContact(db *gorm.DB, p form.ContactParam) (*model
 		return nil, errors.NewBusinessError("联系人ID不能为空")
 	}
 	var contact = &model.Contact{
-		BizId:    p.ContactBizId,
-		TenantId: p.TenantId,
+		BizId:      p.ContactBizId,
+		TenantId:   p.TenantId,
+		UpdateTime: util.GetNow(),
+		State:      0,
 	}
 	s.dao.Delete(db, contact)
 	return contact, nil

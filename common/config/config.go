@@ -40,6 +40,7 @@ type CommonConfig struct {
 	RegionRole             string `yaml:"regionRole"`
 	MsgUrl                 string `yaml:"msgUrl"`
 	AccountApiHost         string `yaml:"accountApiHost"`
+	CloudMonitor           string `yaml:"cloudMonitor"`
 }
 
 type Serve struct {

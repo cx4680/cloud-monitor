@@ -18,10 +18,11 @@ import (
 )
 
 type AlarmRuleCtl struct {
+	service *service.AlarmRuleService
 }
 
 func NewAlarmRuleCtl() *AlarmRuleCtl {
-	return &AlarmRuleCtl{}
+	return &AlarmRuleCtl{service.NewAlarmRuleService()}
 }
 
 func (ctl *AlarmRuleCtl) SelectRulePageList(c *gin.Context) {

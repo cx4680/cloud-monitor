@@ -20,10 +20,10 @@ logger:
   compress:
 
 rocketmq:
-  name-server: 10.56.4.19:9876
+  name-server:
 
 prometheus:
-  url: http://10.253.6.67:32308/api/v1
+  url: http://localhost:55524/api/v1
   query: /query?query=
   queryRange: /query_range?query=
 
@@ -32,5 +32,5 @@ common:
   smsCenterPath: http://aopesb.dev001.intranet.cecloudcs.com/cestc?appId=600006&format=json&method=CESTC_UNHQ_saveMessageOperate
   activateInformationUrl: http://monitor.console.dev001.intranet.cecloudcs.com/#/alarm/activation?code=
   tenantUrl: http://cbcm.dev001.intranet.cecloudcs.com/api/cbcm/IUcaInfosOpenService/queryUcaInfosByUserId
-  RegionRole: integration
-  regionName:
+  regionRole: integration
+  cloudMonitor: http://localhost:8081/hawkeye/inner/regionSync
