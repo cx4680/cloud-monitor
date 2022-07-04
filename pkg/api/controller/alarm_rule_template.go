@@ -199,6 +199,8 @@ func (ctl *AlarmRuleTemplateCtl) buildRuleReqs(productBizId string, tenantId str
 		paramList[j].GroupList = []string{"-1"}
 
 		p := dao.MonitorProduct.GetMonitorProductByBizId(strconv.Itoa(paramList[j].ProductId))
+		//TODO 多Region绑定
+
 		resourceList, err := task.GetRemoteProductInstanceList(p.Abbreviation, tenantId)
 		if err != nil {
 			return nil, errors.NewBusinessError("实例获取失败")
