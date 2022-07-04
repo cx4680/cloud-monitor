@@ -1,54 +1,10 @@
 package service
 
 import (
-	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/form"
 	"fmt"
-	"log"
-	"sync"
 	"testing"
 	"time"
 )
-
-func TestChan(t *testing.T) {
-	var waitGroup = &sync.WaitGroup{}
-	alertListChan := make(chan []*form.AlertDTO, 1)
-	waitGroup.Add(2)
-	go fun1(waitGroup, alertListChan)
-	go fun2(waitGroup, alertListChan)
-	go func() {
-		log.Println("-------------wait ")
-		waitGroup.Wait()
-		close(alertListChan)
-		log.Println("-------------close ")
-	}()
-	log.Println("ing ")
-	var alertList []*form.AlertDTO
-	for list := range alertListChan {
-		log.Printf("apend----")
-		alertList = append(alertList, list...)
-	}
-	log.Printf("%+v", alertList)
-}
-
-func fun1(wg *sync.WaitGroup, alertListChan chan []*form.AlertDTO) {
-	defer wg.Done()
-	dtos := []*form.AlertDTO{
-		{RuleType: "11"},
-		{RuleType: "22"},
-	}
-	alertListChan <- dtos
-	log.Println("1-------------end ")
-}
-
-func fun2(wg *sync.WaitGroup, alertListChan chan []*form.AlertDTO) {
-	defer wg.Done()
-	dtos := []*form.AlertDTO{
-		{RuleType: "33"},
-		{RuleType: "44"},
-	}
-	alertListChan <- dtos
-	fmt.Printf("2-------------end ")
-}
 
 func TestTime(t *testing.T) {
 	d := int(time.Second * 1 / time.Second)
