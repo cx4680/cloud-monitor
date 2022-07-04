@@ -13,6 +13,14 @@ import (
 	"strconv"
 )
 
+type AlarmRuleService struct {
+	dao *dao.AlarmRuleDao
+}
+
+func NewAlarmRuleService() *AlarmRuleService {
+	return &AlarmRuleService{dao.AlarmRule}
+}
+
 func CreateRule(tx *gorm.DB, param interface{}) error {
 	dto := param.(*form.AlarmRuleAddReqDTO)
 	//功能未开发，默认全天24小时

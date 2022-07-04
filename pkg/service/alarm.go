@@ -210,8 +210,8 @@ func (s *AlarmRecordAddService) buildAlertRecord(alert *form.AlarmRecordAlertsBe
 		SourceType:     ruleDesc.Rule.ProductName,
 		SourceId:       sourceId,
 		CurrentValue:   cv,
-		StartTime:      util2.TimeToStr(startTime, util2.FullTimeFmt),
-		EndTime:        util2.TimeToStr(util2.TimeParseForZone(alert.EndsAt), util2.FullTimeFmt),
+		StartTime:      startTime,
+		EndTime:        util2.TimeParseForZone(alert.EndsAt),
 		Duration:       s.getDurationTime(now, startTime, period*times),
 		Level:          level,
 		Region:         config.Cfg.Common.RegionName,
@@ -281,8 +281,8 @@ func (s *AlarmRecordAddService) buildNoticeData(alert *form.AlarmRecordAlertsBea
 	//objMap["metricName"] = ruleDesc.MonitorItem
 	objMap["Name"] = ruleDesc.Rule.Name
 	objMap["userName"] = s.TenantSvc.GetTenantInfo(ruleDesc.Rule.TenantID).Name
-	objMap["alertTime"] = record.StartTime
-	objMap["recoveryTime"] = record.EndTime
+	objMap["alertTime"] = record.StartTime.Format(util2.FullTimeFmt)
+	objMap["recoveryTime"] = record.EndTime.Format(util2.FullTimeFmt)
 	objMap["exprDetails"] = ruleDesc.ExprDetail
 	//f, _ := strconv.ParseFloat(record.CurrentValue, 64)
 	//cv := fmt.Sprintf("%.2f", f)
