@@ -27,7 +27,7 @@ func NewMonitorChartController() *MonitorChartCtl {
 	return &MonitorChartCtl{service.NewMonitorChartService()}
 }
 
-func (mcr *MonitorChartCtl) GetMonitorDatas(c *gin.Context) {
+func (ctl *MonitorChartCtl) GetMonitorDatas(c *gin.Context) {
 	tenantId, err := util2.GetTenantId(c)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, openapi.NewRespError(openapi.MissingParameter, c))
@@ -78,7 +78,7 @@ func (mcr *MonitorChartCtl) GetMonitorDatas(c *gin.Context) {
 	c.JSON(http.StatusOK, result)
 }
 
-func (mcr *MonitorChartCtl) GetMonitorData(c *gin.Context) {
+func (ctl *MonitorChartCtl) GetMonitorData(c *gin.Context) {
 	tenantId, err := util2.GetTenantId(c)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, openapi.NewRespError(openapi.MissingParameter, c))
@@ -109,7 +109,7 @@ func (mcr *MonitorChartCtl) GetMonitorData(c *gin.Context) {
 	c.JSON(http.StatusOK, result)
 }
 
-func (mcr *MonitorChartCtl) GetMonitorDataTop(c *gin.Context) {
+func (ctl *MonitorChartCtl) GetMonitorDataTop(c *gin.Context) {
 	tenantId, err := util2.GetTenantId(c)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, openapi.NewRespError(openapi.MissingParameter, c))
