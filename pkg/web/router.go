@@ -8,6 +8,7 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global/logs"
 	service2 "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/service"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/service/external/message_center"
+	external "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/service/external/region"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/task"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/dao"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/service"
@@ -99,7 +100,7 @@ func alarmRuleRouters() {
 }
 
 func alarmRuleTemplateRouters() {
-	ctl := controller.NewAlarmRuleTemplateCtl(message_center.NewService())
+	ctl := controller.NewAlarmRuleTemplateCtl(message_center.NewService(), external.NewExternService())
 	group := Router.Group(pathPrefix + "ruleTemplate/")
 	{
 		group.GET("getProductList", logs.GinTrailzap(false, Read, logs.INFO, logs.AlertRuleTemplate), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetProductList", ResourceType: "*", ResourceId: "*"}), ctl.GetProductList)
