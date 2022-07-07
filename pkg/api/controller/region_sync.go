@@ -24,7 +24,12 @@ func (ctl *RegionSyncCtl) GetContactSyncData(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, global.NewError("更新时间不能为空"))
 		return
 	}
-	c.JSON(http.StatusOK, global.NewSuccess("查询成功", ctl.service.GetContactSyncData(time)))
+	data, err := ctl.service.GetContactSyncData(time)
+	if err != nil {
+		c.JSON(http.StatusOK, global.NewError("查询失败"))
+		return
+	}
+	c.JSON(http.StatusOK, global.NewSuccess("查询成功", data))
 }
 
 func (ctl RegionSyncCtl) ContactSync(c *gin.Context) {
@@ -43,7 +48,12 @@ func (ctl *RegionSyncCtl) GetAlarmRuleSyncData(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, global.NewError("更新时间不能为空"))
 		return
 	}
-	c.JSON(http.StatusOK, global.NewSuccess("查询成功", ctl.service.GetAlarmRuleSyncData(time)))
+	data, err := ctl.service.GetAlarmRuleSyncData(time)
+	if err != nil {
+		c.JSON(http.StatusOK, global.NewError("查询失败"))
+		return
+	}
+	c.JSON(http.StatusOK, global.NewSuccess("查询成功", data))
 }
 
 func (ctl RegionSyncCtl) AlarmRuleSync(c *gin.Context) {
@@ -62,7 +72,12 @@ func (ctl RegionSyncCtl) GetAlarmRecordSyncData(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, global.NewError("更新时间不能为空"))
 		return
 	}
-	c.JSON(http.StatusOK, global.NewSuccess("查询成功", ctl.service.GetAlarmRecordSyncData(time)))
+	data, err := ctl.service.GetAlarmRecordSyncData(time)
+	if err != nil {
+		c.JSON(http.StatusOK, global.NewError("查询失败"))
+		return
+	}
+	c.JSON(http.StatusOK, global.NewSuccess("查询成功", data))
 }
 
 func (ctl *RegionSyncCtl) PullAlarmRecordSyncData(c *gin.Context) {

@@ -22,12 +22,12 @@ func NewRegionSyncService() *RegionSyncService {
 	return &RegionSyncService{dao.NewRegionSyncDao()}
 }
 
-func (s RegionSyncService) GetContactSyncData(time string) form.ContactSync {
+func (s RegionSyncService) GetContactSyncData(time string) (form.ContactSync, error) {
 	return s.dao.GetContactSyncData(time)
 }
 
 func (s RegionSyncService) ContactSync() error {
-	time := s.dao.GetUpdateTime()
+	time := s.dao.GetUpdateTime("contact")
 	response, err := httputil.HttpGet(config.Cfg.Common.CloudMonitor + "/getContactSyncData?time=" + time.UpdateTime)
 	if err != nil {
 		logger.Logger().Errorf("同步数据API调用失败：%v", err)
@@ -46,12 +46,12 @@ func (s RegionSyncService) ContactSync() error {
 	return err
 }
 
-func (s RegionSyncService) GetAlarmRuleSyncData(time string) form.AlarmRuleSync {
+func (s RegionSyncService) GetAlarmRuleSyncData(time string) (form.AlarmRuleSync, error) {
 	return s.dao.GetAlarmRuleSyncData(time)
 }
 
 func (s RegionSyncService) AlarmRuleSync() error {
-	time := s.dao.GetUpdateTime()
+	time := s.dao.GetUpdateTime("alarmRule")
 	response, err := httputil.HttpGet(config.Cfg.Common.CloudMonitor + "/getAlarmRuleSyncData?time=" + time.UpdateTime)
 	if err != nil {
 		logger.Logger().Errorf("同步数据API调用失败：%v", err)
@@ -70,7 +70,7 @@ func (s RegionSyncService) AlarmRuleSync() error {
 	return err
 }
 
-func (s RegionSyncService) GetAlarmRecordSyncData(time string) form.AlarmRecordSync {
+func (s RegionSyncService) GetAlarmRecordSyncData(time string) (form.AlarmRecordSync, error) {
 	return s.dao.GetAlarmRecordSyncData(time)
 }
 
@@ -87,9 +87,13 @@ func (s RegionSyncService) PullAlarmRecordSyncData(param form.AlarmRecordSync) e
 }
 
 func (s RegionSyncService) AlarmRecordSync() error {
-	time := s.dao.GetUpdateTime().UpdateTime
+	time := s.dao.GetUpdateTime("alarmRecord").UpdateTime
 	currentTime := util.GetNowStr()
-	syncData := s.dao.GetAlarmRecordSyncData(time)
+	syncData, err := s.dao.GetAlarmRecordSyncData(time)
+	if err != nil {
+		logger.Logger().Errorf("查询失败：%v", err)
+		return err
+	}
 	response, err := httputil.HttpPostJson(config.Cfg.Common.CloudMonitor+"/pullAlarmRecordSyncData", syncData, nil)
 	logger.Logger().Info(response)
 	var resp global.Resp
