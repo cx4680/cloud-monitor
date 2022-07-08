@@ -32,7 +32,7 @@ func monitorProductOpenApiV1Routers(group *gin.RouterGroup) {
 
 func monitorItemOpenApiV1Routers(group *gin.RouterGroup) {
 	monitorItemCtl := v1_0.NewMonitorItemCtl(service.MonitorItemService{})
-	group.GET("products/:ProductAbbreviation/metrics", logs.GinTrailzap(false, Read, logs.INFO, logs.MonitorProduct), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetMonitorItemsByIdList", ResourceType: "*", ResourceId: "*"}), monitorItemCtl.GetMonitorItemsByProductAbbr)
+	group.GET("products/:ProductCode/metrics", logs.GinTrailzap(false, Read, logs.INFO, logs.MonitorProduct), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetMonitorItemsByIdList", ResourceType: "*", ResourceId: "*"}), monitorItemCtl.GetMonitorItemsByProductCode)
 }
 
 func instanceOpenApiRouters(group *gin.RouterGroup) {
@@ -89,7 +89,7 @@ func MonitorChartOpenApiV1Routers(group *gin.RouterGroup) {
 
 func ResourceOpenApiV1Routers(group *gin.RouterGroup) {
 	resourceCtl := v1_0.NewResourceController()
-	group.GET(":ProductAbbreviation/resources", logs.GinTrailzap(false, Read, logs.INFO, logs.Resource), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetResourceList", ResourceType: "*", ResourceId: "*"}), resourceCtl.GetResourceList)
+	group.GET(":ProductCode/resources", logs.GinTrailzap(false, Read, logs.INFO, logs.Resource), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetResourceList", ResourceType: "*", ResourceId: "*"}), resourceCtl.GetResourceList)
 }
 
 func alarmRuleTemplateOPIRouters(group *gin.RouterGroup) {

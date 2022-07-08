@@ -69,7 +69,7 @@ func (is *InstanceServiceImpl) GetPage(form InstancePageForm, stage InstanceStag
 }
 
 func (is *InstanceServiceImpl) getRequestUrl(product string) (string, error) {
-	p := dao.MonitorProduct.GetByAbbreviation(global.DB, product)
+	p := dao.MonitorProduct.GetByProductCode(global.DB, product)
 	if p == nil {
 		return "", errors.New("产品配置有误")
 	}
