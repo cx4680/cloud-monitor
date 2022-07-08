@@ -49,7 +49,7 @@ func (s *MonitorItemService) PersistenceLocal(db *gorm.DB, param interface{}) (s
 
 func (s *MonitorItemService) GetMonitorItemPage(pageSize int, pageNum int, productAbbr string) *vo.PageVO {
 	var monitorItemList []model.MonitorItem
-	sql := "select item.* from t_monitor_item item  ,t_monitor_product product  where item.product_biz_id=product.biz_id  and product.abbreviation=?"
+	sql := "select item.* from t_monitor_item item,t_monitor_product product where item.product_biz_id=product.biz_id and item.display like '%chart%' and product.abbreviation = ?"
 	paginate := util.Paginate(pageSize, pageNum, sql, []interface{}{productAbbr}, &monitorItemList)
 	return paginate
 }
