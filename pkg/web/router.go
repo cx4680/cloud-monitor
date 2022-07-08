@@ -182,6 +182,8 @@ func innerMapping() {
 	innerRuleCtl := inner.NewAlarmRuleCtl()
 	noticeCtl := controller.NewNoticeCtl(service2.MessageService{})
 	monitorReportFormCtl := controller.NewMonitorReportFormController(service.NewMonitorReportFormService())
+
+	monitorResourceCtl := inner.NewMonitorResourceController()
 	group := Router.Group(pathPrefix + "inner/")
 	{
 		group.GET("configItem/getItemList", configItemController.GetItemListById)
@@ -195,6 +197,8 @@ func innerMapping() {
 		ruleGroup.POST("update", innerRuleCtl.UpdateRule)
 		ruleGroup.POST("delete", ruleCtl.DeleteRule)
 		ruleGroup.POST("changeStatus", ruleCtl.ChangeRuleStatus)
+
+		group.GET("/monitorResource/list", monitorResourceCtl.GetProductInstanceList)
 	}
 }
 
@@ -220,12 +224,9 @@ func instance() {
 func innerCtl() {
 	addService := service.NewAlarmRecordAddService(service.NewAlarmRecordService(), service2.NewAlarmHandlerService(), service2.NewTenantService())
 	ctl := inner.NewAlertRecordCtl(addService)
-
-	monitorResourceCtl := inner.NewMonitorResourceController()
 	group := Router.Group("/inner/")
 	{
 		group.POST("/alarmRecord/insert", ctl.AddAlarmRecord)
-		group.GET("/monitorResource/list", monitorResourceCtl.GetProductInstanceList)
 	}
 }
 

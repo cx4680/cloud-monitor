@@ -207,6 +207,7 @@ func (ctl *AlarmRuleTemplateCtl) buildRuleReqs(productBizId string, tenantId str
 		if err != nil {
 			return nil, err
 		}
+		logger.Logger().Infof("get region list : %s", jsonutil.ToString(list))
 		var resourceList []*model.AlarmInstance
 		for _, regionObj := range list {
 			regionResources, err := ctl.getResourceByRegion(regionObj.Code, p.Abbreviation, tenantId)
