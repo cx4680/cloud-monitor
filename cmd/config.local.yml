@@ -35,5 +35,5 @@ common:
   smsCenterPath: http://aopesb.dev001.intranet.cecloudcs.com/cestc?appId=600006&format=json&method=CESTC_UNHQ_saveMessageOperate
   activateInformationUrl: http://monitor.console.dev001.intranet.cecloudcs.com/#/alarm/activation?code=
   tenantUrl: http://cbcm.dev001.intranet.cecloudcs.com/api/cbcm/IUcaInfosOpenService/queryUcaInfosByUserId
-  regionRole: region01
+  regionRole: integration
   cloudMonitor: http://localhost:8081/hawkeye/inner/regionSync
