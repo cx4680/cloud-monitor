@@ -8,8 +8,6 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/dao"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/errors"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global"
-	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/model"
-	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/util"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/form"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/k8s"
 	"gorm.io/gorm"
@@ -27,12 +25,11 @@ func (s RegionSyncService) GetContactSyncData(time string) (form.ContactSync, er
 	return s.dao.GetContactSyncData(time)
 }
 
-func (s RegionSyncService) ContactSync() error {
-	time := s.dao.GetUpdateTime("contact")
-	response, err := httputil.HttpGet(config.Cfg.Common.CloudMonitor + "/getContactSyncData?time=" + time.UpdateTime)
+func (s RegionSyncService) ContactSync(time string) (string, error) {
+	response, err := httputil.HttpGet(config.Cfg.Common.CloudMonitor + "/getContactSyncData?time=" + time)
 	if err != nil {
 		logger.Logger().Errorf("同步数据API调用失败：%v", err)
-		return err
+		return "", err
 	}
 	var contactSync ContactSyncResponse
 	jsonutil.ToObject(response, &contactSync)
@@ -44,19 +41,18 @@ func (s RegionSyncService) ContactSync() error {
 		}
 		return nil
 	})
-	return err
+	return contactSync.Module.SyncTime.UpdateTime, err
 }
 
 func (s RegionSyncService) GetAlarmRuleSyncData(time string) (form.AlarmRuleSync, error) {
 	return s.dao.GetAlarmRuleSyncData(time)
 }
 
-func (s RegionSyncService) AlarmRuleSync() error {
-	time := s.dao.GetUpdateTime("alarmRule")
-	response, err := httputil.HttpGet(config.Cfg.Common.CloudMonitor + "/getAlarmRuleSyncData?time=" + time.UpdateTime)
+func (s RegionSyncService) AlarmRuleSync(time string) (string, error) {
+	response, err := httputil.HttpGet(config.Cfg.Common.CloudMonitor + "/getAlarmRuleSyncData?time=" + time)
 	if err != nil {
 		logger.Logger().Errorf("同步数据API调用失败：%v", err)
-		return err
+		return "", err
 	}
 	var alarmRuleSync AlarmRuleSyncResponse
 	jsonutil.ToObject(response, &alarmRuleSync)
@@ -74,7 +70,7 @@ func (s RegionSyncService) AlarmRuleSync() error {
 		}
 		return nil
 	})
-	return err
+	return alarmRuleSync.Module.SyncTime.UpdateTime, err
 }
 
 func (s RegionSyncService) GetAlarmRecordSyncData(time string) (form.AlarmRecordSync, error) {
@@ -93,13 +89,11 @@ func (s RegionSyncService) PullAlarmRecordSyncData(param form.AlarmRecordSync) e
 	return err
 }
 
-func (s RegionSyncService) AlarmRecordSync() error {
-	time := s.dao.GetUpdateTime("alarmRecord").UpdateTime
-	currentTime := util.GetNowStr()
+func (s RegionSyncService) AlarmRecordSync(time string) (string, error) {
 	syncData, err := s.dao.GetAlarmRecordSyncData(time)
 	if err != nil {
 		logger.Logger().Errorf("查询失败：%v", err)
-		return err
+		return "", err
 	}
 	response, err := httputil.HttpPostJson(config.Cfg.Common.CloudMonitor+"/pullAlarmRecordSyncData", syncData, nil)
 	logger.Logger().Info(response)
@@ -107,10 +101,9 @@ func (s RegionSyncService) AlarmRecordSync() error {
 	jsonutil.ToObject(response, &resp)
 	if err != nil || resp.ErrorCode != "200" {
 		logger.Logger().Errorf("推送数据API调用失败：%v", err)
-		return err
+		return "", err
 	}
-	s.dao.UpdateTime(model.SyncTime{Name: "alarmRecord", UpdateTime: currentTime})
-	return nil
+	return syncData.SyncTime.UpdateTime, nil
 }
 
 type ContactSyncResponse struct {

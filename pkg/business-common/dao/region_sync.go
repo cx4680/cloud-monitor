@@ -83,9 +83,6 @@ func (dao RegionSyncDao) ContactSync(db *gorm.DB, contactSync form.ContactSync) 
 			return err
 		}
 	}
-	if err := db.Updates(contactSync.SyncTime).Error; err != nil {
-		return err
-	}
 	return nil
 }
 
@@ -191,9 +188,6 @@ func (dao RegionSyncDao) AlarmRuleSync(db *gorm.DB, alarmRuleSync form.AlarmRule
 			return nil, err
 		}
 	}
-	if err := db.Updates(alarmRuleSync.SyncTime).Error; err != nil {
-		return nil, err
-	}
 	return tenantList, nil
 }
 
@@ -209,9 +203,6 @@ func (dao RegionSyncDao) GetAlarmRecordSyncData(time string) (form.AlarmRecordSy
 			alarmRecordList = append(alarmRecordList, v.BizId)
 		}
 		if err := tx.Where("alarm_biz_id IN (?)", alarmRecordList).Find(&alarmRecordSync.AlarmInfo).Error; err != nil {
-			return err
-		}
-		if err := tx.Updates(alarmRecordSync.SyncTime).Error; err != nil {
 			return err
 		}
 		return nil
@@ -243,12 +234,12 @@ func (dao RegionSyncDao) PullAlarmRecordSyncData(db *gorm.DB, alarmRecordSync fo
 	return nil
 }
 
-func (dao RegionSyncDao) GetUpdateTime(name string) model.SyncTime {
+func (dao RegionSyncDao) GetUpdateTime(db *gorm.DB, name string) model.SyncTime {
 	var entity model.SyncTime
-	global.DB.Where("name = ?", name).First(&entity)
+	db.Where("name = ?", name).First(&entity)
 	return entity
 }
 
-func (dao RegionSyncDao) UpdateTime(model model.SyncTime) {
-	global.DB.Updates(model)
+func (dao RegionSyncDao) UpdateTime(db *gorm.DB, model model.SyncTime) {
+	db.Updates(model)
 }

@@ -257,8 +257,8 @@ func regionSync() {
 		innerGroup.GET("/getAlarmRuleSyncData", regionSyncCtl.GetAlarmRuleSyncData)
 		innerGroup.GET("/getAlarmRecordSyncData", regionSyncCtl.GetAlarmRecordSyncData)
 		innerGroup.POST("/pullAlarmRecordSyncData", regionSyncCtl.PullAlarmRecordSyncData)
-		innerGroup.POST("/contact", regionSyncCtl.ContactSync)
-		innerGroup.POST("/alarmRule", regionSyncCtl.AlarmRuleSync)
-		innerGroup.POST("/alarmRecord", regionSyncCtl.AlarmRecordSync)
+		//innerGroup.POST("/contact", regionSyncCtl.ContactSync)
+		//innerGroup.POST("/alarmRule", regionSyncCtl.AlarmRuleSync)
+		//innerGroup.POST("/alarmRecord", regionSyncCtl.AlarmRecordSync)
 	}
 }

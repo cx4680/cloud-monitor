@@ -2,6 +2,7 @@ package sync_biz
 
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/data_sync"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/service"
 	"time"
 )
 
@@ -19,9 +20,10 @@ func NewContactSynchronizer() data_sync.SyncTask {
 	return s
 }
 
-func (cs *ContactSynchronizer) Work(lastUpdateTime string) error {
-
-	return nil
+func (cs *ContactSynchronizer) Work(lastUpdateTime string) (string, error) {
+	currentTime, err := service.NewRegionSyncService().ContactSync(lastUpdateTime)
+	time.Sleep(10 * time.Second)
+	return currentTime, err
 }
 
 func (cs *ContactSynchronizer) Period() time.Duration {
