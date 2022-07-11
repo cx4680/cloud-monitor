@@ -1,48 +1,55 @@
 package data_sync
 
-import "errors"
+import (
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/run_time"
+	"errors"
+	"time"
+)
 
-type Synchronizer interface {
-	StartSync() error
+type Task interface {
+	Run() error
+}
+
+type SyncTask interface {
+	Task
+	Period() time.Duration
+	SetLoop(chan SyncTask)
+	Loop() chan SyncTask
 }
 
 type CombinedSynchronizer struct {
-	Synchronizes []Synchronizer
+	Loop  chan SyncTask
+	Tasks []SyncTask
 }
 
-type ContactSynchronizer struct {
-}
-
-type AlarmRuleSynchronizer struct {
-}
-
-type AlarmRecordSynchronizer struct {
-}
-
-func (cs *CombinedSynchronizer) NewCombinedSynchronizer(synchronizes []Synchronizer) (Synchronizer, error) {
-	if len(synchronizes) == 0 {
-		return nil, errors.New("同步器不能为空")
+func NewCombinedSynchronizer(tasks []SyncTask) (Task, error) {
+	if len(tasks) == 0 {
+		return nil, errors.New("任务不能为空")
 	}
 	return &CombinedSynchronizer{
-		Synchronizes: synchronizes,
+		Tasks: tasks,
+		Loop:  make(chan SyncTask),
 	}, nil
 }
 
-func (cs *CombinedSynchronizer) StartSync() error {
-	for _, synchronize := range cs.Synchronizes {
-		if err := synchronize.StartSync(); err != nil {
-			return err
+func (cs *CombinedSynchronizer) Run() error {
+	go func() {
+		for {
+			select {
+			case st := <-cs.Loop:
+				go run_time.SafeRun(func() {
+					err := st.Run()
+					if err != nil {
+						logger.Logger().Errorf("同步数据：出错原因：%v ", err)
+					}
+				})
+			}
 		}
+	}()
+	for i := range cs.Tasks {
+		cs.Tasks[i].SetLoop(cs.Loop)
+		cs.Loop <- cs.Tasks[i]
 	}
-	return nil
-}
-
-func (cs *ContactSynchronizer) StartSync() error {
-	return nil
-}
-func (cs *AlarmRuleSynchronizer) StartSync() error {
-	return nil
-}
-func (cs *AlarmRecordSynchronizer) StartSync() error {
 	return nil
 }
