@@ -5,7 +5,6 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/dao"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/model"
-	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/util"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/data_sync"
 	"time"
 )
@@ -43,7 +42,6 @@ func (bst *BaseSyncTask) Work(time string) (string, error) {
 }
 
 func (bst *BaseSyncTask) Run() error {
-	currentTime := util.GetNowStr()
 	defer func() {
 		time.Sleep(bst.Period())
 		bst.Loop() <- bst.Task
@@ -53,7 +51,7 @@ func (bst *BaseSyncTask) Run() error {
 		return err
 	}
 	logger.Logger().Info("sync task start , %v", bst.Task)
-	currentTime, err = bst.Task.Work(lastUpdateTime)
+	currentTime, err := bst.Task.Work(lastUpdateTime)
 	logger.Logger().Info("sync task over, %v", bst.Task)
 	if err != nil {
 		return err
