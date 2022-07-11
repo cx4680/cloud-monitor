@@ -9,6 +9,6 @@ CREATE TABLE `t_sync_time`
   COLLATE = utf8mb4_unicode_ci
   ROW_FORMAT = DYNAMIC;
 
-INSERT INTO t_sync_time (name,update_time,) VALUES ('contact','0000-01-01 00:00:00');
+INSERT INTO t_sync_time (name,update_time) VALUES ('contact','0000-01-01 00:00:00');
 INSERT INTO t_sync_time (name,update_time) VALUES ('alarmRule','0000-01-01 00:00:00');
 INSERT INTO t_sync_time (name,update_time) VALUES ('alarmRecord','0000-01-01 00:00:00');
