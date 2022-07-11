@@ -5,7 +5,6 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/model"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/util"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/form"
-	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/k8s"
 	"gorm.io/gorm"
 )
 
@@ -130,7 +129,7 @@ func (dao RegionSyncDao) GetAlarmRuleSyncData(time string) (form.AlarmRuleSync, 
 	return alarmRuleSync, err
 }
 
-func (dao RegionSyncDao) AlarmRuleSync(db *gorm.DB, alarmRuleSync form.AlarmRuleSync) error {
+func (dao RegionSyncDao) AlarmRuleSync(db *gorm.DB, alarmRuleSync form.AlarmRuleSync) ([]string, error) {
 	var alarmRuleList []string
 	var tenantList []string
 	if len(alarmRuleSync.AlarmRule) != 0 {
@@ -139,69 +138,63 @@ func (dao RegionSyncDao) AlarmRuleSync(db *gorm.DB, alarmRuleSync form.AlarmRule
 			tenantList = append(tenantList, v.TenantID)
 		}
 		if err := db.Save(alarmRuleSync.AlarmRule).Error; err != nil {
-			return err
+			return nil, err
 		}
 	}
 	if len(alarmRuleSync.AlarmItem) != 0 {
 		if err := db.Where("rule_biz_id IN (?)", alarmRuleList).Delete(&model.AlarmItem{}).Error; err != nil {
-			return err
+			return nil, err
 		}
 		if err := db.Save(alarmRuleSync.AlarmItem).Error; err != nil {
-			return err
+			return nil, err
 		}
 	}
 	if len(alarmRuleSync.AlarmNotice) != 0 {
 		if err := db.Where("alarm_rule_id IN (?)", alarmRuleList).Delete(&model.AlarmNotice{}).Error; err != nil {
-			return err
+			return nil, err
 		}
 		if err := db.Save(alarmRuleSync.AlarmRule).Error; err != nil {
-			return err
+			return nil, err
 		}
 	}
 	if len(alarmRuleSync.ResourceGroup) != 0 {
 		if err := db.Save(alarmRuleSync.ResourceGroup).Error; err != nil {
-			return err
+			return nil, err
 		}
 	}
 	if len(alarmRuleSync.AlarmRuleGroupRel) != 0 {
 		if err := db.Where("alarm_rule_id IN (?)", alarmRuleList).Delete(&model.AlarmRuleGroupRel{}).Error; err != nil {
-			return err
+			return nil, err
 		}
 		if err := db.Save(alarmRuleSync.AlarmRuleGroupRel).Error; err != nil {
-			return err
+			return nil, err
 		}
 	}
 	if len(alarmRuleSync.AlarmInstance) != 0 {
 		if err := db.Save(alarmRuleSync.AlarmInstance).Error; err != nil {
-			return err
+			return nil, err
 		}
 	}
 	if len(alarmRuleSync.AlarmRuleResourceRel) != 0 {
 		if err := db.Where("alarm_rule_id IN (?)", alarmRuleList).Delete(&model.AlarmRuleResourceRel{}).Error; err != nil {
-			return err
+			return nil, err
 		}
 		if err := db.Save(alarmRuleSync.AlarmRuleResourceRel).Error; err != nil {
-			return err
+			return nil, err
 		}
 	}
 	if len(alarmRuleSync.AlarmHandler) != 0 {
 		if err := db.Where("alarm_rule_id IN (?)", alarmRuleList).Delete(&model.AlarmHandler{}).Error; err != nil {
-			return err
+			return nil, err
 		}
 		if err := db.Save(alarmRuleSync.AlarmHandler).Error; err != nil {
-			return err
+			return nil, err
 		}
 	}
 	if err := db.Updates(alarmRuleSync.SyncTime).Error; err != nil {
-		return err
+		return nil, err
 	}
-	if len(tenantList) > 0 {
-		prometheusDao := k8s.PrometheusRule
-		for _, v := range tenantList {
-			prometheusDao.GenerateUserPrometheusRule(v)
-		}
-	}
-	return nil
+	return tenantList, nil
 }
 
 func (dao RegionSyncDao) GetAlarmRecordSyncData(time string) (form.AlarmRecordSync, error) {

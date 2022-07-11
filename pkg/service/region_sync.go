@@ -11,6 +11,7 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/model"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/util"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/form"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/k8s"
 	"gorm.io/gorm"
 )
 
@@ -60,10 +61,16 @@ func (s RegionSyncService) AlarmRuleSync() error {
 	var alarmRuleSync AlarmRuleSyncResponse
 	jsonutil.ToObject(response, &alarmRuleSync)
 	err = global.DB.Transaction(func(tx *gorm.DB) error {
-		err = s.dao.AlarmRuleSync(tx, alarmRuleSync.Module)
+		tenantList, err := s.dao.AlarmRuleSync(tx, alarmRuleSync.Module)
 		if err != nil {
 			logger.Logger().Errorf("同步失败：%v", err)
 			return errors.NewBusinessError("同步失败")
+		}
+		if len(tenantList) > 0 {
+			prometheusDao := k8s.PrometheusRule
+			for _, v := range tenantList {
+				prometheusDao.GenerateUserPrometheusRule(v)
+			}
 		}
 		return nil
 	})
