@@ -7,10 +7,7 @@ type PrometheusRequest struct {
 	Instance     string `form:"instance"`
 	Labels       string `form:"labels"`
 	TopNum       int    `form:"topNum"`
-	/**
-	 * 范围查询 s(秒)  m(分钟)  h(小时)  d(天)  w(周)  y(年)
-	 */
-	Scope string `form:"range"`
+
 	/**
 	 * 瞬时数据查询参数 时间戳
 	 */
@@ -22,10 +19,13 @@ type PrometheusRequest struct {
 	End   int `form:"end"`
 	Step  int `form:"step"`
 	/**
-	 * 统计方式
 	 * 聚合函数 sum(求和)  min(最小值)  max (最大值)  avg (平均值)  stddev (标准差)  stdvar (标准差异)  count (计数)
 	 */
 	Statistics string `form:"statistics"`
+	/**
+	 * 聚合范围 1s(1秒)  1m(1分钟)  1h(1小时)  1d(1天)  1w(1周)  1y(1年)
+	 */
+	Scope string `form:"scope"`
 }
 
 type PrometheusResponse struct {
