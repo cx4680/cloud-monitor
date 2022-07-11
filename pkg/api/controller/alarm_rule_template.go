@@ -276,7 +276,7 @@ func (ctl *AlarmRuleTemplateCtl) getResourceByRegion(regionId, abbreviation, ten
 		return nil, nil
 	}
 	list, ok := r.Module.([]interface{})
-	if ok {
+	if !ok {
 		logger.Logger().Infof("get remote resource fail, return data type error. regionId=%s, abbreviation=%s, tenantId=%s", regionId, abbreviation, tenantId)
 		return nil, nil
 	}
