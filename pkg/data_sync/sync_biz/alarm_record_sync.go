@@ -22,11 +22,9 @@ func NewAlarmRecordSynchronizer() data_sync.SyncTask {
 
 func (ars *AlarmRecordSynchronizer) Work(lastUpdateTime string) (string, error) {
 	currentTime, err := service.NewRegionSyncService().AlarmRecordSync(lastUpdateTime)
-	time.Sleep(10 * time.Second)
 	return currentTime, err
-
 }
 
 func (ars *AlarmRecordSynchronizer) Period() time.Duration {
-	return 30 * time.Second
+	return 10 * time.Second
 }
