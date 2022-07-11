@@ -261,7 +261,7 @@ func (ctl *AlarmRuleTemplateCtl) buildRuleReqs(productBizId string, tenantId str
 }
 
 func (ctl *AlarmRuleTemplateCtl) getResourceByRegion(regionId, abbreviation, tenantId string) ([]*model.AlarmInstance, error) {
-	respStr, err := httputil.HttpGet("http://cloud-monitor." + regionId + ".intranet.cecloudcs.com/inner/monitorResource/list?abbreviation" + abbreviation + "&tenantId=" + tenantId)
+	respStr, err := httputil.HttpGet("http://cloud-monitor." + regionId + ".intranet.cecloudcs.com/hawkeye/inner/monitorResource/list?abbreviation" + abbreviation + "&tenantId=" + tenantId)
 	if err != nil {
 		return nil, err
 	}
