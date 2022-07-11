@@ -2,7 +2,7 @@ package sync_biz
 
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/data_sync"
-	"log"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/service"
 	"time"
 )
 
@@ -20,10 +20,10 @@ func NewAlarmRuleSynchronizer() data_sync.SyncTask {
 	return s
 }
 
-func (ars *AlarmRuleSynchronizer) Work(lastUpdateTime string) error {
-	log.Println("告警规则同步...")
+func (ars *AlarmRuleSynchronizer) Work(lastUpdateTime string) (string, error) {
+	currentTime, err := service.NewRegionSyncService().AlarmRuleSync(lastUpdateTime)
 	time.Sleep(10 * time.Second)
-	return nil
+	return currentTime, err
 }
 
 func (ars *AlarmRuleSynchronizer) Period() time.Duration {
