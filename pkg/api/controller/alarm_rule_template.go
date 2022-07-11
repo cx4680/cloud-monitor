@@ -265,6 +265,7 @@ func (ctl *AlarmRuleTemplateCtl) getResourceByRegion(regionId, abbreviation, ten
 	if err != nil {
 		return nil, err
 	}
+	logger.Logger().Infof("get resource list resp: %s", respStr)
 	var r global.Resp
 	err = jsonutil.ToObjectWithError(respStr, &r)
 	if err != nil {
