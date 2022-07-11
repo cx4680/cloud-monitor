@@ -27,27 +27,31 @@ func InitSync(regionRole string) error {
 
 	//同步器心跳检测
 	go run_time.SafeRun(func() {
-		logger.Logger().Info("start sync heartbeat check ")
-		ticker := time.NewTicker(60 * time.Second)
-		for {
-			select {
-			case <-ticker.C:
-				val, err := sys_redis.Get(constant.SyncFlagKey)
-				if err != nil && err != redis.Nil {
-					logger.Logger().Infof("get started flag error, %v", err)
-				}
-				if len(val) == 0 {
-					err := startSync()
-					if err != nil {
-						logger.Logger().Info("start sync task error, %v", err)
-					}
-				}
-			}
-		}
-
+		startHeartBeatCheckTask()
 	})
 	return startSync()
 
+}
+
+func startHeartBeatCheckTask() {
+	logger.Logger().Info("start sync heartbeat check ")
+	ticker := time.NewTicker(60 * time.Second)
+	for {
+		select {
+		case <-ticker.C:
+			val, err := sys_redis.Get(constant.SyncFlagKey)
+			if err != nil && err != redis.Nil {
+				logger.Logger().Infof("get started flag error, %v", err)
+			}
+			if len(val) == 0 {
+				logger.Logger().Info("sync task is null, start running sync task")
+				err := startSync()
+				if err != nil {
+					logger.Logger().Info("start sync task error, %v", err)
+				}
+			}
+		}
+	}
 }
 
 func startSync() error {
@@ -72,7 +76,7 @@ func startSync() error {
 		return nil
 	}
 	if len(val) > 0 {
-		logger.Logger().Info("already start sync programs, not need running ")
+		logger.Logger().Info("already start sync task, not need running ")
 		return nil
 	}
 
@@ -84,6 +88,13 @@ func startSync() error {
 	if err != nil {
 		return err
 	}
+
+	heartBeatTask()
+	logger.Logger().Info("sync task is running success!")
+	return nil
+}
+
+func heartBeatTask() {
 	//同步器心跳
 	go run_time.SafeRun(func() {
 		logger.Logger().Info("start sync heartbeat... ")
@@ -91,12 +102,11 @@ func startSync() error {
 		for {
 			select {
 			case <-ticker.C:
-				err = sys_redis.SetByTimeOut(constant.SyncFlagKey, "started", 30*time.Second)
+				err := sys_redis.SetByTimeOut(constant.SyncFlagKey, "started", 30*time.Second)
 				if err != nil {
 					logger.Logger().Info("set started flag error, %v", err)
 				}
 			}
 		}
 	})
-	return nil
 }
