@@ -22,10 +22,9 @@ func NewContactSynchronizer() data_sync.SyncTask {
 
 func (cs *ContactSynchronizer) Work(lastUpdateTime string) (string, error) {
 	currentTime, err := service.NewRegionSyncService().ContactSync(lastUpdateTime)
-	time.Sleep(10 * time.Second)
 	return currentTime, err
 }
 
 func (cs *ContactSynchronizer) Period() time.Duration {
-	return 10 * time.Second
+	return 30 * time.Second
 }
