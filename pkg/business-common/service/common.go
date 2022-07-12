@@ -24,24 +24,24 @@ func (s *AbstractSyncServiceImpl) SyncRemote(topic sys_rocketmq.Topic, msg strin
 
 func (s *AbstractSyncServiceImpl) Persistence(c SyncService, topic sys_rocketmq.Topic, param interface{}) error {
 	return global.DB.Transaction(func(tx *gorm.DB) error {
-		content, err2 := c.PersistenceLocal(tx, param)
-		if err2 != nil {
-			return err2
-		}
-		if err := s.SyncRemote(topic, content); err != nil {
+		_, err := c.PersistenceLocal(tx, param)
+		if err != nil {
 			return err
 		}
+		//if err = s.SyncRemote(topic, content); err != nil {
+		//	return err
+		//}
 		return nil
 	})
 }
 
 func (s *AbstractSyncServiceImpl) PersistenceInner(db *gorm.DB, c SyncService, topic sys_rocketmq.Topic, param interface{}) error {
-	content, err := c.PersistenceLocal(db, param)
+	_, err := c.PersistenceLocal(db, param)
 	if err != nil {
 		return err
 	}
-	if err := s.SyncRemote(topic, content); err != nil {
-		return err
-	}
+	//if err = s.SyncRemote(topic, content); err != nil {
+	//	return err
+	//}
 	return nil
 }

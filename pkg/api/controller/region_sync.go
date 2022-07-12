@@ -32,16 +32,6 @@ func (ctl *RegionSyncCtl) GetContactSyncData(c *gin.Context) {
 	c.JSON(http.StatusOK, global.NewSuccess("查询成功", data))
 }
 
-//func (ctl RegionSyncCtl) ContactSync(c *gin.Context) {
-//	err := ctl.service.ContactSync()
-//	if err != nil {
-//		c.JSON(http.StatusOK, global.NewError("同步失败"))
-//		return
-//	} else {
-//		c.JSON(http.StatusOK, global.NewSuccess("同步成功", true))
-//	}
-//}
-
 func (ctl *RegionSyncCtl) GetAlarmRuleSyncData(c *gin.Context) {
 	time := c.Query("time")
 	if strutil.IsBlank(time) {
@@ -55,16 +45,6 @@ func (ctl *RegionSyncCtl) GetAlarmRuleSyncData(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, global.NewSuccess("查询成功", data))
 }
-
-//func (ctl RegionSyncCtl) AlarmRuleSync(c *gin.Context) {
-//	err := ctl.service.AlarmRuleSync()
-//	if err != nil {
-//		c.JSON(http.StatusOK, global.NewError("同步失败"))
-//		return
-//	} else {
-//		c.JSON(http.StatusOK, global.NewSuccess("同步成功", true))
-//	}
-//}
 
 func (ctl RegionSyncCtl) GetAlarmRecordSyncData(c *gin.Context) {
 	time := c.Query("time")
@@ -90,13 +70,3 @@ func (ctl *RegionSyncCtl) PullAlarmRecordSyncData(c *gin.Context) {
 	contactSync := ctl.service.PullAlarmRecordSyncData(param)
 	c.JSON(http.StatusOK, global.NewSuccess("查询成功", contactSync))
 }
-
-//func (ctl RegionSyncCtl) AlarmRecordSync(c *gin.Context) {
-//	err := ctl.service.AlarmRecordSync()
-//	if err != nil {
-//		c.JSON(http.StatusOK, global.NewError(err.Error()))
-//		return
-//	} else {
-//		c.JSON(http.StatusOK, global.NewSuccess("同步成功", true))
-//	}
-//}
