@@ -1,7 +1,6 @@
 package sync_biz
 
 import (
-	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/dao"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/model"
@@ -50,9 +49,7 @@ func (bst *BaseSyncTask) Run() error {
 	if err != nil {
 		return err
 	}
-	logger.Logger().Info("sync task start , %v", bst.Task)
 	currentTime, err := bst.Task.Work(lastUpdateTime)
-	logger.Logger().Info("sync task over, %v", bst.Task)
 	if err != nil {
 		return err
 	}
@@ -64,13 +61,11 @@ func (bst *BaseSyncTask) Run() error {
 }
 
 func (bst *BaseSyncTask) getUpdateTime() (string, error) {
-	//TODO 获取上一次的更新时间
 	syncTime := dao.NewRegionSyncDao().GetUpdateTime(global.DB, bst.BizCode)
 	return syncTime.UpdateTime, nil
 }
 
 func (bst *BaseSyncTask) updateTime(currentTime string) error {
-	//TODO 更新本次更新时间
 	dao.NewRegionSyncDao().UpdateTime(global.DB, model.SyncTime{Name: bst.BizCode, UpdateTime: currentTime})
 	return nil
 }
