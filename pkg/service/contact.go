@@ -217,7 +217,7 @@ func (s *ContactService) CreateSysContact(tenantId string) (string, error) {
 		}
 	}
 	groupBizId = strconv.FormatInt(snowflake.GetWorker().NextId(), 10)
-	group := &model.ContactGroup{BizId: groupBizId, TenantId: tenantId, Name: constant.DefaultContact, CreateUser: "系统创建", CreateTime: now, UpdateTime: now}
+	group := &model.ContactGroup{BizId: groupBizId, TenantId: tenantId, Name: constant.DefaultContact, CreateUser: "系统创建", CreateTime: now, UpdateTime: now, State: 1}
 	rel := &model.ContactGroupRel{TenantId: tenantId, ContactBizId: contactBizId, GroupBizId: groupBizId, CreateUser: "系统创建"}
 	err := global.DB.Transaction(func(db *gorm.DB) error {
 		if contact != (&model.Contact{}) {
