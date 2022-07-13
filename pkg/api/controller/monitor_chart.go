@@ -41,7 +41,7 @@ func (ctl *MonitorChartCtl) GetData(c *gin.Context) {
 }
 
 func (ctl *MonitorChartCtl) GetAxisData(c *gin.Context) {
-	var param = form.PrometheusRequest{Step: 60}
+	var param = form.PrometheusRequest{Step: 60, Scope: "1m"}
 	err := c.ShouldBindQuery(&param)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, global.NewError(translate.GetErrorMsg(err)))
@@ -100,7 +100,7 @@ func (ctl *MonitorChartCtl) GetNetworkData(c *gin.Context) {
 }
 
 func (ctl *MonitorChartCtl) GetAxisDataInner(c *gin.Context) {
-	var param form.PrometheusRequest
+	var param = form.PrometheusRequest{Step: 60, Scope: "1m"}
 	err := c.ShouldBindQuery(&param)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, global.NewError(translate.GetErrorMsg(err)))

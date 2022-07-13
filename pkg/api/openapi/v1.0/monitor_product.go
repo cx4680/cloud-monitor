@@ -27,28 +27,28 @@ func (mpc *MonitorProductCtl) GetMonitorProduct(c *gin.Context) {
 	productListVo := productPageVo.Records.([]model.MonitorProduct)
 	for _, productVo := range productListVo {
 		productMeta := ProductMeta{
-			Name:         productVo.Name,
-			Abbreviation: productVo.Abbreviation,
-			Description:  productVo.Description,
-			MonitorType:  productVo.MonitorType,
+			ProductName: productVo.Name,
+			ProductCode: productVo.Abbreviation,
+			Description: productVo.Description,
+			MonitorType: productVo.MonitorType,
 		}
 		productMetaList = append(productMetaList, productMeta)
 	}
 	page := ProductPage{
 		ResCommonPage: *openapi.NewResCommonPage(c, productPageVo),
-		Resources:     productMetaList,
+		ProductList:   productMetaList,
 	}
 	c.JSON(http.StatusOK, page)
 }
 
 type ProductMeta struct {
-	Name         string // 监控产品名称
-	Description  string // 描述
-	Abbreviation string // 简称
-	MonitorType  string // 监控类型
+	ProductName string // 监控产品名称
+	Description string // 描述
+	ProductCode string // 监控产品编码
+	MonitorType string // 监控类型
 }
 
 type ProductPage struct {
 	openapi.ResCommonPage
-	Resources []ProductMeta
+	ProductList []ProductMeta
 }

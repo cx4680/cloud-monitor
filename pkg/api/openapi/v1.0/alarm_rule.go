@@ -189,9 +189,9 @@ func buildAlarmRuleReqParam(c *gin.Context, createParam *AlarmRuleCreateReqDTO, 
 			return nil, openapi.GetErrorCode(err)
 		}
 		param = createParam
-		productInfo = dao.MonitorProduct.GetByAbbreviation(global.DB, param.ProductAbbreviation)
+		productInfo = dao.MonitorProduct.GetByProductCode(global.DB, param.ProductAbbreviation)
 		if productInfo == nil || len(productInfo.BizId) == 0 {
-			return nil, openapi.ProductAbbreviationInvalid
+			return nil, openapi.ProductCodeInvalid
 		}
 	} else if updateParam != nil {
 		if err := c.ShouldBindJSON(updateParam); err != nil {

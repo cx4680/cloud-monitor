@@ -65,15 +65,15 @@ func (ctl *MonitorChartCtl) GetMonitorDatas(c *gin.Context) {
 	}
 	label := getLabel(monitorItem.Labels)
 	result := MonitorRangeData{
-		RequestId:           openapi.GetRequestId(c),
-		MetricCode:          metricCode,
-		ProductAbbreviation: monitorItem.ProductAbbreviation,
-		Times:               timeList,
-		StartTime:           util2.TimestampToFullTimeFmtStr(int64(param.StartTime)),
-		EndTime:             util2.TimestampToFullTimeFmtStr(int64(param.EndTime)),
-		Step:                param.Step,
-		Dimension:           label,
-		Points:              pointsFillEmptyRangeData(prometheusResult, timeList, label, resourceId),
+		RequestId:   openapi.GetRequestId(c),
+		MetricCode:  metricCode,
+		ProductCode: monitorItem.ProductAbbreviation,
+		Times:       timeList,
+		StartTime:   util2.TimestampToFullTimeFmtStr(int64(param.StartTime)),
+		EndTime:     util2.TimestampToFullTimeFmtStr(int64(param.EndTime)),
+		Step:        param.Step,
+		Dimension:   label,
+		Points:      pointsFillEmptyRangeData(prometheusResult, timeList, label, resourceId),
 	}
 	c.JSON(http.StatusOK, result)
 }
@@ -99,12 +99,12 @@ func (ctl *MonitorChartCtl) GetMonitorData(c *gin.Context) {
 	prometheusResult := service.Query(pql, "").Data.Result
 	label := getLabel(monitorItem.Labels)
 	result := MonitorData{
-		RequestId:           openapi.GetRequestId(c),
-		MetricCode:          metricCode,
-		ProductAbbreviation: monitorItem.ProductAbbreviation,
-		Dimension:           label,
-		CurrentTime:         util2.GetNowStr(),
-		Points:              pointsFillEmptyData(prometheusResult, label, resourceId),
+		RequestId:   openapi.GetRequestId(c),
+		MetricCode:  metricCode,
+		ProductCode: monitorItem.ProductAbbreviation,
+		Dimension:   label,
+		CurrentTime: util2.GetNowStr(),
+		Points:      pointsFillEmptyData(prometheusResult, label, resourceId),
 	}
 	c.JSON(http.StatusOK, result)
 }
@@ -133,12 +133,12 @@ func (ctl *MonitorChartCtl) GetMonitorDataTop(c *gin.Context) {
 	prometheusResult := service.Query(pql, "").Data.Result
 	label := getLabel(monitorItem.Labels)
 	result := MonitorTopData{
-		RequestId:           openapi.GetRequestId(c),
-		MetricCode:          metricCode,
-		ProductAbbreviation: monitorItem.ProductAbbreviation,
-		Dimension:           label,
-		CurrentTime:         util2.GetNowStr(),
-		Tops:                []Top{},
+		RequestId:   openapi.GetRequestId(c),
+		MetricCode:  metricCode,
+		ProductCode: monitorItem.ProductAbbreviation,
+		Dimension:   label,
+		CurrentTime: util2.GetNowStr(),
+		Tops:        []Top{},
 	}
 	for _, v := range prometheusResult {
 		result.Tops = append(result.Tops, Top{ResourceId: v.Metric[constant.INSTANCE], Value: changeDecimal(v.Value[1].(string))})
@@ -288,15 +288,15 @@ type MonitorDataParam struct {
 }
 
 type MonitorRangeData struct {
-	RequestId           string       `json:"RequestId"`
-	MetricCode          string       `json:"MetricCode"`
-	ProductAbbreviation string       `json:"ProductAbbreviation"`
-	Times               []int        `json:"Times"`
-	StartTime           string       `json:"StartTime"`
-	EndTime             string       `json:"EndTime"`
-	Step                int          `json:"Step"`
-	Dimension           string       `json:"Dimension"`
-	Points              []RangePoint `json:"Points"`
+	RequestId   string       `json:"RequestId"`
+	MetricCode  string       `json:"MetricCode"`
+	ProductCode string       `json:"ProductCode"`
+	Times       []int        `json:"Times"`
+	StartTime   string       `json:"StartTime"`
+	EndTime     string       `json:"EndTime"`
+	Step        int          `json:"Step"`
+	Dimension   string       `json:"Dimension"`
+	Points      []RangePoint `json:"Points"`
 }
 
 type RangePoint struct {
@@ -305,12 +305,12 @@ type RangePoint struct {
 }
 
 type MonitorData struct {
-	RequestId           string  `json:"RequestId"`
-	MetricCode          string  `json:"MetricCode"`
-	ProductAbbreviation string  `json:"ProductAbbreviation"`
-	Dimension           string  `json:"Dimension"`
-	CurrentTime         string  `json:"CurrentTime"`
-	Points              []Point `json:"Points"`
+	RequestId   string  `json:"RequestId"`
+	MetricCode  string  `json:"MetricCode"`
+	ProductCode string  `json:"ProductCode"`
+	Dimension   string  `json:"Dimension"`
+	CurrentTime string  `json:"CurrentTime"`
+	Points      []Point `json:"Points"`
 }
 
 type Point struct {
@@ -319,12 +319,12 @@ type Point struct {
 }
 
 type MonitorTopData struct {
-	RequestId           string `json:"RequestId"`
-	MetricCode          string `json:"MetricCode"`
-	ProductAbbreviation string `json:"ProductAbbreviation"`
-	Dimension           string `json:"Dimension"`
-	CurrentTime         string `json:"CurrentTime"`
-	Tops                []Top  `json:"Tops"`
+	RequestId   string `json:"RequestId"`
+	MetricCode  string `json:"MetricCode"`
+	ProductCode string `json:"ProductCode"`
+	Dimension   string `json:"Dimension"`
+	CurrentTime string `json:"CurrentTime"`
+	Tops        []Top  `json:"Tops"`
 }
 
 type Top struct {

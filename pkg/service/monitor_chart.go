@@ -95,6 +95,9 @@ func (s *MonitorChartService) GetAxisData(request form.PrometheusRequest) (*form
 		return nil, errors.NewBusinessError("该租户无此实例")
 	}
 	pql := strings.ReplaceAll(monitorItem.MetricsLinux, constant.MetricLabel, constant.INSTANCE+"='"+request.Instance+"',"+constant.FILTER)
+	if strutil.IsNotBlank(request.Statistics) {
+		pql = fmt.Sprintf("%s_over_time((%s)[%s:1m])", request.Statistics, pql, request.Scope)
+	}
 	prometheusResponse := QueryRange(pql, strconv.Itoa(request.Start), strconv.Itoa(request.End), strconv.Itoa(request.Step))
 	result := prometheusResponse.Data.Result
 

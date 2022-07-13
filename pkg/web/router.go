@@ -199,6 +199,7 @@ func innerMapping() {
 		ruleGroup.POST("changeStatus", ruleCtl.ChangeRuleStatus)
 
 		group.POST("/reportForm/getMonitorData", reportFormCtl.GetMonitorData)
+		group.POST("/reportForm/getAlarmRecord", reportFormCtl.GetAlarmRecord)
 
 	}
 }
@@ -217,10 +218,8 @@ func reportForm() {
 	reportFormCtl := controller.NewReportFormController()
 	group := Router.Group(pathPrefix + "reportForm/")
 	{
-		group.POST("/getMonitorData", reportFormCtl.GetMonitorData)
-		group.POST("/export", reportFormCtl.Export)
-		group.GET("/queryExportRecords", reportFormCtl.QueryExportRecords)
-		group.GET("/downloadFile", reportFormCtl.DownloadFile)
+		group.POST("/exportMonitorData", reportFormCtl.ExportMonitorData)
+		group.POST("/exportAlarmRecord", reportFormCtl.ExportAlarmRecord)
 	}
 }
 
