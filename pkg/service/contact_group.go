@@ -131,6 +131,7 @@ func (s *ContactGroupService) insertContactGroup(db *gorm.DB, p form.ContactPara
 		CreateUser:  p.CreateUser,
 		CreateTime:  currentTime,
 		UpdateTime:  currentTime,
+		State:       1,
 	}
 	s.dao.Insert(db, contactGroup)
 	return contactGroup, nil
@@ -165,6 +166,7 @@ func (s *ContactGroupService) deleteContactGroup(db *gorm.DB, p form.ContactPara
 		BizId:      p.GroupBizId,
 		TenantId:   p.TenantId,
 		UpdateTime: util.GetNow(),
+		State:      0,
 	}
 	s.dao.Delete(db, contactGroup)
 	return contactGroup, nil
