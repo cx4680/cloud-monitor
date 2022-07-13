@@ -8,12 +8,10 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/dto"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/errors"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global"
-	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global/sys_component/sys_rocketmq"
 	commonModels "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/model"
 	message_center2 "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/service/external/message_center"
 	util2 "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/util"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/constant"
-	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/sync/publisher"
 	"strconv"
 )
 
@@ -121,19 +119,9 @@ func (s *MessageService) SendAlarmNotice(msgList []interface{}) error {
 	for i, _ := range recordList {
 		recordList[i].Id = 0
 	}
-
-	_ = publisher.GlobalPublisher.Pub(publisher.PubMessage{
-		Topic: sys_rocketmq.NotificationSyncTopic,
-		Data:  jsonutil.ToString(recordList),
-	})
 	// 发送短信余量不足提醒
 	if len(smsSender) > 0 {
 		smsSender = util2.RemoveDuplicateElement(smsSender)
-		//通过MQ异步解耦
-		_ = publisher.GlobalPublisher.Pub(publisher.PubMessage{
-			Topic: sys_rocketmq.SmsMarginReminderTopic,
-			Data:  jsonutil.ToString(smsSender),
-		})
 	}
 	return nil
 }
@@ -158,10 +146,6 @@ func (s *MessageService) SendActivateMsg(msg message_center2.MessageSendDTO, con
 	}
 	s.NotificationRecordDao.Insert(global.DB, record)
 	record.Id = 0
-	_ = publisher.GlobalPublisher.Pub(publisher.PubMessage{
-		Topic: sys_rocketmq.NotificationSyncTopic,
-		Data:  jsonutil.ToString(record),
-	})
 }
 
 // SmsMarginReminder 短信余量提醒
@@ -210,10 +194,6 @@ func (s *MessageService) SmsMarginReminder(sender string) {
 	s.NotificationRecordDao.Insert(global.DB, record)
 
 	record.Id = 0
-	_ = publisher.GlobalPublisher.Pub(publisher.PubMessage{
-		Topic: sys_rocketmq.NotificationSyncTopic,
-		Data:  jsonutil.ToString(record),
-	})
 }
 
 func (s *MessageService) checkSentNum(tenantId string, num int) bool {

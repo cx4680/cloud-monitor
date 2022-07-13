@@ -9,12 +9,10 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/errors"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/form"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global"
-	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global/sys_component/sys_rocketmq"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/model"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/service"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/util"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/constant"
-	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/mq"
 	"gorm.io/gorm"
 	"regexp"
 	"strconv"
@@ -226,10 +224,6 @@ func (s *ContactService) CreateSysContact(tenantId string) (string, error) {
 		}
 		dao.ContactGroup.Insert(db, group)
 		dao.ContactGroupRel.Insert(db, rel)
-		err := mq.SendMsg(sys_rocketmq.ContactTopic, enum.CreateSysContact, ContactMsg{Contact: contact, ContactGroup: group, ContactGroupRel: rel, ContactInformationList: informationList})
-		if err != nil {
-			return err
-		}
 		return nil
 	})
 	if err != nil {

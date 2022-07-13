@@ -4,7 +4,6 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/enum"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/form"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global"
-	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global/sys_component/sys_rocketmq"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/util"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/constant"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/service"
@@ -67,7 +66,7 @@ func (ctl *ContactGroupCtl) CreateContactGroup(c *gin.Context) {
 	}
 	param.TenantId = tenantId
 	param.EventEum = enum.InsertContactGroup
-	err = ctl.service.Persistence(ctl.service, sys_rocketmq.ContactGroupTopic, &param)
+	err = ctl.service.Persistence(ctl.service, &param)
 	if err != nil {
 		c.JSON(http.StatusOK, global.NewError(err.Error()))
 	} else {
@@ -91,7 +90,7 @@ func (ctl *ContactGroupCtl) UpdateContactGroup(c *gin.Context) {
 	}
 	param.TenantId = tenantId
 	param.EventEum = enum.UpdateContactGroup
-	err = ctl.service.Persistence(ctl.service, sys_rocketmq.ContactGroupTopic, &param)
+	err = ctl.service.Persistence(ctl.service, &param)
 	if err != nil {
 		c.JSON(http.StatusOK, global.NewError(err.Error()))
 	} else {
@@ -114,7 +113,7 @@ func (ctl *ContactGroupCtl) DeleteContactGroup(c *gin.Context) {
 	}
 	param.TenantId = tenantId
 	param.EventEum = enum.DeleteContactGroup
-	err = ctl.service.Persistence(ctl.service, sys_rocketmq.ContactGroupTopic, &param)
+	err = ctl.service.Persistence(ctl.service, &param)
 	if err != nil {
 		c.JSON(http.StatusOK, global.NewError(err.Error()))
 	} else {
