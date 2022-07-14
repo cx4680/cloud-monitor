@@ -184,6 +184,7 @@ func innerMapping() {
 	noticeCtl := controller.NewNoticeCtl(service2.MessageService{})
 	monitorChartCtl := controller.NewMonitorChartController(service.NewMonitorChartService())
 	reportFormCtl := controller.NewReportFormController()
+	monitorResourceCtl := inner.NewMonitorResourceController()
 
 	group := Router.Group(pathPrefix + "inner/")
 	{
@@ -201,7 +202,6 @@ func innerMapping() {
 
 		group.POST("/reportForm/getMonitorData", reportFormCtl.GetMonitorData)
 		group.POST("/reportForm/getAlarmRecord", reportFormCtl.GetAlarmRecord)
-
 
 		group.GET("/monitorResource/list", monitorResourceCtl.GetProductInstanceList)
 	}
