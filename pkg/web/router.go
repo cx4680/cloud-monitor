@@ -37,7 +37,8 @@ func loadRouters() {
 	innerMapping()
 
 	instance()
-	MonitorReportForm()
+	monitorChart()
+	reportForm()
 	innerCtl()
 	remote()
 }
@@ -181,16 +182,16 @@ func innerMapping() {
 	ruleCtl := controller.NewAlarmRuleCtl()
 	innerRuleCtl := inner.NewAlarmRuleCtl()
 	noticeCtl := controller.NewNoticeCtl(service2.MessageService{})
-	monitorReportFormCtl := controller.NewMonitorReportFormController(service.NewMonitorReportFormService())
+	monitorChartCtl := controller.NewMonitorChartController(service.NewMonitorChartService())
+	reportFormCtl := controller.NewReportFormController()
 
-	monitorResourceCtl := inner.NewMonitorResourceController()
 	group := Router.Group(pathPrefix + "inner/")
 	{
 		group.GET("configItem/getItemList", configItemController.GetItemListById)
 		group.GET("monitorItem/getMonitorItemList", monitorItemController.GetMonitorItemsById)
 		group.GET("notice/getUsage", noticeCtl.GetCenterUsage)
-		group.GET("monitorChart/network", monitorReportFormCtl.GetNetworkData)
-		group.GET("monitorChart/getAxisData", monitorReportFormCtl.GetAxisDataInner)
+		group.GET("monitorChart/network", monitorChartCtl.GetNetworkData)
+		group.GET("monitorChart/getAxisData", monitorChartCtl.GetAxisDataInner)
 
 		ruleGroup := group.Group("rule/")
 		ruleGroup.POST("create", innerRuleCtl.CreateRule)
@@ -198,17 +199,30 @@ func innerMapping() {
 		ruleGroup.POST("delete", ruleCtl.DeleteRule)
 		ruleGroup.POST("changeStatus", ruleCtl.ChangeRuleStatus)
 
+		group.POST("/reportForm/getMonitorData", reportFormCtl.GetMonitorData)
+		group.POST("/reportForm/getAlarmRecord", reportFormCtl.GetAlarmRecord)
+
+
 		group.GET("/monitorResource/list", monitorResourceCtl.GetProductInstanceList)
 	}
 }
 
-func MonitorReportForm() {
-	monitorReportFormCtl := controller.NewMonitorReportFormController(service.NewMonitorReportFormService())
+func monitorChart() {
+	monitorChartCtl := controller.NewMonitorChartController(service.NewMonitorChartService())
 	group := Router.Group(pathPrefix + "MonitorReportForm/")
 	{
-		group.GET("/getData", logs.GinTrailzap(false, Read, logs.INFO, logs.MonitorReportForm), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetMonitorReportData", ResourceType: "*", ResourceId: "*"}), monitorReportFormCtl.GetData)
-		group.GET("/getAxisData", logs.GinTrailzap(false, Read, logs.INFO, logs.MonitorReportForm), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetMonitorReportRangeData", ResourceType: "*", ResourceId: "*"}), monitorReportFormCtl.GetAxisData)
-		group.GET("/getTop", logs.GinTrailzap(false, Read, logs.INFO, logs.MonitorReportForm), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetMonitorReportTop", ResourceType: "*", ResourceId: "*"}), monitorReportFormCtl.GetTop)
+		group.GET("/getData", logs.GinTrailzap(false, Read, logs.INFO, logs.MonitorReportForm), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetMonitorReportData", ResourceType: "*", ResourceId: "*"}), monitorChartCtl.GetData)
+		group.GET("/getAxisData", logs.GinTrailzap(false, Read, logs.INFO, logs.MonitorReportForm), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetMonitorReportRangeData", ResourceType: "*", ResourceId: "*"}), monitorChartCtl.GetAxisData)
+		group.GET("/getTop", logs.GinTrailzap(false, Read, logs.INFO, logs.MonitorReportForm), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetMonitorReportTop", ResourceType: "*", ResourceId: "*"}), monitorChartCtl.GetTop)
+	}
+}
+
+func reportForm() {
+	reportFormCtl := controller.NewReportFormController()
+	group := Router.Group(pathPrefix + "reportForm/")
+	{
+		group.POST("/exportMonitorData", reportFormCtl.ExportMonitorData)
+		group.POST("/exportAlarmRecord", reportFormCtl.ExportAlarmRecord)
 	}
 }
 

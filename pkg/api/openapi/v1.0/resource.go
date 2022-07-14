@@ -27,12 +27,12 @@ func (ctl *ResourceCtl) GetResourceList(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, openapi.NewRespError(openapi.GetErrorCode(err), c))
 		return
 	}
-	productAbbreviation := c.Param("ProductAbbreviation")
-	c.Set(global.ResourceName, productAbbreviation)
-	f := commonService.InstancePageForm{Product: productAbbreviation, TenantId: tenantId, PageSize: param.PageSize, Current: param.PageNumber}
+	productCode := c.Param("ProductCode")
+	c.Set(global.ResourceName, productCode)
+	f := commonService.InstancePageForm{Product: productCode, TenantId: tenantId, PageSize: param.PageSize, Current: param.PageNumber}
 	instanceService := external.ProductInstanceServiceMap[f.Product]
 	if instanceService == nil {
-		c.JSON(http.StatusBadRequest, openapi.NewRespError(openapi.ProductAbbreviationInvalid, c))
+		c.JSON(http.StatusBadRequest, openapi.NewRespError(openapi.ProductCodeInvalid, c))
 		return
 	}
 	page, err := instanceService.GetPage(f, instanceService.(commonService.InstanceStage))

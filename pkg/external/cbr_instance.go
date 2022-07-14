@@ -77,6 +77,9 @@ func (c *CbrInstanceService) ConvertResp(realResp interface{}) (int, []service.I
 				InstanceId:   d.VaultId,
 				InstanceName: d.Name,
 				Labels: []service.InstanceLabel{{
+					Name:  "status",
+					Value: d.Status,
+				}, {
 					Name:  "capacity",
 					Value: strconv.Itoa(d.Capacity),
 				}, {
