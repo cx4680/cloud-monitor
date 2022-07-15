@@ -1,7 +1,13 @@
 package snowflake
 
 import (
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
+	crand "crypto/rand"
 	"errors"
+	"hash/fnv"
+	"math/big"
+	"net"
+	"os"
 	"strconv"
 	"sync"
 	"time"
@@ -132,11 +138,59 @@ var once sync.Once
 
 func GetWorker() *SnowflakeIdWorker {
 	once.Do(func() {
-		worker, err := createWorker(0, 0)
+		podName := os.Getenv("POD_NAME")
+		wid := getWorkerId(podName)
+		did := getDataCenterId()
+		logger.Logger().Infof("podName: %v, dataCenterId: %v, init worker id: %v", podName, did, wid)
+		worker, err := createWorker(wid, did)
 		if err != nil {
 			panic(err)
 		}
 		instance = worker
 	})
 	return instance
+}
+
+func getWorkerId(podName string) int64 {
+	if podName != "" {
+		return hashcode(podName) % (maxWorkerId + 1)
+	}
+	randId, _ := crand.Int(crand.Reader, big.NewInt(maxWorkerId+1))
+	return randId.Int64()
+}
+
+func getDataCenterId() int64 {
+	var id int64 = 0
+	mac := getMac()
+	logger.Logger().Infof("mac: %v", string(mac))
+	if mac == nil {
+		randId, _ := crand.Int(crand.Reader, big.NewInt(maxDatacenterId+1))
+		id = randId.Int64()
+	} else {
+		var i = 0x0000FF00 & (int64(mac[len(mac)-1]) << 8)
+		var j = 0x000000FF & int64(mac[len(mac)-2])
+		id = (j | i) >> 6
+		id = id % (maxDatacenterId + 1)
+	}
+	return id
+}
+
+func getMac() []byte {
+	interfaces, err := net.Interfaces()
+	if err != nil {
+		logger.Logger().Errorf("get mac error: %v", err)
+		return nil
+	}
+	if len(interfaces) == 0 {
+		logger.Logger().Infof("get mac interfaces is nil")
+		return nil
+	}
+	return interfaces[0].HardwareAddr
+}
+
+// hashcode 将字符串转化为整数
+func hashcode(s string) int64 {
+	h := fnv.New32a()
+	h.Write([]byte(s))
+	return int64(h.Sum32())
 }
