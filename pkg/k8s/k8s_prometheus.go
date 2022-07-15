@@ -103,8 +103,8 @@ func (service *K8sPrometheusService) buildPrometheusRule(region string, zone str
 	if len(alertList) == 0 {
 		return nil, router, errors.NewBusinessErrorCode(errors.NoResource, "instanceList 为空")
 	}
-	group := &SpecGroups{Name: tenantId, AlertList: alertList}
-	var groups []*SpecGroups
+	group := SpecGroups{Name: tenantId, AlertList: alertList}
+	var groups []SpecGroups
 	specGroups := append(groups, group)
 	ruleDto.SpecGroupsList = specGroups
 	return ruleDto, router, nil
