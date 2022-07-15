@@ -202,8 +202,10 @@ func (dao RegionSyncDao) GetAlarmRecordSyncData(time string) (form.AlarmRecordSy
 		for _, v := range alarmRecordSync.AlarmRecord {
 			alarmRecordList = append(alarmRecordList, v.BizId)
 		}
-		if err := tx.Where("alarm_biz_id IN (?)", alarmRecordList).Find(&alarmRecordSync.AlarmInfo).Error; err != nil {
-			return err
+		if len(alarmRecordList) != 0 {
+			if err := tx.Where("alarm_biz_id IN (?)", alarmRecordList).Find(&alarmRecordSync.AlarmInfo).Error; err != nil {
+				return err
+			}
 		}
 		return nil
 	})
