@@ -27,6 +27,7 @@ func (dao *AlarmRuleDao) SaveRule(tx *gorm.DB, ruleReqDTO *form.AlarmRuleAddReqD
 	rule := buildAlarmRule(ruleReqDTO)
 	rule.MonitorType = ruleReqDTO.MonitorType
 	rule.ProductName = ruleReqDTO.ProductType
+	rule.Enabled = 1
 	tx.Create(rule)
 	dao.saveRuleOthers(tx, ruleReqDTO, rule.BizId)
 }
