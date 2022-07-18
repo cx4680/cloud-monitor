@@ -30,7 +30,7 @@ func (dao RegionSyncDao) GetContactSyncData(time string) (form.ContactSync, erro
 		for _, v := range contactSync.Contact {
 			contactList = append(contactList, v.BizId)
 		}
-		for _, v := range contactSync.Contact {
+		for _, v := range contactSync.ContactGroup {
 			contactGroupList = append(contactGroupList, v.BizId)
 		}
 		if err := tx.Where("contact_biz_id IN (?) OR group_biz_id in (?)", contactList, contactGroupList).Find(&contactSync.ContactGroupRel).Error; err != nil {
@@ -58,28 +58,30 @@ func (dao RegionSyncDao) ContactSync(db *gorm.DB, contactSync form.ContactSync) 
 		if err := db.Save(contactSync.Contact).Error; err != nil {
 			return err
 		}
+		if err := db.Where("contact_biz_id IN (?)", contactList).Delete(&model.ContactInformation{}).Error; err != nil {
+			return err
+		}
+		if len(contactSync.ContactInformation) != 0 {
+			if err := db.Save(contactSync.ContactInformation).Error; err != nil {
+				return err
+			}
+		}
 	}
 	if len(contactSync.ContactGroup) != 0 {
-		for _, v := range contactSync.Contact {
+		for _, v := range contactSync.ContactGroup {
 			contactGroupList = append(contactGroupList, v.BizId)
 		}
 		if err := db.Save(contactSync.ContactGroup).Error; err != nil {
 			return err
 		}
 	}
-	if len(contactSync.ContactGroupRel) != 0 {
+	if len(contactSync.Contact) != 0 || len(contactSync.ContactGroup) != 0 {
 		if err := db.Where("contact_biz_id IN (?) OR group_biz_id in (?)", contactList, contactGroupList).Delete(&model.ContactGroupRel{}).Error; err != nil {
 			return err
 		}
-		if err := db.Save(contactSync.ContactGroupRel).Error; err != nil {
-			return err
-		}
 	}
-	if len(contactSync.ContactInformation) != 0 {
-		if err := db.Where("contact_biz_id IN (?)", contactList).Delete(&model.ContactInformation{}).Error; err != nil {
-			return err
-		}
-		if err := db.Save(contactSync.ContactInformation).Error; err != nil {
+	if len(contactSync.ContactGroupRel) != 0 {
+		if err := db.Save(contactSync.ContactGroupRel).Error; err != nil {
 			return err
 		}
 	}
@@ -93,30 +95,32 @@ func (dao RegionSyncDao) GetAlarmRuleSyncData(time string) (form.AlarmRuleSync, 
 		if err := tx.Where("update_time > ? AND update_time <= ?", time, currentTime).Find(&alarmRuleSync.AlarmRule).Error; err != nil {
 			return err
 		}
-		var alarmRuleList []string
-		for _, v := range alarmRuleSync.AlarmRule {
-			alarmRuleList = append(alarmRuleList, v.BizId)
-		}
-		if err := tx.Where("rule_biz_id IN (?)", alarmRuleList).Find(&alarmRuleSync.AlarmItem).Error; err != nil {
-			return err
-		}
-		if err := tx.Where("alarm_rule_id IN (?)", alarmRuleList).Find(&alarmRuleSync.AlarmNotice).Error; err != nil {
-			return err
-		}
 		if err := tx.Where("update_time > ? AND update_time <= ?", time, currentTime).Find(&alarmRuleSync.ResourceGroup).Error; err != nil {
-			return err
-		}
-		if err := tx.Where("alarm_rule_id IN (?)", alarmRuleList).Find(&alarmRuleSync.AlarmRuleGroupRel).Error; err != nil {
 			return err
 		}
 		if err := tx.Where("create_time > ? AND create_time <= ?", time, currentTime).Find(&alarmRuleSync.AlarmInstance).Error; err != nil {
 			return err
 		}
-		if err := tx.Where("alarm_rule_id IN (?)", alarmRuleList).Find(&alarmRuleSync.AlarmRuleResourceRel).Error; err != nil {
-			return err
+		var alarmRuleList []string
+		for _, v := range alarmRuleSync.AlarmRule {
+			alarmRuleList = append(alarmRuleList, v.BizId)
 		}
-		if err := tx.Where("alarm_rule_id IN (?)", alarmRuleList).Find(&alarmRuleSync.AlarmHandler).Error; err != nil {
-			return err
+		if len(alarmRuleList) != 0 {
+			if err := tx.Where("rule_biz_id IN (?)", alarmRuleList).Find(&alarmRuleSync.AlarmItem).Error; err != nil {
+				return err
+			}
+			if err := tx.Where("alarm_rule_id IN (?)", alarmRuleList).Find(&alarmRuleSync.AlarmNotice).Error; err != nil {
+				return err
+			}
+			if err := tx.Where("alarm_rule_id IN (?)", alarmRuleList).Find(&alarmRuleSync.AlarmRuleGroupRel).Error; err != nil {
+				return err
+			}
+			if err := tx.Where("alarm_rule_id IN (?)", alarmRuleList).Find(&alarmRuleSync.AlarmRuleResourceRel).Error; err != nil {
+				return err
+			}
+			if err := tx.Where("alarm_rule_id IN (?)", alarmRuleList).Find(&alarmRuleSync.AlarmHandler).Error; err != nil {
+				return err
+			}
 		}
 		if err := tx.Updates(alarmRuleSync.SyncTime).Error; err != nil {
 			return err
@@ -137,54 +141,55 @@ func (dao RegionSyncDao) AlarmRuleSync(db *gorm.DB, alarmRuleSync form.AlarmRule
 		if err := db.Save(alarmRuleSync.AlarmRule).Error; err != nil {
 			return nil, err
 		}
-	}
-	if len(alarmRuleSync.AlarmItem) != 0 {
 		if err := db.Where("rule_biz_id IN (?)", alarmRuleList).Delete(&model.AlarmItem{}).Error; err != nil {
 			return nil, err
 		}
-		if err := db.Save(alarmRuleSync.AlarmItem).Error; err != nil {
-			return nil, err
-		}
-	}
-	if len(alarmRuleSync.AlarmNotice) != 0 {
 		if err := db.Where("alarm_rule_id IN (?)", alarmRuleList).Delete(&model.AlarmNotice{}).Error; err != nil {
 			return nil, err
 		}
-		if err := db.Save(alarmRuleSync.AlarmRule).Error; err != nil {
+		if err := db.Where("alarm_rule_id IN (?)", alarmRuleList).Delete(&model.AlarmRuleGroupRel{}).Error; err != nil {
 			return nil, err
 		}
+		if err := db.Where("alarm_rule_id IN (?)", alarmRuleList).Delete(&model.AlarmRuleResourceRel{}).Error; err != nil {
+			return nil, err
+		}
+		if err := db.Where("alarm_rule_id IN (?)", alarmRuleList).Delete(&model.AlarmHandler{}).Error; err != nil {
+			return nil, err
+		}
+		if len(alarmRuleSync.AlarmItem) != 0 {
+			if err := db.Save(alarmRuleSync.AlarmItem).Error; err != nil {
+				return nil, err
+			}
+		}
+		if len(alarmRuleSync.AlarmNotice) != 0 {
+			if err := db.Save(alarmRuleSync.AlarmNotice).Error; err != nil {
+				return nil, err
+			}
+		}
+		if len(alarmRuleSync.AlarmRuleGroupRel) != 0 {
+			if err := db.Save(alarmRuleSync.AlarmRuleGroupRel).Error; err != nil {
+				return nil, err
+			}
+		}
+		if len(alarmRuleSync.AlarmRuleResourceRel) != 0 {
+			if err := db.Save(alarmRuleSync.AlarmRuleResourceRel).Error; err != nil {
+				return nil, err
+			}
+		}
+		if len(alarmRuleSync.AlarmHandler) != 0 {
+			if err := db.Save(alarmRuleSync.AlarmHandler).Error; err != nil {
+				return nil, err
+			}
+		}
 	}
+
 	if len(alarmRuleSync.ResourceGroup) != 0 {
 		if err := db.Save(alarmRuleSync.ResourceGroup).Error; err != nil {
 			return nil, err
 		}
 	}
-	if len(alarmRuleSync.AlarmRuleGroupRel) != 0 {
-		if err := db.Where("alarm_rule_id IN (?)", alarmRuleList).Delete(&model.AlarmRuleGroupRel{}).Error; err != nil {
-			return nil, err
-		}
-		if err := db.Save(alarmRuleSync.AlarmRuleGroupRel).Error; err != nil {
-			return nil, err
-		}
-	}
 	if len(alarmRuleSync.AlarmInstance) != 0 {
 		if err := db.Save(alarmRuleSync.AlarmInstance).Error; err != nil {
-			return nil, err
-		}
-	}
-	if len(alarmRuleSync.AlarmRuleResourceRel) != 0 {
-		if err := db.Where("alarm_rule_id IN (?)", alarmRuleList).Delete(&model.AlarmRuleResourceRel{}).Error; err != nil {
-			return nil, err
-		}
-		if err := db.Save(alarmRuleSync.AlarmRuleResourceRel).Error; err != nil {
-			return nil, err
-		}
-	}
-	if len(alarmRuleSync.AlarmHandler) != 0 {
-		if err := db.Where("alarm_rule_id IN (?)", alarmRuleList).Delete(&model.AlarmHandler{}).Error; err != nil {
-			return nil, err
-		}
-		if err := db.Save(alarmRuleSync.AlarmHandler).Error; err != nil {
 			return nil, err
 		}
 	}

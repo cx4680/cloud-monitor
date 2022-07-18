@@ -25,11 +25,15 @@ func (d *ContactInformationDao) InsertBatch(db *gorm.DB, list []*model.ContactIn
 		return
 	}
 	currentTime := util.GetNow()
+	var informationList []*model.ContactInformation
 	for _, v := range list {
+		if strutil.IsNotBlank(v.Address) {
+			informationList = append(informationList, v)
+		}
 		v.CreateTime = currentTime
 		v.UpdateTime = currentTime
 	}
-	db.Create(list)
+	db.Create(informationList)
 }
 
 func (d *ContactInformationDao) Update(db *gorm.DB, list []*model.ContactInformation) {
