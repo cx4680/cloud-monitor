@@ -46,3 +46,7 @@ func TimeToFullTimeFmtStr(t time.Time) string {
 func TimestampToFullTimeFmtStr(timestamp int64) string {
 	return time.Unix(timestamp, 0).Format(FullTimeFmt)
 }
+
+func TimestampToDayTimeFmtStr(timestamp int64) string {
+	return time.Unix(timestamp, 0).Format(DayTimeFmt)
+}

@@ -131,7 +131,7 @@ func (slb *SlbInstanceService) ConvertResp(realResp interface{}) (int, []service
 					Name:  "vpcId",
 					Value: d.NetworkUid,
 				}, {
-					Name:  "state",
+					Name:  "status",
 					Value: d.State,
 				}, {
 					Name:  "spec",

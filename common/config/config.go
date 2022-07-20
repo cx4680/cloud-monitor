@@ -8,16 +8,24 @@ import (
 )
 
 type AppConfig struct {
-	App        string       `yaml:"app"`
-	Serve      Serve        `yaml:"serve"`
-	Db         DB           `yaml:"db"`
-	Logger     LogConfig    `yaml:"logger"`
-	HttpConfig HttpConfig   `yaml:"http"`
-	Rocketmq   Rocketmq     `yaml:"rocketmq"`
-	Prometheus Prometheus   `yaml:"prometheus"`
-	Common     CommonConfig `yaml:"common"`
-	Redis      RedisConfig  `yaml:"redis"`
-	Iam        IamConfig    `yaml:"iam"`
+	App         string       `yaml:"app"`
+	Serve       Serve        `yaml:"serve"`
+	Db          DB           `yaml:"db"`
+	Logger      LogConfig    `yaml:"logger"`
+	HttpConfig  HttpConfig   `yaml:"http"`
+	Rocketmq    Rocketmq     `yaml:"rocketmq"`
+	Prometheus  Prometheus   `yaml:"prometheus"`
+	Common      CommonConfig `yaml:"common"`
+	Redis       RedisConfig  `yaml:"redis"`
+	Iam         IamConfig    `yaml:"iam"`
+	AsyncExport AsyncExport  `yaml:"asyncExport"`
+}
+
+type AsyncExport struct {
+	Url           string `yaml:"url"`
+	Export        string `yaml:"export"`
+	ExportRecords string `yaml:"exportRecords"`
+	DownloadFile  string `yaml:"downloadFile"`
 }
 
 type CommonConfig struct {
