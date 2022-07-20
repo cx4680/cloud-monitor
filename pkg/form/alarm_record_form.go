@@ -14,4 +14,6 @@ type AlarmRecordPageQueryForm struct {
 	RuleName     string   `json:"ruleName" form:"ruleName"`
 	Status       string   `json:"status" form:"status"`
 	Expression   string   `json:"expression" form:"expression"`
+	RegionCode   string   `json:"regionCode" form:"regionCode" `
+	TenantID     string   `json:"tenantId" form:"tenantId"`
 }

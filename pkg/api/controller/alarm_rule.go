@@ -1,15 +1,13 @@
 package controller
 
 import (
-	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/jsonutil"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/dao"
-	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/enum"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/enum/source_type"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/form"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/util"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/constant"
-	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/mq/handler"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/k8s"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/service"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/validator/translate"
 	"github.com/gin-gonic/gin"
@@ -18,10 +16,11 @@ import (
 )
 
 type AlarmRuleCtl struct {
+	service *service.AlarmRuleService
 }
 
 func NewAlarmRuleCtl() *AlarmRuleCtl {
-	return &AlarmRuleCtl{}
+	return &AlarmRuleCtl{service.NewAlarmRuleService()}
 }
 
 func (ctl *AlarmRuleCtl) SelectRulePageList(c *gin.Context) {
@@ -89,8 +88,7 @@ func CreateRule(c *gin.Context, param form.AlarmRuleAddReqDTO) {
 		c.JSON(http.StatusInternalServerError, global.NewError(err.Error()))
 		return
 	}
-	//本Region异步处理
-	go handler.HandleMsg(enum.CreateRule, []byte(jsonutil.ToString(param)), false)
+	go k8s.PrometheusRule.GenerateUserPrometheusRule(tenantId)
 	c.Set(global.ResourceName, param.Id)
 	c.JSON(http.StatusOK, global.NewSuccess("创建成功", param.Id))
 }
@@ -132,7 +130,7 @@ func UpdateRule(c *gin.Context, param form.AlarmRuleAddReqDTO) {
 		c.JSON(http.StatusInternalServerError, global.NewError(err.Error()))
 		return
 	}
-	go handler.HandleMsg(enum.UpdateRule, []byte(jsonutil.ToString(param)), false)
+	go k8s.PrometheusRule.GenerateUserPrometheusRule(tenantId)
 	c.JSON(http.StatusOK, global.NewSuccess("更新成功", true))
 }
 
@@ -154,7 +152,7 @@ func (ctl *AlarmRuleCtl) DeleteRule(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, global.NewError(err.Error()))
 		return
 	}
-	go handler.HandleMsg(enum.DeleteRule, []byte(jsonutil.ToString(&param)), false)
+	go k8s.PrometheusRule.GenerateUserPrometheusRule(tenantId)
 	c.JSON(http.StatusOK, global.NewSuccess("删除成功", true))
 }
 
@@ -180,7 +178,7 @@ func (ctl *AlarmRuleCtl) ChangeRuleStatus(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, global.NewError(err.Error()))
 		return
 	}
-	go handler.HandleMsg(enum.ChangeStatus, []byte(jsonutil.ToString(param)), false)
+	go k8s.PrometheusRule.GenerateUserPrometheusRule(tenantId)
 	c.JSON(http.StatusOK, global.NewSuccess("更新成功", true))
 }
 

@@ -18,7 +18,7 @@ type AlarmRule struct {
 	EffectiveStart string    `gorm:"column:effective_start"`                          // 监控时间段-开始时间
 	EffectiveEnd   string    `gorm:"column:effective_end"`                            // 监控时间段-结束时间
 	Level          uint8     `gorm:"column:level;"`                                   // 报警级别  紧急1 重要2次要3提醒 4
-	Enabled        uint8     `gorm:"column:enabled;default:1;force"`                  // 启用（1）禁用（0）
+	Enabled        uint8     `gorm:"column:enabled;force"`                            // 启用（1）禁用（0）
 	TenantID       string    `gorm:"column:tenant_id"`                                // 租户id
 	CreateTime     time.Time `gorm:"column:create_time;autoCreateTime;type:datetime"` // 创建时间
 	CreateUser     string    `gorm:"column:create_user"`                              // 创建人

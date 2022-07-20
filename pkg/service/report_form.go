@@ -8,12 +8,13 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/strutil"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/dao"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/errors"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/util"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/constant"
+	dao2 "code.cestc.cn/ccos-ops/cloud-monitor/pkg/dao"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/form"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/vo"
 	"fmt"
-	"io"
-	"net/http"
 	"strconv"
 	"strings"
 )
@@ -78,23 +79,23 @@ func (s *ReportFormService) GetMonitorData(param form.ReportFormParam) ([]form.R
 				expr := fmt.Sprintf("%s_over_time((%s)[1d:1m])", v1, pql)
 				result = QueryRange(expr, strconv.Itoa(start), strconv.Itoa(end), "86400").Data.Result
 				if v1 == "max" {
-					for _, v2 := range result {
-						maxResult[v2.Metric["instance"]] = v2
+					for i2, v2 := range result {
+						maxResult[v2.Metric["instance"]+strconv.Itoa(i2)] = v2
 					}
 				}
 				if v1 == "min" {
-					for _, v2 := range result {
-						minResult[v2.Metric["instance"]] = v2
+					for i2, v2 := range result {
+						minResult[v2.Metric["instance"]+strconv.Itoa(i2)] = v2
 					}
 				}
 				if v1 == "avg" {
-					for _, v2 := range result {
-						avgResult[v2.Metric["instance"]] = v2
+					for i2, v2 := range result {
+						avgResult[v2.Metric["instance"]+strconv.Itoa(i2)] = v2
 					}
 				}
 			}
-			for _, v1 := range result {
-				for i, v2 := range v1.Values {
+			for i1, v1 := range result {
+				for i2, v2 := range v1.Values {
 					f := form.ReportForm{
 						Region:       param.RegionCode,
 						InstanceName: instanceMap[v1.Metric["instance"]].InstanceName,
@@ -104,14 +105,14 @@ func (s *ReportFormService) GetMonitorData(param form.ReportFormParam) ([]form.R
 						Time:         util.TimestampToDayTimeFmtStr(int64(v2[0].(float64)) - 1),
 						Timestamp:    int64(v2[0].(float64) - 1),
 					}
-					if len(maxResult[v1.Metric["instance"]].Values) != 0 {
-						f.MaxValue = changeDecimal(maxResult[v1.Metric["instance"]].Values[i][1].(string))
+					if len(maxResult[v1.Metric["instance"]+strconv.Itoa(i1)].Values) != 0 {
+						f.MaxValue = changeDecimal(maxResult[v1.Metric["instance"]+strconv.Itoa(i1)].Values[i2][1].(string))
 					}
-					if len(minResult[v1.Metric["instance"]].Values) != 0 {
-						f.MinValue = changeDecimal(minResult[v1.Metric["instance"]].Values[i][1].(string))
+					if len(minResult[v1.Metric["instance"]+strconv.Itoa(i1)].Values) != 0 {
+						f.MinValue = changeDecimal(minResult[v1.Metric["instance"]+strconv.Itoa(i1)].Values[i2][1].(string))
 					}
-					if len(avgResult[v1.Metric["instance"]].Values) != 0 {
-						f.AvgValue = changeDecimal(avgResult[v1.Metric["instance"]].Values[i][1].(string))
+					if len(avgResult[v1.Metric["instance"]+strconv.Itoa(i1)].Values) != 0 {
+						f.AvgValue = changeDecimal(avgResult[v1.Metric["instance"]+strconv.Itoa(i1)].Values[i2][1].(string))
 					}
 					for _, v3 := range labels {
 						if v3 != "instance" && strutil.IsNotBlank(v1.Metric[v3]) {
@@ -126,7 +127,7 @@ func (s *ReportFormService) GetMonitorData(param form.ReportFormParam) ([]form.R
 	return reportForm, nil
 }
 
-func (s *ReportFormService) Export(param form.ReportFormParam, userInfo string) error {
+func (s *ReportFormService) ExportMonitorData(param form.ReportFormParam, userInfo string) error {
 	url := config.Cfg.AsyncExport.Url + config.Cfg.AsyncExport.Export
 	asyncParams := []form.AsyncExportParam{
 		{
@@ -149,32 +150,51 @@ func (s *ReportFormService) Export(param form.ReportFormParam, userInfo string) 
 	return nil
 }
 
-func (s *ReportFormService) QueryExportRecords(param form.ReportFormParam, userInfo string) (form.ExportRecords, error) {
-	url := config.Cfg.AsyncExport.Url + config.Cfg.AsyncExport.ExportRecords + "?current=" + strconv.Itoa(param.Current) + "&pageSize=" + strconv.Itoa(param.PageSize)
+func (s *ReportFormService) GetAlarmRecord(param form.AlarmRecordPageQueryForm) ([]form.AlarmRecord, error) {
+	param.PageNum = 1
+	param.PageSize = 10000
+	page := dao2.AlarmRecord.GetPageList(global.DB, param.TenantID, param)
+	var list []form.AlarmRecord
+	if page.Records != nil {
+		for _, v := range page.Records.([]vo.AlarmRecordPageVO) {
+			list = append(list, form.AlarmRecord{
+				AlarmId:     v.BizId,
+				AlarmTime:   v.CreateTime.Format(util.FullTimeFmt),
+				MonitorType: v.MonitorType,
+				SourceType:  v.SourceType,
+				SourceId:    v.SourceId,
+				RuleName:    v.RuleName,
+				Expression:  v.Expression,
+				Status:      statusMap[v.Status],
+				Level:       levelMap[v.Level],
+			})
+		}
+	}
+	return list, nil
+}
+
+func (s *ReportFormService) ExportAlarmRecord(param form.AlarmRecordPageQueryForm, userInfo string) error {
+	url := config.Cfg.AsyncExport.Url + config.Cfg.AsyncExport.Export
+	asyncParams := []form.AsyncExportParam{
+		{
+			SheetSeq:   0,
+			SheetName:  "云监控",
+			SheetParam: jsonutil.ToString(param),
+		},
+	}
+	asyncRequest := form.AsyncExportRequest{
+		TemplateId: "cloud_monitor_alarm_record",
+		Params:     asyncParams,
+	}
 	header := map[string]string{"user-info": userInfo}
-	result, err := httputil.HttpHeaderGet(url, header)
+	result, err := httputil.HttpPostJson(url, asyncRequest, header)
+	logger.Logger().Infof("AsyncExport：%v", result)
 	if err != nil {
 		logger.Logger().Infof("AsyncExportError：%v", err)
-		return form.ExportRecords{}, errors.NewBusinessError("获取下载列表失败")
+		return errors.NewBusinessError("异步导出API调用失败")
 	}
-	var exportRecords form.ExportRecords
-	jsonutil.ToObject(result, &exportRecords)
-	return exportRecords, nil
+	return nil
 }
 
-func (s *ReportFormService) DownloadFile(param form.ReportFormParam, userInfo string) (io.ReadCloser, error) {
-	url := config.Cfg.AsyncExport.Url + config.Cfg.AsyncExport.DownloadFile + "?fileId=" + param.FileId
-	header := map[string]string{"user-info": userInfo}
-
-	req, _ := http.NewRequest("GET", url, nil)
-	for k, v := range header {
-		req.Header.Set(k, v)
-	}
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		logger.Logger().Errorf("download error:%v", err)
-	}
-	defer resp.Body.Close()
-	return resp.Body, nil
-}
+var statusMap = map[string]string{"firing": "告警触发", "resolved": "告警恢复"}
+var levelMap = map[int]string{1: "紧急", 2: "重要", 3: "次要", 4: "提醒"}

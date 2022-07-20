@@ -1,17 +1,14 @@
 package controller
 
 import (
-	"bufio"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
-	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/jsonutil"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/util"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/form"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/service"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/validator/translate"
-	"fmt"
 	"github.com/gin-gonic/gin"
-	"io"
 	"net/http"
 )
 
@@ -60,7 +57,7 @@ func (rfc *ReportFormCtl) GetMonitorData(c *gin.Context) {
 	}
 }
 
-func (rfc *ReportFormCtl) Export(c *gin.Context) {
+func (rfc *ReportFormCtl) ExportMonitorData(c *gin.Context) {
 	var param = form.ReportFormParam{Step: 60}
 	err := c.ShouldBindJSON(&param)
 	if err != nil {
@@ -80,7 +77,7 @@ func (rfc *ReportFormCtl) Export(c *gin.Context) {
 		return
 	}
 	param.RegionCode = config.Cfg.Common.RegionName
-	err = rfc.service.Export(param, c.Request.Header.Get("user-info"))
+	err = rfc.service.ExportMonitorData(param, c.Request.Header.Get("user-info"))
 	if err == nil {
 		c.JSON(http.StatusOK, global.NewSuccess("导入任务已下发", true))
 	} else {
@@ -88,38 +85,41 @@ func (rfc *ReportFormCtl) Export(c *gin.Context) {
 	}
 }
 
-func (rfc *ReportFormCtl) QueryExportRecords(c *gin.Context) {
-	var param = form.ReportFormParam{}
-	err := c.ShouldBindQuery(&param)
+func (rfc *ReportFormCtl) GetAlarmRecord(c *gin.Context) {
+	var callback = form.CallbackReportForm{}
+	err := c.ShouldBindJSON(&callback)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, global.NewError(translate.GetErrorMsg(err)))
 		return
 	}
-	result, err := rfc.service.QueryExportRecords(param, c.Request.Header.Get("user-info"))
+	var param = form.AlarmRecordPageQueryForm{}
+	jsonutil.ToObject(callback.Param, &param)
+	result, err := rfc.service.GetAlarmRecord(param)
 	if err == nil {
-		c.JSON(http.StatusOK, global.NewSuccess("查询成功", result))
+		c.JSON(http.StatusOK, map[string]interface{}{
+			"code":      http.StatusOK,
+			"message":   "success",
+			"pageCount": 1,
+			"result":    result,
+		})
 	} else {
 		c.JSON(http.StatusOK, global.NewError(err.Error()))
 	}
 }
 
-func (rfc *ReportFormCtl) DownloadFile(c *gin.Context) {
-	var param = form.ReportFormParam{}
-	err := c.ShouldBindQuery(&param)
+func (rfc *ReportFormCtl) ExportAlarmRecord(c *gin.Context) {
+	var param = form.AlarmRecordPageQueryForm{}
+	err := c.ShouldBindJSON(&param)
+	tenantId, err := util.GetTenantId(c)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, global.NewError(translate.GetErrorMsg(err)))
+		c.JSON(http.StatusBadRequest, global.NewError(err.Error()))
 		return
 	}
-	body, err := rfc.service.DownloadFile(param, c.Request.Header.Get("user-info"))
-	logger.Logger().Info("body:", body)
+	param.RegionCode = config.Cfg.Common.RegionName
+	param.TenantID = tenantId
+	err = rfc.service.ExportAlarmRecord(param, c.Request.Header.Get("user-info"))
 	if err == nil {
-		var w http.ResponseWriter
-		w.Header().Add("Content-Type", "binary/octet-stream")
-		w.Header().Add("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", "file.csv"))
-		io.Copy(w, body)
-		br := bufio.NewReader(body)
-		br.WriteTo(w)
-
+		c.JSON(http.StatusOK, global.NewSuccess("导入任务已下发", true))
 	} else {
 		c.JSON(http.StatusOK, global.NewError(err.Error()))
 	}

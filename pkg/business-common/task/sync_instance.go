@@ -6,15 +6,12 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/jsonutil"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/strutil"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/dao"
-	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/dto"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global/sys_component/sys_redis"
-	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global/sys_component/sys_rocketmq"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/model"
 	commonService "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/service"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/service/external/region"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/external"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/k8s"
-	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/mq/producer"
 	"github.com/pkg/errors"
 	"log"
 )
@@ -114,8 +111,6 @@ func syncInstanceName(list []*model.AlarmInstance) {
 		instance.RegionName = info.Name
 	}
 	dao.AlarmInstance.UpdateBatchInstanceName(list)
-
-	producer.SendInstanceJobMsg(sys_rocketmq.InstanceTopic, list)
 }
 
 func deleteNotExistsInstances(tenantId string, dbInstanceList []*model.AlarmInstance, instanceInfoList []*model.AlarmInstance) {
@@ -138,11 +133,6 @@ func deleteNotExistsInstances(tenantId string, dbInstanceList []*model.AlarmInst
 	logger.Logger().Infof(" delete list :%+v", deletedList)
 	if len(deletedList) != 0 {
 		dao.AlarmInstance.DeleteInstanceList(tenantId, deletedList)
-		instance := &dto.Instance{
-			TenantId: tenantId,
-			List:     deletedList,
-		}
-		producer.SendInstanceJobMsg(sys_rocketmq.DeleteInstanceTopic, instance)
 		k8s.PrometheusRule.GenerateUserPrometheusRule(tenantId)
 	}
 }

@@ -12,7 +12,7 @@ type MonitorProductDao struct {
 
 var MonitorProduct = new(MonitorProductDao)
 
-func (mpd *MonitorProductDao) GetByAbbreviation(db *gorm.DB, abbreviation string) *model.MonitorProduct {
+func (mpd *MonitorProductDao) GetByProductCode(db *gorm.DB, abbreviation string) *model.MonitorProduct {
 	if strutil.IsBlank(abbreviation) {
 		return nil
 	}

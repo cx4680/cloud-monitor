@@ -3,15 +3,20 @@ package service
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/snowflake"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/dao"
-	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/enum"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/errors"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/form"
-	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global/sys_component/sys_rocketmq"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/constant"
-	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/mq"
 	"gorm.io/gorm"
 	"strconv"
 )
+
+type AlarmRuleService struct {
+	dao *dao.AlarmRuleDao
+}
+
+func NewAlarmRuleService() *AlarmRuleService {
+	return &AlarmRuleService{dao.AlarmRule}
+}
 
 func CreateRule(tx *gorm.DB, param interface{}) error {
 	dto := param.(*form.AlarmRuleAddReqDTO)
@@ -33,8 +38,7 @@ func CreateRule(tx *gorm.DB, param interface{}) error {
 	}
 	dto.Id = strconv.FormatInt(snowflake.GetWorker().NextId(), 10)
 	dao.AlarmRule.SaveRule(tx, dto)
-	//其他Region同步
-	return mq.SendMsg(sys_rocketmq.RuleTopic, enum.CreateRule, dto)
+	return nil
 }
 
 func UpdateRule(tx *gorm.DB, param interface{}) error {
@@ -59,7 +63,7 @@ func UpdateRule(tx *gorm.DB, param interface{}) error {
 	if err != nil {
 		return err
 	}
-	return mq.SendMsg(sys_rocketmq.RuleTopic, enum.UpdateRule, dto)
+	return nil
 }
 
 func DeleteRule(tx *gorm.DB, param interface{}) error {
@@ -69,7 +73,7 @@ func DeleteRule(tx *gorm.DB, param interface{}) error {
 	if err != nil {
 		return err
 	}
-	return mq.SendMsg(sys_rocketmq.RuleTopic, enum.DeleteRule, param)
+	return nil
 }
 
 func ChangeRuleStatus(tx *gorm.DB, param interface{}) error {
@@ -79,7 +83,7 @@ func ChangeRuleStatus(tx *gorm.DB, param interface{}) error {
 	if err != nil {
 		return err
 	}
-	return mq.SendMsg(sys_rocketmq.RuleTopic, enum.ChangeStatus, param)
+	return nil
 }
 
 func checkConditions(param *form.AlarmRuleAddReqDTO) error {

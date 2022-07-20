@@ -18,8 +18,8 @@ type AlarmRecord struct {
 	SourceType     string    `gorm:"source_type" json:"sourceType"`     // 资源类型
 	SourceId       string    `gorm:"source_id" json:"sourceId"`         // 资源id
 	CurrentValue   string    `gorm:"current_value" json:"currentValue"` // 当前值
-	StartTime      string    `gorm:"start_time" json:"startTime"`       // 告警开始时间
-	EndTime        string    `gorm:"end_time" json:"endTime"`           // 告警结束时间
+	StartTime      time.Time `gorm:"start_time" json:"startTime"`       // 告警开始时间
+	EndTime        time.Time `gorm:"end_time" json:"endTime"`           // 告警结束时间
 	TargetValue    string    `gorm:"target_value" json:"targetValue"`   // 规则定义阈值
 	Duration       string    `gorm:"duration" json:"duration"`          // 持续时间
 	Level          uint8     `gorm:"level" json:"level"`                // 告警级别 紧急 重要 次要 提醒
