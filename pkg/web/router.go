@@ -41,6 +41,7 @@ func loadRouters() {
 	reportForm()
 	innerCtl()
 	remote()
+	regionSync()
 }
 
 func monitorProductRouters() {
@@ -202,6 +203,7 @@ func innerMapping() {
 		group.GET("/monitorResource/list", monitorResourceCtl.GetProductInstanceList)
 
 		group.POST("/reportForm/getMonitorData", reportFormCtl.GetMonitorData)
+		group.POST("/reportForm/getAlarmRecord", reportFormCtl.GetAlarmRecord)
 
 	}
 }
@@ -220,10 +222,8 @@ func reportForm() {
 	reportFormCtl := controller.NewReportFormController()
 	group := Router.Group(pathPrefix + "reportForm/")
 	{
-		group.POST("/getMonitorData", reportFormCtl.GetMonitorData)
-		group.POST("/export", reportFormCtl.Export)
-		group.GET("/queryExportRecords", reportFormCtl.QueryExportRecords)
-		group.GET("/downloadFile", reportFormCtl.DownloadFile)
+		group.POST("/exportMonitorData", reportFormCtl.ExportMonitorData)
+		group.POST("/exportAlarmRecord", reportFormCtl.ExportAlarmRecord)
 	}
 }
 
@@ -250,4 +250,18 @@ func remote() {
 		productType := context.Param("productType")
 		task.Run(productType)
 	})
+}
+
+func regionSync() {
+	regionSyncCtl := controller.NewRegionSyncController()
+	innerGroup := Router.Group(pathPrefix + "inner/regionSync/")
+	{
+		innerGroup.GET("/getContactSyncData", regionSyncCtl.GetContactSyncData)
+		innerGroup.GET("/getAlarmRuleSyncData", regionSyncCtl.GetAlarmRuleSyncData)
+		innerGroup.GET("/getAlarmRecordSyncData", regionSyncCtl.GetAlarmRecordSyncData)
+		innerGroup.POST("/pullAlarmRecordSyncData", regionSyncCtl.PullAlarmRecordSyncData)
+		//innerGroup.POST("/contact", regionSyncCtl.ContactSync)
+		//innerGroup.POST("/alarmRule", regionSyncCtl.AlarmRuleSync)
+		//innerGroup.POST("/alarmRecord", regionSyncCtl.AlarmRecordSync)
+	}
 }

@@ -95,3 +95,22 @@ type ExportRecords struct {
 		FileId     string `json:"fileId"`
 	} `json:"result"`
 }
+
+type AlarmRecordParam struct {
+	RegionCode string `form:"regionCode" json:"regionCode"`
+	TenantID   string `form:"tenantId" json:"tenantId"`
+	StartTime  string `form:"startTime" json:"startTime"`
+	EndTime    string `form:"endTime" json:"endTime"`
+}
+
+type AlarmRecord struct {
+	AlarmId     string `json:"alarmId"`
+	AlarmTime   string `json:"alarmTime"`
+	MonitorType string `json:"monitorType"`
+	SourceType  string `json:"sourceType"`
+	SourceId    string `json:"sourceId"`
+	RuleName    string `json:"ruleName"`
+	Expression  string `json:"expression"`
+	Status      string `json:"status"`
+	Level       string `json:"level"`
+}

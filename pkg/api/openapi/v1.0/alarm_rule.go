@@ -2,9 +2,7 @@ package v1_0
 
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
-	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/jsonutil"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/dao"
-	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/enum"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/enum/source_type"
 	commonError "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/errors"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/form"
@@ -13,7 +11,7 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/model"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/util"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/constant"
-	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/mq/handler"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/k8s"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/service"
 	"errors"
 	"fmt"
@@ -167,8 +165,11 @@ func (ctl *AlarmRuleCtl) CreateRule(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, openapi.NewRespError(openapi.SystemError, c))
 		return
 	}
-	//本Region异步处理
-	go handler.HandleMsg(enum.CreateRule, []byte(jsonutil.ToString(addForm)), false)
+	tenantId, err := util.GetTenantId(c)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, openapi.NewRespError(openapi.MissingParameter, c))
+	}
+	go k8s.PrometheusRule.GenerateUserPrometheusRule(tenantId)
 	res := struct {
 		RequestId string
 		RuleId    string
@@ -189,9 +190,9 @@ func buildAlarmRuleReqParam(c *gin.Context, createParam *AlarmRuleCreateReqDTO, 
 			return nil, openapi.GetErrorCode(err)
 		}
 		param = createParam
-		productInfo = dao.MonitorProduct.GetByAbbreviation(global.DB, param.ProductAbbreviation)
+		productInfo = dao.MonitorProduct.GetByProductCode(global.DB, param.ProductAbbreviation)
 		if productInfo == nil || len(productInfo.BizId) == 0 {
-			return nil, openapi.ProductAbbreviationInvalid
+			return nil, openapi.ProductCodeInvalid
 		}
 	} else if updateParam != nil {
 		if err := c.ShouldBindJSON(updateParam); err != nil {
@@ -304,7 +305,11 @@ func (ctl *AlarmRuleCtl) UpdateRule(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, openapi.NewRespError(openapi.SystemError, c))
 		return
 	}
-	go handler.HandleMsg(enum.UpdateRule, []byte(jsonutil.ToString(updateForm)), false)
+	tenantId, err := util.GetTenantId(c)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, openapi.NewRespError(openapi.MissingParameter, c))
+	}
+	go k8s.PrometheusRule.GenerateUserPrometheusRule(tenantId)
 	c.JSON(http.StatusOK, openapi.NewResSuccess(c))
 }
 
@@ -330,7 +335,7 @@ func (ctl *AlarmRuleCtl) DeleteRule(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, global.NewError(err.Error()))
 		return
 	}
-	go handler.HandleMsg(enum.DeleteRule, []byte(jsonutil.ToString(&reqParam)), false)
+	go k8s.PrometheusRule.GenerateUserPrometheusRule(tenantId)
 	c.JSON(http.StatusOK, openapi.NewResSuccess(c))
 }
 
@@ -364,7 +369,7 @@ func (ctl *AlarmRuleCtl) ChangeRuleStatus(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, openapi.NewRespError(openapi.SystemError, c))
 		return
 	}
-	go handler.HandleMsg(enum.ChangeStatus, []byte(jsonutil.ToString(&reqParam)), false)
+	go k8s.PrometheusRule.GenerateUserPrometheusRule(tenantId)
 	c.JSON(http.StatusOK, openapi.NewResSuccess(c))
 }
 

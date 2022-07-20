@@ -7,7 +7,6 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/form"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global/openapi"
-	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global/sys_component/sys_rocketmq"
 	service2 "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/service"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/service/external/message_center"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/util"
@@ -107,7 +106,7 @@ func (acl *ContactCtl) CreateContact(c *gin.Context) {
 		GroupBizIdList: param.GroupIdList,
 		EventEum:       enum.InsertContact,
 	}
-	err = acl.service.Persistence(acl.service, sys_rocketmq.ContactTopic, request)
+	err = acl.service.Persistence(acl.service, request)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, openapi.NewRespError(getErrorCode(err), c))
 		return
@@ -145,7 +144,7 @@ func (acl *ContactCtl) UpdateContact(c *gin.Context) {
 		EventEum:       enum.UpdateContact,
 	}
 	c.Set(global.ResourceName, request.ContactBizId)
-	err = acl.service.Persistence(acl.service, sys_rocketmq.ContactTopic, request)
+	err = acl.service.Persistence(acl.service, request)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, openapi.NewRespError(getErrorCode(err), c))
 		return
@@ -167,7 +166,7 @@ func (acl *ContactCtl) DeleteContact(c *gin.Context) {
 		EventEum:     enum.DeleteContact,
 	}
 	c.Set(global.ResourceName, request.ContactBizId)
-	err = acl.service.Persistence(acl.service, sys_rocketmq.ContactTopic, request)
+	err = acl.service.Persistence(acl.service, request)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, openapi.NewRespError(getErrorCode(err), c))
 		return
@@ -189,7 +188,7 @@ func (acl *ContactCtl) ActivateContact(c *gin.Context) {
 		EventEum:   enum.ActivateContact,
 	}
 	c.Set(global.ResourceName, request.ActiveCode)
-	err = acl.service.Persistence(acl.service, sys_rocketmq.ContactTopic, request)
+	err = acl.service.Persistence(acl.service, request)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, openapi.NewRespError(getErrorCode(err), c))
 		return

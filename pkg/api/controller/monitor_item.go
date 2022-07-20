@@ -6,7 +6,6 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/enum"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/form"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global"
-	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global/sys_component/sys_rocketmq"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/service"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/validator/translate"
 	"github.com/gin-gonic/gin"
@@ -54,7 +53,7 @@ func (mic *MonitorItemCtl) ChangeDisplay(c *gin.Context) {
 		}
 	}
 	param.EventEum = enum.ChangeMonitorItemDisplay
-	err = mic.service.Persistence(mic.service, sys_rocketmq.MonitorItemTopic, param)
+	err = mic.service.Persistence(mic.service, param)
 	if err != nil {
 		c.JSON(http.StatusOK, global.NewError(err.Error()))
 	} else {

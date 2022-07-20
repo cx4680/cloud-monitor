@@ -27,6 +27,7 @@ const (
 		"LEFT JOIN t_contact_group_rel AS acgr ON acg.biz_id = acgr.group_biz_id AND acg.tenant_id = acgr.tenant_id " +
 		"WHERE " +
 		"acg.tenant_id = ? " +
+		"AND state = 1 " +
 		"AND acg.name LIKE CONCAT('%',?,'%') " +
 		"GROUP BY " +
 		"acg.biz_id " +
@@ -114,24 +115,24 @@ func (d *ContactGroupDao) Insert(db *gorm.DB, entity *model.ContactGroup) {
 }
 
 func (d *ContactGroupDao) Update(db *gorm.DB, entity *model.ContactGroup) {
-	db.Select("name", "description", "update_time").Where("tenant_id = ? AND biz_id = ?", entity.TenantId, entity.BizId).Updates(entity)
+	db.Select("name", "description", "update_time").Where("tenant_id = ? AND biz_id = ? AND state = 1", entity.TenantId, entity.BizId).Updates(entity)
 }
 
 func (d *ContactGroupDao) Delete(db *gorm.DB, entity *model.ContactGroup) {
-	db.Where("tenant_id = ? AND biz_id = ?", entity.TenantId, entity.BizId).Delete(entity)
+	db.Select("state", "update_time").Where("tenant_id = ? AND biz_id = ?", entity.TenantId, entity.BizId).Updates(entity)
 }
 
 //查询组
 func (d *ContactGroupDao) GetGroup(tenantId, groupBizId string) model.ContactGroup {
 	var contactGroup model.ContactGroup
-	global.DB.Where("tenant_id = ? AND biz_id = ?", tenantId, groupBizId).First(&contactGroup)
+	global.DB.Where("tenant_id = ? AND biz_id = ? AND state = 1", tenantId, groupBizId).First(&contactGroup)
 	return contactGroup
 }
 
 //查询租户下的联系组数量
 func (d *ContactGroupDao) GetGroupCount(tenantId string) int64 {
 	var groupCount int64
-	global.DB.Model(&model.ContactGroup{}).Where("tenant_id = ?", tenantId).Count(&groupCount)
+	global.DB.Model(&model.ContactGroup{}).Where("tenant_id = ? AND state = 1", tenantId).Count(&groupCount)
 	return groupCount
 }
 
@@ -139,9 +140,9 @@ func (d *ContactGroupDao) GetGroupCount(tenantId string) int64 {
 func (d *ContactGroupDao) CheckGroupName(tenantId, groupName, groupBizId string) bool {
 	var count int64
 	if strutil.IsBlank(groupBizId) {
-		global.DB.Model(&model.ContactGroup{}).Where("tenant_id = ? AND name = ?", tenantId, groupName).Count(&count)
+		global.DB.Model(&model.ContactGroup{}).Where("tenant_id = ? AND name = ? AND state = 1", tenantId, groupName).Count(&count)
 	} else {
-		global.DB.Model(&model.ContactGroup{}).Where("tenant_id = ? AND name = ? AND biz_id != ?", tenantId, groupName, groupBizId).Count(&count)
+		global.DB.Model(&model.ContactGroup{}).Where("tenant_id = ? AND name = ? AND biz_id != ? AND state = 1", tenantId, groupName, groupBizId).Count(&count)
 	}
 	if count > 0 {
 		return true
@@ -152,7 +153,7 @@ func (d *ContactGroupDao) CheckGroupName(tenantId, groupName, groupBizId string)
 //检验组ID是否存在
 func (d *ContactGroupDao) CheckGroupId(tenantId, groupBizId string) bool {
 	var count int64
-	global.DB.Model(&model.ContactGroup{}).Where("tenant_id = ? AND biz_id = ?", tenantId, groupBizId).Count(&count)
+	global.DB.Model(&model.ContactGroup{}).Where("tenant_id = ? AND biz_id = ? AND state = 1", tenantId, groupBizId).Count(&count)
 	if count > 0 {
 		return true
 	}
@@ -161,7 +162,7 @@ func (d *ContactGroupDao) CheckGroupId(tenantId, groupBizId string) bool {
 
 func (d *ContactGroupDao) GetGroupBizIdByName(tenantId, groupName string) string {
 	var group model.ContactGroup
-	global.DB.Model(&model.ContactGroup{}).Where("tenant_id = ? AND name = ?", tenantId, groupName).First(&group)
+	global.DB.Model(&model.ContactGroup{}).Where("tenant_id = ? AND name = ? AND state = 1", tenantId, groupName).First(&group)
 	if group == (model.ContactGroup{}) {
 		return ""
 	}
