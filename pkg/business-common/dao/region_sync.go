@@ -204,12 +204,16 @@ func (dao RegionSyncDao) GetAlarmRecordSyncData(time string) (form.AlarmRecordSy
 			return err
 		}
 		var alarmRecordList []string
-		for _, v := range alarmRecordSync.AlarmRecord {
+		for i, v := range alarmRecordSync.AlarmRecord {
 			alarmRecordList = append(alarmRecordList, v.BizId)
+			alarmRecordSync.AlarmRecord[i].Id = 0
 		}
 		if len(alarmRecordList) != 0 {
 			if err := tx.Where("alarm_biz_id IN (?)", alarmRecordList).Find(&alarmRecordSync.AlarmInfo).Error; err != nil {
 				return err
+			}
+			for i, _ := range alarmRecordSync.AlarmInfo {
+				alarmRecordSync.AlarmInfo[i].Id = 0
 			}
 		}
 		return nil
@@ -226,11 +230,11 @@ func (dao RegionSyncDao) PullAlarmRecordSyncData(db *gorm.DB, alarmRecordSync fo
 		if err := db.Save(alarmRecordSync.AlarmRecord).Error; err != nil {
 			return err
 		}
-	}
-	if len(alarmRecordSync.AlarmInfo) != 0 {
 		if err := db.Where("alarm_biz_id IN (?)", alarmRecordList).Delete(&model.AlarmInfo{}).Error; err != nil {
 			return err
 		}
+	}
+	if len(alarmRecordSync.AlarmInfo) != 0 {
 		if err := db.Save(alarmRecordSync.AlarmInfo).Error; err != nil {
 			return err
 		}
