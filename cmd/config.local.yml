@@ -19,6 +19,9 @@ logger:
   max_age:
   compress:
 
+redis:
+  addr: localhost:6379
+  password:
 rocketmq:
   name-server:
 
@@ -33,4 +36,4 @@ common:
   activateInformationUrl: http://monitor.console.dev001.intranet.cecloudcs.com/#/alarm/activation?code=
   tenantUrl: http://cbcm.dev001.intranet.cecloudcs.com/api/cbcm/IUcaInfosOpenService/queryUcaInfosByUserId
   regionRole: integration
-  regionName:
+  cloudMonitor: http://localhost:8081/hawkeye/inner/regionSync

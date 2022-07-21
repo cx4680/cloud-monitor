@@ -5,7 +5,6 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/enum"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/form"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global"
-	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global/sys_component/sys_rocketmq"
 	service2 "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/service"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/service/external/message_center"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/util"
@@ -54,7 +53,7 @@ func (ctl *ContactCtl) CreateContact(c *gin.Context) {
 	}
 	param.TenantId = tenantId
 	param.EventEum = enum.InsertContact
-	err = ctl.service.Persistence(ctl.service, sys_rocketmq.ContactTopic, &param)
+	err = ctl.service.Persistence(ctl.service, &param)
 	if err != nil {
 		c.JSON(http.StatusOK, global.NewError(err.Error()))
 	} else {
@@ -78,7 +77,7 @@ func (ctl *ContactCtl) UpdateContact(c *gin.Context) {
 	}
 	param.TenantId = tenantId
 	param.EventEum = enum.UpdateContact
-	err = ctl.service.Persistence(ctl.service, sys_rocketmq.ContactTopic, &param)
+	err = ctl.service.Persistence(ctl.service, &param)
 	if err != nil {
 		c.JSON(http.StatusOK, global.NewError(err.Error()))
 	} else {
@@ -101,7 +100,7 @@ func (ctl *ContactCtl) DeleteContact(c *gin.Context) {
 	}
 	param.TenantId = tenantId
 	param.EventEum = enum.DeleteContact
-	err = ctl.service.Persistence(ctl.service, sys_rocketmq.ContactTopic, &param)
+	err = ctl.service.Persistence(ctl.service, &param)
 	if err != nil {
 		c.JSON(http.StatusOK, global.NewError(err.Error()))
 	} else {
@@ -118,7 +117,7 @@ func (ctl *ContactCtl) ActivateContact(c *gin.Context) {
 	}
 	c.Set(global.ResourceName, param.ActiveCode)
 	param.EventEum = enum.ActivateContact
-	err = ctl.service.Persistence(ctl.service, sys_rocketmq.ContactTopic, &param)
+	err = ctl.service.Persistence(ctl.service, &param)
 	if err != nil {
 		c.JSON(http.StatusOK, global.NewError(err.Error()))
 	} else {

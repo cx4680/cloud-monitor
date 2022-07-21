@@ -5,7 +5,6 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/enum"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/form"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global"
-	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global/sys_component/sys_rocketmq"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/service"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/validator/translate"
 	"github.com/gin-gonic/gin"
@@ -37,7 +36,7 @@ func (mpc *MonitorProductCtl) ChangeStatus(c *gin.Context) {
 	}
 	c.Set(global.ResourceName, param.BizIdList)
 	param.EventEum = enum.ChangeMonitorProductStatus
-	err = mpc.service.Persistence(mpc.service, sys_rocketmq.MonitorProductTopic, param)
+	err = mpc.service.Persistence(mpc.service, param)
 	if err != nil {
 		c.JSON(http.StatusOK, global.NewError(err.Error()))
 	} else {
