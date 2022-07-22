@@ -1,9 +1,9 @@
 package form
 
 type ReportFormParam struct {
-	Name         string         `form:"name" json:"name"`
-	ItemList     []string       `form:"itemList" json:"itemList"`
-	InstanceList []InstanceForm `form:"instanceList" json:"instanceList"`
+	Name         string          `form:"name" json:"name"`
+	ItemList     []string        `form:"itemList" json:"itemList"`
+	InstanceList []*InstanceForm `form:"instanceList" json:"instanceList"`
 	/**
 	 * 区间数据查询参数 时间戳
 	 */
