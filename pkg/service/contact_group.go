@@ -131,6 +131,7 @@ func (s *ContactGroupService) insertContactGroup(db *gorm.DB, p form.ContactPara
 		CreateUser:  p.CreateUser,
 		CreateTime:  currentTime,
 		UpdateTime:  currentTime,
+		State:       1,
 	}
 	s.dao.Insert(db, contactGroup)
 	return contactGroup, nil
@@ -150,6 +151,7 @@ func (s *ContactGroupService) updateContactGroup(db *gorm.DB, p form.ContactPara
 		Name:        p.GroupName,
 		Description: p.Description,
 		UpdateTime:  currentTime,
+		State:       0,
 	}
 	s.dao.Update(db, contactGroup)
 	return contactGroup, nil
@@ -161,8 +163,10 @@ func (s *ContactGroupService) deleteContactGroup(db *gorm.DB, p form.ContactPara
 		return nil, errors.NewBusinessError("该租户无此联系组")
 	}
 	var contactGroup = &model.ContactGroup{
-		BizId:    p.GroupBizId,
-		TenantId: p.TenantId,
+		BizId:      p.GroupBizId,
+		TenantId:   p.TenantId,
+		UpdateTime: util.GetNow(),
+		State:      0,
 	}
 	s.dao.Delete(db, contactGroup)
 	return contactGroup, nil

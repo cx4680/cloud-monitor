@@ -41,6 +41,7 @@ func loadRouters() {
 	reportForm()
 	innerCtl()
 	remote()
+	regionSync()
 }
 
 func monitorProductRouters() {
@@ -249,4 +250,18 @@ func remote() {
 		productType := context.Param("productType")
 		task.Run(productType)
 	})
+}
+
+func regionSync() {
+	regionSyncCtl := controller.NewRegionSyncController()
+	innerGroup := Router.Group(pathPrefix + "inner/regionSync/")
+	{
+		innerGroup.GET("/getContactSyncData", regionSyncCtl.GetContactSyncData)
+		innerGroup.GET("/getAlarmRuleSyncData", regionSyncCtl.GetAlarmRuleSyncData)
+		innerGroup.GET("/getAlarmRecordSyncData", regionSyncCtl.GetAlarmRecordSyncData)
+		innerGroup.POST("/pullAlarmRecordSyncData", regionSyncCtl.PullAlarmRecordSyncData)
+		//innerGroup.POST("/contact", regionSyncCtl.ContactSync)
+		//innerGroup.POST("/alarmRule", regionSyncCtl.AlarmRuleSync)
+		//innerGroup.POST("/alarmRecord", regionSyncCtl.AlarmRecordSync)
+	}
 }

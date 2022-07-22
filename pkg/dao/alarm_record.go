@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/strutil"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/enum/source_type"
-	commonModels "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/model"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/model"
 	cvo "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/vo"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/form"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/vo"
@@ -109,12 +109,12 @@ func (a *AlarmRecordDao) GetByBizIdAndTenantId(db *gorm.DB, bizId, tenantId stri
 func (a *AlarmRecordDao) GetAlarmRecordTotal(db *gorm.DB, tenantId string, region string, startTime string, endTime string) int64 {
 	var count int64
 	if region != "" {
-		db.Model(&commonModels.AlarmRecord{}).
+		db.Model(&model.AlarmRecord{}).
 			Where("tenant_id = ? AND create_time BETWEEN ? AND ? AND region = ? and rule_source_type != ? AND status = ?",
 				tenantId, startTime, endTime, region, source_type.AutoScaling, "firing").
 			Count(&count)
 	} else {
-		db.Model(&commonModels.AlarmRecord{}).
+		db.Model(&model.AlarmRecord{}).
 			Where("tenant_id = ? AND create_time BETWEEN ? AND ? and rule_source_type != ? AND status = ?",
 				tenantId, startTime, endTime, source_type.AutoScaling, "firing").
 			Count(&count)

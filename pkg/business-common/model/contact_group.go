@@ -11,6 +11,7 @@ type ContactGroup struct {
 	CreateUser  string    `gorm:"column:create_user" json:"create_user"`         // 创建人
 	CreateTime  time.Time `gorm:"column:create_time" json:"create_time"`         // 创建时间
 	UpdateTime  time.Time `gorm:"column:update_time" json:"update_time"`         // 修改时间
+	State       uint8     `gorm:"column:state" json:"state"`                     // 状态1启动2删除
 }
 
 func (*ContactGroup) TableName() string {

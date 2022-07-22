@@ -5,7 +5,6 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/httputil"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/jsonutil"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/dao"
-	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/enum"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/errors"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/form"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global"
@@ -13,7 +12,7 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/service/external/message_center"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/service/external/region"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/util"
-	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/mq/handler"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/k8s"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/service"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -122,8 +121,7 @@ func (ctl *AlarmRuleTemplateCtl) Open(c *gin.Context) {
 	}
 
 	for _, param := range paramList {
-		//本Region异步处理
-		go handler.HandleMsg(enum.CreateRule, []byte(jsonutil.ToString(param)), false)
+		go k8s.PrometheusRule.GenerateUserPrometheusRule(param.TenantId)
 	}
 
 	c.JSON(http.StatusOK, global.NewSuccess("开启成功", nil))

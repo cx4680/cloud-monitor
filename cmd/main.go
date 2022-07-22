@@ -9,10 +9,10 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global/sys_component/sys_db"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global/sys_component/sys_redis"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/task"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/data_sync/sync_init"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/k8s"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/pipeline/sys_upgrade"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/service"
-	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/sync"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/validator/translate"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/web"
 	"code.cestc.cn/yyptb-group_tech/iam-sdk-go/pkg/middleware"
@@ -54,8 +54,8 @@ func main() {
 		return sys_db.InitData(config.Cfg.Db, "hawkeye", "file://./migrations")
 	})
 
-	loader.AddStage(func(*context.Context) error {
-		return sync.InitSync(config.Cfg.Common.RegionRole)
+	loader.AddStage(func(c *context.Context) error {
+		return sync_init.InitSync(config.Cfg.Common.RegionRole)
 	})
 
 	loader.AddStage(func(*context.Context) error {

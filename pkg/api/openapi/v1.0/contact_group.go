@@ -7,7 +7,6 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/form"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global/openapi"
-	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global/sys_component/sys_rocketmq"
 	commonService "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/service"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/util"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/service"
@@ -134,7 +133,7 @@ func (acgc *ContactGroupCtl) CreateContactGroup(c *gin.Context) {
 		ContactBizIdList: param.ContactIdList,
 		EventEum:         enum.InsertContactGroup,
 	}
-	err = acgc.service.Persistence(acgc.service, sys_rocketmq.ContactGroupTopic, request)
+	err = acgc.service.Persistence(acgc.service, request)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, openapi.NewRespError(ContactErrorMap[err.(*errors.BusinessError).Message], c))
 		return
@@ -170,7 +169,7 @@ func (acgc *ContactGroupCtl) UpdateContactGroup(c *gin.Context) {
 		EventEum:         enum.UpdateContactGroup,
 	}
 	c.Set(global.ResourceName, request.GroupBizId)
-	err = acgc.service.Persistence(acgc.service, sys_rocketmq.ContactGroupTopic, request)
+	err = acgc.service.Persistence(acgc.service, request)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, openapi.NewRespError(ContactErrorMap[err.(*errors.BusinessError).Message], c))
 		return
@@ -192,7 +191,7 @@ func (acgc *ContactGroupCtl) DeleteContactGroup(c *gin.Context) {
 		EventEum:   enum.DeleteContactGroup,
 	}
 	c.Set(global.ResourceName, request.GroupBizId)
-	err = acgc.service.Persistence(acgc.service, sys_rocketmq.ContactGroupTopic, request)
+	err = acgc.service.Persistence(acgc.service, request)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, openapi.NewRespError(ContactErrorMap[err.(*errors.BusinessError).Message], c))
 		return

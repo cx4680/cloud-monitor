@@ -10,7 +10,6 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/dto"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/enum/handler_type"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global"
-	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global/sys_component/sys_rocketmq"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/model"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/service"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/service/external/message_center"
@@ -18,7 +17,6 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/constant"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/form"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/k8s"
-	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/sync/publisher"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/util"
 	"context"
 	"errors"
@@ -91,18 +89,6 @@ func (s *AlarmRecordAddService) Add(ctx *context.Context, f form.InnerAlarmRecor
 	if err := s.AlarmRecordSvc.InsertAndHandler(ctx, list, infoList, events); err != nil {
 		return err
 	}
-	//消息同步
-	if err := publisher.GlobalPublisher.Pub(publisher.PubMessage{
-		Topic: sys_rocketmq.AlarmTopic,
-		Data: dto.AlarmSyncData{
-			RecordList: list,
-			InfoList:   infoList,
-		},
-	}); err != nil {
-		logger.Logger().Errorf("sync alarm data error, recordList= %v, infoList=%v, error=%v", list, infoList, err)
-		return err
-	}
-
 	return nil
 }
 
@@ -210,8 +196,8 @@ func (s *AlarmRecordAddService) buildAlertRecord(alert *form.AlarmRecordAlertsBe
 		SourceType:     ruleDesc.Rule.ProductName,
 		SourceId:       sourceId,
 		CurrentValue:   cv,
-		StartTime:      util2.TimeToStr(startTime, util2.FullTimeFmt),
-		EndTime:        util2.TimeToStr(util2.TimeParseForZone(alert.EndsAt), util2.FullTimeFmt),
+		StartTime:      startTime,
+		EndTime:        util2.TimeParseForZone(alert.EndsAt),
 		Duration:       s.getDurationTime(now, startTime, period*times),
 		Level:          level,
 		Region:         config.Cfg.Common.RegionName,
@@ -281,8 +267,8 @@ func (s *AlarmRecordAddService) buildNoticeData(alert *form.AlarmRecordAlertsBea
 	//objMap["metricName"] = ruleDesc.MonitorItem
 	objMap["Name"] = ruleDesc.Rule.Name
 	objMap["userName"] = s.TenantSvc.GetTenantInfo(ruleDesc.Rule.TenantID).Name
-	objMap["alertTime"] = record.StartTime
-	objMap["recoveryTime"] = record.EndTime
+	objMap["alertTime"] = record.StartTime.Format(util2.FullTimeFmt)
+	objMap["recoveryTime"] = record.EndTime.Format(util2.FullTimeFmt)
 	objMap["exprDetails"] = ruleDesc.ExprDetail
 	//f, _ := strconv.ParseFloat(record.CurrentValue, 64)
 	//cv := fmt.Sprintf("%.2f", f)
