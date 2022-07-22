@@ -50,7 +50,11 @@ func SetByTimeOut(key, value string, timeout time.Duration) error {
 
 func Get(key string) (string, error) {
 	cmd := rdb.Get(ctx, key)
-	return cmd.Result()
+	result, err := cmd.Result()
+	if err != nil && err != redis.Nil {
+		return "", err
+	}
+	return result, nil
 }
 
 func GetClient() *redis.Client {
