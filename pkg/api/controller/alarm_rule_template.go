@@ -1,13 +1,16 @@
 package controller
 
 import (
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/httputil"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/jsonutil"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/dao"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/errors"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/form"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/model"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/service/external/message_center"
-	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/task"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/service/external/region"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/util"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/k8s"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/service"
@@ -20,10 +23,11 @@ import (
 
 type AlarmRuleTemplateCtl struct {
 	MessageCenterSvc *message_center.Service
+	RegionSvc        *region.ExternService
 }
 
-func NewAlarmRuleTemplateCtl(MessageCenterSvc *message_center.Service) *AlarmRuleTemplateCtl {
-	return &AlarmRuleTemplateCtl{MessageCenterSvc: MessageCenterSvc}
+func NewAlarmRuleTemplateCtl(MessageCenterSvc *message_center.Service, RegionSvc *region.ExternService) *AlarmRuleTemplateCtl {
+	return &AlarmRuleTemplateCtl{MessageCenterSvc: MessageCenterSvc, RegionSvc: RegionSvc}
 }
 
 func (ctl *AlarmRuleTemplateCtl) GetProductList(c *gin.Context) {
@@ -196,7 +200,23 @@ func (ctl *AlarmRuleTemplateCtl) buildRuleReqs(productBizId string, tenantId str
 		paramList[j].GroupList = []string{"-1"}
 
 		p := dao.MonitorProduct.GetMonitorProductByBizId(strconv.Itoa(paramList[j].ProductId))
-		resourceList, err := task.GetRemoteProductInstanceList(p.Abbreviation, tenantId)
+
+		list, err := ctl.RegionSvc.GetRegionList(tenantId)
+		if err != nil {
+			return nil, err
+		}
+		logger.Logger().Infof("get region list : %s", jsonutil.ToString(list))
+		var resourceList []*model.AlarmInstance
+		for _, regionObj := range list {
+			regionResources, err := ctl.getResourceByRegion(regionObj.Code, p.Abbreviation, tenantId)
+			if err != nil {
+				continue
+			}
+			if len(regionResources) > 0 {
+				resourceList = append(resourceList, regionResources...)
+			}
+		}
+
 		if err != nil {
 			return nil, errors.NewBusinessError("实例获取失败")
 		}
@@ -236,4 +256,37 @@ func (ctl *AlarmRuleTemplateCtl) buildRuleReqs(productBizId string, tenantId str
 	}
 
 	return paramList, nil
+}
+
+func (ctl *AlarmRuleTemplateCtl) getResourceByRegion(regionId, abbreviation, tenantId string) ([]*model.AlarmInstance, error) {
+	respStr, err := httputil.HttpGet("http://cloud-monitor." + regionId + ".intranet.cecloudcs.com/hawkeye/inner/monitorResource/list?abbreviation=" + abbreviation + "&tenantId=" + tenantId)
+	if err != nil {
+		return nil, err
+	}
+	logger.Logger().Infof("get resource list resp: %s", respStr)
+	var r global.Resp
+	err = jsonutil.ToObjectWithError(respStr, &r)
+	if err != nil {
+		return nil, err
+	}
+	if r.Module == nil {
+		logger.Logger().Infof("get remote resource empty. regionId=%s, abbreviation=%s, tenantId=%s", regionId, abbreviation, tenantId)
+		return nil, nil
+	}
+	list, ok := r.Module.([]interface{})
+	if !ok {
+		logger.Logger().Infof("get remote resource fail, return data type error. regionId=%s, abbreviation=%s, tenantId=%s", regionId, abbreviation, tenantId)
+		return nil, nil
+	}
+	rets := make([]*model.AlarmInstance, len(list))
+	for i, temp := range list {
+		var ai model.AlarmInstance
+		err = jsonutil.ToObjectWithError(jsonutil.ToString(temp), &ai)
+		if err != nil {
+			logger.Logger().Errorf("get remote resource fail. regionId=%s, abbreviation=%s, tenantId=%s, err=%v", regionId, abbreviation, tenantId, err)
+			continue
+		}
+		rets[i] = &ai
+	}
+	return rets, nil
 }
