@@ -29,18 +29,19 @@ type AsyncExport struct {
 }
 
 type CommonConfig struct {
-	Env                    string `yaml:"env"`
-	EnvType                string `yaml:"envType"`
-	Nk                     string `yaml:"nk"`
-	TenantUrl              string `yaml:"tenantUrl"`
-	SmsCenterPath          string `yaml:"smsCenterPath"`
-	ActivateInformationUrl string `yaml:"activateInformationUrl"`
-	RegionName             string `yaml:"regionName"`
-	EcsInnerGateway        string `yaml:"ecs-inner-gateway"`
-	RegionRole             string `yaml:"regionRole"`
-	MsgUrl                 string `yaml:"msgUrl"`
-	AccountApiHost         string `yaml:"accountApiHost"`
-	CloudMonitor           string `yaml:"cloudMonitor"`
+	Env                      string `yaml:"env"`
+	EnvType                  string `yaml:"envType"`
+	Nk                       string `yaml:"nk"`
+	TenantUrl                string `yaml:"tenantUrl"`
+	SmsCenterPath            string `yaml:"smsCenterPath"`
+	ActivateInformationUrl   string `yaml:"activateInformationUrl"`
+	RegionName               string `yaml:"regionName"`
+	EcsInnerGateway          string `yaml:"ecs-inner-gateway"`
+	RegionRole               string `yaml:"regionRole"`
+	MsgUrl                   string `yaml:"msgUrl"`
+	AccountApiHost           string `yaml:"accountApiHost"`
+	CloudMonitor             string `yaml:"cloudMonitor"`
+	CloudMonitorRegionDomain string `yaml:"cloudMonitorRegionDomain"`
 }
 
 type Serve struct {
