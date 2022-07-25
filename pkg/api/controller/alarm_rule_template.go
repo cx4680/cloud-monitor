@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/httputil"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/jsonutil"
@@ -14,6 +15,7 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/util"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/k8s"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/service"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 	"net/http"
@@ -259,7 +261,8 @@ func (ctl *AlarmRuleTemplateCtl) buildRuleReqs(productBizId string, tenantId str
 }
 
 func (ctl *AlarmRuleTemplateCtl) getResourceByRegion(regionId, abbreviation, tenantId string) ([]*model.AlarmInstance, error) {
-	respStr, err := httputil.HttpGet("http://cloud-monitor." + regionId + ".intranet.cecloudcs.com/hawkeye/inner/monitorResource/list?abbreviation=" + abbreviation + "&tenantId=" + tenantId)
+	url := fmt.Sprintf(config.Cfg.Common.CloudMonitorRegionDomain+"/hawkeye/inner/monitorResource/list?abbreviation=%s&tenantId=%s", regionId, abbreviation, tenantId)
+	respStr, err := httputil.HttpGet(url)
 	if err != nil {
 		return nil, err
 	}
