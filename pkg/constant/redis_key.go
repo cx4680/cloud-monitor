@@ -6,4 +6,6 @@ const (
 
 	SyncTaskKey          = "task_%s_started" //同步器MasterId
 	SyncTaskStartLockKey = "task_%s_start_lock"
+
+	MonitorItemKey = "cloud-monitor:monitorItem:%s" //监控项redis缓存key
 )

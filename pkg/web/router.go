@@ -38,6 +38,7 @@ func loadRouters() {
 
 	instance()
 	monitorChart()
+	monitorReportForm()
 	reportForm()
 	innerCtl()
 	remote()
@@ -210,6 +211,17 @@ func innerMapping() {
 
 func monitorChart() {
 	monitorChartCtl := controller.NewMonitorChartController(service.NewMonitorChartService())
+	group := Router.Group(pathPrefix + "monitorChart/")
+	{
+		group.GET("/getData", logs.GinTrailzap(false, Read, logs.INFO, logs.MonitorChart), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetMonitorReportData", ResourceType: "*", ResourceId: "*"}), monitorChartCtl.GetData)
+		group.GET("/getAxisData", logs.GinTrailzap(false, Read, logs.INFO, logs.MonitorChart), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetMonitorReportRangeData", ResourceType: "*", ResourceId: "*"}), monitorChartCtl.GetAxisData)
+		group.GET("/getTop", logs.GinTrailzap(false, Read, logs.INFO, logs.MonitorChart), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetMonitorReportTop", ResourceType: "*", ResourceId: "*"}), monitorChartCtl.GetTop)
+		group.GET("/getProcessData", logs.GinTrailzap(false, Read, logs.INFO, logs.MonitorChart), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetMonitorReportProcess", ResourceType: "*", ResourceId: "*"}), monitorChartCtl.GetProcessData)
+	}
+}
+
+func monitorReportForm() {
+	monitorChartCtl := controller.NewMonitorChartController(service.NewMonitorChartService())
 	group := Router.Group(pathPrefix + "MonitorReportForm/")
 	{
 		group.GET("/getData", logs.GinTrailzap(false, Read, logs.INFO, logs.MonitorReportForm), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetMonitorReportData", ResourceType: "*", ResourceId: "*"}), monitorChartCtl.GetData)
@@ -260,8 +272,5 @@ func regionSync() {
 		innerGroup.GET("/getAlarmRuleSyncData", regionSyncCtl.GetAlarmRuleSyncData)
 		innerGroup.GET("/getAlarmRecordSyncData", regionSyncCtl.GetAlarmRecordSyncData)
 		innerGroup.POST("/pullAlarmRecordSyncData", regionSyncCtl.PullAlarmRecordSyncData)
-		//innerGroup.POST("/contact", regionSyncCtl.ContactSync)
-		//innerGroup.POST("/alarmRule", regionSyncCtl.AlarmRuleSync)
-		//innerGroup.POST("/alarmRecord", regionSyncCtl.AlarmRecordSync)
 	}
 }
