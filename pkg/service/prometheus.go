@@ -10,7 +10,14 @@ import (
 	"net/url"
 )
 
-func Query(pql string, time string) form.PrometheusResponse {
+type PrometheusService struct {
+}
+
+func NewPrometheusService() *PrometheusService {
+	return &PrometheusService{}
+}
+
+func (s *PrometheusService) Query(pql string, time string) *form.PrometheusResponse {
 	var cfg = config.Cfg.Prometheus
 	requestUrl := cfg.Url + cfg.Query
 	logger.Logger().Info(requestUrl + pql)
@@ -21,7 +28,7 @@ func Query(pql string, time string) form.PrometheusResponse {
 	return sendRequest(requestUrl, pql)
 }
 
-func QueryRange(pql string, start string, end string, step string) form.PrometheusResponse {
+func (s *PrometheusService) QueryRange(pql string, start string, end string, step string) *form.PrometheusResponse {
 	var cfg = config.Cfg.Prometheus
 	requestUrl := cfg.Url + cfg.QueryRange
 	logger.Logger().Info(requestUrl + pql)
@@ -29,8 +36,8 @@ func QueryRange(pql string, start string, end string, step string) form.Promethe
 	return sendRequest(requestUrl, pql)
 }
 
-func sendRequest(requestUrl string, pql string) form.PrometheusResponse {
-	var prometheusResponse form.PrometheusResponse
+func sendRequest(requestUrl string, pql string) *form.PrometheusResponse {
+	prometheusResponse := &form.PrometheusResponse{}
 	response, err := httputil.HttpGet(requestUrl + pql)
 	if err != nil {
 		logger.Logger().Errorf("error:%v\n", err)
