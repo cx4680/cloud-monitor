@@ -6,6 +6,7 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/dao"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/errors"
 	commonService "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/service"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/util"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/constant"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/external"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/form"
@@ -62,7 +63,6 @@ func (s *MonitorChartService) GetTop(request form.PrometheusRequest) ([]form.Pro
 		for i, v := range list {
 			list[i] = fmt.Sprintf(constant.TopExpr, "1", strings.ReplaceAll(monitorItem.MetricsLinux, constant.MetricLabel, constant.INSTANCE+"='"+v+"'"))
 		}
-
 		pql = fmt.Sprintf(constant.TopExpr, strconv.Itoa(request.TopNum), strings.Join(list, " or "))
 	} else {
 		instances := strings.Join(list, "|")
@@ -98,6 +98,9 @@ func (s *MonitorChartService) GetAxisData(request form.PrometheusRequest) (*form
 		return nil, errors.NewBusinessError("该租户无此实例")
 	}
 	pql := strings.ReplaceAll(monitorItem.MetricsLinux, constant.MetricLabel, constant.INSTANCE+"='"+request.Instance+"',"+constant.FILTER)
+	if strutil.IsNotBlank(request.Pid) {
+		pql = strings.ReplaceAll(monitorItem.MetricsLinux, constant.MetricLabel, constant.INSTANCE+"='"+request.Instance+"',"+fmt.Sprintf(constant.PId, request.Pid))
+	}
 	if strutil.IsNotBlank(request.Statistics) {
 		pql = fmt.Sprintf("%s_over_time((%s)[%s:1m])", request.Statistics, pql, request.Scope)
 	}
@@ -114,7 +117,6 @@ func (s *MonitorChartService) GetAxisData(request form.PrometheusRequest) (*form
 	} else {
 		timeList = getTimeList(start, end, step, int(result[0].Values[0][0].(float64)))
 	}
-
 	prometheusAxis := &form.PrometheusAxis{
 		XAxis: timeList,
 		YAxis: yAxisFillEmptyData(result, timeList, labels, request.Instance),
@@ -159,29 +161,69 @@ func (s *MonitorChartService) GetNetworkData(request form.PrometheusRequest) (*f
 	return networkData, nil
 }
 
+func (s *MonitorChartService) GetProcessData(request form.PrometheusRequest) ([]form.ProcessData, error) {
+	if strutil.IsBlank(request.Instance) {
+		return nil, errors.NewBusinessError("instance为空")
+	}
+	if request.Start == 0 || request.End == 0 || request.Start > request.End {
+		return nil, errors.NewBusinessError("时间参数错误")
+	}
+	cpu := dao.MonitorItem.GetMonitorItemCacheByName("ecs_processes_top5Cpus")
+	mem := dao.MonitorItem.GetMonitorItemCacheByName("ecs_processes_top5Mems")
+	fd := dao.MonitorItem.GetMonitorItemCacheByName("ecs_processes_top5Fds")
+	if !checkUserInstanceIdentity(request.TenantId, "1", request.Instance) {
+		return nil, errors.NewBusinessError("该租户无此实例")
+	}
+	cpuPql := strings.ReplaceAll(cpu.MetricsLinux, constant.MetricLabel, constant.INSTANCE+"='"+request.Instance+"',"+constant.FILTER)
+	memPql := strings.ReplaceAll(mem.MetricsLinux, constant.MetricLabel, constant.INSTANCE+"='"+request.Instance+"',"+constant.FILTER)
+	fdPql := strings.ReplaceAll(fd.MetricsLinux, constant.MetricLabel, constant.INSTANCE+"='"+request.Instance+"',"+constant.FILTER)
+	cpuResponse := s.prometheus.QueryRange(cpuPql, strconv.Itoa(request.Start), strconv.Itoa(request.End), strconv.Itoa(request.Step))
+	memResponse := s.prometheus.QueryRange(memPql, strconv.Itoa(request.Start), strconv.Itoa(request.End), strconv.Itoa(request.Step))
+	fdResponse := s.prometheus.QueryRange(fdPql, strconv.Itoa(request.Start), strconv.Itoa(request.End), strconv.Itoa(request.Step))
+	memMap := make(map[string]*form.PrometheusResult)
+	fdMap := make(map[string]*form.PrometheusResult)
+	for _, v := range memResponse.Data.Result {
+		memMap[v.Metric["pid"]] = v
+	}
+	for _, v := range fdResponse.Data.Result {
+		fdMap[v.Metric["pid"]] = v
+	}
+	var processList []form.ProcessData
+	for _, v := range cpuResponse.Data.Result {
+		process := form.ProcessData{
+			Pid:     v.Metric["pid"],
+			CmdLine: v.Metric["cmd_line"],
+			Name:    getProcessName(v.Metric["cmd_line"]),
+		}
+		if len(v.Values) != 0 {
+			process.Time = util.TimestampToFullTimeFmtStr(int64(v.Values[len(v.Values)-1][0].(float64)))
+			process.Cpu = changeDecimal(v.Values[len(v.Values)-1][1].(string))
+			process.Memory = changeDecimal(memMap[process.Pid].Values[len(memMap[process.Pid].Values)-1][1].(string))
+			process.Openfiles = fdMap[process.Pid].Values[len(fdMap[process.Pid].Values)-1][1].(string)
+		}
+		processList = append(processList, process)
+	}
+	return processList, nil
+}
+
 func yAxisFillEmptyData(result []*form.PrometheusResult, timeList []string, labels []string, instanceId string) map[string][]string {
 	resultMap := make(map[string][]string)
-	for _, v1 := range result {
+	for _, v := range result {
 		timeMap := map[string]string{}
-		for _, v2 := range v1.Values {
-			key := strconv.Itoa(int(v2[0].(float64)))
-			timeMap[key] = v2[1].(string)
+		for _, value := range v.Values {
+			key := strconv.Itoa(int(value[0].(float64)))
+			timeMap[key] = value[1].(string)
 		}
-		var labelList []string
 		var key string
 		var arr []string
-		for _, v3 := range timeList {
-			arr = append(arr, changeDecimal(timeMap[v3]))
+		for _, time := range timeList {
+			arr = append(arr, changeDecimal(timeMap[time]))
 		}
-		for _, v4 := range labels {
-			if v4 != "instance" && strutil.IsNotBlank(v1.Metric[v4]) {
-				labelList = append(labelList, v1.Metric[v4])
+		key = instanceId
+		for _, label := range labels {
+			if label != "instance" && strutil.IsNotBlank(v.Metric[label]) {
+				key = key + " - " + v.Metric[label]
 			}
-		}
-		if len(labelList) == 0 {
-			key = instanceId
-		} else {
-			key = strings.Join(labelList, "-")
 		}
 		resultMap[key] = arr
 	}
@@ -190,14 +232,14 @@ func yAxisFillEmptyData(result []*form.PrometheusResult, timeList []string, labe
 
 func getValueAxis(result []*form.PrometheusResult, timeList []string) []string {
 	var valueAxis []string
-	for _, v1 := range result {
+	for _, v := range result {
 		timeMap := map[string]string{}
-		for _, v2 := range v1.Values {
-			key := strconv.Itoa(int(v2[0].(float64)))
-			timeMap[key] = v2[1].(string)
+		for _, value := range v.Values {
+			key := strconv.Itoa(int(value[0].(float64)))
+			timeMap[key] = value[1].(string)
 		}
-		for _, v3 := range timeList {
-			valueAxis = append(valueAxis, changeDecimal(timeMap[v3]))
+		for _, time := range timeList {
+			valueAxis = append(valueAxis, changeDecimal(timeMap[time]))
 		}
 	}
 	return valueAxis
@@ -268,4 +310,12 @@ func getInstanceList(productBizId, tenantId, instanceId string) ([]string, error
 		instanceList = append(instanceList, v.InstanceId)
 	}
 	return instanceList, nil
+}
+
+func getProcessName(cmdLine string) string {
+	if strutil.IsBlank(cmdLine) {
+		return "unknown"
+	}
+	list := strings.Split(strings.Split(cmdLine, " ")[0], "/")
+	return list[len(list)-1]
 }

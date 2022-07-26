@@ -113,3 +113,18 @@ func (ctl *MonitorChartCtl) GetAxisDataInner(c *gin.Context) {
 		c.JSON(http.StatusOK, global.NewError(err.Error()))
 	}
 }
+
+func (ctl *MonitorChartCtl) GetProcessData(c *gin.Context) {
+	var param = form.PrometheusRequest{Step: 60}
+	err := c.ShouldBindQuery(&param)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, global.NewError(translate.GetErrorMsg(err)))
+		return
+	}
+	data, err := ctl.service.GetProcessData(param)
+	if err == nil {
+		c.JSON(http.StatusOK, global.NewSuccess("查询成功", data))
+	} else {
+		c.JSON(http.StatusOK, global.NewError(err.Error()))
+	}
+}

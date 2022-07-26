@@ -50,6 +50,7 @@ const (
 	AlertContact      ResourceType = "AlertContact"
 	AlertContactGroup ResourceType = "AlertContactGroup"
 	AlertRule         ResourceType = "AlertRule"
+	MonitorChart      ResourceType = "MonitorChart"
 	MonitorReportForm ResourceType = "MonitorReportForm"
 	ConfigItem        ResourceType = "ConfigItem"
 	Instance          ResourceType = "Instance"
