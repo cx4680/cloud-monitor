@@ -15,10 +15,13 @@ import (
 )
 
 type MonitorChartService struct {
+	prometheus *PrometheusService
 }
 
 func NewMonitorChartService() *MonitorChartService {
-	return &MonitorChartService{}
+	return &MonitorChartService{
+		prometheus: NewPrometheusService(),
+	}
 }
 
 func (s *MonitorChartService) GetData(request form.PrometheusRequest) (*form.PrometheusValue, error) {
@@ -33,7 +36,7 @@ func (s *MonitorChartService) GetData(request form.PrometheusRequest) (*form.Pro
 		return nil, errors.NewBusinessError("该租户无此实例")
 	}
 	pql := strings.ReplaceAll(monitorItem.MetricsLinux, constant.MetricLabel, constant.INSTANCE+"='"+request.Instance+"',"+constant.FILTER)
-	prometheusResponse := Query(pql, request.Time)
+	prometheusResponse := s.prometheus.Query(pql, request.Time)
 	if len(prometheusResponse.Data.Result) == 0 {
 		return nil, nil
 	}
@@ -68,7 +71,7 @@ func (s *MonitorChartService) GetTop(request form.PrometheusRequest) ([]form.Pro
 		}
 		pql = fmt.Sprintf(constant.TopExpr, strconv.Itoa(request.TopNum), strings.ReplaceAll(monitorItem.MetricsLinux, constant.MetricLabel, constant.INSTANCE+"=~'"+instances+"'"))
 	}
-	result := Query(pql, request.Time).Data.Result
+	result := s.prometheus.Query(pql, request.Time).Data.Result
 	var instanceList []form.PrometheusInstance
 	for _, v := range result {
 		instanceDTO := form.PrometheusInstance{
@@ -98,7 +101,7 @@ func (s *MonitorChartService) GetAxisData(request form.PrometheusRequest) (*form
 	if strutil.IsNotBlank(request.Statistics) {
 		pql = fmt.Sprintf("%s_over_time((%s)[%s:1m])", request.Statistics, pql, request.Scope)
 	}
-	prometheusResponse := QueryRange(pql, strconv.Itoa(request.Start), strconv.Itoa(request.End), strconv.Itoa(request.Step))
+	prometheusResponse := s.prometheus.QueryRange(pql, strconv.Itoa(request.Start), strconv.Itoa(request.End), strconv.Itoa(request.Step))
 	result := prometheusResponse.Data.Result
 
 	labels := strings.Split(monitorItem.Labels, ",")
@@ -138,7 +141,7 @@ func (s *MonitorChartService) GetNetworkData(request form.PrometheusRequest) (*f
 		instance = constant.INSTANCE + "=~'" + strings.Join(list, "|") + "'"
 	}
 	pql := strings.ReplaceAll(monitorItem.MetricsLinux, constant.MetricLabel, instance)
-	prometheusResponse := QueryRange(pql, strconv.Itoa(request.Start), strconv.Itoa(request.End), strconv.Itoa(request.Step))
+	prometheusResponse := s.prometheus.QueryRange(pql, strconv.Itoa(request.Start), strconv.Itoa(request.End), strconv.Itoa(request.Step))
 	result := prometheusResponse.Data.Result
 	start := request.Start
 	end := request.End
@@ -156,7 +159,7 @@ func (s *MonitorChartService) GetNetworkData(request form.PrometheusRequest) (*f
 	return networkData, nil
 }
 
-func yAxisFillEmptyData(result []form.PrometheusResult, timeList []string, labels []string, instanceId string) map[string][]string {
+func yAxisFillEmptyData(result []*form.PrometheusResult, timeList []string, labels []string, instanceId string) map[string][]string {
 	resultMap := make(map[string][]string)
 	for _, v1 := range result {
 		timeMap := map[string]string{}
@@ -185,7 +188,7 @@ func yAxisFillEmptyData(result []form.PrometheusResult, timeList []string, label
 	return resultMap
 }
 
-func getValueAxis(result []form.PrometheusResult, timeList []string) []string {
+func getValueAxis(result []*form.PrometheusResult, timeList []string) []string {
 	var valueAxis []string
 	for _, v1 := range result {
 		timeMap := map[string]string{}
