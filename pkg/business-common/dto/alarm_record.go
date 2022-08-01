@@ -16,6 +16,8 @@ type ContactGroupInfo struct {
 type AutoScalingData struct {
 	TenantId        string
 	RuleId          string
+	ResourceId      string
+	ResourceType    string
 	ResourceGroupId string
 	Param           string
 }

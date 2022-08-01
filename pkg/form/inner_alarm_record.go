@@ -20,6 +20,7 @@ type AlarmBeanLabelsBean struct {
 	Beta_kubernetes_io_fluentd_ds_ready string
 	Beta_kubernetes_io_os               string
 	Instance                            string
+	InstanceType                        string
 	Job                                 string
 	Kubernetes_io_arch                  string
 	Kubernetes_io_hostname              string
