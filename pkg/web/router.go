@@ -133,10 +133,11 @@ func alertRecordRouters() {
 		group.GET("/contactInfos", logs.GinTrailzap(false, Read, logs.INFO, logs.AlertRecord), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetContactInfoList", ResourceType: "*", ResourceId: "*"}), ctl.GetAlarmContactInfo)
 		group.GET("/total", logs.GinTrailzap(false, Read, logs.INFO, logs.AlertRecord), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetAlarmRecordTotal", ResourceType: "*", ResourceId: "*"}), ctl.GetAlarmRecordTotal)
 		group.GET("/recordNumHistory", logs.GinTrailzap(false, Read, logs.INFO, logs.AlertRecord), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetAlertRecordNumHistory", ResourceType: "*", ResourceId: "*"}), ctl.GetRecordNumHistory)
-		group.GET("/totalByIam", logs.GinTrailzap(false, Read, logs.INFO, logs.AlertRecord), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetAlarmRecordTotal", ResourceType: "*", ResourceId: "*"}), ctl.GetAlarmRecordTotalByIam)
-		group.GET("/recordNumHistoryByIam", logs.GinTrailzap(false, Read, logs.INFO, logs.AlertRecord), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetAlertRecordNumHistory", ResourceType: "*", ResourceId: "*"}), ctl.GetRecordNumHistoryByIam)
+		group.GET("/levelTotalByIam", logs.GinTrailzap(false, Read, logs.INFO, logs.AlertRecord), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetLevelTotalByIam", ResourceType: "*", ResourceId: "*"}), ctl.GetLevelTotalByIam)
+		group.GET("/recordNumHistoryByIam", logs.GinTrailzap(false, Read, logs.INFO, logs.AlertRecord), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetHistoryNumRangeByIam", ResourceType: "*", ResourceId: "*"}), ctl.GetRecordNumHistoryByIam)
+		group.GET("/productRecordNumHistoryByIam", logs.GinTrailzap(false, Read, logs.INFO, logs.AlertRecord), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetProductRecordNumHistoryByIam", ResourceType: "*", ResourceId: "*"}), ctl.GetProductRecordNumHistoryByIam)
+		group.GET("/pageByIam", logs.GinTrailzap(false, Read, logs.INFO, logs.AlertRecord), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetAlertRecordPageListByIam", ResourceType: "*", ResourceId: "*"}), ctl.GetPageListByIam)
 	}
-
 }
 
 func actuatorMapping() {

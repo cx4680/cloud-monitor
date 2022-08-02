@@ -110,7 +110,7 @@ func (a *AlarmRecordController) GetRecordNumHistory(c *gin.Context) {
 	c.JSON(http.StatusOK, global.NewSuccess("查询成功", data))
 }
 
-func (a *AlarmRecordController) GetAlarmRecordTotalByIam(c *gin.Context) {
+func (a *AlarmRecordController) GetLevelTotalByIam(c *gin.Context) {
 	tenantId, _ := util2.GetTenantId(c)
 	iamUserId, _ := util2.GetUserId(c)
 	if strutil.IsBlank(iamUserId) || iamUserId == tenantId {
@@ -124,7 +124,7 @@ func (a *AlarmRecordController) GetAlarmRecordTotalByIam(c *gin.Context) {
 	}
 	f.TenantId = tenantId
 	f.IamUserId = iamUserId
-	result, err := a.service.GetAlarmRecordTotalByIam(f)
+	result, err := a.service.GetLevelTotalByIam(f)
 	if err != nil {
 		c.JSON(http.StatusOK, global.NewError(err.Error()))
 		return
@@ -152,4 +152,48 @@ func (a *AlarmRecordController) GetRecordNumHistoryByIam(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, global.NewSuccess("查询成功", result))
+}
+
+func (a *AlarmRecordController) GetProductRecordNumHistoryByIam(c *gin.Context) {
+	tenantId, _ := util2.GetTenantId(c)
+	iamUserId, _ := util2.GetUserId(c)
+	if strutil.IsBlank(iamUserId) || iamUserId == tenantId {
+		a.GetAlarmRecordTotal(c)
+		return
+	}
+	var f form.AlarmRecordPageQueryForm
+	if err := c.ShouldBindQuery(&f); err != nil {
+		c.JSON(http.StatusBadRequest, global.NewError(translate.GetErrorMsg(err)))
+		return
+	}
+	f.TenantId = tenantId
+	f.IamUserId = iamUserId
+	result, err := a.service.GetProductRecordNumHistoryByIam(f)
+	if err != nil {
+		c.JSON(http.StatusOK, global.NewError(err.Error()))
+		return
+	}
+	c.JSON(http.StatusOK, global.NewSuccess("查询成功", result))
+}
+
+func (a *AlarmRecordController) GetPageListByIam(c *gin.Context) {
+	tenantId, _ := util2.GetTenantId(c)
+	iamUserId, _ := util2.GetUserId(c)
+	if strutil.IsBlank(iamUserId) || iamUserId == tenantId {
+		a.GetPageList(c)
+		return
+	}
+	var f = form.AlarmRecordPageQueryForm{PageNum: 1, PageSize: 10}
+	if err := c.ShouldBindQuery(&f); err != nil {
+		c.JSON(http.StatusBadRequest, global.NewError(translate.GetErrorMsg(err)))
+		return
+	}
+	f.TenantId = tenantId
+	f.IamUserId = iamUserId
+	page, err := a.service.GetPageListByIam(f)
+	if err != nil {
+		c.JSON(http.StatusOK, global.NewError(err.Error()))
+		return
+	}
+	c.JSON(http.StatusOK, global.NewSuccess("查询成功", page))
 }

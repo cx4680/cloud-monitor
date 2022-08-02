@@ -10,6 +10,7 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/model"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/util"
+	cvo "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/vo"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/form"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/vo"
 	"context"
@@ -43,20 +44,9 @@ func (s *AlarmRecordService) InsertAndHandler(ctx *context.Context, recordList [
 	})
 }
 
-func (s *AlarmRecordService) GetAlarmRecordTotalByIam(form form.AlarmRecordPageQueryForm) (*form.AlarmRecordNum, error) {
-	d, _ := time.ParseDuration("24h")
-	d7, _ := time.ParseDuration("-168h")
-	var start, end string
-	//没有传日期则计算7天内的数据
-	if form.StartTime == "" || form.EndTime == "" {
-		now := util.GetNow()
-		end = util.TimeToStr(now.Add(d), util.DayTimeFmt)
-		start = util.TimeToStr(now.Add(d7), util.DayTimeFmt)
-	} else {
-		start = util.TimeToStr(util.StrToTime(util.FullTimeFmt, form.StartTime), util.DayTimeFmt)
-		end = util.TimeToStr(util.StrToTime(util.FullTimeFmt, form.EndTime).Add(d), util.DayTimeFmt)
-	}
-	directoryIdList, err := s.getIamDirectoryIdList(form.IamUserId, form.TenantId)
+func (s *AlarmRecordService) GetLevelTotalByIam(param form.AlarmRecordPageQueryForm) ([]*form.AlarmRecordNum, error) {
+	start, end := s.getFmtTime(param.StartTime, param.EndTime)
+	directoryIdList, err := s.getIamDirectoryIdList(param.IamUserId, param.TenantId)
 	if err != nil {
 		return nil, err
 	}
@@ -64,16 +54,16 @@ func (s *AlarmRecordService) GetAlarmRecordTotalByIam(form form.AlarmRecordPageQ
 	if err != nil {
 		return nil, err
 	}
-	return dao.AlarmRecord.GetAlarmRecordTotalByIam(global.DB, resourcesIdList, start, end), nil
+	return dao.AlarmRecord.GetLevelTotalByIam(global.DB, resourcesIdList, start, end), nil
 }
 
-func (s *AlarmRecordService) GetRecordNumHistoryByIam(form form.AlarmRecordPageQueryForm) ([]vo.RecordNumHistory, error) {
+func (s *AlarmRecordService) GetRecordNumHistoryByIam(param form.AlarmRecordPageQueryForm) ([]vo.RecordNumHistory, error) {
 	d, _ := time.ParseDuration("24h")
-	startDate := util.StrToTime(util.FullTimeFmt, form.StartTime)
-	endDate := util.StrToTime(util.FullTimeFmt, form.EndTime).Add(d)
+	startDate := util.StrToTime(util.FullTimeFmt, param.StartTime)
+	endDate := util.StrToTime(util.FullTimeFmt, param.EndTime).Add(d)
 	start := util.TimeToStr(startDate, util.DayTimeFmt)
 	end := util.TimeToStr(endDate, util.DayTimeFmt)
-	directoryIdList, err := s.getIamDirectoryIdList(form.IamUserId, form.TenantId)
+	directoryIdList, err := s.getIamDirectoryIdList(param.IamUserId, param.TenantId)
 	if err != nil {
 		return nil, err
 	}
@@ -97,6 +87,47 @@ func (s *AlarmRecordService) GetRecordNumHistoryByIam(form form.AlarmRecordPageQ
 		startDate = startDate.Add(d)
 	}
 	return data, nil
+}
+
+func (s *AlarmRecordService) GetProductRecordNumHistoryByIam(param form.AlarmRecordPageQueryForm) ([]*form.ProductAlarmRecordNum, error) {
+	start, end := s.getFmtTime(param.StartTime, param.EndTime)
+	directoryIdList, err := s.getIamDirectoryIdList(param.IamUserId, param.TenantId)
+	if err != nil {
+		return nil, err
+	}
+	resourcesIdList, err := s.getIamResourcesIdList(directoryIdList)
+	if err != nil {
+		return nil, err
+	}
+	list := dao.AlarmRecord.GetProductRecordNumHistoryByIam(global.DB, resourcesIdList, start, end)
+	if len(list) > 10 {
+		num := 0
+		for _, v := range list[10:] {
+			num += v.Count
+		}
+		list = append(list[:10], &form.ProductAlarmRecordNum{ProductCode: "other", Count: num})
+	}
+	return list, nil
+}
+
+func (s *AlarmRecordService) GetPageListByIam(param form.AlarmRecordPageQueryForm) (*cvo.PageVO, error) {
+	start, end := s.getFmtTime(param.StartTime, param.EndTime)
+	directoryIdList, err := s.getIamDirectoryIdList(param.IamUserId, param.TenantId)
+	if err != nil {
+		return nil, err
+	}
+	resourcesIdList, err := s.getIamResourcesIdList(directoryIdList)
+	if err != nil {
+		return nil, err
+	}
+	page, total := dao.AlarmRecord.GetPageListByIam(global.DB, param.ProductCode, resourcesIdList, start, end, param.PageNum, param.PageSize)
+	return &cvo.PageVO{
+		Records: page,
+		Total:   int(total),
+		Size:    param.PageSize,
+		Current: param.PageNum,
+		Pages:   (int(total) / param.PageSize) + 1,
+	}, nil
 }
 
 func (s *AlarmRecordService) getIamDirectoryIdList(iamUserId, belongLoginId string) ([]string, error) {
@@ -132,4 +163,20 @@ func (s *AlarmRecordService) getIamResourcesIdList(directoryIds []string) ([]str
 		resourcesIdList = append(resourcesIdList, v.ResourceId)
 	}
 	return resourcesIdList, nil
+}
+
+func (s *AlarmRecordService) getFmtTime(startTime, endTime string) (string, string) {
+	d, _ := time.ParseDuration("24h")
+	d7, _ := time.ParseDuration("-168h")
+	var start, end string
+	//没有传日期则计算7天内的数据
+	if startTime == "" || endTime == "" {
+		now := util.GetNow()
+		end = util.TimeToStr(now.Add(d), util.DayTimeFmt)
+		start = util.TimeToStr(now.Add(d7), util.DayTimeFmt)
+	} else {
+		start = util.TimeToStr(util.StrToTime(util.FullTimeFmt, startTime), util.DayTimeFmt)
+		end = util.TimeToStr(util.StrToTime(util.FullTimeFmt, endTime).Add(d), util.DayTimeFmt)
+	}
+	return start, end
 }

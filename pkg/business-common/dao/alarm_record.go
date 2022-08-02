@@ -49,10 +49,10 @@ func (dao *AlarmRecordDao) FindFirstInstanceInfo(instanceId string) *model.Alarm
 	return &alarmInstance
 }
 
-func (dao *AlarmRecordDao) GetAlarmRecordTotalByIam(db *gorm.DB, resourcesIdList []string, startTime string, endTime string) *form.AlarmRecordNum {
-	alarmRecordNum := &form.AlarmRecordNum{}
-	sql := "SELECT count( CASE WHEN level = 1 THEN 0 END ) AS p1, count( CASE WHEN level = 2 THEN 0 END ) AS p2, count( CASE WHEN level = 3 THEN 0 END ) AS p3, count( CASE WHEN level = 4 THEN 0 END ) AS p4  FROM t_alarm_record WHERE source_id IN (?)  AND create_time BETWEEN ?  AND ?  AND rule_source_type != ?  AND status = ?"
-	db.Raw(sql, resourcesIdList, startTime, endTime, source_type.AutoScaling, "firing").Find(alarmRecordNum)
+func (dao *AlarmRecordDao) GetLevelTotalByIam(db *gorm.DB, resourcesIdList []string, startTime string, endTime string) []*form.AlarmRecordNum {
+	var alarmRecordNum []*form.AlarmRecordNum
+	sql := "SELECT level, count(*) AS count  FROM t_alarm_record WHERE source_id IN (?)  AND create_time BETWEEN ?  AND ?  AND rule_source_type != ?  AND status = ? GROUP BY level"
+	db.Raw(sql, resourcesIdList, startTime, endTime, source_type.AutoScaling, "firing").Find(&alarmRecordNum)
 	return alarmRecordNum
 }
 
@@ -67,4 +67,23 @@ func (dao *AlarmRecordDao) GetRecordNumHistoryByIam(db *gorm.DB, resourcesIdList
 	var list []vo.RecordNumHistory
 	db.Raw(sql, resourcesIdList, startTime, endTime).Find(&list)
 	return list
+}
+
+func (dao *AlarmRecordDao) GetProductRecordNumHistoryByIam(db *gorm.DB, resourcesIdList []string, startTime string, endTime string) []*form.ProductAlarmRecordNum {
+	var productAlarmRecordNum []*form.ProductAlarmRecordNum
+	sql := "SELECT t2.abbreviation AS productCode, count(*) AS count FROM t_alarm_record AS t1 LEFT JOIN t_monitor_product AS t2 ON t1.source_type = t2.name WHERE t1.source_id IN (?)  AND t1.create_time BETWEEN ? AND ? AND t1.rule_source_type != ?  AND t1.status = ? GROUP BY t1.source_type ORDER BY count(*) DESC"
+	db.Raw(sql, resourcesIdList, startTime, endTime, source_type.AutoScaling, "firing").Find(&productAlarmRecordNum)
+	return productAlarmRecordNum
+}
+
+func (dao *AlarmRecordDao) GetPageListByIam(db *gorm.DB, productCode string, resourcesIdList []string, startTime string, endTime string, pageNum, pageSize int) ([]*form.AlarmRecordPage, int64) {
+	var alarmRecordPage []*form.AlarmRecordPage
+	sql := "SELECT t2.abbreviation AS productCode,t1.source_id AS instanceId,t1.rule_name AS ruleName,t1.level AS level,t1.create_time AS time FROM t_alarm_record AS t1 LEFT JOIN t_monitor_product AS t2 ON t1.source_type = t2.name WHERE t1.source_id IN (?)  AND t1.create_time BETWEEN ?  AND ?  AND t1.rule_source_type != ?  AND t1.status = ?  AND t2.abbreviation = ? "
+	var total int64
+	db.Raw("select count(*) from ("+sql+" ) t ", resourcesIdList, startTime, endTime, source_type.AutoScaling, "firing", productCode).Scan(&total)
+	if total == 0 {
+		return alarmRecordPage, total
+	}
+	db.Raw(sql+" ORDER BY t1.create_time DESC LIMIT ?,?", resourcesIdList, startTime, endTime, source_type.AutoScaling, "firing", productCode, (pageNum-1)*pageSize, pageSize).Find(&alarmRecordPage)
+	return alarmRecordPage, total
 }
