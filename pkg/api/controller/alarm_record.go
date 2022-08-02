@@ -8,6 +8,7 @@ import (
 	util2 "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/util"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/dao"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/form"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/service"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/validator/translate"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/vo"
 	"github.com/gin-gonic/gin"
@@ -16,10 +17,11 @@ import (
 )
 
 type AlarmRecordController struct {
+	service *service.AlarmRecordService
 }
 
 func NewAlarmRecordController() *AlarmRecordController {
-	return &AlarmRecordController{}
+	return &AlarmRecordController{service.NewAlarmRecordService()}
 }
 
 func (a *AlarmRecordController) GetPageList(c *gin.Context) {
@@ -106,4 +108,26 @@ func (a *AlarmRecordController) GetRecordNumHistory(c *gin.Context) {
 		startDate = startDate.Add(d)
 	}
 	c.JSON(http.StatusOK, global.NewSuccess("查询成功", data))
+}
+
+func (a *AlarmRecordController) GetAlarmRecordTotalByIam(c *gin.Context) {
+	tenantId, _ := util2.GetTenantId(c)
+	iamUserId, _ := util2.GetUserId(c)
+	//if strutil.IsBlank(iamUserId) || iamUserId == tenantId {
+	//	a.GetAlarmRecordTotal(c)
+	//	return
+	//}
+	var f form.AlarmRecordPageQueryForm
+	if err := c.ShouldBindQuery(&f); err != nil {
+		c.JSON(http.StatusBadRequest, global.NewError(translate.GetErrorMsg(err)))
+		return
+	}
+	f.TenantId = tenantId
+	f.IamUserId = iamUserId
+	alarmRecordNum, err := a.service.GetAlarmRecordTotalByIam(f)
+	if err != nil {
+		c.JSON(http.StatusOK, global.NewError(err.Error()))
+		return
+	}
+	c.JSON(http.StatusOK, global.NewSuccess("查询成功", alarmRecordNum))
 }

@@ -118,7 +118,7 @@ func (rfc *ReportFormCtl) ExportAlarmRecord(c *gin.Context) {
 		return
 	}
 	param.RegionCode = config.Cfg.Common.RegionName
-	param.TenantID = tenantId
+	param.TenantId = tenantId
 	err = rfc.service.ExportAlarmRecord(param, c.Request.Header.Get("user-info"))
 	if err == nil {
 		c.JSON(http.StatusOK, global.NewSuccess("导入任务已下发", true))
