@@ -6,6 +6,7 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/model"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/form"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/vo"
 	"gorm.io/gorm"
 )
 
@@ -48,9 +49,22 @@ func (dao *AlarmRecordDao) FindFirstInstanceInfo(instanceId string) *model.Alarm
 	return &alarmInstance
 }
 
-func (dao *AlarmRecordDao) GetAlarmRecordTotalByIam(db *gorm.DB, resourcesIdList []string, startTime string, endTime string) form.AlarmRecordNum {
-	var alarmRecordNum form.AlarmRecordNum
+func (dao *AlarmRecordDao) GetAlarmRecordTotalByIam(db *gorm.DB, resourcesIdList []string, startTime string, endTime string) *form.AlarmRecordNum {
+	alarmRecordNum := &form.AlarmRecordNum{}
 	sql := "SELECT count( CASE WHEN level = 1 THEN 0 END ) AS p1, count( CASE WHEN level = 2 THEN 0 END ) AS p2, count( CASE WHEN level = 3 THEN 0 END ) AS p3, count( CASE WHEN level = 4 THEN 0 END ) AS p4  FROM t_alarm_record WHERE source_id IN (?)  AND create_time BETWEEN ?  AND ?  AND rule_source_type != ?  AND status = ?"
-	db.Raw(sql, resourcesIdList, startTime, endTime, source_type.AutoScaling, "firing").Find(&alarmRecordNum)
+	db.Raw(sql, resourcesIdList, startTime, endTime, source_type.AutoScaling, "firing").Find(alarmRecordNum)
 	return alarmRecordNum
+}
+
+func (dao *AlarmRecordDao) GetRecordNumHistoryByIam(db *gorm.DB, resourcesIdList []string, startTime string, endTime string) []vo.RecordNumHistory {
+	var sql = "SELECT COUNT(t.id) AS number, " +
+		"DATE_FORMAT(t.create_time, '%Y-%m-%d') AS DayTime " +
+		"FROM t_alarm_record t " +
+		"WHERE source_id IN (?) " +
+		" AND t.create_time between ? AND ? " +
+		" and t.status='firing' " +
+		" GROUP BY daytime "
+	var list []vo.RecordNumHistory
+	db.Raw(sql, resourcesIdList, startTime, endTime).Find(&list)
+	return list
 }

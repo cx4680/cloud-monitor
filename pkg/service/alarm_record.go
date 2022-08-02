@@ -11,6 +11,7 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/model"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/util"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/form"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/vo"
 	"context"
 	"gorm.io/gorm"
 	"strconv"
@@ -42,7 +43,7 @@ func (s *AlarmRecordService) InsertAndHandler(ctx *context.Context, recordList [
 	})
 }
 
-func (s *AlarmRecordService) GetAlarmRecordTotalByIam(form form.AlarmRecordPageQueryForm) (form.AlarmRecordNum, error) {
+func (s *AlarmRecordService) GetAlarmRecordTotalByIam(form form.AlarmRecordPageQueryForm) (*form.AlarmRecordNum, error) {
 	d, _ := time.ParseDuration("24h")
 	d7, _ := time.ParseDuration("-168h")
 	var start, end string
@@ -55,16 +56,47 @@ func (s *AlarmRecordService) GetAlarmRecordTotalByIam(form form.AlarmRecordPageQ
 		start = util.TimeToStr(util.StrToTime(util.FullTimeFmt, form.StartTime), util.DayTimeFmt)
 		end = util.TimeToStr(util.StrToTime(util.FullTimeFmt, form.EndTime).Add(d), util.DayTimeFmt)
 	}
-	//directoryIdList, err := s.getIamDirectoryIdList(form.IamUserId, form.TenantId)
-	//if err != nil {
-	//	return 0, err
-	//}
-	//resourcesIdList, err := s.getIamResourcesIdList(directoryIdList)
-	//if err != nil {
-	//	return 0, err
-	//}
-	resourcesIdList := []string{"lb-oka17e6fa406", "ecs-przad5c0rvjqlh", "eip-lgp7qqz9qs1w"}
+	directoryIdList, err := s.getIamDirectoryIdList(form.IamUserId, form.TenantId)
+	if err != nil {
+		return nil, err
+	}
+	resourcesIdList, err := s.getIamResourcesIdList(directoryIdList)
+	if err != nil {
+		return nil, err
+	}
 	return dao.AlarmRecord.GetAlarmRecordTotalByIam(global.DB, resourcesIdList, start, end), nil
+}
+
+func (s *AlarmRecordService) GetRecordNumHistoryByIam(form form.AlarmRecordPageQueryForm) ([]vo.RecordNumHistory, error) {
+	d, _ := time.ParseDuration("24h")
+	startDate := util.StrToTime(util.FullTimeFmt, form.StartTime)
+	endDate := util.StrToTime(util.FullTimeFmt, form.EndTime).Add(d)
+	start := util.TimeToStr(startDate, util.DayTimeFmt)
+	end := util.TimeToStr(endDate, util.DayTimeFmt)
+	directoryIdList, err := s.getIamDirectoryIdList(form.IamUserId, form.TenantId)
+	if err != nil {
+		return nil, err
+	}
+	resourcesIdList, err := s.getIamResourcesIdList(directoryIdList)
+	if err != nil {
+		return nil, err
+	}
+	numList := dao.AlarmRecord.GetRecordNumHistoryByIam(global.DB, resourcesIdList, start, end)
+	//补充无数据的日期，该日期的历史数据为0
+	resultMap := make(map[string]int)
+	for _, v := range numList {
+		resultMap[v.DayTime] = v.Number
+	}
+	var data []vo.RecordNumHistory
+	for endDate.Sub(startDate) > 0 {
+		recordNumHistory := vo.RecordNumHistory{
+			DayTime: util.TimeToStr(startDate, util.DayTimeFmt),
+			Number:  resultMap[util.TimeToStr(startDate, util.DayTimeFmt)],
+		}
+		data = append(data, recordNumHistory)
+		startDate = startDate.Add(d)
+	}
+	return data, nil
 }
 
 func (s *AlarmRecordService) getIamDirectoryIdList(iamUserId, belongLoginId string) ([]string, error) {
