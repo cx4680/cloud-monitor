@@ -134,6 +134,7 @@ func alertRecordRouters() {
 		group.GET("/total", logs.GinTrailzap(false, Read, logs.INFO, logs.AlertRecord), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetAlarmRecordTotal", ResourceType: "*", ResourceId: "*"}), ctl.GetAlarmRecordTotal)
 		group.GET("/recordNumHistory", logs.GinTrailzap(false, Read, logs.INFO, logs.AlertRecord), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetAlertRecordNumHistory", ResourceType: "*", ResourceId: "*"}), ctl.GetRecordNumHistory)
 		group.GET("/totalByIam", logs.GinTrailzap(false, Read, logs.INFO, logs.AlertRecord), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetAlarmRecordTotal", ResourceType: "*", ResourceId: "*"}), ctl.GetAlarmRecordTotalByIam)
+		group.GET("/recordNumHistoryByIam", logs.GinTrailzap(false, Read, logs.INFO, logs.AlertRecord), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetAlertRecordNumHistory", ResourceType: "*", ResourceId: "*"}), ctl.GetRecordNumHistoryByIam)
 	}
 
 }
