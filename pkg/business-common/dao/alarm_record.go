@@ -2,8 +2,10 @@ package dao
 
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/dto"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/enum/source_type"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/model"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/form"
 	"gorm.io/gorm"
 )
 
@@ -44,4 +46,11 @@ func (dao *AlarmRecordDao) FindFirstInstanceInfo(instanceId string) *model.Alarm
 	global.DB.Raw("select * from t_resource where instance_id=? limit 1", instanceId).Scan(&alarmInstance)
 	//todo 实例是否关联规则 或直接判断规则是否存在
 	return &alarmInstance
+}
+
+func (dao *AlarmRecordDao) GetAlarmRecordTotalByIam(db *gorm.DB, resourcesIdList []string, startTime string, endTime string) form.AlarmRecordNum {
+	var alarmRecordNum form.AlarmRecordNum
+	sql := "SELECT count( CASE WHEN level = 1 THEN 0 END ) AS p1, count( CASE WHEN level = 2 THEN 0 END ) AS p2, count( CASE WHEN level = 3 THEN 0 END ) AS p3, count( CASE WHEN level = 4 THEN 0 END ) AS p4  FROM t_alarm_record WHERE source_id IN (?)  AND create_time BETWEEN ?  AND ?  AND rule_source_type != ?  AND status = ?"
+	db.Raw(sql, resourcesIdList, startTime, endTime, source_type.AutoScaling, "firing").Find(&alarmRecordNum)
+	return alarmRecordNum
 }
