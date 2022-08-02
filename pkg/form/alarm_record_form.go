@@ -1,5 +1,7 @@
 package form
 
+import "time"
+
 // AlarmRecordPageQueryForm 告警历史记录分页查询参数
 type AlarmRecordPageQueryForm struct {
 	PageNum      int      `json:"pageNum" form:"pageNum"`
@@ -14,23 +16,26 @@ type AlarmRecordPageQueryForm struct {
 	RuleName     string   `json:"ruleName" form:"ruleName"`
 	Status       string   `json:"status" form:"status"`
 	Expression   string   `json:"expression" form:"expression"`
-	RegionCode   string   `json:"regionCode" form:"regionCode" `
+	RegionCode   string   `json:"regionCode" form:"regionCode"`
+	ProductCode  string   `json:"productCode" form:"productCode"`
 	TenantId     string   `json:"tenantId" form:"tenantId"`
 	IamUserId    string   `json:"iamUserId" form:"iamUserId"`
 }
 
 type AlarmRecordNum struct {
-	P1 int `json:"p1" gorm:"column:p1"`
-	P2 int `json:"p2" gorm:"column:p2"`
-	P3 int `json:"p3" gorm:"column:p3"`
-	P4 int `json:"p4" gorm:"column:p4"`
+	Level int `json:"level" gorm:"column:level"`
+	Count int `json:"count" gorm:"column:count"`
 }
 
-type IamDirectory struct {
-	Module struct {
-		DirectoryId int `json:"directoryId"`
-		ChildList   []*struct {
-			DirectoryId int `json:"directoryId"`
-		} `json:"childList"`
-	} `json:"module"`
+type ProductAlarmRecordNum struct {
+	ProductCode string `json:"productCode" gorm:"column:productCode"`
+	Count       int    `json:"count" gorm:"column:count"`
+}
+
+type AlarmRecordPage struct {
+	ProductCode string    `json:"productCode" gorm:"column:productCode"`
+	InstanceId  string    `json:"instanceId" gorm:"column:instanceId"`
+	RuleName    string    `json:"ruleName" gorm:"column:ruleName"`
+	Level       string    `json:"level" gorm:"column:level"`
+	Time        time.Time `json:"time" gorm:"column:time"`
 }
