@@ -5,11 +5,9 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/model"
-	"database/sql"
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/mysql"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
-	"os"
 	"time"
 )
 
@@ -34,13 +32,18 @@ func InitData(dbConfig config.DB, database, path string) error {
 		Update = true
 	}
 	var err error
-	pwd := os.Getenv("DB_PWD")
-	url := dbConfig.Username + ":" + pwd + "@" + dbConfig.Url + "&multiStatements=true"
-	db, err := sql.Open("mysql", url)
-	defer db.Close()
+	//pwd := os.Getenv("DB_PWD")
+	//url := dbConfig.Username + ":" + pwd + "@" + dbConfig.Url + "&multiStatements=true"
+	//db, err := sql.Open("mysql", url)
+	//defer db.Close()
+	//if err != nil {
+	//	return err
+	//}
+	db, err := global.DB.DB()
 	if err != nil {
 		return err
 	}
+
 	driver, _ := mysql.WithInstance(db, &mysql.Config{})
 	m, err := migrate.NewWithDatabaseInstance(path, database, driver)
 	if err != nil {
