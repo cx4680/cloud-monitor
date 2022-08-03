@@ -42,7 +42,7 @@ type KafkaVO struct {
 }
 
 func (kafka *KafkaInstanceService) ConvertRealForm(form service.InstancePageForm) interface{} {
-	param := "/list?pageNum=" + strconv.Itoa(form.Current) + "&pageSize=" + strconv.Itoa(form.PageSize)
+	param := "?pageNum=" + strconv.Itoa(form.Current) + "&pageSize=" + strconv.Itoa(form.PageSize)
 	if strutil.IsNotBlank(form.InstanceName) {
 		param += "&searchName=" + form.InstanceName
 	}

@@ -42,7 +42,7 @@ type CommonConfig struct {
 	AccountApiHost           string `yaml:"accountApiHost"`
 	CloudMonitor             string `yaml:"cloudMonitor"`
 	CloudMonitorRegionDomain string `yaml:"cloudMonitorRegionDomain"`
-	OrganizeApi              string `yaml:"organizeApi"`
+	IamRetrieveIamUser       string `yaml:"iamRetrieveIamUser"`
 	Rc                       string `yaml:"rc"`
 }
 

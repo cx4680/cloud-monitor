@@ -2,7 +2,6 @@ package controller
 
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/dao"
-	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/enum"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/form"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/service"
@@ -34,12 +33,7 @@ func (mpc *MonitorProductCtl) ChangeStatus(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, global.NewError(translate.GetErrorMsg(err)))
 		return
 	}
-	c.Set(global.ResourceName, param.BizIdList)
-	param.EventEum = enum.ChangeMonitorProductStatus
-	err = mpc.service.Persistence(mpc.service, param)
-	if err != nil {
-		c.JSON(http.StatusOK, global.NewError(err.Error()))
-	} else {
-		c.JSON(http.StatusOK, global.NewSuccess("修改成功", true))
-	}
+	c.Set(global.ResourceName, param.ProductCodeList)
+	mpc.service.ChangeStatus(param)
+	c.JSON(http.StatusOK, global.NewSuccess("修改成功", true))
 }
