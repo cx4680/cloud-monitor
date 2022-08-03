@@ -216,10 +216,11 @@ func monitorChart() {
 	monitorChartCtl := controller.NewMonitorChartController(service.NewMonitorChartService())
 	group := Router.Group(pathPrefix + "monitorChart/")
 	{
-		group.GET("/getData", logs.GinTrailzap(false, Read, logs.INFO, logs.MonitorChart), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetMonitorReportData", ResourceType: "*", ResourceId: "*"}), monitorChartCtl.GetData)
-		group.GET("/getAxisData", logs.GinTrailzap(false, Read, logs.INFO, logs.MonitorChart), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetMonitorReportRangeData", ResourceType: "*", ResourceId: "*"}), monitorChartCtl.GetAxisData)
-		group.GET("/getTop", logs.GinTrailzap(false, Read, logs.INFO, logs.MonitorChart), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetMonitorReportTop", ResourceType: "*", ResourceId: "*"}), monitorChartCtl.GetTop)
-		group.GET("/getProcessData", logs.GinTrailzap(false, Read, logs.INFO, logs.MonitorChart), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetMonitorReportProcess", ResourceType: "*", ResourceId: "*"}), monitorChartCtl.GetProcessData)
+		group.GET("/getData", logs.GinTrailzap(false, Read, logs.INFO, logs.MonitorChart), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetMonitorChartData", ResourceType: "*", ResourceId: "*"}), monitorChartCtl.GetData)
+		group.GET("/getAxisData", logs.GinTrailzap(false, Read, logs.INFO, logs.MonitorChart), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetMonitorChartRangeData", ResourceType: "*", ResourceId: "*"}), monitorChartCtl.GetAxisData)
+		group.GET("/getTopData", logs.GinTrailzap(false, Read, logs.INFO, logs.MonitorChart), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetMonitorChartTop", ResourceType: "*", ResourceId: "*"}), monitorChartCtl.GetTopData)
+		group.GET("/getProcessData", logs.GinTrailzap(false, Read, logs.INFO, logs.MonitorChart), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetMonitorChartProcess", ResourceType: "*", ResourceId: "*"}), monitorChartCtl.GetProcessData)
+		group.GET("/getTopDataByIam", logs.GinTrailzap(false, Read, logs.INFO, logs.MonitorChart), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetMonitorChartTopByIam", ResourceType: "*", ResourceId: "*"}), monitorChartCtl.GetTopDataByIam)
 	}
 }
 
@@ -229,7 +230,7 @@ func monitorReportForm() {
 	{
 		group.GET("/getData", logs.GinTrailzap(false, Read, logs.INFO, logs.MonitorReportForm), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetMonitorReportData", ResourceType: "*", ResourceId: "*"}), monitorChartCtl.GetData)
 		group.GET("/getAxisData", logs.GinTrailzap(false, Read, logs.INFO, logs.MonitorReportForm), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetMonitorReportRangeData", ResourceType: "*", ResourceId: "*"}), monitorChartCtl.GetAxisData)
-		group.GET("/getTop", logs.GinTrailzap(false, Read, logs.INFO, logs.MonitorReportForm), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetMonitorReportTop", ResourceType: "*", ResourceId: "*"}), monitorChartCtl.GetTop)
+		group.GET("/getTop", logs.GinTrailzap(false, Read, logs.INFO, logs.MonitorReportForm), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetMonitorReportTop", ResourceType: "*", ResourceId: "*"}), monitorChartCtl.GetTopData)
 	}
 }
 

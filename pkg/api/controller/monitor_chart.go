@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/strutil"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/util"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/form"
@@ -62,7 +63,7 @@ func (ctl *MonitorChartCtl) GetAxisData(c *gin.Context) {
 	}
 }
 
-func (ctl *MonitorChartCtl) GetTop(c *gin.Context) {
+func (ctl *MonitorChartCtl) GetTopData(c *gin.Context) {
 	var param = &form.PrometheusRequest{TopNum: 5}
 	err := c.ShouldBindQuery(&param)
 	if err != nil {
@@ -122,6 +123,34 @@ func (ctl *MonitorChartCtl) GetProcessData(c *gin.Context) {
 		return
 	}
 	data, err := ctl.service.GetProcessData(param)
+	if err == nil {
+		c.JSON(http.StatusOK, global.NewSuccess("查询成功", data))
+	} else {
+		c.JSON(http.StatusOK, global.NewError(err.Error()))
+	}
+}
+
+func (ctl *MonitorChartCtl) GetTopDataByIam(c *gin.Context) {
+	tenantId, iamUserId, err := util.GetTenantIdAndUserId(c)
+	if err != nil {
+		c.JSON(http.StatusOK, global.NewError(err.Error()))
+		return
+	}
+	if strutil.IsBlank(iamUserId) || iamUserId == tenantId {
+		ctl.GetTopData(c)
+		return
+	}
+	var param = &form.PrometheusRequest{TopNum: 5}
+	err = c.ShouldBindQuery(&param)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, global.NewError(translate.GetErrorMsg(err)))
+		return
+	}
+	c.Set(global.ResourceName, param.Name)
+
+	param.TenantId = tenantId
+	param.IamUserId = iamUserId
+	data, err := ctl.service.GetTopDataByIam(*param)
 	if err == nil {
 		c.JSON(http.StatusOK, global.NewSuccess("查询成功", data))
 	} else {

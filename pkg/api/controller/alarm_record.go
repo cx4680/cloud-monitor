@@ -111,8 +111,11 @@ func (a *AlarmRecordController) GetRecordNumHistory(c *gin.Context) {
 }
 
 func (a *AlarmRecordController) GetLevelTotalByIam(c *gin.Context) {
-	tenantId, _ := util2.GetTenantId(c)
-	iamUserId, _ := util2.GetUserId(c)
+	tenantId, iamUserId, err := util2.GetTenantIdAndUserId(c)
+	if err != nil {
+		c.JSON(http.StatusOK, global.NewError(err.Error()))
+		return
+	}
 	if strutil.IsBlank(iamUserId) || iamUserId == tenantId {
 		a.GetAlarmRecordTotal(c)
 		return
@@ -133,8 +136,11 @@ func (a *AlarmRecordController) GetLevelTotalByIam(c *gin.Context) {
 }
 
 func (a *AlarmRecordController) GetRecordNumHistoryByIam(c *gin.Context) {
-	tenantId, _ := util2.GetTenantId(c)
-	iamUserId, _ := util2.GetUserId(c)
+	tenantId, iamUserId, err := util2.GetTenantIdAndUserId(c)
+	if err != nil {
+		c.JSON(http.StatusOK, global.NewError(err.Error()))
+		return
+	}
 	if strutil.IsBlank(iamUserId) || iamUserId == tenantId {
 		a.GetRecordNumHistory(c)
 		return
@@ -155,8 +161,11 @@ func (a *AlarmRecordController) GetRecordNumHistoryByIam(c *gin.Context) {
 }
 
 func (a *AlarmRecordController) GetProductRecordNumHistoryByIam(c *gin.Context) {
-	tenantId, _ := util2.GetTenantId(c)
-	iamUserId, _ := util2.GetUserId(c)
+	tenantId, iamUserId, err := util2.GetTenantIdAndUserId(c)
+	if err != nil {
+		c.JSON(http.StatusOK, global.NewError(err.Error()))
+		return
+	}
 	if strutil.IsBlank(iamUserId) || iamUserId == tenantId {
 		a.GetAlarmRecordTotal(c)
 		return
@@ -177,8 +186,11 @@ func (a *AlarmRecordController) GetProductRecordNumHistoryByIam(c *gin.Context) 
 }
 
 func (a *AlarmRecordController) GetPageListByIam(c *gin.Context) {
-	tenantId, _ := util2.GetTenantId(c)
-	iamUserId, _ := util2.GetUserId(c)
+	tenantId, iamUserId, err := util2.GetTenantIdAndUserId(c)
+	if err != nil {
+		c.JSON(http.StatusOK, global.NewError(err.Error()))
+		return
+	}
 	if strutil.IsBlank(iamUserId) || iamUserId == tenantId {
 		a.GetPageList(c)
 		return
