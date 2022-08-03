@@ -159,7 +159,7 @@ func (s *AlarmRecordService) getFmtTime(startTime, endTime string) (string, stri
 }
 
 func GetIamDirectoryIdList(iamUserId, belongLoginId string) ([]string, error) {
-	response, err := httputil.HttpGet(config.Cfg.Common.OrganizeApi + "?iamUserId=" + iamUserId + "&belongLoginId=" + belongLoginId)
+	response, err := httputil.HttpPostJson(config.Cfg.Common.IamRetrieveIamUser, map[string]string{"principalId": iamUserId, "belongAccountUid": belongLoginId}, nil)
 	if err != nil {
 		logger.Logger().Errorf("获取iam部门错误：%v", err)
 		return nil, errors.NewBusinessError("获取iam部门错误")
