@@ -207,11 +207,7 @@ func (s *MonitorChartService) GetProcessData(request form.PrometheusRequest) ([]
 }
 
 func (s *MonitorChartService) GetTopDataByIam(request form.PrometheusRequest) ([]form.PrometheusInstance, error) {
-	directoryIdList, err := GetIamDirectoryIdList(request.IamUserId, request.TenantId)
-	if err != nil {
-		return nil, err
-	}
-	resourcesIdList, err := GetIamResourcesIdList(directoryIdList)
+	resourcesIdList, err := GetIamResourcesIdList(request.IamUserId)
 	if err != nil {
 		return nil, err
 	}

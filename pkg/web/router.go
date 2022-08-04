@@ -133,10 +133,10 @@ func alertRecordRouters() {
 		group.GET("/contactInfos", logs.GinTrailzap(false, Read, logs.INFO, logs.AlertRecord), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetContactInfoList", ResourceType: "*", ResourceId: "*"}), ctl.GetAlarmContactInfo)
 		group.GET("/total", logs.GinTrailzap(false, Read, logs.INFO, logs.AlertRecord), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetAlarmRecordTotal", ResourceType: "*", ResourceId: "*"}), ctl.GetAlarmRecordTotal)
 		group.GET("/recordNumHistory", logs.GinTrailzap(false, Read, logs.INFO, logs.AlertRecord), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetAlertRecordNumHistory", ResourceType: "*", ResourceId: "*"}), ctl.GetRecordNumHistory)
-		group.GET("/levelTotalByIam", logs.GinTrailzap(false, Read, logs.INFO, logs.AlertRecord), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetLevelTotalByIam", ResourceType: "*", ResourceId: "*"}), ctl.GetLevelTotalByIam)
-		group.GET("/recordNumHistoryByIam", logs.GinTrailzap(false, Read, logs.INFO, logs.AlertRecord), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetHistoryNumRangeByIam", ResourceType: "*", ResourceId: "*"}), ctl.GetRecordNumHistoryByIam)
-		group.GET("/productRecordNumHistoryByIam", logs.GinTrailzap(false, Read, logs.INFO, logs.AlertRecord), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetProductRecordNumHistoryByIam", ResourceType: "*", ResourceId: "*"}), ctl.GetProductRecordNumHistoryByIam)
-		group.GET("/pageByIam", logs.GinTrailzap(false, Read, logs.INFO, logs.AlertRecord), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetAlertRecordPageListByIam", ResourceType: "*", ResourceId: "*"}), ctl.GetPageListByIam)
+		group.GET("/totalByLevel", logs.GinTrailzap(false, Read, logs.INFO, logs.AlertRecord), ctl.GetLevelTotal)
+		group.GET("/recordNumHistoryByIam", logs.GinTrailzap(false, Read, logs.INFO, logs.AlertRecord), ctl.GetRecordNumHistory)
+		group.GET("/totalByProduct", logs.GinTrailzap(false, Read, logs.INFO, logs.AlertRecord), ctl.GetTotalByProduct)
+		group.POST("/pageByProduct", logs.GinTrailzap(false, Read, logs.INFO, logs.AlertRecord), ctl.GetPageListByProduct)
 	}
 }
 
@@ -170,6 +170,7 @@ func configItemRouters() {
 		group.GET("/getRegionList", logs.GinTrailzap(false, Read, logs.INFO, logs.ConfigItem), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetRegionList", ResourceType: "*", ResourceId: "*"}), ctl.GetRegionList)
 		group.GET("/getMonitorRange", logs.GinTrailzap(false, Read, logs.INFO, logs.ConfigItem), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetMonitorRangeList", ResourceType: "*", ResourceId: "*"}), ctl.GetMonitorRange)
 		group.GET("/getNoticeChannel", logs.GinTrailzap(false, Read, logs.INFO, logs.ConfigItem), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetNoticeChannelList", ResourceType: "*", ResourceId: "*"}), ctl.GetNoticeChannel)
+		group.GET("/checkCloudLogin", logs.GinTrailzap(false, Read, logs.INFO, logs.ConfigItem), ctl.CheckCloudLogin)
 	}
 }
 
@@ -220,7 +221,7 @@ func monitorChart() {
 		group.GET("/getAxisData", logs.GinTrailzap(false, Read, logs.INFO, logs.MonitorChart), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetMonitorChartRangeData", ResourceType: "*", ResourceId: "*"}), monitorChartCtl.GetAxisData)
 		group.GET("/getTopData", logs.GinTrailzap(false, Read, logs.INFO, logs.MonitorChart), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetMonitorChartTop", ResourceType: "*", ResourceId: "*"}), monitorChartCtl.GetTopData)
 		group.GET("/getProcessData", logs.GinTrailzap(false, Read, logs.INFO, logs.MonitorChart), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetMonitorChartProcess", ResourceType: "*", ResourceId: "*"}), monitorChartCtl.GetProcessData)
-		group.GET("/getTopDataByIam", logs.GinTrailzap(false, Read, logs.INFO, logs.MonitorChart), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetMonitorChartTopByIam", ResourceType: "*", ResourceId: "*"}), monitorChartCtl.GetTopDataByIam)
+		group.GET("/getTopDataByIam", logs.GinTrailzap(false, Read, logs.INFO, logs.MonitorChart), monitorChartCtl.GetTopDataByIam)
 	}
 }
 
@@ -238,8 +239,8 @@ func reportForm() {
 	reportFormCtl := controller.NewReportFormController()
 	group := Router.Group(pathPrefix + "reportForm/")
 	{
-		group.POST("/exportMonitorData", reportFormCtl.ExportMonitorData)
-		group.POST("/exportAlarmRecord", reportFormCtl.ExportAlarmRecord)
+		group.POST("/exportMonitorData", logs.GinTrailzap(false, Read, logs.INFO, logs.ReportForm), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "ExportMonitorData", ResourceType: "*", ResourceId: "*"}), reportFormCtl.ExportMonitorData)
+		group.POST("/exportAlarmRecord", logs.GinTrailzap(false, Read, logs.INFO, logs.ReportForm), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "ExportAlarmRecord", ResourceType: "*", ResourceId: "*"}), reportFormCtl.ExportAlarmRecord)
 	}
 }
 

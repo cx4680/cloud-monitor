@@ -62,7 +62,21 @@ func (a *AlarmRecordController) GetAlarmRecordTotal(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, global.NewError(translate.GetErrorMsg(err)))
 		return
 	}
-	tenantId, _ := util2.GetTenantId(c)
+	tenantId, iamUserId, err := util2.GetTenantIdAndUserId(c)
+	if err != nil {
+		c.JSON(http.StatusOK, global.NewError(err.Error()))
+		return
+	}
+	isIamLogin := service.CheckIamLogin(tenantId, iamUserId)
+	if isIamLogin {
+		result, err := a.service.GetAlarmRecordTotalByIam(f)
+		if err != nil {
+			c.JSON(http.StatusOK, global.NewError(err.Error()))
+			return
+		}
+		c.JSON(http.StatusOK, global.NewSuccess("查询成功", result))
+		return
+	}
 	d, _ := time.ParseDuration("24h")
 	d7, _ := time.ParseDuration("-168h")
 	var start, end string
@@ -85,7 +99,23 @@ func (a *AlarmRecordController) GetRecordNumHistory(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, global.NewError(translate.GetErrorMsg(err)))
 		return
 	}
-	tenantId, _ := util2.GetTenantId(c)
+	tenantId, iamUserId, err := util2.GetTenantIdAndUserId(c)
+	if err != nil {
+		c.JSON(http.StatusOK, global.NewError(err.Error()))
+		return
+	}
+	isIamLogin := service.CheckIamLogin(tenantId, iamUserId)
+	if isIamLogin {
+		f.TenantId = tenantId
+		f.IamUserId = iamUserId
+		result, err := a.service.GetRecordNumHistoryByIam(f)
+		if err != nil {
+			c.JSON(http.StatusOK, global.NewError(err.Error()))
+			return
+		}
+		c.JSON(http.StatusOK, global.NewSuccess("查询成功", result))
+		return
+	}
 	d, _ := time.ParseDuration("24h")
 	startDate := util2.StrToTime(util2.FullTimeFmt, f.StartTime)
 	endDate := util2.StrToTime(util2.FullTimeFmt, f.EndTime).Add(d)
@@ -110,24 +140,20 @@ func (a *AlarmRecordController) GetRecordNumHistory(c *gin.Context) {
 	c.JSON(http.StatusOK, global.NewSuccess("查询成功", data))
 }
 
-func (a *AlarmRecordController) GetLevelTotalByIam(c *gin.Context) {
+func (a *AlarmRecordController) GetLevelTotal(c *gin.Context) {
 	tenantId, iamUserId, err := util2.GetTenantIdAndUserId(c)
 	if err != nil {
 		c.JSON(http.StatusOK, global.NewError(err.Error()))
 		return
 	}
-	if strutil.IsBlank(iamUserId) || iamUserId == tenantId {
-		a.GetAlarmRecordTotal(c)
-		return
-	}
 	var f form.AlarmRecordPageQueryForm
-	if err := c.ShouldBindQuery(&f); err != nil {
+	if err = c.ShouldBindQuery(&f); err != nil {
 		c.JSON(http.StatusBadRequest, global.NewError(translate.GetErrorMsg(err)))
 		return
 	}
 	f.TenantId = tenantId
 	f.IamUserId = iamUserId
-	result, err := a.service.GetLevelTotalByIam(f)
+	result, err := a.service.GetLevelTotal(f)
 	if err != nil {
 		c.JSON(http.StatusOK, global.NewError(err.Error()))
 		return
@@ -135,24 +161,20 @@ func (a *AlarmRecordController) GetLevelTotalByIam(c *gin.Context) {
 	c.JSON(http.StatusOK, global.NewSuccess("查询成功", result))
 }
 
-func (a *AlarmRecordController) GetRecordNumHistoryByIam(c *gin.Context) {
+func (a *AlarmRecordController) GetTotalByProduct(c *gin.Context) {
 	tenantId, iamUserId, err := util2.GetTenantIdAndUserId(c)
 	if err != nil {
 		c.JSON(http.StatusOK, global.NewError(err.Error()))
 		return
 	}
-	if strutil.IsBlank(iamUserId) || iamUserId == tenantId {
-		a.GetRecordNumHistory(c)
-		return
-	}
 	var f form.AlarmRecordPageQueryForm
-	if err := c.ShouldBindQuery(&f); err != nil {
+	if err = c.ShouldBindQuery(&f); err != nil {
 		c.JSON(http.StatusBadRequest, global.NewError(translate.GetErrorMsg(err)))
 		return
 	}
 	f.TenantId = tenantId
 	f.IamUserId = iamUserId
-	result, err := a.service.GetRecordNumHistoryByIam(f)
+	result, err := a.service.GetTotalByProduct(f)
 	if err != nil {
 		c.JSON(http.StatusOK, global.NewError(err.Error()))
 		return
@@ -160,49 +182,20 @@ func (a *AlarmRecordController) GetRecordNumHistoryByIam(c *gin.Context) {
 	c.JSON(http.StatusOK, global.NewSuccess("查询成功", result))
 }
 
-func (a *AlarmRecordController) GetProductRecordNumHistoryByIam(c *gin.Context) {
+func (a *AlarmRecordController) GetPageListByProduct(c *gin.Context) {
 	tenantId, iamUserId, err := util2.GetTenantIdAndUserId(c)
 	if err != nil {
 		c.JSON(http.StatusOK, global.NewError(err.Error()))
-		return
-	}
-	if strutil.IsBlank(iamUserId) || iamUserId == tenantId {
-		a.GetAlarmRecordTotal(c)
-		return
-	}
-	var f form.AlarmRecordPageQueryForm
-	if err := c.ShouldBindQuery(&f); err != nil {
-		c.JSON(http.StatusBadRequest, global.NewError(translate.GetErrorMsg(err)))
-		return
-	}
-	f.TenantId = tenantId
-	f.IamUserId = iamUserId
-	result, err := a.service.GetProductRecordNumHistoryByIam(f)
-	if err != nil {
-		c.JSON(http.StatusOK, global.NewError(err.Error()))
-		return
-	}
-	c.JSON(http.StatusOK, global.NewSuccess("查询成功", result))
-}
-
-func (a *AlarmRecordController) GetPageListByIam(c *gin.Context) {
-	tenantId, iamUserId, err := util2.GetTenantIdAndUserId(c)
-	if err != nil {
-		c.JSON(http.StatusOK, global.NewError(err.Error()))
-		return
-	}
-	if strutil.IsBlank(iamUserId) || iamUserId == tenantId {
-		a.GetPageList(c)
 		return
 	}
 	var f = form.AlarmRecordPageQueryForm{PageNum: 1, PageSize: 10}
-	if err := c.ShouldBindQuery(&f); err != nil {
+	if err = c.ShouldBindJSON(&f); err != nil {
 		c.JSON(http.StatusBadRequest, global.NewError(translate.GetErrorMsg(err)))
 		return
 	}
 	f.TenantId = tenantId
 	f.IamUserId = iamUserId
-	page, err := a.service.GetPageListByIam(f)
+	page, err := a.service.GetPageListByProduct(f)
 	if err != nil {
 		c.JSON(http.StatusOK, global.NewError(err.Error()))
 		return
