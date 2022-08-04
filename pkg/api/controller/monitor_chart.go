@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/strutil"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/util"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/form"
@@ -136,7 +135,8 @@ func (ctl *MonitorChartCtl) GetTopDataByIam(c *gin.Context) {
 		c.JSON(http.StatusOK, global.NewError(err.Error()))
 		return
 	}
-	if strutil.IsBlank(iamUserId) || iamUserId == tenantId {
+	isIamLogin := service.CheckIamLogin(tenantId, iamUserId)
+	if !isIamLogin {
 		ctl.GetTopData(c)
 		return
 	}

@@ -1,12 +1,10 @@
 package service
 
 import (
-	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
-	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/httputil"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/jsonutil"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/strutil"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/dao"
-	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/errors"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/model"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/util"
@@ -15,7 +13,6 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/vo"
 	"context"
 	"gorm.io/gorm"
-	"strconv"
 	"time"
 )
 
@@ -44,38 +41,51 @@ func (s *AlarmRecordService) InsertAndHandler(ctx *context.Context, recordList [
 	})
 }
 
-func (s *AlarmRecordService) GetLevelTotalByIam(param form.AlarmRecordPageQueryForm) ([]*form.AlarmRecordNum, error) {
-	start, end := s.getFmtTime(param.StartTime, param.EndTime)
-	directoryIdList, err := GetIamDirectoryIdList(param.IamUserId, param.TenantId)
+func (s *AlarmRecordService) GetAlarmRecordTotalByIam(param form.AlarmRecordPageQueryForm) (int64, error) {
+	resourcesIdList, err := GetIamResourcesIdList(param.IamUserId)
 	if err != nil {
-		return nil, err
+		return 0, err
 	}
-	resourcesIdList, err := GetIamResourcesIdList(directoryIdList)
-	if err != nil {
-		return nil, err
+	start, end := getFmtTime(param.StartTime, param.EndTime)
+	return dao.AlarmRecord.GetAlarmRecordTotalByIam(global.DB, resourcesIdList, start, end), nil
+}
+
+func (s *AlarmRecordService) GetLevelTotal(param form.AlarmRecordPageQueryForm) ([]*form.AlarmRecordNum, error) {
+	start, end := getFmtTime(param.StartTime, param.EndTime)
+	isIamLogin := CheckIamLogin(param.TenantId, param.IamUserId)
+	if isIamLogin {
+		resourcesIdList, err := GetIamResourcesIdList(param.IamUserId)
+		if err != nil {
+			return nil, err
+		}
+		if len(resourcesIdList) == 0 {
+			return nil, nil
+		}
+		return dao.AlarmRecord.GetLevelTotalByIam(global.DB, resourcesIdList, start, end), nil
 	}
-	if len(resourcesIdList) == 0 {
-		return nil, nil
-	}
-	return dao.AlarmRecord.GetLevelTotalByIam(global.DB, resourcesIdList, start, end), nil
+	return dao.AlarmRecord.GetLevelTotal(global.DB, param.TenantId, param.Region, start, end), nil
 }
 
 func (s *AlarmRecordService) GetRecordNumHistoryByIam(param form.AlarmRecordPageQueryForm) ([]vo.RecordNumHistory, error) {
-	d, _ := time.ParseDuration("24h")
-	startDate := util.StrToTime(util.FullTimeFmt, param.StartTime)
-	endDate := util.StrToTime(util.FullTimeFmt, param.EndTime).Add(d)
-	start := util.TimeToStr(startDate, util.DayTimeFmt)
-	end := util.TimeToStr(endDate, util.DayTimeFmt)
-	directoryIdList, err := GetIamDirectoryIdList(param.IamUserId, param.TenantId)
-	if err != nil {
-		return nil, err
-	}
-	resourcesIdList, err := GetIamResourcesIdList(directoryIdList)
+	resourcesIdList, err := GetIamResourcesIdList(param.IamUserId)
 	if err != nil {
 		return nil, err
 	}
 	if len(resourcesIdList) == 0 {
 		return nil, nil
+	}
+	var start, end string
+	var startDate, endDate time.Time
+	d, _ := time.ParseDuration("24h")
+	if strutil.IsBlank(param.StartTime) || strutil.IsBlank(param.EndTime) {
+		start, end = getFmtTime(param.StartTime, param.EndTime)
+		startDate = util.StrToTime(util.FullTimeFmt, start+" 00:00:00")
+		endDate = util.StrToTime(util.FullTimeFmt, end+" 00:00:00")
+	} else {
+		startDate = util.StrToTime(util.FullTimeFmt, param.StartTime)
+		endDate = util.StrToTime(util.FullTimeFmt, param.EndTime).Add(d)
+		start = util.TimeToStr(startDate, util.DayTimeFmt)
+		end = util.TimeToStr(endDate, util.DayTimeFmt)
 	}
 	numList := dao.AlarmRecord.GetRecordNumHistoryByIam(global.DB, resourcesIdList, start, end)
 	//补充无数据的日期，该日期的历史数据为0
@@ -95,20 +105,23 @@ func (s *AlarmRecordService) GetRecordNumHistoryByIam(param form.AlarmRecordPage
 	return data, nil
 }
 
-func (s *AlarmRecordService) GetProductRecordNumHistoryByIam(param form.AlarmRecordPageQueryForm) ([]*form.ProductAlarmRecordNum, error) {
-	start, end := s.getFmtTime(param.StartTime, param.EndTime)
-	directoryIdList, err := GetIamDirectoryIdList(param.IamUserId, param.TenantId)
-	if err != nil {
-		return nil, err
+func (s *AlarmRecordService) GetTotalByProduct(param form.AlarmRecordPageQueryForm) ([]*form.ProductAlarmRecordNum, error) {
+	start, end := getFmtTime(param.StartTime, param.EndTime)
+	isIamLogin := CheckIamLogin(param.TenantId, param.IamUserId)
+	var list []*form.ProductAlarmRecordNum
+	if isIamLogin {
+		resourcesIdList, err := GetIamResourcesIdList(param.IamUserId)
+		if err != nil {
+			return nil, err
+		}
+		if len(resourcesIdList) == 0 {
+			return nil, nil
+		}
+		list = dao.AlarmRecord.GetProductTotalByIam(global.DB, resourcesIdList, start, end)
+
+	} else {
+		list = dao.AlarmRecord.GetTotalByProduct(global.DB, param.TenantId, param.Region, start, end)
 	}
-	resourcesIdList, err := GetIamResourcesIdList(directoryIdList)
-	if err != nil {
-		return nil, err
-	}
-	if len(resourcesIdList) == 0 {
-		return nil, nil
-	}
-	list := dao.AlarmRecord.GetProductRecordNumHistoryByIam(global.DB, resourcesIdList, start, end)
 	if len(list) > 10 {
 		num := 0
 		for _, v := range list[10:] {
@@ -119,20 +132,23 @@ func (s *AlarmRecordService) GetProductRecordNumHistoryByIam(param form.AlarmRec
 	return list, nil
 }
 
-func (s *AlarmRecordService) GetPageListByIam(param form.AlarmRecordPageQueryForm) (*cvo.PageVO, error) {
-	start, end := s.getFmtTime(param.StartTime, param.EndTime)
-	directoryIdList, err := GetIamDirectoryIdList(param.IamUserId, param.TenantId)
-	if err != nil {
-		return nil, err
+func (s *AlarmRecordService) GetPageListByProduct(param form.AlarmRecordPageQueryForm) (*cvo.PageVO, error) {
+	isIamLogin := CheckIamLogin(param.TenantId, param.IamUserId)
+	start, end := getFmtTime(param.StartTime, param.EndTime)
+	var page []*form.AlarmRecordPage
+	var total int64
+	if isIamLogin {
+		resourcesIdList, err := GetIamResourcesIdList(param.IamUserId)
+		if err != nil {
+			return nil, err
+		}
+		if len(resourcesIdList) == 0 {
+			return nil, nil
+		}
+		page, total = dao.AlarmRecord.GetPageListByProductByIam(global.DB, param.ProductCode, resourcesIdList, start, end, param.PageNum, param.PageSize)
+	} else {
+
 	}
-	resourcesIdList, err := GetIamResourcesIdList(directoryIdList)
-	if err != nil {
-		return nil, err
-	}
-	if len(resourcesIdList) == 0 {
-		return nil, nil
-	}
-	page, total := dao.AlarmRecord.GetPageListByIam(global.DB, param.ProductCode, resourcesIdList, start, end, param.PageNum, param.PageSize)
 	return &cvo.PageVO{
 		Records: page,
 		Total:   int(total),
@@ -142,7 +158,7 @@ func (s *AlarmRecordService) GetPageListByIam(param form.AlarmRecordPageQueryFor
 	}, nil
 }
 
-func (s *AlarmRecordService) getFmtTime(startTime, endTime string) (string, string) {
+func getFmtTime(startTime, endTime string) (string, string) {
 	d, _ := time.ParseDuration("24h")
 	d7, _ := time.ParseDuration("-168h")
 	var start, end string
@@ -156,39 +172,4 @@ func (s *AlarmRecordService) getFmtTime(startTime, endTime string) (string, stri
 		end = util.TimeToStr(util.StrToTime(util.FullTimeFmt, endTime).Add(d), util.DayTimeFmt)
 	}
 	return start, end
-}
-
-func GetIamDirectoryIdList(iamUserId, belongLoginId string) ([]string, error) {
-	response, err := httputil.HttpPostJson(config.Cfg.Common.IamRetrieveIamUser, map[string]string{"principalId": iamUserId, "belongAccountUid": belongLoginId}, nil)
-	if err != nil {
-		logger.Logger().Errorf("获取iam部门错误：%v", err)
-		return nil, errors.NewBusinessError("获取iam部门错误")
-	}
-	var iamDirectory form.IamDirectory
-	jsonutil.ToObject(response, &iamDirectory)
-	var directoryIdList = []string{strconv.Itoa(iamDirectory.Module.DirectoryId)}
-	for _, v := range iamDirectory.Module.ChildList {
-		directoryIdList = append(directoryIdList, strconv.Itoa(v.DirectoryId))
-	}
-	return directoryIdList, nil
-}
-
-func GetIamResourcesIdList(directoryIds []string) ([]string, error) {
-	param := form.InstanceRequest{
-		DirectoryIds: directoryIds,
-		CurrPage:     "1",
-		PageSize:     "99999",
-	}
-	response, err := httputil.HttpPostJson(config.Cfg.Common.Rc, param, nil)
-	if err != nil {
-		logger.Logger().Errorf("获取实例列表错误：%v", err)
-		return nil, errors.NewBusinessError("获取实例列表错误")
-	}
-	var result form.InstanceResponse
-	jsonutil.ToObject(response, &result)
-	var resourcesIdList []string
-	for _, v := range result.Data.List {
-		resourcesIdList = append(resourcesIdList, v.ResourceId)
-	}
-	return resourcesIdList, nil
 }

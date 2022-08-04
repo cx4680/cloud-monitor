@@ -42,7 +42,6 @@ type CommonConfig struct {
 	AccountApiHost           string `yaml:"accountApiHost"`
 	CloudMonitor             string `yaml:"cloudMonitor"`
 	CloudMonitorRegionDomain string `yaml:"cloudMonitorRegionDomain"`
-	IamRetrieveIamUser       string `yaml:"iamRetrieveIamUser"`
 	Rc                       string `yaml:"rc"`
 }
 
@@ -96,9 +95,12 @@ type RedisConfig struct {
 }
 
 type IamConfig struct {
-	Site   string `yaml:"site"`
-	Region string `yaml:"region"`
-	Log    string `yaml:"log"`
+	Site            string `yaml:"site"`
+	Region          string `yaml:"region"`
+	Log             string `yaml:"log"`
+	RetrieveIamUser string `yaml:"retrieveIamUser"`
+	IamUser         string `yaml:"iamUser"`
+	LoginModel      string `yaml:"loginModel"`
 }
 
 var Cfg = defaultAppConfig()

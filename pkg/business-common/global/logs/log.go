@@ -52,6 +52,7 @@ const (
 	AlertRule         ResourceType = "AlertRule"
 	MonitorChart      ResourceType = "MonitorChart"
 	MonitorReportForm ResourceType = "MonitorReportForm"
+	ReportForm        ResourceType = "ReportForm"
 	ConfigItem        ResourceType = "ConfigItem"
 	Instance          ResourceType = "Instance"
 	Notice            ResourceType = "Notice"

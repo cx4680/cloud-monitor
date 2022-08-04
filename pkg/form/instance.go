@@ -41,12 +41,3 @@ type InstanceResponse struct {
 		} `json:"list"`
 	} `json:"data"`
 }
-
-type IamDirectory struct {
-	Module struct {
-		DirectoryId int `json:"directoryId"`
-		ChildList   []*struct {
-			DirectoryId int `json:"directoryId"`
-		} `json:"childList"`
-	} `json:"module"`
-}
