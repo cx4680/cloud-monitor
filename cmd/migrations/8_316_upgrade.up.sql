@@ -155,8 +155,8 @@ UPDATE t_monitor_item SET metrics_linux='sum by(instance,instanceType,device)(ec
 UPDATE t_monitor_item SET metrics_linux='sum by(instance,instanceType,device)(ecs_filesystem_size_bytes{$INSTANCE})' WHERE biz_id='184';
 UPDATE t_monitor_item SET metrics_linux='sum by(instance,instanceType)(redis_cpu_usage{$INSTANCE})' WHERE biz_id='185';
 UPDATE t_monitor_item SET metrics_linux='sum by(instance,instanceType)(redis_mem_usage{$INSTANCE})' WHERE biz_id='186';
-UPDATE t_monitor_item SET metrics_linux='sum by(instance,instanceType)(redis_tps{$INSTANCE})' WHERE biz_id='187';
-UPDATE t_monitor_item SET metrics_linux='redis_tps{$INSTANCE}' WHERE biz_id='188';
+UPDATE t_monitor_item SET metrics_linux='sum by(instance,instanceType)(redis_connected_clients{$INSTANCE})' WHERE biz_id = '187';
+UPDATE t_monitor_item SET metrics_linux='sum by(instance,instanceType)(redis_tps{$INSTANCE})' WHERE biz_id = '188';
 UPDATE t_monitor_item SET metrics_linux='sum by(instance,instanceType,pod)(mongo_mongos_current_connections{$INSTANCE})' WHERE biz_id='195';
 UPDATE t_monitor_item SET metrics_linux='sum by(instance,instanceType,pod)(mongo_shard_current_connections{$INSTANCE})' WHERE biz_id='196';
 UPDATE t_monitor_item SET metrics_linux='sum by(instance,instanceType,pod)(mongo_config_current_connections{$INSTANCE})' WHERE biz_id='197';
