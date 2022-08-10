@@ -37,29 +37,14 @@ type NatQueryPageResult struct {
 
 type NatInfoBean struct {
 	VpcName       string
-	ReleaseTime   string
-	OrderId       string
 	Specification string
-	Description   string
-	PayModel      int
-	UpdateTime    string
-	FreezeTime    string
-	UserCode      string
-	SubnetName    string
-	EipNum        int
-	SubnetCidr    string
 	Uid           string
 	VpcUid        string
-	ExpireTime    string
-	ResourceCode  string
 	StatusList    string
-	ExpireDay     int
-	CreateTime    string
-	SubnetUid     string
 	Name          string
 	Id            int
-	AdminStateUp  bool
 	Status        string
+	Type          string
 }
 
 func (nat *NatInstanceService) ConvertRealForm(form service.InstancePageForm) interface{} {
@@ -102,6 +87,9 @@ func (nat *NatInstanceService) ConvertResp(realResp interface{}) (int, []service
 				}, {
 					Name:  "vpcName",
 					Value: d.VpcName,
+				}, {
+					Name:  "type",
+					Value: d.Type,
 				}},
 			})
 		}

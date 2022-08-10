@@ -29,9 +29,6 @@ func (d *MonitorItemDao) GetMonitorItem(productBizId, osType, display string) []
 	} else {
 		global.DB.Where("status = ? AND is_display = ? AND product_biz_id = ?", "1", "1", productBizId).Find(&monitorItemList)
 	}
-	if strutil.IsBlank(osType) {
-		return monitorItemList
-	}
 	var newMonitorItemList []model.MonitorItem
 	for _, v := range monitorItemList {
 		if strutil.IsNotBlank(v.ShowExpression) && !isShow(v.ShowExpression, osType) {
