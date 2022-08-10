@@ -146,6 +146,71 @@ func (slb *SlbInstanceService) ConvertResp(realResp interface{}) (int, []service
 	return vo.Data.Total, list
 }
 
+func (slb *SlbInstanceService) ConvertRealAuthForm(form service.InstancePageForm) interface{} {
+	queryParam := SlbQueryParam{
+		Address:  form.ExtraAttr["privateIp"],
+		LbUid:    form.InstanceId,
+		Name:     form.InstanceName,
+		TenantId: form.TenantId,
+	}
+	if strutil.IsNotBlank(form.StatusList) {
+		queryParam.StateList = strings.Split(form.StatusList, ",")
+	}
+	return SlbQueryPageRequest{
+		PageIndex: form.Current,
+		PageSize:  form.PageSize,
+		Data:      queryParam,
+		TenantId:  form.TenantId,
+	}
+}
+
+func (slb *SlbInstanceService) DoAuthRequest(url string, form interface{}) (interface{}, error) {
+	var f = form.(SlbQueryPageRequest)
+	respStr, err := httputil.HttpPostJson(url, form, map[string]string{"userCode": f.TenantId})
+	if err != nil {
+		return nil, err
+	}
+	var resp SlbResponse
+	jsonutil.ToObject(respStr, &resp)
+	return resp, nil
+}
+
+func (slb *SlbInstanceService) ConvertAuthResp(realResp interface{}) (int, []service.InstanceCommonVO) {
+	vo := realResp.(SlbResponse)
+	var list []service.InstanceCommonVO
+	if vo.Data.Total > 0 {
+		for _, d := range vo.Data.Rows {
+			list = append(list, service.InstanceCommonVO{
+				InstanceId:   d.LbUid,
+				InstanceName: d.Name,
+				Labels: []service.InstanceLabel{{
+					Name:  "eipIp",
+					Value: d.Eip.Ip,
+				}, {
+					Name:  "privateIp",
+					Value: d.Address,
+				}, {
+					Name:  "vpcName",
+					Value: d.NetworkName,
+				}, {
+					Name:  "vpcId",
+					Value: d.NetworkUid,
+				}, {
+					Name:  "status",
+					Value: d.State,
+				}, {
+					Name:  "spec",
+					Value: d.Spec,
+				}, {
+					Name:  "listener",
+					Value: getListenerList(d),
+				}},
+			})
+		}
+	}
+	return vo.Data.Total, list
+}
+
 func getListenerList(slb *SlbInfoBean) string {
 	var listener []string
 	for _, v := range slb.ListenerList {

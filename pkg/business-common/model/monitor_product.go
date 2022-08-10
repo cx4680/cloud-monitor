@@ -15,6 +15,7 @@ type MonitorProduct struct {
 	Abbreviation string `gorm:"column:abbreviation;size=20" json:"abbreviation"` // 简称
 	Sort         uint64 `gorm:"column:sort" json:"sort"`                         // 排序
 	MonitorType  string `gorm:"column:monitor_type" json:"monitorType"`          // 监控类型
+	IamPageUrl   string `gorm:"column:iam_page_url" json:"IamPageUrl"`           // 请求路径
 }
 
 func (*MonitorProduct) TableName() string {

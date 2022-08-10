@@ -88,6 +88,51 @@ func (ecs *EcsInstanceService) ConvertResp(realResp interface{}) (int, []commonS
 	return vo.Data.Total, list
 }
 
+func (ecs *EcsInstanceService) ConvertRealAuthForm(f commonService.InstancePageForm) interface{} {
+	param := EcsQueryPageForm{
+		TenantId:     f.TenantId,
+		Current:      f.Current,
+		PageSize:     f.PageSize,
+		InstanceName: f.InstanceName,
+		InstanceId:   f.InstanceId,
+	}
+	if strutil.IsNotBlank(f.StatusList) {
+		param.StatusList = toIntList(f.StatusList)
+	}
+	return param
+}
+
+func (ecs *EcsInstanceService) DoAuthRequest(url string, f interface{}) (interface{}, error) {
+	respStr, err := httputil.HttpPostJson(url, f, nil)
+	if err != nil {
+		return nil, err
+	}
+	var resp EcsQueryPageVO
+	jsonutil.ToObject(respStr, &resp)
+	return resp, nil
+}
+
+func (ecs *EcsInstanceService) ConvertAuthResp(realResp interface{}) (int, []commonService.InstanceCommonVO) {
+	vo := realResp.(EcsQueryPageVO)
+	var list []commonService.InstanceCommonVO
+	if vo.Data.Total > 0 {
+		for _, d := range vo.Data.Rows {
+			list = append(list, commonService.InstanceCommonVO{
+				InstanceId:   d.InstanceId,
+				InstanceName: d.InstanceName,
+				Labels: []commonService.InstanceLabel{{
+					Name:  "status",
+					Value: strconv.Itoa(d.Status),
+				}, {
+					Name:  "osType",
+					Value: d.OsType,
+				}},
+			})
+		}
+	}
+	return vo.Data.Total, list
+}
+
 func toIntList(s string) []int {
 	statusList := strings.Split(s, ",")
 	var list []int
