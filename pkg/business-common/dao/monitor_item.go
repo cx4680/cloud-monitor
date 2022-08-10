@@ -9,6 +9,8 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global/sys_component/sys_redis"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/model"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/constant"
+	"fmt"
 	"gorm.io/gorm"
 	"strconv"
 	"text/template"
@@ -45,7 +47,7 @@ func (d *MonitorItemDao) ChangeDisplay(db *gorm.DB, productBizId, display string
 }
 
 func (d *MonitorItemDao) GetMonitorItemCacheByName(name string) model.MonitorItem {
-	value, err := sys_redis.Get(name)
+	value, err := sys_redis.Get(fmt.Sprintf(constant.MonitorItemKey, name))
 	if err != nil {
 		logger.Logger().Error("key=" + name + ", error:" + err.Error())
 	}
