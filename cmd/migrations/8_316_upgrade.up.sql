@@ -3,7 +3,7 @@ UPDATE t_monitor_item SET metrics_linux = 'ecs_processes_top5Mems{$INSTANCE}', l
 UPDATE t_monitor_item SET metrics_linux = 'ecs_procs_running{$INSTANCE}' WHERE biz_id = '222';
 UPDATE t_monitor_item SET metrics_linux = 'ecs_processes_top5Fds{$INSTANCE}', labels = 'instance,pid' WHERE biz_id = '223';
 
-UPDATE t_monitor_product SET page_url = '/inner/cmq/v1/kafka/cluster/list', status = '1' WHERE abbreviation IN ('kafka');
+UPDATE t_monitor_product SET page_url = '/inner/cmq/v1/kafka/monitor/listAllCluster', status = '1' WHERE abbreviation IN ('kafka');
 
 UPDATE t_monitor_item SET metrics_linux = 'sum by(instance)(redis_connected_clients{$INSTANCE})' WHERE biz_id = '187';
 UPDATE t_monitor_item SET metrics_linux = 'sum by(instance)(redis_tps{$INSTANCE})' WHERE biz_id = '188';
@@ -25,3 +25,6 @@ INSERT INTO `t_monitor_item` (biz_id, product_biz_id, name, metric_name, labels,
 INSERT INTO `t_monitor_item` (biz_id, product_biz_id, name, metric_name, labels, metrics_linux, metrics_windows, statistics, unit, frequency, type, is_display, status, description, create_user, create_time, show_expression, display) VALUES ('231', '6', '入方向PPS', 'nat_e_inbound_pps', 'instance', 'sum by (instance)(rate(Nat_recv_packets_total_count{$INSTANCE}[1m]))', NULL, NULL, '个', NULL, NULL, 1, 1, NULL, NULL, NULL, '{{eq .OSTYPE \"nat-e\"}}', 'chart,rule');
 INSERT INTO `t_monitor_item` (biz_id, product_biz_id, name, metric_name, labels, metrics_linux, metrics_windows, statistics, unit, frequency, type, is_display, status, description, create_user, create_time, show_expression, display) VALUES ('232', '6', '出方向PPS', 'nat_e_outbound_pps', 'instance', 'sum by (instance)(rate(Nat_send_packets_total_count{$INSTANCE}[1m]))', NULL, NULL, '个', NULL, NULL, 1, 1, NULL, NULL, NULL, '{{eq .OSTYPE \"nat-e\"}}', 'chart,rule');
 INSERT INTO `t_monitor_item` (biz_id, product_biz_id, name, metric_name, labels, metrics_linux, metrics_windows, statistics, unit, frequency, type, is_display, status, description, create_user, create_time, show_expression, display) VALUES ('233', '6', 'NAT连接数使用率', 'nat_e_total_connection_ratio', 'instance', 'sum by (instance)(Nat_snat_total_connection_count{$INSTANCE}) / avg by (instance)(Nat_nat_max_connection_count{$INSTANCE}) *100', NULL, NULL, '个', NULL, NULL, 1, 1, NULL, NULL, NULL, '{{eq .OSTYPE \"nat-e\"}}', 'chart,rule');
+
+ALTER TABLE t_monitor_product ADD COLUMN iam_page_url varchar(256) COMMENT 'iam请求路径';
+UPDATE t_monitor_product SET iam_page_url = '/kafka/v1/cluster/listAllCluster' WHERE abbreviation IN ('kafka');

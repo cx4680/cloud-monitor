@@ -5,8 +5,10 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global"
 	commonService "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/service"
 	commonUtil "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/util"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/vo"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/dao"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/external"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/service"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/util"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/validator/translate"
 	"github.com/gin-gonic/gin"
@@ -39,20 +41,31 @@ func NewInstanceRegionCtl(dao *dao.InstanceDao) *InstanceRegionCtl {
 // @Failure 500 {object} global.Resp
 // @Router /hawkeye/instance/page [get]
 func (ctl *InstanceRegionCtl) GetPage(c *gin.Context) {
-	tenantId, _ := commonUtil.GetTenantId(c)
 	f := commonService.InstancePageForm{}
 	if err := c.ShouldBindQuery(&f); err != nil {
 		c.JSON(http.StatusBadRequest, global.NewError(translate.GetErrorMsg(err)))
 		return
 	}
 	c.Set(global.ResourceName, f.Product)
+	tenantId, iamUserId, err := commonUtil.GetTenantIdAndUserId(c)
+	if err != nil {
+		c.JSON(http.StatusOK, global.NewError(err.Error()))
+		return
+	}
 	f.TenantId = tenantId
+	isIamLogin := service.CheckIamLogin(tenantId, iamUserId)
 	instanceService := external.ProductInstanceServiceMap[f.Product]
 	if instanceService == nil {
 		c.JSON(http.StatusBadRequest, global.NewError("该产品未接入"))
 		return
 	}
-	page, err := instanceService.GetPage(f, instanceService.(commonService.InstanceStage))
+	var page *vo.PageVO
+	if isIamLogin {
+		f.UserInfo = c.Request.Header.Get("user-info")
+		page, err = instanceService.GetPageByAuth(f, instanceService.(commonService.InstanceStage))
+	} else {
+		page, err = instanceService.GetPage(f, instanceService.(commonService.InstanceStage))
+	}
 	if err != nil {
 		logger.Logger().Error(err)
 		c.JSON(http.StatusInternalServerError, global.NewError("查询失败"))
