@@ -37,5 +37,6 @@ type AlarmRecordPage struct {
 	InstanceId  string    `json:"instanceId" gorm:"column:instanceId"`
 	RuleName    string    `json:"ruleName" gorm:"column:ruleName"`
 	Level       string    `json:"level" gorm:"column:level"`
-	Time        time.Time `json:"time" gorm:"column:time"`
+	Time        time.Time `json:"-" gorm:"column:time"`
+	FmtTime     string    `json:"time"`
 }
