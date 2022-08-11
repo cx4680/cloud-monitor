@@ -1,3 +1,8 @@
+UPDATE t_monitor_item SET metrics_linux = 'ecs_processes_top5Cpus{$INSTANCE}', labels = 'instance,pid' WHERE biz_id = '220';
+UPDATE t_monitor_item SET metrics_linux = 'ecs_processes_top5Mems{$INSTANCE}', labels = 'instance,pid' WHERE biz_id = '221';
+UPDATE t_monitor_item SET metrics_linux = 'ecs_procs_running{$INSTANCE}' WHERE biz_id = '222';
+UPDATE t_monitor_item SET metrics_linux = 'ecs_processes_top5Fds{$INSTANCE}', labels = 'instance,pid' WHERE biz_id = '223';
+
 UPDATE t_monitor_item SET metrics_linux='100 - (100 * (sum by(instance,instanceType) (irate(ecs_cpu_seconds_total{mode="idle",$INSTANCE}[3m])) / sum by(instance,instanceType) (irate(ecs_cpu_seconds_total{$INSTANCE}[3m]))))' WHERE biz_id='1';
 UPDATE t_monitor_item SET metrics_linux='sum by(instance,instanceType)(ecs_load1{$INSTANCE})' WHERE biz_id='2';
 UPDATE t_monitor_item SET metrics_linux='sum by(instance,instanceType)(ecs_load5{$INSTANCE})' WHERE biz_id='3';
