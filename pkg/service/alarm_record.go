@@ -147,7 +147,10 @@ func (s *AlarmRecordService) GetPageListByProduct(param form.AlarmRecordPageQuer
 		}
 		page, total = dao.AlarmRecord.GetPageListByProductByIam(global.DB, param.ProductCode, resourcesIdList, start, end, param.PageNum, param.PageSize)
 	} else {
-
+		page, total = dao.AlarmRecord.GetPageListByProduct(global.DB, param.ProductCode, param.TenantId, param.Region, start, end, param.PageNum, param.PageSize)
+	}
+	for i, v := range page {
+		page[i].FmtTime = util.TimeToFullTimeFmtStr(v.Time)
 	}
 	return &cvo.PageVO{
 		Records: page,
