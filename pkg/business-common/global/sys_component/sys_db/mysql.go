@@ -11,7 +11,7 @@ import (
 
 func InitDb(dbConfig config.DB) error {
 	pwd := os.Getenv("DB_PWD")
-	url := dbConfig.Username + ":" + pwd + "@" + dbConfig.Url + "&multiStatements=true"
+	url := dbConfig.Username + ":" + pwd + "@" + dbConfig.Url
 	d, err := gorm.Open(mysql.New(mysql.Config{
 		DSN:                       url,   // DSN data source name
 		DefaultStringSize:         256,   // string 类型字段的默认长度
@@ -23,13 +23,6 @@ func InitDb(dbConfig config.DB) error {
 	if err != nil {
 		return err
 	}
-	db, err := d.DB()
-	if err != nil {
-		return err
-	}
-	db.SetMaxIdleConns(1000)
-	db.SetMaxOpenConns(100000)
-	db.SetConnMaxLifetime(-1)
 	global.DB = d
 	return nil
 }
