@@ -11,4 +11,7 @@ const (
 	UserType     = "userType"
 	UserName     = "userName"
 	ResourceName = "ResourceName"
+
+	CloudAccountOrganizeRoleName = "cloudAccountOrganizeRoleName"
+	OrganizeAssumeRoleName       = "organizeAssumeRoleName"
 )

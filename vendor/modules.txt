@@ -1,4 +1,4 @@
-# code.cestc.cn/yyptb-group_tech/iam-sdk-go v1.0.3
+# code.cestc.cn/yyptb-group_tech/iam-sdk-go v1.3.3-SNAPSHOT
 ## explicit; go 1.16
 code.cestc.cn/yyptb-group_tech/iam-sdk-go/internal/config
 code.cestc.cn/yyptb-group_tech/iam-sdk-go/internal/constants/autherrorenum
