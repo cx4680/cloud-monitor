@@ -74,30 +74,60 @@ func ParsingAndSetUserInfo(c *gin.Context) error {
 
 	req := c.Request
 	userInfoEncode := req.Header.Get("user-info")
-	var userMap map[string]string
+	var ssoUser SsoUser
 	if len(userInfoEncode) != 0 {
 		userInfoDecode, err := base64.StdEncoding.DecodeString(userInfoEncode)
 		if err != nil {
 			return err
 		}
 		if strutil.IsNotBlank(string(userInfoDecode)) {
-			jsonutil.ToObject(string(userInfoDecode), &userMap)
-			c.Set(global.UserType, userMap["userTypeCode"])
-			c.Set(global.TenantId, userMap["cloudLoginId"])
-			c.Set(global.UserId, userMap["loginId"])
-			c.Set(global.UserName, userMap["loginCode"])
+			jsonutil.ToObject(string(userInfoDecode), &ssoUser)
+			c.Set(global.UserType, ssoUser.UserTypeCode)
+			c.Set(global.TenantId, ssoUser.CloudLoginId)
+			c.Set(global.UserId, ssoUser.LoginId)
+			c.Set(global.UserName, ssoUser.LoginCode)
+			c.Set(global.CloudAccountOrganizeRoleName, ssoUser.RoleName)
+			c.Set(global.OrganizeAssumeRoleName, ssoUser.RoleName)
 			return nil
 		}
 	}
 	userIdentity := req.Header.Get("userIdentity")
 	if len(userIdentity) != 0 {
-		jsonutil.ToObject(userIdentity, &userMap)
-		c.Set(global.UserType, userMap["typeCode"])
-		c.Set(global.TenantId, userMap["accountId"])
-		c.Set(global.UserId, userMap["principalId"])
-		c.Set(global.UserName, userMap["userName"])
+		jsonutil.ToObject(userIdentity, &ssoUser)
+		c.Set(global.UserType, ssoUser.TypeCode)
+		c.Set(global.TenantId, ssoUser.AccountId)
+		c.Set(global.UserId, ssoUser.PrincipalId)
+		c.Set(global.UserName, ssoUser.UserName)
+		c.Set(global.CloudAccountOrganizeRoleName, ssoUser.RoleName)
+		c.Set(global.OrganizeAssumeRoleName, ssoUser.RoleName)
 		return nil
 	}
 	return errors.New("无用户信息")
 
+}
+
+type SsoUser struct {
+	CustName         string        `json:"custName"`
+	CustId           string        `json:"custId"`
+	LoginId          string        `json:"loginId"`
+	LoginCode        string        `json:"loginCode"`
+	UserTypeCode     string        `json:"userTypeCode"`
+	SerialNumber     string        `json:"serialNumber"`
+	UserHeadPortrait string        `json:"userHeadPortrait"`
+	AcctId           string        `json:"acctId"`
+	CloudLoginCode   string        `json:"cloudLoginCode"`
+	CloudLoginId     string        `json:"cloudLoginId"`
+	IsIdentify       string        `json:"isIdentify"`
+	LoginState       string        `json:"loginState"`
+	RoleName         string        `json:"roleName"`
+	TypeCode         string        `json:"typeCode"`
+	AccountId        string        `json:"accountId"`
+	PrincipalId      string        `json:"principalId"`
+	UserName         string        `json:"userName"`
+	Organization     *Organization `json:"organization"`
+}
+
+type Organization struct {
+	RoleName        string `json:"roleName"`
+	RoleDisplayName string `json:"roleDisplayName"`
 }

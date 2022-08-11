@@ -19,40 +19,41 @@ const (
 	RoleTokenInvalidHasRetry = true
 	STAR                     = "*"
 	ContextListQueryRuleKey  = "ContextListQueryRuleKey"
+	ContextListResource      = "ContextListResource"
 )
 
-func AuthIdentify(c *gin.Context, identity *models.Identity, crn string) error {
+func AuthIdentity(c *gin.Context, identity *models.Identity, crn string) (error, *models.IdentityResult) {
 	logger.Logger().Infof("【IAM SDK】 AuthIdentify iam鉴权开始")
 	logger.Logger().Infof("【IAM SDK】 AuthIdentify identity:%+v, crn:%s", *identity, crn)
 
 	if c.Request == nil {
 		logger.Logger().Warnf("【IAM SDK】 AuthIdentify Request is nil -> this is an inner api")
 		printEndLog()
-		return nil
+		return nil, &models.IdentityResult{IsFullDisplayResource: true}
 	}
 
 	// 白名单不鉴权
 	if identity.IsWhite {
 		logger.Logger().Infof("【IAM SDK】 AuthIdentify identity:%+v,命中白名单,不进行拦截", *identity)
 		printEndLog()
-		return nil
+		return nil, &models.IdentityResult{IsFullDisplayResource: true}
 	}
 
 	// 获取用户信息
 	operatorInfo, err := handler.RetrieveUserInfo(c)
 	if err != nil {
-		return err
+		return err, nil
 	} else if operatorInfo == nil {
 		logger.Logger().Warnf("【IAM SDK】 AuthIdentify operatorInfo is nil -> this is an inner api")
 		printEndLog()
-		return nil
+		return nil, &models.IdentityResult{IsFullDisplayResource: true}
 	}
 
 	// 云账号不鉴权
 	if isCloudAccountRequest(operatorInfo) {
 		logger.Logger().Infof("【IAM SDK】 AuthIdentify 云账号不鉴权")
 		printEndLog()
-		return nil
+		return nil, &models.IdentityResult{IsFullDisplayResource: true}
 	}
 
 	// 组装鉴权信息
@@ -63,38 +64,44 @@ func AuthIdentify(c *gin.Context, identity *models.Identity, crn string) error {
 	var result *authhttp.AuthResponse
 
 	if reflect.DeepEqual(operatorInfo.UserTypeCode, strconv.Itoa(identitytypeenum.IamRole)) {
-		result, er = authRole(operatorInfo, actionInfo)
+		result, er = authRole(c, operatorInfo, actionInfo)
 	} else {
-		result, er = authUser(operatorInfo, actionInfo)
+		result, er = authUser(c, operatorInfo, actionInfo)
 	}
 	if er != nil {
 		printEndLog()
-		return er
+		return er, nil
 	}
 
 	logger.Logger().Infof("【IAM SDK】 AuthIdentify operatorInfo:%+v, actionInfo:%+v 请求鉴权成功,用户允许该操作", *operatorInfo, *actionInfo)
 
-	if result.Module.ListQueryRule != nil {
-		setContextListQueryRule(c, result.Module.ListQueryRule)
-	}
-
 	printEndLog()
-	return nil
+
+	return nil, &models.IdentityResult{ListQueryRule: result.Module.ListQueryRule, ListResource: result.Module.ListResource, IsFullDisplayResource: result.Module.IsFullDisplayResource}
 }
 
 func printEndLog() {
-	logger.Logger().Infof("【IAM SDK】 AuthIdentify iam鉴权鉴权结束\n")
+	logger.Logger().Infof("【IAM SDK】 AuthIdentify iam用户鉴权结束\n")
 }
 
-func GetContextListQueryRule(c *gin.Context) interface{} {
+func GetContextListQueryRule(c *gin.Context) *authhttp.ListQueryRule {
 	v, e := c.Get(ContextListQueryRuleKey)
 	if e == false {
 		logger.Logger().Infof("【IAM SDK】 GetContextListQueryRule ContextListQueryRuleKey is not exist")
 		return nil
 	}
 
-	logger.Logger().Infof("【IAM SDK】 GetContextListQueryRule ContextListQueryRuleKey:%s", v)
-	return v
+	return v.(*authhttp.ListQueryRule)
+}
+
+func GetContextListResource(c *gin.Context) *authhttp.ListResource {
+	v, e := c.Get(ContextListResource)
+	if e == false {
+		logger.Logger().Infof("【IAM SDK】 GetContextListResource ContextListResource is not exist")
+		return nil
+	}
+
+	return v.(*authhttp.ListResource)
 }
 
 func setContextListQueryRule(c *gin.Context, a *authhttp.ListQueryRule) {
@@ -102,16 +109,26 @@ func setContextListQueryRule(c *gin.Context, a *authhttp.ListQueryRule) {
 	logger.Logger().Debugf("【IAM SDK】 setContextListQueryRule ContextListQueryRuleKey:%+v", *a)
 }
 
-func authUser(operatorInfo *domain.OperatorInfo, actionInfo *domain.ActionInfo) (*authhttp.AuthResponse, error) {
+func setContextListResource(c *gin.Context, a *authhttp.ListResource) {
+	c.Set(ContextListResource, a)
+	logger.Logger().Debugf("【IAM SDK】 setContextListResource ContextListResource:%+v", *a)
+}
+
+func authUser(c *gin.Context, operatorInfo *domain.OperatorInfo, actionInfo *domain.ActionInfo) (*authhttp.AuthResponse, error) {
 	var resources []string
 	for _, resource := range actionInfo.Resources {
 		resources = append(resources, resource.ResourceArn)
 	}
+
 	request := &authhttp.UserAuthRequest{
-		AccountUserId: operatorInfo.AccountId,
-		Product:       actionInfo.Product,
-		ActionName:    actionInfo.Action,
-		Resource:      resources}
+		AccountUserId:                operatorInfo.AccountId,
+		Product:                      actionInfo.Product,
+		ActionName:                   actionInfo.Action,
+		Resource:                     resources,
+		OrganizeAssumeRoleName:       operatorInfo.OrganizeAssumeRoleName,
+		CloudAccountOrganizeRoleName: operatorInfo.CloudAccountOrganizeRoleName,
+		Condition:                    getCondition(c),
+	}
 	result, err := request.UserAuth()
 	if err != nil {
 		return nil, err
@@ -126,17 +143,20 @@ func authUser(operatorInfo *domain.OperatorInfo, actionInfo *domain.ActionInfo) 
 	return result, nil
 }
 
-func authRole(operatorInfo *domain.OperatorInfo, actionInfo *domain.ActionInfo) (*authhttp.AuthResponse, error) {
+func authRole(c *gin.Context, operatorInfo *domain.OperatorInfo, actionInfo *domain.ActionInfo) (*authhttp.AuthResponse, error) {
 	var resources []string
 	for _, resource := range actionInfo.Resources {
 		resources = append(resources, resource.ResourceArn)
 	}
+
 	request := &authhttp.RoleAuthRequest{
 		Product:    actionInfo.Product,
 		ActionName: actionInfo.Action,
 		RoleCrn:    operatorInfo.RoleCrn,
 		Token:      operatorInfo.Token,
-		Resource:   resources}
+		Resource:   resources,
+		Condition:  getCondition(c),
+	}
 	result, err := request.RoleAuth()
 	if err != nil {
 		return nil, err
@@ -149,6 +169,15 @@ func authRole(operatorInfo *domain.OperatorInfo, actionInfo *domain.ActionInfo) 
 
 	logger.Logger().Infof("【IAM SDK】 authRole 角色鉴权成功")
 	return res, nil
+}
+
+func getCondition(c *gin.Context) map[string]string {
+	conditionMap := map[string]string{
+		"cs:CurrentTime":     c.GetHeader("cs-CurrentTime"),
+		"cs:SecureTransport": c.GetHeader("cs-SecureTransport"),
+		"cs:SourceIp":        c.GetHeader("cs-SourceIp"),
+	}
+	return conditionMap
 }
 
 func isCloudAccountRequest(operatorInfo *domain.OperatorInfo) bool {
