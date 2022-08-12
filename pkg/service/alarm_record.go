@@ -53,6 +53,7 @@ func (s *AlarmRecordService) GetAlarmRecordTotalByIam(param form.AlarmRecordPage
 func (s *AlarmRecordService) GetLevelTotal(param form.AlarmRecordPageQueryForm) ([]*form.AlarmRecordNum, error) {
 	start, end := getFmtTime(param.StartTime, param.EndTime)
 	isIamLogin := CheckIamLogin(param.TenantId, param.IamUserId)
+	isIamLogin = false
 	if isIamLogin {
 		resourcesIdList, err := GetIamResourcesIdList(param.IamUserId)
 		if err != nil {
@@ -107,8 +108,9 @@ func (s *AlarmRecordService) GetRecordNumHistoryByIam(param form.AlarmRecordPage
 
 func (s *AlarmRecordService) GetTotalByProduct(param form.AlarmRecordPageQueryForm) ([]*form.ProductAlarmRecordNum, error) {
 	start, end := getFmtTime(param.StartTime, param.EndTime)
-	isIamLogin := CheckIamLogin(param.TenantId, param.IamUserId)
 	var list []*form.ProductAlarmRecordNum
+	isIamLogin := CheckIamLogin(param.TenantId, param.IamUserId)
+	isIamLogin = false
 	if isIamLogin {
 		resourcesIdList, err := GetIamResourcesIdList(param.IamUserId)
 		if err != nil {
@@ -133,10 +135,11 @@ func (s *AlarmRecordService) GetTotalByProduct(param form.AlarmRecordPageQueryFo
 }
 
 func (s *AlarmRecordService) GetPageListByProduct(param form.AlarmRecordPageQueryForm) (*cvo.PageVO, error) {
-	isIamLogin := CheckIamLogin(param.TenantId, param.IamUserId)
 	start, end := getFmtTime(param.StartTime, param.EndTime)
 	var page []*form.AlarmRecordPage
 	var total int64
+	isIamLogin := CheckIamLogin(param.TenantId, param.IamUserId)
+	isIamLogin = false
 	if isIamLogin {
 		resourcesIdList, err := GetIamResourcesIdList(param.IamUserId)
 		if err != nil {
