@@ -58,7 +58,7 @@ func (kafka *KafkaInstanceService) ConvertRealForm(form service.InstancePageForm
 	if strutil.IsNotBlank(form.StatusList) {
 		param += "&searchState" + form.StatusList
 	}
-	return KafkaDTO{Param: param, TenantId: form.TenantId, UserInfo: form.UserInfo}
+	return KafkaDTO{Param: param, TenantId: form.TenantId}
 }
 
 func (kafka *KafkaInstanceService) DoRequest(url string, f interface{}) (interface{}, error) {
@@ -110,7 +110,7 @@ func (kafka *KafkaInstanceService) ConvertRealAuthForm(form service.InstancePage
 	if strutil.IsNotBlank(form.StatusList) {
 		param += "&searchState" + form.StatusList
 	}
-	return KafkaDTO{Param: param, TenantId: form.TenantId}
+	return KafkaDTO{Param: param, TenantId: form.TenantId, UserInfo: form.IamInfo.UserInfo}
 }
 
 func (kafka *KafkaInstanceService) DoAuthRequest(url string, f interface{}) (interface{}, error) {

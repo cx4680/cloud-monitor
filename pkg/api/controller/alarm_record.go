@@ -68,6 +68,7 @@ func (a *AlarmRecordController) GetAlarmRecordTotal(c *gin.Context) {
 		return
 	}
 	isIamLogin := service.CheckIamLogin(tenantId, iamUserId)
+	isIamLogin = false
 	if isIamLogin {
 		result, err := a.service.GetAlarmRecordTotalByIam(f)
 		if err != nil {
@@ -105,6 +106,7 @@ func (a *AlarmRecordController) GetRecordNumHistory(c *gin.Context) {
 		return
 	}
 	isIamLogin := service.CheckIamLogin(tenantId, iamUserId)
+	isIamLogin = false
 	if isIamLogin {
 		f.TenantId = tenantId
 		f.IamUserId = iamUserId
@@ -117,11 +119,18 @@ func (a *AlarmRecordController) GetRecordNumHistory(c *gin.Context) {
 		return
 	}
 	d, _ := time.ParseDuration("24h")
-	startDate := util2.StrToTime(util2.FullTimeFmt, f.StartTime)
-	endDate := util2.StrToTime(util2.FullTimeFmt, f.EndTime).Add(d)
-
-	start := util2.TimeToStr(startDate, util2.DayTimeFmt)
-	end := util2.TimeToStr(endDate, util2.DayTimeFmt)
+	var start, end string
+	var startDate, endDate time.Time
+	if strutil.IsBlank(f.StartTime) || strutil.IsBlank(f.EndTime) {
+		start, end = getFmtTime(f.StartTime, f.EndTime)
+		startDate = util2.StrToTime(util2.FullTimeFmt, start+" 00:00:00")
+		endDate = util2.StrToTime(util2.FullTimeFmt, end+" 00:00:00")
+	} else {
+		startDate = util2.StrToTime(util2.FullTimeFmt, f.StartTime)
+		endDate = util2.StrToTime(util2.FullTimeFmt, f.EndTime).Add(d)
+		start = util2.TimeToStr(startDate, util2.DayTimeFmt)
+		end = util2.TimeToStr(endDate, util2.DayTimeFmt)
+	}
 	numList := dao.AlarmRecord.GetRecordNumHistory(global.DB, tenantId, f.Region, start, end)
 	//补充无数据的日期，该日期的历史数据为0
 	resultMap := make(map[string]int)
@@ -141,14 +150,14 @@ func (a *AlarmRecordController) GetRecordNumHistory(c *gin.Context) {
 }
 
 func (a *AlarmRecordController) GetLevelTotal(c *gin.Context) {
+	var f form.AlarmRecordPageQueryForm
+	if err := c.ShouldBindQuery(&f); err != nil {
+		c.JSON(http.StatusBadRequest, global.NewError(translate.GetErrorMsg(err)))
+		return
+	}
 	tenantId, iamUserId, err := util2.GetTenantIdAndUserId(c)
 	if err != nil {
 		c.JSON(http.StatusOK, global.NewError(err.Error()))
-		return
-	}
-	var f form.AlarmRecordPageQueryForm
-	if err = c.ShouldBindQuery(&f); err != nil {
-		c.JSON(http.StatusBadRequest, global.NewError(translate.GetErrorMsg(err)))
 		return
 	}
 	f.TenantId = tenantId
@@ -201,4 +210,20 @@ func (a *AlarmRecordController) GetPageListByProduct(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, global.NewSuccess("查询成功", page))
+}
+
+func getFmtTime(startTime, endTime string) (string, string) {
+	d, _ := time.ParseDuration("24h")
+	d7, _ := time.ParseDuration("-168h")
+	var start, end string
+	//没有传日期则计算7天内的数据
+	if startTime == "" || endTime == "" {
+		now := util2.GetNow()
+		end = util2.TimeToStr(now.Add(d), util2.DayTimeFmt)
+		start = util2.TimeToStr(now.Add(d7), util2.DayTimeFmt)
+	} else {
+		start = util2.TimeToStr(util2.StrToTime(util2.FullTimeFmt, startTime), util2.DayTimeFmt)
+		end = util2.TimeToStr(util2.StrToTime(util2.FullTimeFmt, endTime).Add(d), util2.DayTimeFmt)
+	}
+	return start, end
 }

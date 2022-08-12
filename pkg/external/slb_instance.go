@@ -32,6 +32,7 @@ type SlbQueryPageRequest struct {
 	Data      interface{} `json:"data,omitempty"`
 	//临时传递
 	TenantId string
+	IamInfo  service.IamInfo `json:"-"`
 }
 
 type SlbResponse struct {
@@ -160,18 +161,21 @@ func (slb *SlbInstanceService) ConvertRealAuthForm(form service.InstancePageForm
 		PageIndex: form.Current,
 		PageSize:  form.PageSize,
 		Data:      queryParam,
-		TenantId:  form.TenantId,
+		IamInfo:   form.IamInfo,
 	}
 }
 
 func (slb *SlbInstanceService) DoAuthRequest(url string, form interface{}) (interface{}, error) {
 	var f = form.(SlbQueryPageRequest)
-	respStr, err := httputil.HttpPostJson(url, form, map[string]string{"userCode": f.TenantId})
+	respStr, err := httputil.HttpPostJson(url, form, slb.GetIamHeader(&f.IamInfo))
 	if err != nil {
 		return nil, err
 	}
 	var resp SlbResponse
-	jsonutil.ToObject(respStr, &resp)
+	err = jsonutil.ToObjectWithError(respStr, &resp)
+	if err != nil {
+		return nil, err
+	}
 	return resp, nil
 }
 

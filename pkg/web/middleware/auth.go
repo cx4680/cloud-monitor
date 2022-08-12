@@ -107,24 +107,24 @@ func ParsingAndSetUserInfo(c *gin.Context) error {
 }
 
 type SsoUser struct {
-	CustName         string        `json:"custName"`
-	CustId           string        `json:"custId"`
-	LoginId          string        `json:"loginId"`
-	LoginCode        string        `json:"loginCode"`
-	UserTypeCode     string        `json:"userTypeCode"`
-	SerialNumber     string        `json:"serialNumber"`
-	UserHeadPortrait string        `json:"userHeadPortrait"`
-	AcctId           string        `json:"acctId"`
-	CloudLoginCode   string        `json:"cloudLoginCode"`
-	CloudLoginId     string        `json:"cloudLoginId"`
-	IsIdentify       string        `json:"isIdentify"`
-	LoginState       string        `json:"loginState"`
-	RoleName         string        `json:"roleName"`
-	TypeCode         string        `json:"typeCode"`
-	AccountId        string        `json:"accountId"`
-	PrincipalId      string        `json:"principalId"`
-	UserName         string        `json:"userName"`
-	Organization     *Organization `json:"organization"`
+	CustName         string       `json:"custName"`
+	CustId           string       `json:"custId"`
+	LoginId          string       `json:"loginId"`
+	LoginCode        string       `json:"loginCode"`
+	UserTypeCode     string       `json:"userTypeCode"`
+	SerialNumber     string       `json:"serialNumber"`
+	UserHeadPortrait string       `json:"userHeadPortrait"`
+	AcctId           string       `json:"acctId"`
+	CloudLoginCode   string       `json:"cloudLoginCode"`
+	CloudLoginId     string       `json:"cloudLoginId"`
+	IsIdentify       string       `json:"isIdentify"`
+	LoginState       string       `json:"loginState"`
+	RoleName         string       `json:"roleName"`
+	TypeCode         string       `json:"typeCode"`
+	AccountId        string       `json:"accountId"`
+	PrincipalId      string       `json:"principalId"`
+	UserName         string       `json:"userName"`
+	Organization     Organization `json:"organization"`
 }
 
 type Organization struct {

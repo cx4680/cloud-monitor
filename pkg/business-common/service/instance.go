@@ -29,7 +29,15 @@ type InstancePageForm struct {
 	PageSize     int               `form:"pageSize,default=10"`
 	Product      string            `form:"product" binding:"required"`
 	ExtraAttr    map[string]string `form:"extraAttr"`
-	UserInfo     string            `form:"userInfo"`
+	IamInfo      IamInfo           `form:"iamInfo"`
+}
+
+type IamInfo struct {
+	UserInfo        string
+	SID             string
+	CurrentTime     string
+	SecureTransport string
+	SourceIp        string
 }
 
 type InstanceStage interface {
@@ -118,4 +126,16 @@ func (is *InstanceServiceImpl) getAuthRequestUrl(product string) (string, error)
 		return "", errors.New("产品配置有误")
 	}
 	return p.Host + p.IamPageUrl, nil
+}
+
+func (is *InstanceServiceImpl) GetIamHeader(info *IamInfo) map[string]string {
+	var headerParams = make(map[string]string)
+	if info != nil {
+		headerParams["user-info"] = info.UserInfo
+		headerParams["cookie"] = "SID=" + info.SID
+		headerParams["cs-CurrentTime"] = info.CurrentTime
+		headerParams["cs-SecureTransport"] = info.SecureTransport
+		headerParams["cs-SourceIp"] = info.SourceIp
+	}
+	return headerParams
 }

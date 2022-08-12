@@ -24,13 +24,13 @@ func GetUserId(c *gin.Context) (string, error) {
 }
 
 func GetTenantIdAndUserId(c *gin.Context) (string, string, error) {
-	tenantId := c.GetString(global.TenantId)
-	if strutil.IsBlank(tenantId) {
-		return "", "", errors.NewBusinessError("获取租户ID失败")
+	tenantId, err := GetTenantId(c)
+	if err != nil {
+		return "", "", err
 	}
-	userId := c.GetString(global.UserId)
-	if strutil.IsBlank(tenantId) {
-		return "", "", errors.NewBusinessError("获取用户ID失败")
+	userId, err := GetUserId(c)
+	if err != nil {
+		return "", "", err
 	}
 	return tenantId, userId, nil
 }

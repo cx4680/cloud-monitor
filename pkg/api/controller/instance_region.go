@@ -53,15 +53,16 @@ func (ctl *InstanceRegionCtl) GetPage(c *gin.Context) {
 		return
 	}
 	f.TenantId = tenantId
-	isIamLogin := service.CheckIamLogin(tenantId, iamUserId)
 	instanceService := external.ProductInstanceServiceMap[f.Product]
 	if instanceService == nil {
 		c.JSON(http.StatusBadRequest, global.NewError("该产品未接入"))
 		return
 	}
 	var page *vo.PageVO
+	isIamLogin := service.CheckIamLogin(tenantId, iamUserId)
 	if isIamLogin {
-		f.UserInfo = c.Request.Header.Get("user-info")
+		f.IamInfo.UserInfo = c.Request.Header.Get("user-info")
+		ctl.fillIamInfo(c, &f)
 		page, err = instanceService.GetPageByAuth(f, instanceService.(commonService.InstanceStage))
 	} else {
 		page, err = instanceService.GetPage(f, instanceService.(commonService.InstanceStage))
@@ -72,6 +73,17 @@ func (ctl *InstanceRegionCtl) GetPage(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, global.NewSuccess("查询成功", page))
+}
+
+func (ctl *InstanceRegionCtl) fillIamInfo(c *gin.Context, f *commonService.InstancePageForm) error {
+	header := c.Request.Header
+	f.IamInfo.UserInfo = header.Get("user-info")
+	sid, _ := c.Cookie("SID")
+	f.IamInfo.SID = sid
+	f.IamInfo.CurrentTime = header.Get("cs-CurrentTime")
+	f.IamInfo.SecureTransport = header.Get("cs-SecureTransport")
+	f.IamInfo.SourceIp = header.Get("cs-SourceIp")
+	return nil
 }
 
 // GetInstanceNumByRegion
@@ -91,11 +103,15 @@ func (ctl *InstanceRegionCtl) GetPage(c *gin.Context) {
 // @Success 200 {object} AlarmInstanceRegionVO
 // @Router /hawkeye/instance/getInstanceNum [get]
 func (ctl *InstanceRegionCtl) GetInstanceNumByRegion(c *gin.Context) {
-	tenantId, _ := commonUtil.GetTenantId(c)
 	regionCode := c.Query("region")
 	if len(regionCode) == 0 {
 		logger.Logger().Error("region不能为空")
 		c.JSON(http.StatusOK, global.NewError("region不能为空"))
+		return
+	}
+	tenantId, iamUserId, err := commonUtil.GetTenantIdAndUserId(c)
+	if err != nil {
+		c.JSON(http.StatusOK, global.NewError(err.Error()))
 		return
 	}
 	f := commonService.InstancePageForm{
@@ -105,7 +121,16 @@ func (ctl *InstanceRegionCtl) GetInstanceNumByRegion(c *gin.Context) {
 		PageSize: 1000,
 	}
 	instanceService := external.ProductInstanceServiceMap[external.ECS]
-	page, err := instanceService.GetPage(f, instanceService.(commonService.InstanceStage))
+	var result = &AlarmInstanceRegionVO{}
+	var page *vo.PageVO
+	isIamLogin := service.CheckIamLogin(tenantId, iamUserId)
+	if isIamLogin {
+		f.IamInfo.UserInfo = c.Request.Header.Get("user-info")
+		ctl.fillIamInfo(c, &f)
+		page, err = instanceService.GetPageByAuth(f, instanceService.(commonService.InstanceStage))
+	} else {
+		page, err = instanceService.GetPage(f, instanceService.(commonService.InstanceStage))
+	}
 	if err != nil {
 		logger.Logger().Error(err)
 		c.JSON(http.StatusInternalServerError, global.NewError("查询失败"))
@@ -113,8 +138,8 @@ func (ctl *InstanceRegionCtl) GetInstanceNumByRegion(c *gin.Context) {
 	}
 	bindNum := ctl.dao.GetInstanceNum(tenantId, regionCode)
 	total := util.If(bindNum > page.Total, bindNum, page.Total)
-	vo := &AlarmInstanceRegionVO{Total: total.(int), BindNum: bindNum}
-	c.JSON(http.StatusOK, global.NewSuccess("查询成功", vo))
+	result = &AlarmInstanceRegionVO{Total: total.(int), BindNum: bindNum}
+	c.JSON(http.StatusOK, global.NewSuccess("查询成功", result))
 }
 
 type AlarmInstanceRegionVO struct {
