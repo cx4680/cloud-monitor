@@ -16,9 +16,21 @@ func GetTenantId(c *gin.Context) (string, error) {
 }
 
 func GetUserId(c *gin.Context) (string, error) {
-	tenantId := c.GetString(global.UserId)
-	if strutil.IsBlank(tenantId) {
+	userId := c.GetString(global.UserId)
+	if strutil.IsBlank(userId) {
 		return "", errors.NewBusinessError("获取用户ID失败")
 	}
-	return tenantId, nil
+	return userId, nil
+}
+
+func GetTenantIdAndUserId(c *gin.Context) (string, string, error) {
+	tenantId, err := GetTenantId(c)
+	if err != nil {
+		return "", "", err
+	}
+	userId, err := GetUserId(c)
+	if err != nil {
+		return "", "", err
+	}
+	return tenantId, userId, nil
 }

@@ -16,17 +16,32 @@ type AuthResponse struct {
 	ErrorCode string `json:"errorCode"`
 	Success   bool   `json:"success"`
 	Module    *struct {
-		Allowed          bool                      `json:"allowed"`
-		IsHit            bool                      `json:"isHit"`
-		IdentityResource *IdentityResourceResponse `json:"identityResource"`
-		ListQueryRule    *ListQueryRule            `json:"listQueryRule"`
+		Allowed               bool                     `json:"allowed"`
+		IsHit                 bool                     `json:"isHit"`
+		ListQueryRule         *ListQueryRule           `json:"listQueryRule"`
+		ListResource          *ListResource            `json:"listResource"`
+		IdentityDetails       *IdentityDetailsResponse `json:"identityDetails"`
+		IsFullDisplayResource bool                     `json:"isFullDisplayResource"`
 	} `json:"module"`
 }
 
-type IdentityResourceResponse struct {
-	ResourceType     string   `json:"resourceType"`
-	DenyResourceIDs  []string `json:"denyResourceIDs"`
-	AllowResourceIDs []string `json:"allowResourceIDs"`
+type IdentityDetailsResponse struct {
+	NotHitReason []*IdentityNotHitReason `json:"notHitReason"`
+	HitPolicy    []*IdentityHitReason    `json:"hitPolicy"`
+}
+
+type IdentityNotHitReason struct {
+	Effect                string `json:"effect"`
+	RequestParam          string `json:"requestParam"`
+	MatcherPolicyItem     string `json:"matcherPolicyItem"`
+	MatcherPolicyDocument string `json:"matcherPolicyDocument"`
+	Desc                  string `json:"desc"`
+}
+
+type IdentityHitReason struct {
+	Effect         string `json:"effect"`
+	RequestParam   string `json:"requestParam"`
+	PolicyDocument string `json:"policyDocument"`
 }
 
 type ListQueryRule struct {
@@ -47,13 +62,17 @@ type ListQueryRuleField struct {
 	Value     string `json:"value"`
 }
 
+type ListResource struct {
+	Resources map[string]map[string][]string `json:"resources"`
+}
+
 func (resp *AuthResponse) AuthResultRole(action *domain.ActionInfo, hasTry bool, operatorInfo *domain.OperatorInfo) (*AuthResponse, error) {
 	if err := resp.authResultForNull(); err != nil {
 		return nil, err
 	}
 
 	if len(resp.ErrorCode) > 0 && autherrorenum.IamRoleStsTokenInvalid == resp.ErrorCode {
-		if hasTry {
+		if !hasTry {
 			logger.Logger().Errorf("【IAM SDK】 AuthResultRole Token已失效")
 			return nil, errortypes.IAMSDKError(autherrorenum.IamRoleStsTokenInvalid)
 		}
@@ -119,7 +138,7 @@ func (resp *AuthResponse) authResultForModel() error {
 	}
 
 	if !resp.Module.Allowed {
-		logger.Logger().Errorf("【IAM SDK】 authResultForModel,resp.Module.Allowed is false")
+		logger.Logger().Errorf("【IAM SDK】 resp.Module.Allowed is false")
 		return errortypes.IAMSDKError(autherrorenum.OperNotAllowed)
 	}
 

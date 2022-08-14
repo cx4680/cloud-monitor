@@ -12,4 +12,8 @@ type UserIdentity struct {
 	 * 用户类型
 	 */
 	Type string `json:"type"`
+
+	OrganizeAssumeRoleName string `json:"organizeAssumeRoleName"`
+
+	CloudAccountOrganizeRoleName string `json:"cloudAccountOrganizeRoleName"`
 }

@@ -20,6 +20,14 @@ type OperatorInfo struct {
 	RoleCrn      string
 	Token        string
 	Cid          string
+	/**
+	 * 云账号之上组织角色
+	 */
+	OrganizeAssumeRoleName string
+	/**
+	 * 云账号之下组织角色
+	 */
+	CloudAccountOrganizeRoleName string
 }
 
 type RequestType int32

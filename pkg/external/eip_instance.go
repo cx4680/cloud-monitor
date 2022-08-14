@@ -123,3 +123,58 @@ func (eip *EipInstanceService) ConvertResp(realResp interface{}) (int, []service
 	}
 	return vo.Data.Total, list
 }
+
+func (eip *EipInstanceService) ConvertRealAuthForm(form service.InstancePageForm) interface{} {
+	queryParam := EipQueryParam{
+		IpAddress:   form.ExtraAttr["ip"],
+		InstanceUid: form.InstanceId,
+		UserCode:    form.TenantId,
+	}
+	if strutil.IsNotBlank(form.StatusList) {
+		queryParam.Status = toIntList(form.StatusList)
+	}
+
+	return EipQueryPageRequest{
+		PageIndex: form.Current,
+		PageSize:  form.PageSize,
+		Data:      queryParam,
+		UserCode:  form.TenantId,
+	}
+}
+
+func (eip *EipInstanceService) DoAuthRequest(url string, form interface{}) (interface{}, error) {
+	respStr, err := httputil.HttpPostJson(url, form, nil)
+	if err != nil {
+		return nil, err
+	}
+	var resp EipResponse
+	jsonutil.ToObject(respStr, &resp)
+	return resp, nil
+}
+
+func (eip *EipInstanceService) ConvertAuthResp(realResp interface{}) (int, []service.InstanceCommonVO) {
+	vo := realResp.(EipResponse)
+	var list []service.InstanceCommonVO
+	if vo.Data.Total > 0 {
+		for _, d := range vo.Data.Rows {
+			list = append(list, service.InstanceCommonVO{
+				InstanceId:   d.Uid,
+				InstanceName: d.Name,
+				Labels: []service.InstanceLabel{{
+					Name:  "eipAddress",
+					Value: d.IpAddress,
+				}, {
+					Name:  "status",
+					Value: strconv.Itoa(d.Status),
+				}, {
+					Name:  "bandWidth",
+					Value: strconv.Itoa(d.BandWidth),
+				}, {
+					Name:  "bindInstanceId",
+					Value: d.InstanceUid,
+				}},
+			})
+		}
+	}
+	return vo.Data.Total, list
+}

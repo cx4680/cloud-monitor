@@ -206,6 +206,40 @@ func (s *MonitorChartService) GetProcessData(request form.PrometheusRequest) ([]
 	return processList, nil
 }
 
+func (s *MonitorChartService) GetTopDataByIam(request form.PrometheusRequest) ([]form.PrometheusInstance, error) {
+	resourcesIdList, err := GetIamResourcesIdList(request.IamUserId)
+	if err != nil {
+		return nil, err
+	}
+	if len(resourcesIdList) == 0 {
+		return nil, nil
+	}
+	monitorItem := dao.MonitorItem.GetMonitorItemCacheByName(request.Name)
+	var pql string
+	if len(strings.Split(monitorItem.Labels, ",")) > 1 {
+		for i, v := range resourcesIdList {
+			resourcesIdList[i] = fmt.Sprintf(constant.TopExpr, "1", strings.ReplaceAll(monitorItem.MetricsLinux, constant.MetricLabel, constant.INSTANCE+"='"+v+"'"))
+		}
+		pql = fmt.Sprintf(constant.TopExpr, strconv.Itoa(request.TopNum), strings.Join(resourcesIdList, " or "))
+	} else {
+		instances := strings.Join(resourcesIdList, "|")
+		if strutil.IsBlank(instances) {
+			return nil, nil
+		}
+		pql = fmt.Sprintf(constant.TopExpr, strconv.Itoa(request.TopNum), strings.ReplaceAll(monitorItem.MetricsLinux, constant.MetricLabel, constant.INSTANCE+"=~'"+instances+"'"))
+	}
+	result := s.prometheus.Query(pql, request.Time).Data.Result
+	var instanceList []form.PrometheusInstance
+	for _, v := range result {
+		instanceDTO := form.PrometheusInstance{
+			Instance: v.Metric[constant.INSTANCE],
+			Value:    changeDecimal(v.Value[1].(string)),
+		}
+		instanceList = append(instanceList, instanceDTO)
+	}
+	return instanceList, nil
+}
+
 func yAxisFillEmptyData(result []*form.PrometheusResult, timeList []string, labels []string, instanceId string) map[string][]string {
 	resultMap := make(map[string][]string)
 	for _, v := range result {

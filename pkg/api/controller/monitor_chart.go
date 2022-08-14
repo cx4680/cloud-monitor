@@ -62,7 +62,7 @@ func (ctl *MonitorChartCtl) GetAxisData(c *gin.Context) {
 	}
 }
 
-func (ctl *MonitorChartCtl) GetTop(c *gin.Context) {
+func (ctl *MonitorChartCtl) GetTopData(c *gin.Context) {
 	var param = &form.PrometheusRequest{TopNum: 5}
 	err := c.ShouldBindQuery(&param)
 	if err != nil {
@@ -70,12 +70,23 @@ func (ctl *MonitorChartCtl) GetTop(c *gin.Context) {
 		return
 	}
 	c.Set(global.ResourceName, param.Name)
-	tenantId, err := util.GetTenantId(c)
+	tenantId, iamUserId, err := util.GetTenantIdAndUserId(c)
 	if err != nil {
 		c.JSON(http.StatusOK, global.NewError(err.Error()))
 		return
 	}
 	param.TenantId = tenantId
+	param.IamUserId = iamUserId
+	isIamLogin := service.CheckIamLogin(tenantId, iamUserId)
+	if isIamLogin {
+		data, err := ctl.service.GetTopDataByIam(*param)
+		if err == nil {
+			c.JSON(http.StatusOK, global.NewSuccess("查询成功", data))
+		} else {
+			c.JSON(http.StatusOK, global.NewError(err.Error()))
+		}
+		return
+	}
 	data, err := ctl.service.GetTop(*param)
 	if err == nil {
 		c.JSON(http.StatusOK, global.NewSuccess("查询成功", data))
@@ -122,6 +133,39 @@ func (ctl *MonitorChartCtl) GetProcessData(c *gin.Context) {
 		return
 	}
 	data, err := ctl.service.GetProcessData(param)
+	if err == nil {
+		c.JSON(http.StatusOK, global.NewSuccess("查询成功", data))
+	} else {
+		c.JSON(http.StatusOK, global.NewError(err.Error()))
+	}
+}
+
+func (ctl *MonitorChartCtl) GetTopDataByIam(c *gin.Context) {
+	var param = &form.PrometheusRequest{TopNum: 5}
+	err := c.ShouldBindQuery(&param)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, global.NewError(translate.GetErrorMsg(err)))
+		return
+	}
+	tenantId, iamUserId, err := util.GetTenantIdAndUserId(c)
+	if err != nil {
+		c.JSON(http.StatusOK, global.NewError(err.Error()))
+		return
+	}
+	param.TenantId = tenantId
+	param.IamUserId = iamUserId
+	isIamLogin := service.CheckIamLogin(tenantId, iamUserId)
+	if !isIamLogin {
+		data, err := ctl.service.GetTop(*param)
+		if err == nil {
+			c.JSON(http.StatusOK, global.NewSuccess("查询成功", data))
+		} else {
+			c.JSON(http.StatusOK, global.NewError(err.Error()))
+		}
+		return
+	}
+	c.Set(global.ResourceName, param.Name)
+	data, err := ctl.service.GetTopDataByIam(*param)
 	if err == nil {
 		c.JSON(http.StatusOK, global.NewSuccess("查询成功", data))
 	} else {
