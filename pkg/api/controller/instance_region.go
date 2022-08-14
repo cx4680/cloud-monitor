@@ -75,7 +75,7 @@ func (ctl *InstanceRegionCtl) GetPage(c *gin.Context) {
 	c.JSON(http.StatusOK, global.NewSuccess("查询成功", page))
 }
 
-func (ctl *InstanceRegionCtl) fillIamInfo(c *gin.Context, f *commonService.InstancePageForm) error {
+func (ctl *InstanceRegionCtl) fillIamInfo(c *gin.Context, f *commonService.InstancePageForm) {
 	header := c.Request.Header
 	f.IamInfo.UserInfo = header.Get("user-info")
 	sid, _ := c.Cookie("SID")
@@ -83,7 +83,6 @@ func (ctl *InstanceRegionCtl) fillIamInfo(c *gin.Context, f *commonService.Insta
 	f.IamInfo.CurrentTime = header.Get("cs-CurrentTime")
 	f.IamInfo.SecureTransport = header.Get("cs-SecureTransport")
 	f.IamInfo.SourceIp = header.Get("cs-SourceIp")
-	return nil
 }
 
 // GetInstanceNumByRegion
@@ -123,20 +122,30 @@ func (ctl *InstanceRegionCtl) GetInstanceNumByRegion(c *gin.Context) {
 	instanceService := external.ProductInstanceServiceMap[external.ECS]
 	var result = &AlarmInstanceRegionVO{}
 	var page *vo.PageVO
+	var bindNum int
 	isIamLogin := service.CheckIamLogin(tenantId, iamUserId)
 	if isIamLogin {
 		f.IamInfo.UserInfo = c.Request.Header.Get("user-info")
 		ctl.fillIamInfo(c, &f)
 		page, err = instanceService.GetPageByAuth(f, instanceService.(commonService.InstanceStage))
+		var instanceList []string
+		if page != nil {
+			for _, v := range page.Records.([]commonService.InstanceCommonVO) {
+				instanceList = append(instanceList, v.InstanceId)
+			}
+		}
+		if len(instanceList) != 0 {
+			bindNum = ctl.dao.GetInstanceNumByIam(tenantId, regionCode, instanceList)
+		}
 	} else {
 		page, err = instanceService.GetPage(f, instanceService.(commonService.InstanceStage))
+		bindNum = ctl.dao.GetInstanceNum(tenantId, regionCode)
 	}
 	if err != nil {
 		logger.Logger().Error(err)
 		c.JSON(http.StatusInternalServerError, global.NewError("查询失败"))
 		return
 	}
-	bindNum := ctl.dao.GetInstanceNum(tenantId, regionCode)
 	total := util.If(bindNum > page.Total, bindNum, page.Total)
 	result = &AlarmInstanceRegionVO{Total: total.(int), BindNum: bindNum}
 	c.JSON(http.StatusOK, global.NewSuccess("查询成功", result))
