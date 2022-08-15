@@ -57,7 +57,8 @@ func consumeOneEvent(messageSvc *commonService.MessageService, e AlarmHandlerEve
 	} else if t == handler_type.Http {
 		//调用弹性伸缩
 		data := e.Data.(*commonDtos.AutoScalingData)
-		respJson, err := httputil.HttpPostJson(data.Param, map[string]string{"ruleId": data.RuleId, "tenantId": data.TenantId}, nil)
+		respJson, err := httputil.HttpPostJson(data.Param,
+			map[string]string{"ruleId": data.RuleId, "tenantId": data.TenantId, "instanceId": data.ResourceId, "instanceType": data.ResourceType}, nil)
 		if err != nil {
 			logger.Logger().Error("requestId=", e.RequestId, ", autoScaling request fail, data=", jsonutil.ToString(e), err)
 		} else {
