@@ -206,8 +206,8 @@ func (s *MonitorChartService) GetProcessData(request form.PrometheusRequest) ([]
 	return processList, nil
 }
 
-func (s *MonitorChartService) GetTopDataByIam(request form.PrometheusRequest) ([]form.PrometheusInstance, error) {
-	resourcesIdList, err := GetIamResourcesIdList(request.IamUserId)
+func (s *MonitorChartService) GetTopDataByIam(request form.PrometheusRequest, instancePageForm *commonService.InstancePageForm) ([]form.PrometheusInstance, error) {
+	resourcesIdList, err := getIamInstanceList("1", instancePageForm)
 	if err != nil {
 		return nil, err
 	}
@@ -336,6 +336,25 @@ func getInstanceList(productBizId, tenantId, instanceId string) ([]string, error
 		return nil, errors.NewBusinessError("获取监控产品服务失败")
 	}
 	page, err := instanceService.GetPage(f, stage)
+	if err != nil {
+		return nil, errors.NewBusinessError(err.Error())
+	}
+	var instanceList []string
+	for _, v := range page.Records.([]commonService.InstanceCommonVO) {
+		instanceList = append(instanceList, v.InstanceId)
+	}
+	return instanceList, nil
+}
+
+// GetIamInstanceList 获取iam实例ID列表
+func getIamInstanceList(productBizId string, f *commonService.InstancePageForm) ([]string, error) {
+	f.Product = dao.MonitorProduct.GetMonitorProductByBizId(productBizId).Abbreviation
+	instanceService := external.ProductInstanceServiceMap[f.Product]
+	stage, ok := instanceService.(commonService.InstanceStage)
+	if !ok {
+		return nil, errors.NewBusinessError("获取监控产品服务失败")
+	}
+	page, err := instanceService.GetPageByAuth(*f, stage)
 	if err != nil {
 		return nil, errors.NewBusinessError(err.Error())
 	}

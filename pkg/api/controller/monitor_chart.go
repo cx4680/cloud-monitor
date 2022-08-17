@@ -2,6 +2,7 @@ package controller
 
 import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global"
+	commonService "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/service"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/util"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/form"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/service"
@@ -79,7 +80,13 @@ func (ctl *MonitorChartCtl) GetTopData(c *gin.Context) {
 	param.IamUserId = iamUserId
 	isIamLogin := service.CheckIamLogin(tenantId, iamUserId)
 	if isIamLogin {
-		data, err := ctl.service.GetTopDataByIam(*param)
+		f := &commonService.InstancePageForm{
+			TenantId: tenantId,
+			Current:  1,
+			PageSize: 10000,
+		}
+		FillIamInfo(c, f)
+		data, err := ctl.service.GetTopDataByIam(*param, f)
 		if err == nil {
 			c.JSON(http.StatusOK, global.NewSuccess("查询成功", data))
 		} else {
@@ -165,7 +172,13 @@ func (ctl *MonitorChartCtl) GetTopDataByIam(c *gin.Context) {
 		return
 	}
 	c.Set(global.ResourceName, param.Name)
-	data, err := ctl.service.GetTopDataByIam(*param)
+	f := &commonService.InstancePageForm{
+		TenantId: tenantId,
+		Current:  1,
+		PageSize: 10000,
+	}
+	FillIamInfo(c, f)
+	data, err := ctl.service.GetTopDataByIam(*param, f)
 	if err == nil {
 		c.JSON(http.StatusOK, global.NewSuccess("查询成功", data))
 	} else {
