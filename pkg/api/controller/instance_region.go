@@ -62,7 +62,7 @@ func (ctl *InstanceRegionCtl) GetPage(c *gin.Context) {
 	isIamLogin := service.CheckIamLogin(tenantId, iamUserId)
 	if isIamLogin {
 		f.IamInfo.UserInfo = c.Request.Header.Get("user-info")
-		ctl.fillIamInfo(c, &f)
+		FillIamInfo(c, &f)
 		page, err = instanceService.GetPageByAuth(f, instanceService.(commonService.InstanceStage))
 	} else {
 		page, err = instanceService.GetPage(f, instanceService.(commonService.InstanceStage))
@@ -75,7 +75,7 @@ func (ctl *InstanceRegionCtl) GetPage(c *gin.Context) {
 	c.JSON(http.StatusOK, global.NewSuccess("查询成功", page))
 }
 
-func (ctl *InstanceRegionCtl) fillIamInfo(c *gin.Context, f *commonService.InstancePageForm) {
+func FillIamInfo(c *gin.Context, f *commonService.InstancePageForm) {
 	header := c.Request.Header
 	f.IamInfo.UserInfo = header.Get("user-info")
 	sid, _ := c.Cookie("SID")
@@ -126,7 +126,7 @@ func (ctl *InstanceRegionCtl) GetInstanceNumByRegion(c *gin.Context) {
 	isIamLogin := service.CheckIamLogin(tenantId, iamUserId)
 	if isIamLogin {
 		f.IamInfo.UserInfo = c.Request.Header.Get("user-info")
-		ctl.fillIamInfo(c, &f)
+		FillIamInfo(c, &f)
 		page, err = instanceService.GetPageByAuth(f, instanceService.(commonService.InstanceStage))
 		var instanceList []string
 		if page != nil {
