@@ -216,11 +216,15 @@ func (s *AlarmRecordAddService) buildAutoScalingData(alert *form.AlarmRecordAler
 		//脏数据
 		return nil
 	}
+	sm := s.parseSummary(alert.Annotations.Summary)
+	it := alert.Labels.InstanceType
 
 	return &dto.AutoScalingData{
 		TenantId:        ruleDesc.Rule.TenantID,
 		RuleId:          ruleDesc.Rule.BizId,
 		ResourceGroupId: ruleDesc.ResourceGroupId,
+		ResourceId:      sm["instance"],
+		ResourceType:    it,
 		Param:           param,
 	}
 }
