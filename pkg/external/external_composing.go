@@ -10,6 +10,7 @@ const (
 	CBR        = "cbr"
 	EIP        = "eip"
 	NAT        = "nat"
+	NatE       = "nat-e"
 	SLB        = "slb"
 	BMS        = "bms"
 	EBMS       = "ebms"
@@ -33,6 +34,9 @@ var ProductInstanceServiceMap = map[string]commonService.InstanceService{
 		InstanceServiceImpl: commonService.InstanceServiceImpl{},
 	},
 	NAT: &NatInstanceService{
+		InstanceServiceImpl: commonService.InstanceServiceImpl{},
+	},
+	NatE: &NatEInstanceService{
 		InstanceServiceImpl: commonService.InstanceServiceImpl{},
 	},
 	SLB: &SlbInstanceService{
