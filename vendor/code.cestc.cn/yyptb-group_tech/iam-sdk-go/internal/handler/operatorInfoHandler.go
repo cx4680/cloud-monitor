@@ -24,20 +24,24 @@ const (
 	WebUserId    = "userId"
 
 	// UserIdentity 能开 用户数据存于此键值
-	UserIdentity    = "userIdentity"
-	SsoCookieTicket = "SID"
+	UserIdentity                 = "userIdentity"
+	SsoCookieTicket              = "SID"
+	CloudAccountOrganizeRoleName = "cloudAccountOrganizeRoleName"
+	OrganizeAssumeRoleName       = "organizeAssumeRoleName"
 )
 
 // RetrieveUserInfo 获取用户信息
 func RetrieveUserInfo(c *gin.Context) (*domain.OperatorInfo, error) {
 	var (
-		userTypeCode   string
-		accountId      string
-		cloudAccountId string
-		roleCrn        string
-		token          string
-		requestType    = domain.Request_Http
-		cid            string
+		userTypeCode                 string
+		accountId                    string
+		cloudAccountId               string
+		roleCrn                      string
+		token                        string
+		requestType                  = domain.Request_Http
+		cid                          string
+		cloudAccountOrganizeRoleName string
+		organizeAssumeRoleName       string
 	)
 
 	userInfo := getUserInfoFromContext(c)
@@ -45,6 +49,8 @@ func RetrieveUserInfo(c *gin.Context) (*domain.OperatorInfo, error) {
 		userTypeCode = userInfo.UserTypeCode
 		accountId = userInfo.AccountId
 		cloudAccountId = userInfo.CloudAccountId
+		cloudAccountOrganizeRoleName = userInfo.CloudAccountOrganizeRoleName
+		organizeAssumeRoleName = userInfo.OrganizeAssumeRoleName
 
 		// 角色
 		if strconv.Itoa(identitytypeenum.IamRole) == userTypeCode {
@@ -66,7 +72,7 @@ func RetrieveUserInfo(c *gin.Context) (*domain.OperatorInfo, error) {
 			cid = cecSID
 		}
 
-		logger.Logger().Infof("【IAM SDK】 retrieveUserInfo  isWebApi\nuserTypeCode:%s\naccountId:%s\ncloudAccountId:%s\ncid:%s\nroleCrn:%s\ntoken:%s",
+		logger.Logger().Infof("【IAM SDK】 retrieveUserInfo  isWebApi\nuserTypeCode:%s, accountId:%s, cloudAccountId:%s, cid:%s, roleCrn:%s, token:%s",
 			userTypeCode, accountId, cloudAccountId, cid, roleCrn, token)
 	} else if len(c.GetHeader(UserIdentity)) > 0 {
 		userIdentityStr := c.GetHeader(UserIdentity)
@@ -83,6 +89,8 @@ func RetrieveUserInfo(c *gin.Context) (*domain.OperatorInfo, error) {
 		userTypeCode = strconv.Itoa(identitytypeenum.IdentityCode(userIdentity.Type))
 		accountId = userIdentity.PrincipalId
 		cloudAccountId = userIdentity.AccountId
+		cloudAccountOrganizeRoleName = userIdentity.CloudAccountOrganizeRoleName
+		organizeAssumeRoleName = userIdentity.OrganizeAssumeRoleName
 		logger.Logger().Infof("【IAM SDK】 retrieveUserInfo  isOpenApi\nuserTypeCode:%s\naccountId:%s\ncloudAccountId:%s\nroleCrn:%s\ntoken:%s",
 			userTypeCode, accountId, cloudAccountId, roleCrn, token)
 	}
@@ -104,7 +112,7 @@ func RetrieveUserInfo(c *gin.Context) (*domain.OperatorInfo, error) {
 		return nil, errortypes.IAMSDKError(autherrorenum.IamUserIdFormatError)
 	}
 
-	return &domain.OperatorInfo{AccountId: accountId, CloudAccountId: cloudAccountId, RequestType: requestType, UserTypeCode: userTypeCode, RoleCrn: roleCrn, Token: token, Cid: cid}, nil
+	return &domain.OperatorInfo{AccountId: accountId, CloudAccountId: cloudAccountId, RequestType: requestType, UserTypeCode: userTypeCode, RoleCrn: roleCrn, Token: token, Cid: cid, OrganizeAssumeRoleName: organizeAssumeRoleName, CloudAccountOrganizeRoleName: cloudAccountOrganizeRoleName}, nil
 
 }
 
@@ -112,11 +120,15 @@ func getUserInfoFromContext(c *gin.Context) *UserInfo {
 	userTypeCode, _ := c.Get(WebUserType)
 	accountId, _ := c.Get(WebUserId)
 	cloudAccountId, _ := c.Get(WebAccountId)
+	organizeAssumeRoleName, _ := c.Get(OrganizeAssumeRoleName)
+	cloudAccountOrganizeRoleName, _ := c.Get(CloudAccountOrganizeRoleName)
 
 	userInfo := &UserInfo{
-		UserTypeCode:   util.Strval(userTypeCode),
-		AccountId:      util.Strval(accountId),
-		CloudAccountId: util.Strval(cloudAccountId),
+		UserTypeCode:                 util.Strval(userTypeCode),
+		AccountId:                    util.Strval(accountId),
+		CloudAccountId:               util.Strval(cloudAccountId),
+		OrganizeAssumeRoleName:       util.Strval(organizeAssumeRoleName),
+		CloudAccountOrganizeRoleName: util.Strval(cloudAccountOrganizeRoleName),
 	}
 	return userInfo
 }
@@ -136,7 +148,9 @@ func getCookie(cookies []*http.Cookie, name string) string {
 }
 
 type UserInfo struct {
-	CloudAccountId string `json:"cloudLoginId"`
-	AccountId      string `json:"loginId"`
-	UserTypeCode   string `json:"userTypeCode"`
+	CloudAccountId               string `json:"cloudLoginId"`
+	AccountId                    string `json:"loginId"`
+	UserTypeCode                 string `json:"userTypeCode"`
+	OrganizeAssumeRoleName       string `json:"organizeAssumeRoleName"`
+	CloudAccountOrganizeRoleName string `json:"cloudAccountOrganizeRoleName"`
 }

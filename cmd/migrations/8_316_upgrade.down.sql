@@ -32,3 +32,6 @@ UPDATE t_monitor_item SET metrics_linux = 'sum by (instance)(mysql_write_frequen
 UPDATE t_monitor_item SET metrics_linux = 'sum by (instance)(mysql_top_statememt_avg_exec_time{$INSTANCE})' WHERE biz_id = '117';
 UPDATE t_monitor_item SET metrics_linux = 'sum by (instance)(mysql_top_statememt_exec_err_rate{$INSTANCE})' WHERE biz_id = '118';
 UPDATE t_monitor_item SET metrics_linux = 'sum by (instance)(mysql_current_cons_num{$INSTANCE})' WHERE biz_id = '119';
+
+DELETE FROM t_monitor_item WHERE biz_id IN ('226','227','228','229','230','231','232','233');
+ALTER TABLE t_monitor_product DROP COLUMN iam_page_url;

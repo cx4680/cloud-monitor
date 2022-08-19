@@ -46,8 +46,8 @@ func (mpd *MonitorProductDao) GetMonitorProductDTO() *[]model.MonitorProductDTO 
 	return product
 }
 
-func (mpd *MonitorProductDao) ChangeStatus(db *gorm.DB, bizId []string, status uint8) {
-	global.DB.Model(&model.MonitorProduct{}).Where("biz_id IN (?)", bizId).Update("status", status)
+func (mpd *MonitorProductDao) ChangeStatus(db *gorm.DB, productCodeList []string, status uint8) {
+	db.Model(&model.MonitorProduct{}).Where("abbreviation IN (?)", productCodeList).Update("status", status)
 }
 
 func (mpd *MonitorProductDao) GetByName(db *gorm.DB, name string) *model.MonitorProduct {

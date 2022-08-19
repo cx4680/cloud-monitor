@@ -1,16 +1,12 @@
 package service
 
 import (
-	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/jsonutil"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/dao"
-	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/enum"
-	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/errors"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/form"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/model"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/service"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/vo"
-	"gorm.io/gorm"
 )
 
 type MonitorProductService struct {
@@ -32,19 +28,8 @@ func (s *MonitorProductService) GetAllMonitorProduct() *[]model.MonitorProduct {
 	return s.dao.GetAllMonitorProduct()
 }
 
-func (s *MonitorProductService) PersistenceLocal(db *gorm.DB, param interface{}) (string, error) {
-	p := param.(form.MonitorProductParam)
-	switch p.EventEum {
-	case enum.ChangeMonitorProductStatus:
-		s.dao.ChangeStatus(db, p.BizIdList, p.Status)
-		msg := form.MqMsg{
-			EventEum: enum.ChangeMonitorProductStatus,
-			Data:     param,
-		}
-		return jsonutil.ToString(msg), nil
-	default:
-		return "", errors.NewBusinessError("系统异常")
-	}
+func (s *MonitorProductService) ChangeStatus(param form.MonitorProductParam) {
+	s.dao.ChangeStatus(global.DB, param.ProductCodeList, param.Status)
 }
 
 func (s *MonitorProductService) GetMonitorProductPage(pageSize int, pageNum int) *vo.PageVO {

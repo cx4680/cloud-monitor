@@ -206,6 +206,40 @@ func (s *MonitorChartService) GetProcessData(request form.PrometheusRequest) ([]
 	return processList, nil
 }
 
+func (s *MonitorChartService) GetTopDataByIam(request form.PrometheusRequest, instancePageForm *commonService.InstancePageForm) ([]form.PrometheusInstance, error) {
+	resourcesIdList, err := getIamInstanceList("1", instancePageForm)
+	if err != nil {
+		return nil, err
+	}
+	if len(resourcesIdList) == 0 {
+		return nil, nil
+	}
+	monitorItem := dao.MonitorItem.GetMonitorItemCacheByName(request.Name)
+	var pql string
+	if len(strings.Split(monitorItem.Labels, ",")) > 1 {
+		for i, v := range resourcesIdList {
+			resourcesIdList[i] = fmt.Sprintf(constant.TopExpr, "1", strings.ReplaceAll(monitorItem.MetricsLinux, constant.MetricLabel, constant.INSTANCE+"='"+v+"'"))
+		}
+		pql = fmt.Sprintf(constant.TopExpr, strconv.Itoa(request.TopNum), strings.Join(resourcesIdList, " or "))
+	} else {
+		instances := strings.Join(resourcesIdList, "|")
+		if strutil.IsBlank(instances) {
+			return nil, nil
+		}
+		pql = fmt.Sprintf(constant.TopExpr, strconv.Itoa(request.TopNum), strings.ReplaceAll(monitorItem.MetricsLinux, constant.MetricLabel, constant.INSTANCE+"=~'"+instances+"'"))
+	}
+	result := s.prometheus.Query(pql, request.Time).Data.Result
+	var instanceList []form.PrometheusInstance
+	for _, v := range result {
+		instanceDTO := form.PrometheusInstance{
+			Instance: v.Metric[constant.INSTANCE],
+			Value:    changeDecimal(v.Value[1].(string)),
+		}
+		instanceList = append(instanceList, instanceDTO)
+	}
+	return instanceList, nil
+}
+
 func yAxisFillEmptyData(result []*form.PrometheusResult, timeList []string, labels []string, instanceId string) map[string][]string {
 	resultMap := make(map[string][]string)
 	for _, v := range result {
@@ -302,6 +336,25 @@ func getInstanceList(productBizId, tenantId, instanceId string) ([]string, error
 		return nil, errors.NewBusinessError("获取监控产品服务失败")
 	}
 	page, err := instanceService.GetPage(f, stage)
+	if err != nil {
+		return nil, errors.NewBusinessError(err.Error())
+	}
+	var instanceList []string
+	for _, v := range page.Records.([]commonService.InstanceCommonVO) {
+		instanceList = append(instanceList, v.InstanceId)
+	}
+	return instanceList, nil
+}
+
+// GetIamInstanceList 获取iam实例ID列表
+func getIamInstanceList(productBizId string, f *commonService.InstancePageForm) ([]string, error) {
+	f.Product = dao.MonitorProduct.GetMonitorProductByBizId(productBizId).Abbreviation
+	instanceService := external.ProductInstanceServiceMap[f.Product]
+	stage, ok := instanceService.(commonService.InstanceStage)
+	if !ok {
+		return nil, errors.NewBusinessError("获取监控产品服务失败")
+	}
+	page, err := instanceService.GetPageByAuth(*f, stage)
 	if err != nil {
 		return nil, errors.NewBusinessError(err.Error())
 	}

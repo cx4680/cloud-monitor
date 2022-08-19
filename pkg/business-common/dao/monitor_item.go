@@ -29,9 +29,6 @@ func (d *MonitorItemDao) GetMonitorItem(productBizId, osType, display string) []
 	} else {
 		global.DB.Where("status = ? AND is_display = ? AND product_biz_id = ?", "1", "1", productBizId).Find(&monitorItemList)
 	}
-	if strutil.IsBlank(osType) {
-		return monitorItemList
-	}
 	var newMonitorItemList []model.MonitorItem
 	for _, v := range monitorItemList {
 		if strutil.IsNotBlank(v.ShowExpression) && !isShow(v.ShowExpression, osType) {
@@ -47,7 +44,8 @@ func (d *MonitorItemDao) ChangeDisplay(db *gorm.DB, productBizId, display string
 }
 
 func (d *MonitorItemDao) GetMonitorItemCacheByName(name string) model.MonitorItem {
-	value, err := sys_redis.Get(fmt.Sprintf(constant.MonitorItemKey, name))
+	key := fmt.Sprintf(constant.MonitorItemKey, name)
+	value, err := sys_redis.Get(key)
 	if err != nil {
 		logger.Logger().Error("key=" + name + ", error:" + err.Error())
 	}
@@ -61,7 +59,7 @@ func (d *MonitorItemDao) GetMonitorItemCacheByName(name string) model.MonitorIte
 		logger.Logger().Info("获取监控项为空")
 		return monitorItemModel
 	}
-	if e := sys_redis.SetByTimeOut(name, jsonutil.ToString(monitorItemModel), time.Hour); e != nil {
+	if e := sys_redis.SetByTimeOut(key, jsonutil.ToString(monitorItemModel), time.Hour); e != nil {
 		logger.Logger().Error("设置监控项缓存错误, key=" + name)
 	}
 	return monitorItemModel

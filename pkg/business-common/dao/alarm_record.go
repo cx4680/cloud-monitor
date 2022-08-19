@@ -1,9 +1,13 @@
 package dao
 
 import (
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/strutil"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/dto"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/enum/source_type"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/model"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/form"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/vo"
 	"gorm.io/gorm"
 )
 
@@ -44,4 +48,97 @@ func (dao *AlarmRecordDao) FindFirstInstanceInfo(instanceId string) *model.Alarm
 	global.DB.Raw("select * from t_resource where instance_id=? limit 1", instanceId).Scan(&alarmInstance)
 	//todo 实例是否关联规则 或直接判断规则是否存在
 	return &alarmInstance
+}
+
+func (dao *AlarmRecordDao) GetAlarmRecordTotalByIam(db *gorm.DB, resourcesIdList []string, startTime string, endTime string) int64 {
+	var count int64
+	db.Model(&model.AlarmRecord{}).
+		Where("source_id IN (?) AND create_time BETWEEN ? AND ? and rule_source_type != ? AND status = ?",
+			resourcesIdList, startTime, endTime, source_type.AutoScaling, "firing").
+		Count(&count)
+	return count
+}
+
+func (dao *AlarmRecordDao) GetLevelTotal(db *gorm.DB, tenantId string, region string, startTime string, endTime string) []*form.AlarmRecordNum {
+	var sql string
+	var alarmRecordNum []*form.AlarmRecordNum
+	if strutil.IsNotBlank(region) {
+		sql = "SELECT level, count(*) AS count  FROM t_alarm_record WHERE tenant_id = ?  AND create_time BETWEEN ?  AND ?  AND region = ?  AND rule_source_type != ?  AND status = ? GROUP BY level"
+		db.Raw(sql, tenantId, startTime, endTime, region, source_type.AutoScaling, "firing").Find(&alarmRecordNum)
+	} else {
+		sql = "SELECT level, count(*) AS count  FROM t_alarm_record WHERE tenant_id = ?  AND create_time BETWEEN ?  AND ?  AND rule_source_type != ?  AND status = ? GROUP BY level"
+		db.Raw(sql, tenantId, startTime, endTime, source_type.AutoScaling, "firing").Find(&alarmRecordNum)
+	}
+	return alarmRecordNum
+}
+
+func (dao *AlarmRecordDao) GetLevelTotalByIam(db *gorm.DB, resourcesIdList []string, startTime string, endTime string) []*form.AlarmRecordNum {
+	var alarmRecordNum []*form.AlarmRecordNum
+	sql := "SELECT level, count(*) AS count  FROM t_alarm_record WHERE source_id IN (?)  AND create_time BETWEEN ?  AND ?  AND rule_source_type != ?  AND status = ? GROUP BY level"
+	db.Raw(sql, resourcesIdList, startTime, endTime, source_type.AutoScaling, "firing").Find(&alarmRecordNum)
+	return alarmRecordNum
+}
+
+func (dao *AlarmRecordDao) GetRecordNumHistoryByIam(db *gorm.DB, resourcesIdList []string, startTime string, endTime string) []vo.RecordNumHistory {
+	var sql = "SELECT COUNT(t.id) AS number, " +
+		"DATE_FORMAT(t.create_time, '%Y-%m-%d') AS DayTime " +
+		"FROM t_alarm_record t " +
+		"WHERE source_id IN (?) " +
+		" AND t.create_time between ? AND ? " +
+		" and t.status='firing' " +
+		" GROUP BY daytime "
+	var list []vo.RecordNumHistory
+	db.Raw(sql, resourcesIdList, startTime, endTime).Find(&list)
+	return list
+}
+
+func (dao *AlarmRecordDao) GetTotalByProduct(db *gorm.DB, tenantId, region, startTime, endTime string) []*form.ProductAlarmRecordNum {
+	var sql string
+	var productAlarmRecordNum []*form.ProductAlarmRecordNum
+	if strutil.IsNotBlank(region) {
+		sql = "SELECT t2.abbreviation AS productCode, count(*) AS count FROM t_alarm_record AS t1 LEFT JOIN t_monitor_product AS t2 ON t1.source_type = t2.name WHERE t1.tenant_id = ?  AND t1.region = ?  AND t1.create_time BETWEEN ? AND ? AND t1.rule_source_type != ?  AND t1.status = ? GROUP BY t1.source_type ORDER BY count(*) DESC"
+		db.Raw(sql, tenantId, region, startTime, endTime, source_type.AutoScaling, "firing").Find(&productAlarmRecordNum)
+	} else {
+		sql = "SELECT t2.abbreviation AS productCode, count(*) AS count FROM t_alarm_record AS t1 LEFT JOIN t_monitor_product AS t2 ON t1.source_type = t2.name WHERE t1.tenant_id = ?  AND t1.create_time BETWEEN ? AND ? AND t1.rule_source_type != ?  AND t1.status = ? GROUP BY t1.source_type ORDER BY count(*) DESC"
+		db.Raw(sql, tenantId, startTime, endTime, source_type.AutoScaling, "firing").Find(&productAlarmRecordNum)
+	}
+	return productAlarmRecordNum
+}
+
+func (dao *AlarmRecordDao) GetProductTotalByIam(db *gorm.DB, resourcesIdList []string, startTime string, endTime string) []*form.ProductAlarmRecordNum {
+	var productAlarmRecordNum []*form.ProductAlarmRecordNum
+	sql := "SELECT t2.abbreviation AS productCode, count(*) AS count FROM t_alarm_record AS t1 LEFT JOIN t_monitor_product AS t2 ON t1.source_type = t2.name WHERE t1.source_id IN (?)  AND t1.create_time BETWEEN ? AND ? AND t1.rule_source_type != ?  AND t1.status = ? GROUP BY t1.source_type ORDER BY count(*) DESC"
+	db.Raw(sql, resourcesIdList, startTime, endTime, source_type.AutoScaling, "firing").Find(&productAlarmRecordNum)
+	return productAlarmRecordNum
+}
+
+func (dao *AlarmRecordDao) GetPageListByProduct(db *gorm.DB, productCode string, tenantId, region, startTime, endTime string, pageNum, pageSize int) ([]*form.AlarmRecordPage, int64) {
+	var alarmRecordPage []*form.AlarmRecordPage
+	var sql string
+	var total int64
+	if strutil.IsNotBlank(region) {
+		sql = "SELECT t2.abbreviation AS productCode,t1.source_id AS instanceId,t1.rule_name AS ruleName,t1.level AS level,t1.create_time AS time FROM t_alarm_record AS t1 LEFT JOIN t_monitor_product AS t2 ON t1.source_type = t2.name  WHERE t1.tenant_id = ?  AND t1.region = ?  AND t1.create_time BETWEEN ?  AND ?  AND t1.rule_source_type != ?  AND t1.status = ?  AND t2.abbreviation = ? "
+		db.Raw("select count(*) from ("+sql+" ) t ", tenantId, region, startTime, endTime, source_type.AutoScaling, "firing", productCode).Scan(&total)
+		db.Raw(sql+" ORDER BY t1.create_time DESC LIMIT ?,?", tenantId, region, startTime, endTime, source_type.AutoScaling, "firing", productCode, (pageNum-1)*pageSize, pageSize).Find(&alarmRecordPage)
+	} else {
+		sql = "SELECT t2.abbreviation AS productCode,t1.source_id AS instanceId,t1.rule_name AS ruleName,t1.level AS level,t1.create_time AS time FROM t_alarm_record AS t1 LEFT JOIN t_monitor_product AS t2 ON t1.source_type = t2.name  WHERE t1.tenant_id = ?  AND t1.create_time BETWEEN ?  AND ?  AND t1.rule_source_type != ?  AND t1.status = ?  AND t2.abbreviation = ? "
+		db.Raw("select count(*) from ("+sql+" ) t ", tenantId, startTime, endTime, source_type.AutoScaling, "firing", productCode).Scan(&total)
+		db.Raw(sql+" ORDER BY t1.create_time DESC LIMIT ?,?", tenantId, startTime, endTime, source_type.AutoScaling, "firing", productCode, (pageNum-1)*pageSize, pageSize).Find(&alarmRecordPage)
+	}
+	if total == 0 {
+		return alarmRecordPage, total
+	}
+	return alarmRecordPage, total
+}
+
+func (dao *AlarmRecordDao) GetPageListByProductByIam(db *gorm.DB, productCode string, resourcesIdList []string, startTime string, endTime string, pageNum, pageSize int) ([]*form.AlarmRecordPage, int64) {
+	var alarmRecordPage []*form.AlarmRecordPage
+	sql := "SELECT t2.abbreviation AS productCode,t1.source_id AS instanceId,t1.rule_name AS ruleName,t1.level AS level,t1.create_time AS time FROM t_alarm_record AS t1 LEFT JOIN t_monitor_product AS t2 ON t1.source_type = t2.name WHERE t1.source_id IN (?)  AND t1.create_time BETWEEN ?  AND ?  AND t1.rule_source_type != ?  AND t1.status = ?  AND t2.abbreviation = ? "
+	var total int64
+	db.Raw("select count(*) from ("+sql+" ) t ", resourcesIdList, startTime, endTime, source_type.AutoScaling, "firing", productCode).Scan(&total)
+	if total == 0 {
+		return alarmRecordPage, total
+	}
+	db.Raw(sql+" ORDER BY t1.create_time DESC LIMIT ?,?", resourcesIdList, startTime, endTime, source_type.AutoScaling, "firing", productCode, (pageNum-1)*pageSize, pageSize).Find(&alarmRecordPage)
+	return alarmRecordPage, total
 }

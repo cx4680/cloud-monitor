@@ -12,18 +12,22 @@ import (
 )
 
 type UserAuthRequest struct {
-	AccountUserId string   `json:"accountUserId"`
-	Product       string   `json:"product"`
-	ActionName    string   `json:"actionName"`
-	Resource      []string `json:"resource"`
+	AccountUserId                string            `json:"accountUserId"`
+	Product                      string            `json:"product"`
+	ActionName                   string            `json:"actionName"`
+	Resource                     []string          `json:"resource"`
+	OrganizeAssumeRoleName       string            `json:"organizeAssumeRoleName"`
+	CloudAccountOrganizeRoleName string            `json:"cloudAccountOrganizeRoleName"`
+	Condition                    map[string]string `json:"condition"`
 }
 
 type RoleAuthRequest struct {
-	RoleCrn    string   `json:"roleCrn"`
-	Product    string   `json:"product"`
-	Token      string   `json:"token"`
-	ActionName string   `json:"actionName"`
-	Resource   []string `json:"resource"`
+	RoleCrn    string            `json:"roleCrn"`
+	Product    string            `json:"product"`
+	Token      string            `json:"token"`
+	ActionName string            `json:"actionName"`
+	Resource   []string          `json:"resource"`
+	Condition  map[string]string `json:"condition"`
 }
 
 // UserAuth IAM 用户鉴权
@@ -99,7 +103,7 @@ func (authRequest *RoleAuthRequest) RoleAuth() (*AuthResponse, error) {
 func getUserIdentityUrl(url string) string {
 	builder := strings.Builder{}
 	builder.WriteString(url)
-	builder.WriteString("/v2/identity")
+	builder.WriteString("/v5/identity")
 	logger.Logger().Infof("【IAM SDK】 getUserIdentityUrl url:%s", builder.String())
 	return builder.String()
 }
@@ -107,7 +111,7 @@ func getUserIdentityUrl(url string) string {
 func getRoleIdentityUrl(url string) string {
 	builder := strings.Builder{}
 	builder.WriteString(url)
-	builder.WriteString("/v2/role/identity")
+	builder.WriteString("/v5/role/identity")
 	logger.Logger().Infof("【IAM SDK】 getRoleIdentityUrl url:%s", builder.String())
 	return builder.String()
 }

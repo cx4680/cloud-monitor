@@ -83,3 +83,52 @@ func (ebms *EbmsInstanceService) ConvertResp(realResp interface{}) (int, []servi
 	}
 	return vo.Data.TotalCount, list
 }
+
+func (ebms *EbmsInstanceService) ConvertRealAuthForm(form service.InstancePageForm) interface{} {
+	var params = "?pageNumber=" + strconv.Itoa(form.Current) + "&pageSize=" + strconv.Itoa(form.PageSize)
+	var filterList []string
+	if strutil.IsNotBlank(form.InstanceName) {
+		filterList = append(filterList, "name:lk:"+form.InstanceName)
+	}
+	if strutil.IsNotBlank(form.InstanceId) {
+		filterList = append(filterList, "id:lk:"+form.InstanceId)
+	}
+	if strutil.IsNotBlank(form.StatusList) {
+		filterList = append(filterList, "status:in:"+form.StatusList)
+	}
+	if len(filterList) > 0 {
+		filter := strings.Join(filterList, "|")
+		params += "&filter=" + filter
+	}
+	return EbmsRequest{TenantId: form.TenantId, Params: params}
+}
+
+func (ebms *EbmsInstanceService) DoAuthRequest(url string, f interface{}) (interface{}, error) {
+	var params = f.(EbmsRequest)
+	url = strings.ReplaceAll(url, "{tenantId}", params.TenantId)
+	respStr, err := httputil.HttpGet(url + params.Params)
+	if err != nil {
+		return nil, err
+	}
+	var resp EbmsResponse
+	jsonutil.ToObject(respStr, &resp)
+	return resp, nil
+}
+
+func (ebms *EbmsInstanceService) ConvertAuthResp(realResp interface{}) (int, []service.InstanceCommonVO) {
+	vo := realResp.(EbmsResponse)
+	var list []service.InstanceCommonVO
+	if vo.Data.TotalCount > 0 {
+		for _, d := range vo.Data.Servers {
+			list = append(list, service.InstanceCommonVO{
+				InstanceId:   d.Id,
+				InstanceName: d.Name,
+				Labels: []service.InstanceLabel{{
+					Name:  "status",
+					Value: d.Status,
+				}},
+			})
+		}
+	}
+	return vo.Data.TotalCount, list
+}

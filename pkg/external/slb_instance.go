@@ -32,6 +32,7 @@ type SlbQueryPageRequest struct {
 	Data      interface{} `json:"data,omitempty"`
 	//临时传递
 	TenantId string
+	IamInfo  service.IamInfo `json:"-"`
 }
 
 type SlbResponse struct {
@@ -111,6 +112,74 @@ func (slb *SlbInstanceService) DoRequest(url string, form interface{}) (interfac
 }
 
 func (slb *SlbInstanceService) ConvertResp(realResp interface{}) (int, []service.InstanceCommonVO) {
+	vo := realResp.(SlbResponse)
+	var list []service.InstanceCommonVO
+	if vo.Data.Total > 0 {
+		for _, d := range vo.Data.Rows {
+			list = append(list, service.InstanceCommonVO{
+				InstanceId:   d.LbUid,
+				InstanceName: d.Name,
+				Labels: []service.InstanceLabel{{
+					Name:  "eipIp",
+					Value: d.Eip.Ip,
+				}, {
+					Name:  "privateIp",
+					Value: d.Address,
+				}, {
+					Name:  "vpcName",
+					Value: d.NetworkName,
+				}, {
+					Name:  "vpcId",
+					Value: d.NetworkUid,
+				}, {
+					Name:  "status",
+					Value: d.State,
+				}, {
+					Name:  "spec",
+					Value: d.Spec,
+				}, {
+					Name:  "listener",
+					Value: getListenerList(d),
+				}},
+			})
+		}
+	}
+	return vo.Data.Total, list
+}
+
+func (slb *SlbInstanceService) ConvertRealAuthForm(form service.InstancePageForm) interface{} {
+	queryParam := SlbQueryParam{
+		Address:  form.ExtraAttr["privateIp"],
+		LbUid:    form.InstanceId,
+		Name:     form.InstanceName,
+		TenantId: form.TenantId,
+	}
+	if strutil.IsNotBlank(form.StatusList) {
+		queryParam.StateList = strings.Split(form.StatusList, ",")
+	}
+	return SlbQueryPageRequest{
+		PageIndex: form.Current,
+		PageSize:  form.PageSize,
+		Data:      queryParam,
+		IamInfo:   form.IamInfo,
+	}
+}
+
+func (slb *SlbInstanceService) DoAuthRequest(url string, form interface{}) (interface{}, error) {
+	var f = form.(SlbQueryPageRequest)
+	respStr, err := httputil.HttpPostJson(url, form, slb.GetIamHeader(&f.IamInfo))
+	if err != nil {
+		return nil, err
+	}
+	var resp SlbResponse
+	err = jsonutil.ToObjectWithError(respStr, &resp)
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+func (slb *SlbInstanceService) ConvertAuthResp(realResp interface{}) (int, []service.InstanceCommonVO) {
 	vo := realResp.(SlbResponse)
 	var list []service.InstanceCommonVO
 	if vo.Data.Total > 0 {

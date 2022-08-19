@@ -17,7 +17,7 @@ func AuthIdentify(identity *models.Identity) gin.HandlerFunc {
 		c.Set("ResourceType", identity.ResourceType)
 		c.Set("ResourceId", identity.ResourceId)
 		// IAM鉴权接口
-		err := middleware.AuthIdentify(c, identity, "")
+		err, _ := middleware.AuthIdentity(c, identity, "")
 		if err != nil {
 			if openapi.OpenApiRouter(c) {
 				c.JSON(http.StatusOK, openapi.NewRespError(openapi.AuthorizedNoPermission, c))

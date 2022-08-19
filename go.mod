@@ -3,7 +3,7 @@ module code.cestc.cn/ccos-ops/cloud-monitor
 go 1.18
 
 require (
-	code.cestc.cn/yyptb-group_tech/iam-sdk-go v1.0.3
+	code.cestc.cn/yyptb-group_tech/iam-sdk-go v1.3.3-SNAPSHOT
 	github.com/gin-gonic/gin v1.7.7
 	github.com/go-playground/locales v0.14.0
 	github.com/go-playground/universal-translator v0.18.0

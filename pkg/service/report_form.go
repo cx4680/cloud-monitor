@@ -214,7 +214,7 @@ func (s *ReportFormService) ExportMonitorData(param form.ReportFormParam, userIn
 func (s *ReportFormService) GetAlarmRecord(param form.AlarmRecordPageQueryForm) ([]form.AlarmRecord, error) {
 	param.PageNum = 1
 	param.PageSize = 10000
-	page := dao2.AlarmRecord.GetPageList(global.DB, param.TenantID, param)
+	page := dao2.AlarmRecord.GetPageList(global.DB, param.TenantId, param)
 	var list []form.AlarmRecord
 	if page.Records != nil {
 		for _, v := range page.Records.([]vo.AlarmRecordPageVO) {
