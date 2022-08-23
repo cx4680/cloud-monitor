@@ -49,7 +49,7 @@ func monitorProductRouters() {
 	monitorProductCtl := controller.NewMonitorProductCtl()
 	group := Router.Group(pathPrefix + "monitorProduct/")
 	{
-		group.GET("/getAllMonitorProducts", logs.GinTrailzap(false, Read, logs.INFO, logs.MonitorProduct), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetMonitorProductsList", ResourceType: "*", ResourceId: "*"}), monitorProductCtl.GetMonitorProduct)
+		group.GET("/getAllMonitorProducts", logs.GinTrailzap(false, Read, logs.INFO, logs.MonitorProduct), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetAllMonitorProductsList", ResourceType: "*", ResourceId: "*"}), monitorProductCtl.GetMonitorProduct)
 		group.GET("/getMonitorProduct", logs.GinTrailzap(false, Read, logs.INFO, logs.MonitorProduct), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetAllMonitorProductsList", ResourceType: "*", ResourceId: "*"}), monitorProductCtl.GetAllMonitorProduct)
 		group.POST("/changeStatus", logs.GinTrailzap(false, Write, logs.Warn, logs.MonitorProduct), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetAllMonitorProductsList", ResourceType: "*", ResourceId: "*"}), monitorProductCtl.ChangeStatus)
 	}
@@ -68,7 +68,7 @@ func contactRouters() {
 	contactCtl := controller.NewContactCtl()
 	group := Router.Group(pathPrefix + "contact/")
 	{
-		group.GET("/getContact", logs.GinTrailzap(false, Read, logs.INFO, logs.AlertContact), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetAlertContact", ResourceType: "*", ResourceId: "*"}), contactCtl.GetContact)
+		group.GET("/getContact", logs.GinTrailzap(false, Read, logs.INFO, logs.AlertContact), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetAlertContactList", ResourceType: "*", ResourceId: "*"}), contactCtl.GetContact)
 		group.POST("/addContact", logs.GinTrailzap(false, Write, logs.INFO, logs.AlertContact), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "SetAlertContact", ResourceType: "*", ResourceId: "*"}), contactCtl.CreateContact)
 		group.POST("/updateContact", logs.GinTrailzap(false, Write, logs.Warn, logs.AlertContact), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "UpdateAlertContact", ResourceType: "*", ResourceId: "*"}), contactCtl.UpdateContact)
 		group.POST("/deleteContact", logs.GinTrailzap(false, Write, logs.Warn, logs.AlertContact), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "DeleteAlertContact", ResourceType: "*", ResourceId: "*"}), contactCtl.DeleteContact)
@@ -80,12 +80,12 @@ func contactGroupRouters() {
 	contactGroupCtl := controller.NewContactGroupCtl()
 	group := Router.Group(pathPrefix + "contactGroup/")
 	{
-		group.GET("/getContactGroup", logs.GinTrailzap(false, Read, logs.INFO, logs.AlertContactGroup), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetAlertContactGroup", ResourceType: "*", ResourceId: "*"}), contactGroupCtl.GetContactGroup)
-		group.GET("/getContact", logs.GinTrailzap(false, Read, logs.INFO, logs.AlertContactGroup), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetAlertContact", ResourceType: "*", ResourceId: "*"}), contactGroupCtl.GetGroupContact)
+		group.GET("/getContactGroup", logs.GinTrailzap(false, Read, logs.INFO, logs.AlertContactGroup), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetAlertContactGroupList", ResourceType: "*", ResourceId: "*"}), contactGroupCtl.GetContactGroup)
+		group.GET("/getContact", logs.GinTrailzap(false, Read, logs.INFO, logs.AlertContactGroup), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetAlertContactList", ResourceType: "*", ResourceId: "*"}), contactGroupCtl.GetGroupContact)
 		group.POST("/addContactGroup", logs.GinTrailzap(false, Write, logs.INFO, logs.AlertContactGroup), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "SetAlertContactGroup", ResourceType: "*", ResourceId: "*"}), contactGroupCtl.CreateContactGroup)
 		group.POST("/updateContactGroup", logs.GinTrailzap(false, Write, logs.Warn, logs.AlertContactGroup), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "UpdateAlertContactGroup", ResourceType: "*", ResourceId: "*"}), contactGroupCtl.UpdateContactGroup)
 		group.POST("/deleteContactGroup", logs.GinTrailzap(false, Write, logs.Warn, logs.AlertContactGroup), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "DeleteAlertContactGroup", ResourceType: "*", ResourceId: "*"}), contactGroupCtl.DeleteContactGroup)
-		group.GET("/getContactGroupWithSys", logs.GinTrailzap(false, Read, logs.INFO, logs.AlertContactGroup), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetAlertContactGroup", ResourceType: "*", ResourceId: "*"}), contactGroupCtl.GetContactGroupWithSys)
+		group.GET("/getContactGroupWithSys", logs.GinTrailzap(false, Read, logs.INFO, logs.AlertContactGroup), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetAlertContactGroupList", ResourceType: "*", ResourceId: "*"}), contactGroupCtl.GetContactGroupWithSys)
 	}
 }
 
@@ -131,7 +131,7 @@ func alertRecordRouters() {
 	{
 		group.POST("/page", logs.GinTrailzap(false, Read, logs.INFO, logs.AlertRecord), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetAlertRecordPageList", ResourceType: "*", ResourceId: "*"}), ctl.GetPageList)
 		group.GET("/contactInfos", logs.GinTrailzap(false, Read, logs.INFO, logs.AlertRecord), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetContactInfoList", ResourceType: "*", ResourceId: "*"}), ctl.GetAlarmContactInfo)
-		group.GET("/total", logs.GinTrailzap(false, Read, logs.INFO, logs.AlertRecord), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetAlarmRecordTotal", ResourceType: "*", ResourceId: "*"}), ctl.GetAlarmRecordTotal)
+		group.GET("/total", logs.GinTrailzap(false, Read, logs.INFO, logs.AlertRecord), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetAlertRecordTotal", ResourceType: "*", ResourceId: "*"}), ctl.GetAlarmRecordTotal)
 		group.GET("/recordNumHistory", logs.GinTrailzap(false, Read, logs.INFO, logs.AlertRecord), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetAlertRecordNumHistory", ResourceType: "*", ResourceId: "*"}), ctl.GetRecordNumHistory)
 		group.GET("/totalByLevel", logs.GinTrailzap(false, Read, logs.INFO, logs.AlertRecord), ctl.GetLevelTotal)
 		group.GET("/recordNumHistoryByIam", logs.GinTrailzap(false, Read, logs.INFO, logs.AlertRecord), ctl.GetRecordNumHistory)
