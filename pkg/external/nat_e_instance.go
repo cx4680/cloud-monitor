@@ -6,11 +6,11 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/service"
 )
 
-type NatInstanceService struct {
+type NatEInstanceService struct {
 	service.InstanceServiceImpl
 }
 
-type NatQueryPageRequest struct {
+type NatEQueryPageRequest struct {
 	OrderName string      `json:"orderName,omitempty"`
 	OrderRule string      `json:"orderRule,omitempty"`
 	PageIndex int         `json:"pageIndex,omitempty"`
@@ -21,7 +21,7 @@ type NatQueryPageRequest struct {
 	IamInfo  service.IamInfo `json:"-"`
 }
 
-type NatQueryParam struct {
+type NatEQueryParam struct {
 	Name      string `json:"name"`
 	Uid       string `json:"uid"`
 	Status    string `json:"status"`
@@ -29,17 +29,17 @@ type NatQueryParam struct {
 	NoVpcName bool   `json:"noVpcName"` //true:优化查询实例列表，但vpcName字段值为空，false:正常查询，vpcName字段有值
 }
 
-type NatResponse struct {
+type NatEResponse struct {
 	Code string
 	Msg  string
-	Data NatQueryPageResult
+	Data NatEQueryPageResult
 }
-type NatQueryPageResult struct {
+type NatEQueryPageResult struct {
 	Total int
-	Rows  []*NatInfoBean
+	Rows  []*NatEInfoBean
 }
 
-type NatInfoBean struct {
+type NatEInfoBean struct {
 	VpcName       string
 	Specification string
 	Uid           string
@@ -51,15 +51,15 @@ type NatInfoBean struct {
 	Type          string
 }
 
-func (nat *NatInstanceService) ConvertRealForm(form service.InstancePageForm) interface{} {
-	queryParam := NatQueryParam{
+func (nat *NatEInstanceService) ConvertRealForm(form service.InstancePageForm) interface{} {
+	queryParam := NatEQueryParam{
 		Name:   form.InstanceName,
 		Uid:    form.InstanceId,
 		Status: form.StatusList,
-		Type:   "natgw",
+		Type:   "nat-e",
 		//NoVpcName: true,
 	}
-	return NatQueryPageRequest{
+	return NatEQueryPageRequest{
 		PageIndex: form.Current,
 		PageSize:  form.PageSize,
 		Data:      queryParam,
@@ -67,18 +67,18 @@ func (nat *NatInstanceService) ConvertRealForm(form service.InstancePageForm) in
 	}
 }
 
-func (nat *NatInstanceService) DoRequest(url string, form interface{}) (interface{}, error) {
+func (nat *NatEInstanceService) DoRequest(url string, form interface{}) (interface{}, error) {
 	respStr, err := httputil.HttpPostJson(url, form, nil)
 	if err != nil {
 		return nil, err
 	}
-	var resp NatResponse
+	var resp NatEResponse
 	jsonutil.ToObject(respStr, &resp)
 	return resp, nil
 }
 
-func (nat *NatInstanceService) ConvertResp(realResp interface{}) (int, []service.InstanceCommonVO) {
-	vo := realResp.(NatResponse)
+func (nat *NatEInstanceService) ConvertResp(realResp interface{}) (int, []service.InstanceCommonVO) {
+	vo := realResp.(NatEResponse)
 	var list []service.InstanceCommonVO
 	if vo.Data.Total > 0 {
 		for _, d := range vo.Data.Rows {
@@ -104,15 +104,15 @@ func (nat *NatInstanceService) ConvertResp(realResp interface{}) (int, []service
 	return vo.Data.Total, list
 }
 
-func (nat *NatInstanceService) ConvertRealAuthForm(form service.InstancePageForm) interface{} {
-	queryParam := NatQueryParam{
+func (nat *NatEInstanceService) ConvertRealAuthForm(form service.InstancePageForm) interface{} {
+	queryParam := NatEQueryParam{
 		Name:   form.InstanceName,
 		Uid:    form.InstanceId,
 		Status: form.StatusList,
-		Type:   "natgw",
+		Type:   "nat-e",
 		//NoVpcName: true,
 	}
-	return NatQueryPageRequest{
+	return NatEQueryPageRequest{
 		PageIndex: form.Current,
 		PageSize:  form.PageSize,
 		Data:      queryParam,
@@ -121,18 +121,19 @@ func (nat *NatInstanceService) ConvertRealAuthForm(form service.InstancePageForm
 	}
 }
 
-func (nat *NatInstanceService) DoAuthRequest(url string, form interface{}) (interface{}, error) {
-	respStr, err := httputil.HttpPostJson(url, form, nil)
+func (nat *NatEInstanceService) DoAuthRequest(url string, form interface{}) (interface{}, error) {
+	f := form.(NatEQueryPageRequest)
+	respStr, err := httputil.HttpPostJson(url, form, nat.GetIamHeader(&f.IamInfo))
 	if err != nil {
 		return nil, err
 	}
-	var resp NatResponse
+	var resp NatEResponse
 	jsonutil.ToObject(respStr, &resp)
 	return resp, nil
 }
 
-func (nat *NatInstanceService) ConvertAuthResp(realResp interface{}) (int, []service.InstanceCommonVO) {
-	vo := realResp.(NatResponse)
+func (nat *NatEInstanceService) ConvertAuthResp(realResp interface{}) (int, []service.InstanceCommonVO) {
+	vo := realResp.(NatEResponse)
 	var list []service.InstanceCommonVO
 	if vo.Data.Total > 0 {
 		for _, d := range vo.Data.Rows {
