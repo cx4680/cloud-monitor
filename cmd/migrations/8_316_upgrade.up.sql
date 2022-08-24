@@ -243,3 +243,5 @@ UPDATE t_monitor_product SET iam_page_url = '/gateway/instance/page' WHERE abbre
 
 UPDATE t_monitor_item SET metrics_linux = 'clamp_max((sum(eip_upstream_bits_rate{$INSTANCE}) by (instance,eip) / avg(eip_config_upstream_bandwidth{$INSTANCE}) by (instance,eip)) * 100, 100)' WHERE metric_name = 'eip_upstream_bandwidth_usage';
 UPDATE t_monitor_item SET metrics_linux = 'clamp_max(sum by(instance,instanceType)(dm_global_status_cpu_use_rate{$INSTANCE}), 100)' WHERE metric_name = 'dm_global_status_cpu_use_rate';
+
+ALTER TABLE t_alarm_rule_resource_rel ADD INDEX alarm_rule_id ( alarm_rule_id );

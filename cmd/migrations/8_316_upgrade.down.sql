@@ -35,3 +35,5 @@ UPDATE t_monitor_item SET metrics_linux = 'sum by (instance)(mysql_current_cons_
 
 DELETE FROM t_monitor_item WHERE biz_id IN ('226','227','228','229','230','231','232','233');
 ALTER TABLE t_monitor_product DROP COLUMN iam_page_url;
+
+DROP INDEX alarm_rule_id ON `t_alarm_rule_resource_rel`;
