@@ -245,3 +245,5 @@ UPDATE t_monitor_item SET metrics_linux = 'clamp_max((sum(eip_upstream_bits_rate
 UPDATE t_monitor_item SET metrics_linux = 'clamp_max(sum by(instance,instanceType)(dm_global_status_cpu_use_rate{$INSTANCE}), 100)' WHERE metric_name = 'dm_global_status_cpu_use_rate';
 
 INSERT INTO t_monitor_product (biz_id, name, status, description, create_user, create_time, route, cron, host, page_url, abbreviation, sort, monitor_type, iam_page_url) VALUES ('15', '增强型NAT网关', '1', 'nat-e', null, null, '/productmonitoring/nat-e', '0 0 0/1 * * ?', 'http://product-nat-controller-nat-manage.product-nat-gw', '/nat-gw/inner/nat/page', 'nat-e', '6', '云产品监控', '/nat-gw/inner/nat/page');
+
+ALTER TABLE t_alarm_rule_resource_rel ADD INDEX alarm_rule_id ( alarm_rule_id );
