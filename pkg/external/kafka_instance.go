@@ -115,7 +115,7 @@ func (kafka *KafkaInstanceService) ConvertRealAuthForm(form service.InstancePage
 
 func (kafka *KafkaInstanceService) DoAuthRequest(url string, f interface{}) (interface{}, error) {
 	var param = f.(KafkaDTO)
-	respStr, err := httputil.HttpHeaderGet(url+param.Param, map[string]string{"user-info": param.UserInfo})
+	respStr, err := httputil.HttpHeaderGet(url+param.Param, map[string]string{"CECLOUD-CSP-USER": "{\"tenantId\":\"" + param.TenantId + "\"}"})
 	if err != nil {
 		return nil, err
 	}
