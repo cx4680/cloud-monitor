@@ -1,6 +1,6 @@
 module code.cestc.cn/ccos-ops/cloud-monitor
 
-go 1.18
+go 1.17
 
 require (
 	code.cestc.cn/yyptb-group_tech/iam-sdk-go v1.3.3-SNAPSHOT
