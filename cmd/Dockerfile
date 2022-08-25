@@ -1,4 +1,4 @@
-FROM image.cestc.cn/baseos/base/golang:1.17 as builder
+FROM image.cestc.cn/secdb/golang:1.17-cert-mgr as builder
 
 # 为我们的镜像设置必要的环境变量
 ENV GO111MODULE=on \
