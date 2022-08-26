@@ -41,16 +41,16 @@ func (bms *BmsInstanceService) ConvertRealForm(form service.InstancePageForm) in
 	var params = "?pageNumber=" + strconv.Itoa(form.Current) + "&pageSize=" + strconv.Itoa(form.PageSize)
 	var filterList []string
 	if strutil.IsNotBlank(form.InstanceName) {
-		filterList = append(filterList, "name:lk:"+form.InstanceName)
+		filterList = append(filterList, "name/:lk/:"+form.InstanceName)
 	}
 	if strutil.IsNotBlank(form.InstanceId) {
-		filterList = append(filterList, "id:lk:"+form.InstanceId)
+		filterList = append(filterList, "id/:lk/:"+form.InstanceId)
 	}
 	if strutil.IsNotBlank(form.StatusList) {
-		filterList = append(filterList, "state:in:"+form.StatusList)
+		filterList = append(filterList, "state/:in/:"+form.StatusList)
 	}
 	if strutil.IsNotBlank(form.ExtraAttr["bmType"]) {
-		filterList = append(filterList, "BmType:in:"+form.ExtraAttr["bmType"])
+		filterList = append(filterList, "BmType/:in/:"+form.ExtraAttr["bmType"])
 	}
 	if len(filterList) > 0 {
 		filter := strings.Join(filterList, "|")
