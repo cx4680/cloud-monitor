@@ -39,13 +39,13 @@ func (ebms *EbmsInstanceService) ConvertRealForm(form service.InstancePageForm) 
 	var params = "?pageNumber=" + strconv.Itoa(form.Current) + "&pageSize=" + strconv.Itoa(form.PageSize)
 	var filterList []string
 	if strutil.IsNotBlank(form.InstanceName) {
-		filterList = append(filterList, "name:lk:"+form.InstanceName)
+		filterList = append(filterList, "name/:lk/:"+form.InstanceName)
 	}
 	if strutil.IsNotBlank(form.InstanceId) {
-		filterList = append(filterList, "id:lk:"+form.InstanceId)
+		filterList = append(filterList, "id/:lk/:"+form.InstanceId)
 	}
 	if strutil.IsNotBlank(form.StatusList) {
-		filterList = append(filterList, "status:in:"+form.StatusList)
+		filterList = append(filterList, "status/:in/:"+form.StatusList)
 	}
 	if len(filterList) > 0 {
 		filter := strings.Join(filterList, "|")
