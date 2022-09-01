@@ -13,10 +13,11 @@ type KafkaInstanceService struct {
 }
 
 type KafkaQueryPageForm struct {
-	TenantId   string `json:"tenantId"`
-	SearchName string `json:"searchName"`
-	PageNum    int    `json:"pageNum"`
-	PageSize   int    `json:"pageSize"`
+	TenantId   string          `json:"tenantId"`
+	SearchName string          `json:"searchName"`
+	PageNum    int             `json:"pageNum"`
+	PageSize   int             `json:"pageSize"`
+	IamInfo    service.IamInfo `json:"-"`
 }
 
 type KafkaQueryPageVO struct {
@@ -45,6 +46,7 @@ type KafkaDTO struct {
 	Param    string
 	TenantId string
 	UserInfo string
+	IamInfo  service.IamInfo `json:"-"`
 }
 
 func (kafka *KafkaInstanceService) ConvertRealForm(form service.InstancePageForm) interface{} {
@@ -110,7 +112,7 @@ func (kafka *KafkaInstanceService) ConvertRealAuthForm(form service.InstancePage
 	if strutil.IsNotBlank(form.StatusList) {
 		param += "&searchState" + form.StatusList
 	}
-	return KafkaDTO{Param: param, TenantId: form.TenantId, UserInfo: form.IamInfo.UserInfo}
+	return KafkaDTO{Param: param, TenantId: form.TenantId, UserInfo: form.IamInfo.UserInfo, IamInfo: form.IamInfo}
 }
 
 func (kafka *KafkaInstanceService) DoAuthRequest(url string, f interface{}) (interface{}, error) {

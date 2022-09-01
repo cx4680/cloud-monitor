@@ -33,11 +33,16 @@ type InstancePageForm struct {
 }
 
 type IamInfo struct {
-	UserInfo        string
-	SID             string
-	CurrentTime     string
-	SecureTransport string
-	SourceIp        string
+	UserInfo                     string
+	SID                          string
+	CurrentTime                  string
+	SecureTransport              string
+	SourceIp                     string
+	UserId                       string
+	UserName                     string
+	UserType                     string
+	CloudAccountOrganizeRoleName string
+	OrganizeAssumeRoleName       string
 }
 
 type InstanceStage interface {
@@ -131,11 +136,13 @@ func (is *InstanceServiceImpl) getAuthRequestUrl(product string) (string, error)
 func (is *InstanceServiceImpl) GetIamHeader(info *IamInfo) map[string]string {
 	var headerParams = make(map[string]string)
 	if info != nil {
-		headerParams["user-info"] = info.UserInfo
-		headerParams["cookie"] = "SID=" + info.SID
-		headerParams["cs-CurrentTime"] = info.CurrentTime
-		headerParams["cs-SecureTransport"] = info.SecureTransport
-		headerParams["cs-SourceIp"] = info.SourceIp
+		headerParams[global.UserInfo] = info.UserInfo
+		headerParams[global.Cookie] = global.SID + "=" + info.SID
+		headerParams[global.CsCurrentTime] = info.CurrentTime
+		headerParams[global.CsSecureTransport] = info.SecureTransport
+		headerParams[global.CsSourceIp] = info.SourceIp
+		headerParams[global.CloudAccountOrganizeRoleName] = info.CloudAccountOrganizeRoleName
+		headerParams[global.OrganizeAssumeRoleName] = info.OrganizeAssumeRoleName
 	}
 	return headerParams
 }

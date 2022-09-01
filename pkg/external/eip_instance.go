@@ -18,7 +18,8 @@ type EipQueryPageRequest struct {
 	PageSize  int         `json:"pageSize,omitempty"`
 	Data      interface{} `json:"data,omitempty"`
 	//临时传递
-	UserCode string `json:"userCode,omitempty"`
+	UserCode string          `json:"userCode,omitempty"`
+	IamInfo  service.IamInfo `json:"-"`
 }
 
 type EipQueryParam struct {
@@ -139,11 +140,13 @@ func (eip *EipInstanceService) ConvertRealAuthForm(form service.InstancePageForm
 		PageSize:  form.PageSize,
 		Data:      queryParam,
 		UserCode:  form.TenantId,
+		IamInfo:   form.IamInfo,
 	}
 }
 
 func (eip *EipInstanceService) DoAuthRequest(url string, form interface{}) (interface{}, error) {
-	respStr, err := httputil.HttpPostJson(url, form, nil)
+	var param = form.(EipQueryPageRequest)
+	respStr, err := httputil.HttpPostJson(url, form, eip.GetIamHeader(&param.IamInfo))
 	if err != nil {
 		return nil, err
 	}

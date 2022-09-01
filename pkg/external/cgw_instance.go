@@ -4,21 +4,22 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/httputil"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/jsonutil"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/strutil"
-	commonService "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/service"
+	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/service"
 	"strconv"
 )
 
 type CgwInstanceService struct {
-	commonService.InstanceServiceImpl
+	service.InstanceServiceImpl
 }
 
 type CgwQueryPageForm struct {
-	TenantId     string `json:"tenantId"`
-	InstanceId   string `json:"instanceId"`
-	InstanceName string `json:"instanceName"`
-	PageNum      int    `json:"pageNum"`
-	PageSize     int    `json:"pageSize"`
-	Status       string `json:"status"`
+	TenantId     string          `json:"tenantId"`
+	InstanceId   string          `json:"instanceId"`
+	InstanceName string          `json:"instanceName"`
+	PageNum      int             `json:"pageNum"`
+	PageSize     int             `json:"pageSize"`
+	Status       string          `json:"status"`
+	IamInfo      service.IamInfo `json:"-"`
 }
 
 type CgwQueryPageVO struct {
@@ -45,7 +46,7 @@ type CgwRecords struct {
 	Eip            string `json:"eip"`
 }
 
-func (ecs *CgwInstanceService) ConvertRealForm(f commonService.InstancePageForm) interface{} {
+func (ecs *CgwInstanceService) ConvertRealForm(f service.InstancePageForm) interface{} {
 	param := CgwQueryPageForm{
 		TenantId:     f.TenantId,
 		PageNum:      f.Current,
@@ -78,15 +79,15 @@ func (ecs *CgwInstanceService) DoRequest(url string, f interface{}) (interface{}
 	return resp, nil
 }
 
-func (ecs *CgwInstanceService) ConvertResp(realResp interface{}) (int, []commonService.InstanceCommonVO) {
+func (ecs *CgwInstanceService) ConvertResp(realResp interface{}) (int, []service.InstanceCommonVO) {
 	vo := realResp.(CgwQueryPageVO)
-	var list []commonService.InstanceCommonVO
+	var list []service.InstanceCommonVO
 	if vo.Data.Total > 0 {
 		for _, d := range vo.Data.Records {
-			list = append(list, commonService.InstanceCommonVO{
+			list = append(list, service.InstanceCommonVO{
 				InstanceId:   d.PaasInstanceId,
 				InstanceName: d.InstanceName,
-				Labels: []commonService.InstanceLabel{{
+				Labels: []service.InstanceLabel{{
 					Name:  "status",
 					Value: strconv.Itoa(d.Status),
 				}, {
@@ -108,7 +109,7 @@ func (ecs *CgwInstanceService) ConvertResp(realResp interface{}) (int, []commonS
 	return vo.Data.Total, list
 }
 
-func (ecs *CgwInstanceService) ConvertRealAuthForm(f commonService.InstancePageForm) interface{} {
+func (ecs *CgwInstanceService) ConvertRealAuthForm(f service.InstancePageForm) interface{} {
 	param := CgwQueryPageForm{
 		TenantId:     f.TenantId,
 		PageNum:      f.Current,
@@ -116,6 +117,7 @@ func (ecs *CgwInstanceService) ConvertRealAuthForm(f commonService.InstancePageF
 		InstanceName: f.InstanceName,
 		InstanceId:   f.InstanceId,
 		Status:       f.StatusList,
+		IamInfo:      f.IamInfo,
 	}
 	return param
 }
@@ -132,7 +134,8 @@ func (ecs *CgwInstanceService) DoAuthRequest(url string, f interface{}) (interfa
 	if strutil.IsNotBlank(form.Status) {
 		param += "&status=" + form.Status
 	}
-	respStr, err := httputil.HttpHeaderGet(url+param, map[string]string{"CECLOUD-CSP-USER": "{\"tenantId\":\"" + form.TenantId + "\"}"})
+	headerMap := map[string]string{"CECLOUD-CSP-USER": "{\"tenantId\":\"" + form.TenantId + "\",\"userId\":\"" + form.IamInfo.UserId + "\",\"userName\":\"" + form.IamInfo.UserName + "\",\"userType\":\"" + form.IamInfo.UserType + "\",\"roleName\":\"" + form.IamInfo.CloudAccountOrganizeRoleName + "\",\"organizationRoleName\":\"" + form.IamInfo.OrganizeAssumeRoleName + "\"}"}
+	respStr, err := httputil.HttpHeaderGet(url+param, headerMap)
 	if err != nil {
 		return nil, err
 	}
@@ -141,15 +144,15 @@ func (ecs *CgwInstanceService) DoAuthRequest(url string, f interface{}) (interfa
 	return resp, nil
 }
 
-func (ecs *CgwInstanceService) ConvertAuthResp(realResp interface{}) (int, []commonService.InstanceCommonVO) {
+func (ecs *CgwInstanceService) ConvertAuthResp(realResp interface{}) (int, []service.InstanceCommonVO) {
 	vo := realResp.(CgwQueryPageVO)
-	var list []commonService.InstanceCommonVO
+	var list []service.InstanceCommonVO
 	if vo.Data.Total > 0 {
 		for _, d := range vo.Data.Records {
-			list = append(list, commonService.InstanceCommonVO{
+			list = append(list, service.InstanceCommonVO{
 				InstanceId:   d.PaasInstanceId,
 				InstanceName: d.InstanceName,
-				Labels: []commonService.InstanceLabel{{
+				Labels: []service.InstanceLabel{{
 					Name:  "status",
 					Value: strconv.Itoa(d.Status),
 				}, {

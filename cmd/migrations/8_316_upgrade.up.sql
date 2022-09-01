@@ -228,9 +228,10 @@ INSERT INTO `t_monitor_item` (biz_id, product_biz_id, name, metric_name, labels,
 ALTER TABLE t_monitor_product ADD COLUMN iam_page_url varchar(256) COMMENT 'iam请求路径';
 UPDATE t_monitor_product SET iam_page_url = '/compute/ecs/instance/cbc/pageList' WHERE abbreviation IN ('ecs');
 UPDATE t_monitor_product SET iam_page_url = '/eip/inner/eipInfoList' WHERE abbreviation IN ('eip');
-UPDATE t_monitor_product SET iam_page_url = '/slb/list' WHERE abbreviation IN ('slb');
-UPDATE t_monitor_product SET iam_page_url = '/noauth/backup/vault/pageList' WHERE abbreviation IN ('cbr');
+UPDATE t_monitor_product SET iam_page_url = '/slb/inner/list' WHERE abbreviation IN ('slb');
+UPDATE t_monitor_product SET iam_page_url = '/compute/monitor/vault/pageList' WHERE abbreviation IN ('cbr');
 UPDATE t_monitor_product SET iam_page_url = '/nat-gw/inner/nat/page' WHERE abbreviation IN ('nat');
+UPDATE t_monitor_product SET iam_page_url = '/nat-gw/nat/page' WHERE abbreviation IN ('nat-e');
 UPDATE t_monitor_product SET iam_page_url = '/v1/mysql/instance' WHERE abbreviation IN ('mysql');
 UPDATE t_monitor_product SET iam_page_url = '/v1/dm/instance' WHERE abbreviation IN ('dm');
 UPDATE t_monitor_product SET iam_page_url = '/v1/pg/instance/' WHERE abbreviation IN ('postgresql');
