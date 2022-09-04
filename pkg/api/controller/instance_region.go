@@ -77,12 +77,17 @@ func (ctl *InstanceRegionCtl) GetPage(c *gin.Context) {
 
 func FillIamInfo(c *gin.Context, f *commonService.InstancePageForm) {
 	header := c.Request.Header
-	f.IamInfo.UserInfo = header.Get("user-info")
-	sid, _ := c.Cookie("SID")
+	f.IamInfo.UserInfo = header.Get(global.UserInfo)
+	sid, _ := c.Cookie(global.SID)
 	f.IamInfo.SID = sid
-	f.IamInfo.CurrentTime = header.Get("cs-CurrentTime")
-	f.IamInfo.SecureTransport = header.Get("cs-SecureTransport")
-	f.IamInfo.SourceIp = header.Get("cs-SourceIp")
+	f.IamInfo.CurrentTime = header.Get(global.CsCurrentTime)
+	f.IamInfo.SecureTransport = header.Get(global.CsSecureTransport)
+	f.IamInfo.SourceIp = header.Get(global.CsSourceIp)
+	f.IamInfo.CloudAccountOrganizeRoleName = c.GetString(global.CloudAccountOrganizeRoleName)
+	f.IamInfo.OrganizeAssumeRoleName = c.GetString(global.OrganizeAssumeRoleName)
+	f.IamInfo.UserId = c.GetString(global.UserId)
+	f.IamInfo.UserName = c.GetString(global.UserName)
+	f.IamInfo.UserType = c.GetString(global.UserType)
 }
 
 // GetInstanceNumByRegion

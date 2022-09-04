@@ -12,6 +12,12 @@ const (
 	UserName     = "userName"
 	ResourceName = "ResourceName"
 
+	UserInfo                     = "user-info"
+	Cookie                       = "cookie"
+	SID                          = "SID"
+	CsCurrentTime                = "cs-CurrentTime"
+	CsSecureTransport            = "cs-SecureTransport"
+	CsSourceIp                   = "cs-SourceIp"
 	CloudAccountOrganizeRoleName = "cloudAccountOrganizeRoleName"
 	OrganizeAssumeRoleName       = "organizeAssumeRoleName"
 )

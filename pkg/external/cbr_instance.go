@@ -20,6 +20,7 @@ type CbrQueryParam struct {
 	Status     string
 	PageNumber string
 	PageSize   string
+	IamInfo    service.IamInfo `json:"-"`
 }
 
 type CbrQueryPageVO struct {
@@ -43,7 +44,7 @@ type CbrInfoBean struct {
 	UpdatedAt    string
 }
 
-func (c *CbrInstanceService) ConvertRealForm(form service.InstancePageForm) interface{} {
+func (cbr *CbrInstanceService) ConvertRealForm(form service.InstancePageForm) interface{} {
 	param := CbrQueryParam{
 		TenantId:   form.TenantId,
 		VaultId:    form.InstanceId,
@@ -57,7 +58,7 @@ func (c *CbrInstanceService) ConvertRealForm(form service.InstancePageForm) inte
 	return param
 }
 
-func (c *CbrInstanceService) DoRequest(url string, form interface{}) (interface{}, error) {
+func (cbr *CbrInstanceService) DoRequest(url string, form interface{}) (interface{}, error) {
 	respStr, err := httputil.HttpPostJson(url, form, nil)
 	if err != nil {
 		logger.Logger().Errorf("error:%v, url:%v, request:%v", err, url, form)
@@ -68,7 +69,7 @@ func (c *CbrInstanceService) DoRequest(url string, form interface{}) (interface{
 	return resp, nil
 }
 
-func (c *CbrInstanceService) ConvertResp(realResp interface{}) (int, []service.InstanceCommonVO) {
+func (cbr *CbrInstanceService) ConvertResp(realResp interface{}) (int, []service.InstanceCommonVO) {
 	vo := realResp.(CbrQueryPageVO)
 	var list []service.InstanceCommonVO
 	if vo.Total_count > 0 {
@@ -92,13 +93,14 @@ func (c *CbrInstanceService) ConvertResp(realResp interface{}) (int, []service.I
 	return vo.Total_count, list
 }
 
-func (c *CbrInstanceService) ConvertRealAuthForm(form service.InstancePageForm) interface{} {
+func (cbr *CbrInstanceService) ConvertRealAuthForm(form service.InstancePageForm) interface{} {
 	param := CbrQueryParam{
 		TenantId:   form.TenantId,
 		VaultId:    form.InstanceId,
 		VaultName:  form.InstanceName,
 		PageNumber: strconv.Itoa(form.Current),
 		PageSize:   strconv.Itoa(form.PageSize),
+		IamInfo:    form.IamInfo,
 	}
 	if strutil.IsNotBlank(form.StatusList) {
 		param.Status = form.StatusList
@@ -106,8 +108,9 @@ func (c *CbrInstanceService) ConvertRealAuthForm(form service.InstancePageForm) 
 	return param
 }
 
-func (c *CbrInstanceService) DoAuthRequest(url string, form interface{}) (interface{}, error) {
-	respStr, err := httputil.HttpPostJson(url, form, nil)
+func (cbr *CbrInstanceService) DoAuthRequest(url string, form interface{}) (interface{}, error) {
+	var f = form.(CbrQueryParam)
+	respStr, err := httputil.HttpPostJson(url, form, cbr.GetIamHeader(&f.IamInfo))
 	if err != nil {
 		logger.Logger().Errorf("error:%v, url:%v, request:%v", err, url, form)
 		return nil, err
@@ -117,7 +120,7 @@ func (c *CbrInstanceService) DoAuthRequest(url string, form interface{}) (interf
 	return resp, nil
 }
 
-func (c *CbrInstanceService) ConvertAuthResp(realResp interface{}) (int, []service.InstanceCommonVO) {
+func (cbr *CbrInstanceService) ConvertAuthResp(realResp interface{}) (int, []service.InstanceCommonVO) {
 	vo := realResp.(CbrQueryPageVO)
 	var list []service.InstanceCommonVO
 	if vo.Total_count > 0 {
