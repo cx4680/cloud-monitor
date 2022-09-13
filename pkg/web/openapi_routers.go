@@ -44,7 +44,7 @@ func instanceOpenApiRouters(group *gin.RouterGroup) {
 
 func contactOpenApiV1Routers(group *gin.RouterGroup) {
 	contactCtl := v1_0.NewContactCtl()
-	group.GET("contacts", logs.GinTrailzap(false, Read, logs.INFO, logs.AlertContact), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetAlertContact", ResourceType: "*", ResourceId: "*"}), contactCtl.SelectContactPage)
+	group.GET("contacts", logs.GinTrailzap(false, Read, logs.INFO, logs.AlertContact), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetAlertContactList", ResourceType: "*", ResourceId: "*"}), contactCtl.SelectContactPage)
 	group.POST("contacts", logs.GinTrailzap(false, Write, logs.INFO, logs.AlertContact), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "SetAlertContact", ResourceType: "*", ResourceId: "*"}), contactCtl.CreateContact)
 	group.PUT("contacts/:ContactId", logs.GinTrailzap(false, Write, logs.Warn, logs.AlertContact), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "UpdateAlertContact", ResourceType: "*", ResourceId: "*"}), contactCtl.UpdateContact)
 	group.DELETE("contacts/:ContactId", logs.GinTrailzap(false, Write, logs.Warn, logs.AlertContact), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "DeleteAlertContact", ResourceType: "*", ResourceId: "*"}), contactCtl.DeleteContact)
@@ -53,7 +53,7 @@ func contactOpenApiV1Routers(group *gin.RouterGroup) {
 
 func contactGroupOpenApiV1Routers(group *gin.RouterGroup) {
 	contactGroupCtl := v1_0.NewContactGroupCtl()
-	group.GET("groups", logs.GinTrailzap(false, Read, logs.INFO, logs.AlertContactGroup), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetAlertContactGroup", ResourceType: "*", ResourceId: "*"}), contactGroupCtl.SelectContactGroupPage)
+	group.GET("groups", logs.GinTrailzap(false, Read, logs.INFO, logs.AlertContactGroup), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetAlertContactGroupList", ResourceType: "*", ResourceId: "*"}), contactGroupCtl.SelectContactGroupPage)
 	group.GET("groups/:GroupId/contacts", logs.GinTrailzap(false, Read, logs.INFO, logs.AlertContactGroup), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetAlertContact", ResourceType: "*", ResourceId: "*"}), contactGroupCtl.SelectContactPageByGroupId)
 	group.POST("groups", logs.GinTrailzap(false, Write, logs.INFO, logs.AlertContactGroup), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "SetAlertContactGroup", ResourceType: "*", ResourceId: "*"}), contactGroupCtl.CreateContactGroup)
 	group.PUT("groups/:GroupId", logs.GinTrailzap(false, Write, logs.Warn, logs.AlertContactGroup), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "UpdateAlertContactGroup", ResourceType: "*", ResourceId: "*"}), contactGroupCtl.UpdateContactGroup)
@@ -89,7 +89,7 @@ func MonitorChartOpenApiV1Routers(group *gin.RouterGroup) {
 
 func ResourceOpenApiV1Routers(group *gin.RouterGroup) {
 	resourceCtl := v1_0.NewResourceController()
-	group.GET(":ProductCode/resources", logs.GinTrailzap(false, Read, logs.INFO, logs.Resource), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetResourceList", ResourceType: "*", ResourceId: "*"}), resourceCtl.GetResourceList)
+	group.GET(":ProductCode/resources", logs.GinTrailzap(false, Read, logs.INFO, logs.Resource), iam.AuthIdentify(&models.Identity{Product: iam.ProductMonitor, Action: "GetInstancePageList", ResourceType: "*", ResourceId: "*"}), resourceCtl.GetResourceList)
 }
 
 func alarmRuleTemplateOPIRouters(group *gin.RouterGroup) {
