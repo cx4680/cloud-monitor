@@ -122,7 +122,8 @@ func (nat *NatInstanceService) ConvertRealAuthForm(form service.InstancePageForm
 }
 
 func (nat *NatInstanceService) DoAuthRequest(url string, form interface{}) (interface{}, error) {
-	respStr, err := httputil.HttpPostJson(url, form, nil)
+	f := form.(NatQueryPageRequest)
+	respStr, err := httputil.HttpPostJson(url, form, nat.GetIamHeader(&f.IamInfo))
 	if err != nil {
 		return nil, err
 	}
