@@ -55,7 +55,14 @@ func (dao RegionSyncDao) ContactSync(db *gorm.DB, contactSync form.ContactSync) 
 		for _, v := range contactSync.Contact {
 			contactList = append(contactList, v.BizId)
 		}
-		if err := db.Save(contactSync.Contact).Error; err != nil {
+		n := 0
+		for len(contactSync.Contact)-n > 1000 {
+			if err := db.Save(contactSync.Contact[n : n+1000]).Error; err != nil {
+				return err
+			}
+			n += 1000
+		}
+		if err := db.Save(contactSync.Contact[n:]).Error; err != nil {
 			return err
 		}
 		if err := db.Where("contact_biz_id IN (?)", contactList).Delete(&model.ContactInformation{}).Error; err != nil {
@@ -71,7 +78,13 @@ func (dao RegionSyncDao) ContactSync(db *gorm.DB, contactSync form.ContactSync) 
 		for _, v := range contactSync.ContactGroup {
 			contactGroupList = append(contactGroupList, v.BizId)
 		}
-		if err := db.Save(contactSync.ContactGroup).Error; err != nil {
+		n := 0
+		for len(contactSync.ContactGroup)-n > 1000 {
+			if err := db.Save(contactSync.ContactGroup[n : n+1000]).Error; err != nil {
+				return err
+			}
+		}
+		if err := db.Save(contactSync.ContactGroup[n:]).Error; err != nil {
 			return err
 		}
 	}
@@ -138,7 +151,14 @@ func (dao RegionSyncDao) AlarmRuleSync(db *gorm.DB, alarmRuleSync form.AlarmRule
 			alarmRuleList = append(alarmRuleList, v.BizId)
 			tenantList = append(tenantList, v.TenantID)
 		}
-		if err := db.Save(alarmRuleSync.AlarmRule).Error; err != nil {
+		n := 0
+		for len(alarmRuleSync.AlarmRule)-n > 1000 {
+			if err := db.Save(alarmRuleSync.AlarmRule[n : n+1000]).Error; err != nil {
+				return nil, err
+			}
+			n += 1000
+		}
+		if err := db.Save(alarmRuleSync.AlarmRule[n:]).Error; err != nil {
 			return nil, err
 		}
 		if err := db.Where("rule_biz_id IN (?)", alarmRuleList).Delete(&model.AlarmItem{}).Error; err != nil {
@@ -212,7 +232,7 @@ func (dao RegionSyncDao) GetAlarmRecordSyncData(time string) (form.AlarmRecordSy
 			if err := tx.Where("alarm_biz_id IN (?)", alarmRecordList).Find(&alarmRecordSync.AlarmInfo).Error; err != nil {
 				return err
 			}
-			for i, _ := range alarmRecordSync.AlarmInfo {
+			for i := range alarmRecordSync.AlarmInfo {
 				alarmRecordSync.AlarmInfo[i].Id = 0
 			}
 		}
@@ -227,7 +247,14 @@ func (dao RegionSyncDao) PullAlarmRecordSyncData(db *gorm.DB, alarmRecordSync fo
 		for _, v := range alarmRecordSync.AlarmRecord {
 			alarmRecordList = append(alarmRecordList, v.BizId)
 		}
-		if err := db.Save(alarmRecordSync.AlarmRecord).Error; err != nil {
+		n := 0
+		for len(alarmRecordSync.AlarmRecord)-n > 1000 {
+			if err := db.Save(alarmRecordSync.AlarmRecord[n : n+1000]).Error; err != nil {
+				return err
+			}
+			n += 1000
+		}
+		if err := db.Save(alarmRecordSync.AlarmRecord[n:]).Error; err != nil {
 			return err
 		}
 		if err := db.Where("alarm_biz_id IN (?)", alarmRecordList).Delete(&model.AlarmInfo{}).Error; err != nil {

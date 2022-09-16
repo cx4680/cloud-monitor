@@ -214,7 +214,7 @@ type ContactGroupPage struct {
 	TotalCount    int64          `json:"TotalCount"`
 	PageSize      int            `json:"PageSize"`
 	PageNumber    int            `json:"PageNumber"`
-	ContactGroups []ContactGroup `json:"Contacts"`
+	ContactGroups []ContactGroup `json:"Groups"`
 }
 
 type ContactGroup struct {

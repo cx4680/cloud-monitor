@@ -32,11 +32,11 @@ func (ctl *AlarmRuleTemplateCtl) GetProductList(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, openapi.NewRespError(openapi.MissingParameter, c))
 		return
 	}
-	list := dao.AlarmRuleTemplate.QueryTemplateProductList(global.DB, tenantId)
+	list := dao.AlarmRuleTemplate.QueryOpenApiTemplateProductList(global.DB, tenantId)
 
 	ret := struct {
 		RequestId string
-		Products  []dao.TemplateProduct
+		Products  []dao.OpenApiTemplateProduct
 	}{
 		RequestId: openapi.GetRequestId(c),
 		Products:  list,
@@ -58,7 +58,7 @@ func (ctl *AlarmRuleTemplateCtl) GetRuleListByProduct(c *gin.Context) {
 		return
 	}
 
-	ruleList := dao.AlarmRuleTemplate.QueryRuleTemplateListByProduct(global.DB, tenantId, productBizId)
+	ruleList := dao.AlarmRuleTemplate.QueryOpenApiRuleTemplateListByProduct(global.DB, tenantId, productBizId)
 	for i, v := range ruleList {
 		if v.Type == 1 {
 			ruleDetail, _ := dao.AlarmRule.GetDetail(global.DB, v.RuleId, tenantId)
@@ -79,7 +79,7 @@ func (ctl *AlarmRuleTemplateCtl) GetRuleListByProduct(c *gin.Context) {
 	}
 	ret := struct {
 		RequestId string
-		Rules     []dao.AlarmRuleTemplateRule
+		Rules     []dao.OpenApiAlarmRuleTemplateRule
 	}{
 		RequestId: openapi.GetRequestId(c),
 		Rules:     ruleList,
