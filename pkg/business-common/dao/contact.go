@@ -63,21 +63,26 @@ const (
 func (d *ContactDao) Select(db *gorm.DB, param form.ContactParam) *form.ContactFormPage {
 	var entity []form.ContactForm
 	var sql string
+	var screenParams []interface{}
 	var total int64
+	screenParams = append(screenParams, param.TenantId)
 	if strutil.IsNotBlank(param.ContactName) {
-		sql += " AND ac.name LIKE CONCAT('%','" + param.ContactName + "','%') "
+		sql += " AND ac.name LIKE CONCAT('%',?,'%') "
+		screenParams = append(screenParams, param.ContactName)
 	}
 	if strutil.IsNotBlank(param.Phone) {
-		sql += " AND ac.biz_id = ANY(SELECT contact_biz_id FROM t_contact_information WHERE type = 1 AND state = 1 AND address LIKE CONCAT('%','" + param.Phone + "','%')) "
+		sql += " AND ac.biz_id = ANY(SELECT contact_biz_id FROM t_contact_information WHERE type = 1 AND state = 1 AND address LIKE CONCAT('%',?,'%')) "
+		screenParams = append(screenParams, param.Phone)
 	}
 	if strutil.IsNotBlank(param.Email) {
-		sql += " AND ac.biz_id = ANY(SELECT contact_biz_id FROM t_contact_information WHERE type = 2 AND state = 1 AND address LIKE CONCAT('%','" + param.Email + "','%')) "
+		sql += " AND ac.biz_id = ANY(SELECT contact_biz_id FROM t_contact_information WHERE type = 2 AND state = 1 AND address LIKE CONCAT('%',?,'%')) "
+		screenParams = append(screenParams, param.Email)
 	}
 	sql = fmt.Sprintf(SelectContact, sql)
-	db.Raw("select count(1) from ( "+sql+") t ", param.TenantId).Scan(&total)
+	db.Raw(fmt.Sprintf("SELECT COUNT(1) FROM (%s) t ", sql), screenParams...).Scan(&total)
 	if total >= 0 {
-		sql += " LIMIT " + strconv.Itoa((param.PageCurrent-1)*param.PageSize) + "," + strconv.Itoa(param.PageSize)
-		db.Raw(sql, param.TenantId).Find(&entity)
+		sql = fmt.Sprintf("%s LIMIT %s,%s", sql, strconv.Itoa((param.PageCurrent-1)*param.PageSize), strconv.Itoa(param.PageSize))
+		db.Raw(sql, screenParams...).Find(&entity)
 	}
 	var contactFormPage = &form.ContactFormPage{
 		Records: entity,
@@ -109,14 +114,14 @@ func (d *ContactDao) ActivateContact(db *gorm.DB, activeCode string) string {
 	return entity.TenantId
 }
 
-//查询租户下的联系人数量
+// GetContactCount 查询租户下的联系人数量
 func (d *ContactDao) GetContactCount(tenantId string) int64 {
 	var count int64
 	global.DB.Model(&model.Contact{}).Where("tenant_id = ? AND state = 1", tenantId).Count(&count)
 	return count
 }
 
-//校验联系人
+// CheckContact 校验联系人
 func (d *ContactDao) CheckContact(tenantId, contactBizId string) bool {
 	var count int64
 	global.DB.Model(&model.Contact{}).Where("tenant_id = ? AND biz_id = ? AND state = 1", tenantId, contactBizId).Count(&count)
@@ -126,7 +131,7 @@ func (d *ContactDao) CheckContact(tenantId, contactBizId string) bool {
 	return false
 }
 
-//根据激活码获取租户ID
+// GetTenantIdByActiveCode 根据激活码获取租户ID
 func (d *ContactDao) GetTenantIdByActiveCode(activeCode string) string {
 	var entity = &model.ContactInformation{}
 	global.DB.Where("active_code = ?", activeCode).First(entity)
