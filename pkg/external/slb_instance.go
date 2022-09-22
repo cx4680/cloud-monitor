@@ -167,7 +167,7 @@ func (slb *SlbInstanceService) ConvertRealAuthForm(form service.InstancePageForm
 
 func (slb *SlbInstanceService) DoAuthRequest(url string, form interface{}) (interface{}, error) {
 	var f = form.(SlbQueryPageRequest)
-	respStr, err := httputil.HttpPostJson(url, form, map[string]string{"userCode": f.TenantId})
+	respStr, err := httputil.HttpPostJson(url, form, slb.GetIamHeader(&f.IamInfo))
 	if err != nil {
 		return nil, err
 	}
