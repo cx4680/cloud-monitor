@@ -13,15 +13,13 @@ type SlbInstanceService struct {
 }
 
 type SlbQueryParam struct {
-	RegionCode  string   `json:"regionCode,omitempty"`
-	Address     string   `json:"address,omitempty"`
-	LbUid       string   `json:"lbUid,omitempty"`
-	Name        string   `json:"name,omitempty"`
-	Ip          string   `json:"ip,omitempty"`
-	NetworkName string   `json:"networkName,omitempty"`
-	NetworkUid  string   `json:"networkUid,omitempty"`
-	StateList   []string `json:"stateList,omitempty"`
-	TenantId    string   `json:"tenantId,omitempty"`
+	LbUid     string   `json:"lbUid,omitempty"`
+	Name      string   `json:"name,omitempty"`
+	SlbId     string   `json:"slbId,omitempty"`
+	SlbName   string   `json:"slbName,omitempty"`
+	Address   string   `json:"address,omitempty"`
+	StateList []string `json:"stateList,omitempty"`
+	TenantId  string   `json:"tenantId,omitempty"`
 }
 
 type SlbQueryPageRequest struct {
@@ -36,39 +34,26 @@ type SlbQueryPageRequest struct {
 }
 
 type SlbResponse struct {
-	Code string
-	Msg  string
-	Data SlbQueryPageResult
+	Code string             `json:"code"`
+	Msg  string             `json:"msg"`
+	Data SlbQueryPageResult `json:"data"`
 }
 type SlbQueryPageResult struct {
-	Total int
-	Rows  []*SlbInfoBean
+	Total int            `json:"total"`
+	Rows  []*SlbInfoBean `json:"rows"`
 }
-
 type SlbInfoBean struct {
-	Name         string        `json:"name"`
-	UserCode     string        `json:"userCode"`
-	LbUid        string        `json:"lbUid"`
-	State        string        `json:"state"`
-	Address      string        `json:"address"`
-	SubnetUid    string        `json:"subnetUid"`
-	PortUid      interface{}   `json:"portUid"`
-	RegionCode   string        `json:"regionCode"`
-	ZoneCode     interface{}   `json:"zoneCode"`
-	Remark       string        `json:"remark"`
-	CreateTime   string        `json:"createTime"`
-	UpdateTime   interface{}   `json:"updateTime"`
-	NetworkName  string        `json:"networkName"`
-	NetworkUid   string        `json:"networkUid"`
-	SubnetName   string        `json:"subnetName"`
-	PoolList     []interface{} `json:"poolList"`
-	ListenerList []struct {
-		Protocol     string `json:"protocol"`
-		ProtocolPort int    `json:"protocolPort"`
-		ListenerUid  string `json:"listenerUid"`
-		ListenerName string `json:"listenerName"`
-	} `json:"listenerList"`
-	Eip struct {
+	LbUid       string `json:"lbUid"`
+	Name        string `json:"name"`
+	SlbName     string `json:"slbName"`
+	SlbId       string `json:"slbId"`
+	State       string `json:"state"`
+	Address     string `json:"address"`
+	NetworkName string `json:"networkName"`
+	NetworkUid  string `json:"networkUid"`
+	EipIp       string `json:"eipIp"`
+	Spec        string `json:"spec"`
+	Eip         struct {
 		Ip         string      `json:"ip"`
 		Name       interface{} `json:"name"`
 		Bandwidth  int         `json:"bandwidth"`
@@ -76,17 +61,22 @@ type SlbInfoBean struct {
 		PayModel   interface{} `json:"payModel"`
 		EipUid     string      `json:"eipUid"`
 	} `json:"eip"`
-	ExpireTime string `json:"expireTime"`
-	PayModel   string `json:"payModel"`
-	OrderId    string `json:"orderId"`
-	Spec       string `json:"spec"`
+	Listeners    []*Listener `json:"listeners"`
+	ListenerList []*Listener `json:"listenerList"`
+}
+
+type Listener struct {
+	Protocol     string `json:"protocol"`
+	ProtocolPort int    `json:"protocolPort"`
+	ListenerUid  string `json:"listenerUid"`
+	ListenerName string `json:"listenerName"`
 }
 
 func (slb *SlbInstanceService) ConvertRealForm(form service.InstancePageForm) interface{} {
 	queryParam := SlbQueryParam{
 		Address:  form.ExtraAttr["privateIp"],
-		LbUid:    form.InstanceId,
-		Name:     form.InstanceName,
+		SlbId:    form.InstanceId,
+		SlbName:  form.InstanceName,
 		TenantId: form.TenantId,
 	}
 	if strutil.IsNotBlank(form.StatusList) {
@@ -96,13 +86,12 @@ func (slb *SlbInstanceService) ConvertRealForm(form service.InstancePageForm) in
 		PageIndex: form.Current,
 		PageSize:  form.PageSize,
 		Data:      queryParam,
-		TenantId:  form.TenantId,
 	}
 }
 
 func (slb *SlbInstanceService) DoRequest(url string, form interface{}) (interface{}, error) {
 	var f = form.(SlbQueryPageRequest)
-	respStr, err := httputil.HttpPostJson(url, form, map[string]string{"userCode": f.TenantId})
+	respStr, err := httputil.HttpPostJson(url, f, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -117,11 +106,11 @@ func (slb *SlbInstanceService) ConvertResp(realResp interface{}) (int, []service
 	if vo.Data.Total > 0 {
 		for _, d := range vo.Data.Rows {
 			list = append(list, service.InstanceCommonVO{
-				InstanceId:   d.LbUid,
-				InstanceName: d.Name,
+				InstanceId:   d.SlbId,
+				InstanceName: d.SlbName,
 				Labels: []service.InstanceLabel{{
 					Name:  "eipIp",
-					Value: d.Eip.Ip,
+					Value: d.EipIp,
 				}, {
 					Name:  "privateIp",
 					Value: d.Address,
@@ -217,8 +206,14 @@ func (slb *SlbInstanceService) ConvertAuthResp(realResp interface{}) (int, []ser
 
 func getListenerList(slb *SlbInfoBean) string {
 	var listener []string
-	for _, v := range slb.ListenerList {
-		listener = append(listener, v.ListenerName)
+	if len(slb.Listeners) != 0 {
+		for _, v := range slb.Listeners {
+			listener = append(listener, v.ListenerName)
+		}
+	} else if len(slb.ListenerList) != 0 {
+		for _, v := range slb.ListenerList {
+			listener = append(listener, v.ListenerName)
+		}
 	}
 	return strings.Join(listener, ",")
 }
