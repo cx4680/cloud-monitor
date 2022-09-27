@@ -76,8 +76,6 @@ func CheckIamDirectory(loginId string) (bool, error) {
 }
 
 func CheckIamLogin(tenantId, iamUserId string) bool {
-	logger.Logger().Info("tenantId:" + tenantId)
-	logger.Logger().Info("iamUserId:" + iamUserId)
 	isOpen, err := CheckIamDirectory(tenantId)
 	if err != nil {
 		logger.Logger().Errorf("IamLogin接口错误：%v", err)
