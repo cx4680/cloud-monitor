@@ -15,8 +15,6 @@ type ReportFormParam struct {
 	 * 聚合函数 sum(求和)  min(最小值)  max (最大值)  avg (平均值)  stddev (标准差)  stdvar (标准差异)  count (计数)
 	 */
 	Statistics []string `form:"statistics" json:"statistics"`
-	Current    int      `form:"current" json:"current"`
-	PageSize   int      `form:"pageSize" json:"pageSize"`
 	RegionCode string   `form:"regionCode" json:"regionCode"`
 	FileId     string   `form:"fileId" json:"fileId"`
 }
@@ -47,60 +45,16 @@ type AsyncExportRequest struct {
 }
 
 type AsyncExportParam struct {
-	SheetSeq   int    `json:"sheetSeq"`
-	SheetName  string `json:"sheetName"`
-	SheetParam string `json:"sheetParam"`
-}
-
-type ExportRecordsRequest struct {
-	SheetSeq   int    `json:"sheetSeq"`
-	SheetName  string `json:"sheetName"`
-	SheetParam string `json:"sheetParam"`
-}
-
-type ExportRecordsResponse struct {
-	PageCount int                   `json:"pageCount"`
-	PageSize  int                   `json:"pageSize"`
-	Current   int                   `json:"current"`
-	Result    []ExportRecordsResult `json:"result"`
-}
-
-type ExportRecordsResult struct {
-	BusiId     int64  `json:"busiId"`
-	Module     string `json:"module"`
-	FileName   string `json:"fileName"`
-	CreateDate string `json:"createDate"`
-	FileSuffix string `json:"fileSuffix"`
-	FileStatus string `json:"fileStatus"`
-	FileId     string `json:"fileId"`
+	SheetSeq       int      `json:"sheetSeq"`
+	SheetName      string   `json:"sheetName"`
+	SheetParam     string   `json:"sheetParam"`
+	SheetParamList []string `json:"sheetParamList"`
 }
 
 type CallbackReportForm struct {
 	PageSize int    `json:"pageSize"`
 	Current  int    `json:"current"`
 	Param    string `json:"param"`
-}
-
-type ExportRecords struct {
-	PageSize  int `json:"pageSize"`
-	Current   int `json:"current"`
-	PageCount int `json:"pageCount"`
-	Result    []struct {
-		BusiId     int64  `json:"busiId"`
-		Module     string `json:"module"`
-		FileName   string `json:"fileName"`
-		CreateDate string `json:"createDate"`
-		FileSuffix string `json:"fileSuffix"`
-		FileStatus string `json:"fileStatus"`
-		FileId     string `json:"fileId"`
-	} `json:"result"`
-}
-
-type AlarmRecordParam struct {
-	RegionCode string `form:"regionCode" json:"regionCode"`
-	TenantID   string `form:"tenantId" json:"tenantId"`
-	StartTime  string `form:"startTime" json:"startTime"`
-	EndTime    string `form:"endTime" json:"endTime"`
 }
 
 type AlarmRecord struct {

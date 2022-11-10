@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global"
 	commonService "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/service"
@@ -11,6 +12,7 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/service"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/util"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/validator/translate"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
@@ -69,7 +71,7 @@ func (ctl *InstanceRegionCtl) GetPage(c *gin.Context) {
 	}
 	if err != nil {
 		logger.Logger().Error(err)
-		c.JSON(http.StatusInternalServerError, global.NewError("查询失败"))
+		c.JSON(http.StatusOK, global.NewError(fmt.Sprintf("%s的%s产品未部署", config.Cfg.Common.RegionName, f.Product)))
 		return
 	}
 	c.JSON(http.StatusOK, global.NewSuccess("查询成功", page))

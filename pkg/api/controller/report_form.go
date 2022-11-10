@@ -44,8 +44,6 @@ func (rfc *ReportFormCtl) GetMonitorData(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, global.NewError("时间参数有误"))
 		return
 	}
-	//用监控项数组的下标充当分页
-	param.Current = callback.Current - 1
 	result, err := rfc.service.GetMonitorData(param)
 	if err == nil {
 		c.JSON(http.StatusOK, map[string]interface{}{
