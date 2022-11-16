@@ -46,10 +46,10 @@ type CommonConfig struct {
 }
 
 type Serve struct {
-	Debug        bool `yaml:"debug"`
-	Port         int  `yaml:"port"`
-	ReadTimeout  int  `yaml:"read_timeout"`
-	WriteTimeout int  `yaml:"write_timeout"`
+	Debug        bool          `yaml:"debug"`
+	Port         int           `yaml:"port"`
+	ReadTimeout  time.Duration `yaml:"read_timeout"`
+	WriteTimeout time.Duration `yaml:"write_timeout"`
 }
 
 type DB struct {
