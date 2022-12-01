@@ -40,7 +40,7 @@ func (s *ReportFormService) GetMonitorData(param form.ReportFormParam) ([]*form.
 		instanceMap[v.InstanceId] = v
 	}
 	instances := strings.Join(instanceList, "|")
-	item := dao.MonitorItem.GetMonitorItemCacheByName(param.ItemList[param.Current])
+	item := dao.MonitorItem.GetMonitorItemCacheByName(param.ItemList[0])
 	labels := strings.Split(item.Labels, ",")
 	pql := strings.ReplaceAll(item.MetricsLinux, constant.MetricLabel, constant.INSTANCE+"=~'"+instances+"'")
 	//获取单个指标的所有实例数据
@@ -189,12 +189,22 @@ func firstUpper(s string) string {
 }
 
 func (s *ReportFormService) ExportMonitorData(param form.ReportFormParam, userInfo string) error {
+	var sheetParamList []string
+	var newParam form.ReportFormParam
+	for _, item := range param.ItemList {
+		for _, instance := range param.InstanceList {
+			newParam = param
+			newParam.ItemList = []string{item}
+			newParam.InstanceList = []*form.InstanceForm{instance}
+			sheetParamList = append(sheetParamList, jsonutil.ToString(newParam))
+		}
+	}
 	url := config.Cfg.AsyncExport.Url + config.Cfg.AsyncExport.Export
 	asyncParams := []form.AsyncExportParam{
 		{
-			SheetSeq:   0,
-			SheetName:  "云监控-云产品监控",
-			SheetParam: jsonutil.ToString(param),
+			SheetSeq:       0,
+			SheetName:      "云监控-云产品监控",
+			SheetParamList: sheetParamList,
 		},
 	}
 	asyncRequest := form.AsyncExportRequest{
