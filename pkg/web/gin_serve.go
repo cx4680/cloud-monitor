@@ -39,12 +39,18 @@ func doStart(cfg config.Serve) error {
 	if cfg.Port > 0 {
 		port = strconv.Itoa(cfg.Port)
 	}
+	if cfg.ReadTimeout <= 0 {
+		cfg.ReadTimeout = 30 * time.Second
+	}
+	if cfg.WriteTimeout <= 0 {
+		cfg.WriteTimeout = 30 * time.Second
+	}
 
 	s := &http.Server{
 		Addr:           ":" + port,
 		Handler:        Router,
-		ReadTimeout:    30 * time.Second,
-		WriteTimeout:   30 * time.Second,
+		ReadTimeout:    cfg.ReadTimeout,
+		WriteTimeout:   cfg.WriteTimeout,
 		MaxHeaderBytes: 1 << 20,
 	}
 

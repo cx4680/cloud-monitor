@@ -228,8 +228,8 @@ INSERT INTO `t_monitor_item` (biz_id, product_biz_id, name, metric_name, labels,
 ALTER TABLE t_monitor_product ADD COLUMN iam_page_url varchar(256) COMMENT 'iam请求路径';
 UPDATE t_monitor_product SET iam_page_url = '/compute/ecs/instance/cbc/pageList' WHERE abbreviation IN ('ecs');
 UPDATE t_monitor_product SET iam_page_url = '/eip/inner/eipInfoList' WHERE abbreviation IN ('eip');
-UPDATE t_monitor_product SET iam_page_url = '/slb/inner/list' WHERE abbreviation IN ('slb');
-UPDATE t_monitor_product SET iam_page_url = '/compute/monitor/vault/pageList' WHERE abbreviation IN ('cbr');
+UPDATE t_monitor_product SET iam_page_url = '/slb/list' WHERE abbreviation IN ('slb');
+UPDATE t_monitor_product SET iam_page_url = '/noauth/backup/vault/pageList' WHERE abbreviation IN ('cbr');
 UPDATE t_monitor_product SET iam_page_url = '/nat-gw/inner/nat/page' WHERE abbreviation IN ('nat');
 UPDATE t_monitor_product SET iam_page_url = '/nat-gw/nat/page' WHERE abbreviation IN ('nat-e');
 UPDATE t_monitor_product SET iam_page_url = '/v1/mysql/instance' WHERE abbreviation IN ('mysql');
@@ -248,4 +248,3 @@ UPDATE t_monitor_item SET metrics_linux = 'clamp_max(sum by(instance,instanceTyp
 INSERT INTO t_monitor_product (biz_id, name, status, description, create_user, create_time, route, cron, host, page_url, abbreviation, sort, monitor_type, iam_page_url) VALUES ('15', '增强型NAT网关', '1', 'nat-e', null, null, '/productmonitoring/nat-e', '0 0 0/1 * * ?', 'http://product-nat-controller-nat-manage.product-nat-gw', '/nat-gw/inner/nat/page', 'nat-e', '6', '云产品监控', '/nat-gw/inner/nat/page');
 
 ALTER TABLE t_alarm_rule_resource_rel ADD INDEX alarm_rule_id ( alarm_rule_id );
-
