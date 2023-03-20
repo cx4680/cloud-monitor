@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global"
 	commonService "code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/service"

@@ -46,7 +46,7 @@ type CgwRecords struct {
 	Eip            string `json:"eip"`
 }
 
-func (ecs *CgwInstanceService) ConvertRealForm(f service.InstancePageForm) interface{} {
+func (cgw *CgwInstanceService) ConvertRealForm(f service.InstancePageForm) interface{} {
 	param := CgwQueryPageForm{
 		TenantId:     f.TenantId,
 		PageNum:      f.Current,
@@ -58,7 +58,7 @@ func (ecs *CgwInstanceService) ConvertRealForm(f service.InstancePageForm) inter
 	return param
 }
 
-func (ecs *CgwInstanceService) DoRequest(url string, f interface{}) (interface{}, error) {
+func (cgw *CgwInstanceService) DoRequest(url string, f interface{}) (interface{}, error) {
 	var form = f.(CgwQueryPageForm)
 	param := "?pageNum=" + strconv.Itoa(form.PageNum) + "&pageSize=" + strconv.Itoa(form.PageSize)
 	if strutil.IsNotBlank(form.InstanceName) {
@@ -79,7 +79,7 @@ func (ecs *CgwInstanceService) DoRequest(url string, f interface{}) (interface{}
 	return resp, nil
 }
 
-func (ecs *CgwInstanceService) ConvertResp(realResp interface{}) (int, []service.InstanceCommonVO) {
+func (cgw *CgwInstanceService) ConvertResp(realResp interface{}) (int, []service.InstanceCommonVO) {
 	vo := realResp.(CgwQueryPageVO)
 	var list []service.InstanceCommonVO
 	if vo.Data.Total > 0 {
@@ -109,7 +109,7 @@ func (ecs *CgwInstanceService) ConvertResp(realResp interface{}) (int, []service
 	return vo.Data.Total, list
 }
 
-func (ecs *CgwInstanceService) ConvertRealAuthForm(f service.InstancePageForm) interface{} {
+func (cgw *CgwInstanceService) ConvertRealAuthForm(f service.InstancePageForm) interface{} {
 	param := CgwQueryPageForm{
 		TenantId:     f.TenantId,
 		PageNum:      f.Current,
@@ -122,7 +122,7 @@ func (ecs *CgwInstanceService) ConvertRealAuthForm(f service.InstancePageForm) i
 	return param
 }
 
-func (ecs *CgwInstanceService) DoAuthRequest(url string, f interface{}) (interface{}, error) {
+func (cgw *CgwInstanceService) DoAuthRequest(url string, f interface{}) (interface{}, error) {
 	var form = f.(CgwQueryPageForm)
 	param := "?pageNum=" + strconv.Itoa(form.PageNum) + "&pageSize=" + strconv.Itoa(form.PageSize)
 	if strutil.IsNotBlank(form.InstanceName) {
@@ -144,7 +144,7 @@ func (ecs *CgwInstanceService) DoAuthRequest(url string, f interface{}) (interfa
 	return resp, nil
 }
 
-func (ecs *CgwInstanceService) ConvertAuthResp(realResp interface{}) (int, []service.InstanceCommonVO) {
+func (cgw *CgwInstanceService) ConvertAuthResp(realResp interface{}) (int, []service.InstanceCommonVO) {
 	vo := realResp.(CgwQueryPageVO)
 	var list []service.InstanceCommonVO
 	if vo.Data.Total > 0 {
@@ -153,69 +153,6 @@ func (ecs *CgwInstanceService) ConvertAuthResp(realResp interface{}) (int, []ser
 				InstanceId:   d.PaasInstanceId,
 				InstanceName: d.InstanceName,
 				Labels: []service.InstanceLabel{{
-					Name:  "status",
-					Value: strconv.Itoa(d.Status),
-				}, {
-					Name:  "instanceSpec",
-					Value: d.InstanceSpec,
-				}, {
-					Name:  "instanceType",
-					Value: strconv.Itoa(d.InstanceType),
-				}, {
-					Name:  "vpcInfo",
-					Value: d.VpcInfo,
-				}, {
-					Name:  "eip",
-					Value: d.Eip,
-				}},
-			})
-		}
-	}
-	return vo.Data.Total, list
-}
-
-func (ecs *CgwInstanceService) ConvertRealAuthForm(f commonService.InstancePageForm) interface{} {
-	param := CgwQueryPageForm{
-		TenantId:     f.TenantId,
-		PageNum:      f.Current,
-		PageSize:     f.PageSize,
-		InstanceName: f.InstanceName,
-		InstanceId:   f.InstanceId,
-		Status:       f.StatusList,
-	}
-	return param
-}
-
-func (ecs *CgwInstanceService) DoAuthRequest(url string, f interface{}) (interface{}, error) {
-	var form = f.(CgwQueryPageForm)
-	param := "?pageNum=" + strconv.Itoa(form.PageNum) + "&pageSize=" + strconv.Itoa(form.PageSize)
-	if strutil.IsNotBlank(form.InstanceName) {
-		param += "&instanceName=" + form.InstanceName
-	}
-	if strutil.IsNotBlank(form.InstanceId) {
-		param += "&paasInstanceId=" + form.InstanceId
-	}
-	if strutil.IsNotBlank(form.Status) {
-		param += "&status=" + form.Status
-	}
-	respStr, err := httputil.HttpHeaderGet(url+param, map[string]string{"CECLOUD-CSP-USER": "{\"tenantId\":\"" + form.TenantId + "\"}"})
-	if err != nil {
-		return nil, err
-	}
-	var resp CgwQueryPageVO
-	jsonutil.ToObject(respStr, &resp)
-	return resp, nil
-}
-
-func (ecs *CgwInstanceService) ConvertAuthResp(realResp interface{}) (int, []commonService.InstanceCommonVO) {
-	vo := realResp.(CgwQueryPageVO)
-	var list []commonService.InstanceCommonVO
-	if vo.Data.Total > 0 {
-		for _, d := range vo.Data.Records {
-			list = append(list, commonService.InstanceCommonVO{
-				InstanceId:   d.PaasInstanceId,
-				InstanceName: d.InstanceName,
-				Labels: []commonService.InstanceLabel{{
 					Name:  "status",
 					Value: strconv.Itoa(d.Status),
 				}, {
