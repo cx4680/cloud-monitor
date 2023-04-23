@@ -17,6 +17,9 @@ type ReportFormParam struct {
 	Statistics []string `form:"statistics" json:"statistics"`
 	RegionCode string   `form:"regionCode" json:"regionCode"`
 	FileId     string   `form:"fileId" json:"fileId"`
+
+	Item     string `form:"item" json:"item"`
+	Instance string `form:"instance" json:"instance"`
 }
 
 type InstanceForm struct {

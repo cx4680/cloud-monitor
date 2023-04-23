@@ -4,3 +4,5 @@ INSERT INTO t_monitor_item (biz_id, product_biz_id, name, metric_name, labels, m
 UPDATE t_monitor_item SET metrics_linux = '100 * ((sum by(instance)(ecs_memory_MemTotal_bytes{$INSTANCE}) - (sum by(instance)(ecs_memory_MemFree_bytes{}) + sum by(instance)(ecs_memory_Cached_bytes{}))) / sum by(instance)(ecs_memory_MemTotal_bytes{}))' WHERE metric_name = 'ecs_memory_usage';
 UPDATE t_monitor_item SET metrics_linux = '100 * ((sum by(instance)(ecs_memory_MemTotal_bytes{$INSTANCE}) - (sum by(instance)(ecs_memory_MemFree_bytes{}) + sum by(instance)(ecs_memory_Cached_bytes{}))) / sum by(instance)(ecs_memory_MemTotal_bytes{}))' WHERE metric_name = 'bms_memory_usage';
 UPDATE t_monitor_item SET metrics_linux = '100 * ((sum by(instance)(ecs_memory_MemTotal_bytes{$INSTANCE}) - (sum by(instance)(ecs_memory_MemFree_bytes{}) + sum by(instance)(ecs_memory_Cached_bytes{}))) / sum by(instance)(ecs_memory_MemTotal_bytes{}))' WHERE metric_name = 'ebms_memory_usage';
+
+UPDATE `t_monitor_product` SET name = '云数据库 RDS DM' WHERE biz_id = '9';
