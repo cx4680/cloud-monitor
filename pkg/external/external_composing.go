@@ -21,7 +21,6 @@ const (
 	REDIS      = "redis"
 	MONGO      = "mongo"
 	CGW        = "cgw"
-	CWP        = "cwp"
 )
 
 var ProductInstanceServiceMap = map[string]commonService.InstanceService{
@@ -68,9 +67,6 @@ var ProductInstanceServiceMap = map[string]commonService.InstanceService{
 		InstanceServiceImpl: commonService.InstanceServiceImpl{},
 	},
 	CGW: &CgwInstanceService{
-		InstanceServiceImpl: commonService.InstanceServiceImpl{},
-	},
-	CWP: &CwpInstanceService{
 		InstanceServiceImpl: commonService.InstanceServiceImpl{},
 	},
 }
