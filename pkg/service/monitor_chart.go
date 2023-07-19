@@ -98,6 +98,10 @@ func (s *MonitorChartService) GetAxisData(request form.PrometheusRequest) (*form
 		return nil, errors.NewBusinessError("该租户无此实例")
 	}
 	pql := strings.ReplaceAll(monitorItem.MetricsLinux, constant.MetricLabel, constant.INSTANCE+"='"+request.Instance+"',"+constant.FILTER)
+	if request.Name == "private_dns_dns_requests_total" || request.Name == "private_dns_dns_requests_total_rate1m" {
+		pql = strings.ReplaceAll(monitorItem.MetricsLinux, constant.MetricLabel, "instanceId='"+request.Instance+"',"+constant.FILTER)
+
+	}
 	if strutil.IsNotBlank(request.Pid) {
 		pql = strings.ReplaceAll(monitorItem.MetricsLinux, constant.MetricLabel, constant.INSTANCE+"='"+request.Instance+"',"+fmt.Sprintf(constant.PId, request.Pid))
 	}

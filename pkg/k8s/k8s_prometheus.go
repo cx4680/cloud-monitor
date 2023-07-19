@@ -370,9 +370,14 @@ func generateRuleExpression(item model.AlarmItem, instanceStr string, calcMode i
 	if monitorItem.Id == 0 {
 		return "", "", errors.NewBusinessError("指标不存在")
 	}
+
 	var expr = ""
 	funcName := fmt.Sprintf("%s_over_time", dao.ConfigItem.GetConfigItem(item.TriggerCondition.Statistics, dao.StatisticalMethodsPid, "").Data)
 	innerExpr := strings.ReplaceAll(monitorItem.MetricsLinux, constant.MetricLabel, getInstanceLabels(instanceStr, monitorItem.Labels))
+	fmt.Printf("dns:%v", monitorItem)
+	if monitorItem.MetricName == "private_dns_dns_requests_total" || monitorItem.MetricName == "private_dns_dns_requests_total_rate1m" {
+		innerExpr = strings.ReplaceAll(monitorItem.MetricsLinux, constant.MetricLabel, getInstanceLabelsById(instanceStr, monitorItem.Labels))
+	}
 
 	comparison := dao.ConfigItem.GetConfigItem(item.TriggerCondition.ComparisonOperator, dao.ComparisonMethodPid, "").Data
 	if calc_mode.Resource == calcMode {
@@ -482,6 +487,20 @@ func getInstanceLabels(instanceId string, labelStr string) string {
 			builder.WriteString(fmt.Sprintf("=~'%s'", instanceId))
 		}
 	}
+	return builder.String()
+}
+
+func getInstanceLabelsById(instanceId string, labelStr string) string {
+	builder := strings.Builder{}
+	labels := strings.Split(labelStr, ",")
+	for _, label := range labels {
+		if strings.EqualFold(label, "instance") {
+			builder.WriteString("instanceId")
+			builder.WriteString(fmt.Sprintf("=~'%s'", instanceId))
+		}
+	}
+	fmt.Println("dns-url", builder.String())
+
 	return builder.String()
 }
 
