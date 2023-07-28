@@ -126,15 +126,28 @@ func (s *ReportFormService) buildOriginReportForm(param form.ReportFormParam, in
 		}
 	}()
 	fmt.Printf("prometheusResult:%v", prometheusResult.Metric)
-	f = &form.ReportForm{
-		Region:       param.RegionCode,
-		InstanceName: instanceMap[prometheusResult.Metric["instance"]].InstanceName,
-		InstanceId:   prometheusResult.Metric["instance"],
-		Status:       instanceMap[prometheusResult.Metric["instance"]].Status,
-		ItemName:     item.Name,
-		Time:         util.TimestampToFullTimeFmtStr(int64(prometheusValue[0].(float64))),
-		Timestamp:    int64(prometheusValue[0].(float64)),
-		Value:        changeDecimal(prometheusValue[1].(string)),
+	if item.MetricName == "private_dns_dns_requests_total" || item.MetricName == "private_dns_dns_requests_total_rate1m" {
+		f = &form.ReportForm{
+			Region:       param.RegionCode,
+			InstanceName: instanceMap[prometheusResult.Metric["instanceId"]].InstanceName,
+			InstanceId:   prometheusResult.Metric["instanceId"],
+			Status:       instanceMap[prometheusResult.Metric["instanceId"]].Status,
+			ItemName:     item.Name,
+			Time:         util.TimestampToFullTimeFmtStr(int64(prometheusValue[0].(float64))),
+			Timestamp:    int64(prometheusValue[0].(float64)),
+			Value:        changeDecimal(prometheusValue[1].(string)),
+		}
+	} else {
+		f = &form.ReportForm{
+			Region:       param.RegionCode,
+			InstanceName: instanceMap[prometheusResult.Metric["instance"]].InstanceName,
+			InstanceId:   prometheusResult.Metric["instance"],
+			Status:       instanceMap[prometheusResult.Metric["instance"]].Status,
+			ItemName:     item.Name,
+			Time:         util.TimestampToFullTimeFmtStr(int64(prometheusValue[0].(float64))),
+			Timestamp:    int64(prometheusValue[0].(float64)),
+			Value:        changeDecimal(prometheusValue[1].(string)),
+		}
 	}
 	for _, label := range labels {
 		fmt.Println("label:", label)
