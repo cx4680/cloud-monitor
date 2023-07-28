@@ -42,7 +42,11 @@ func (s *ReportFormService) GetMonitorData(param form.ReportFormParam) ([]*form.
 	instances := strings.Join(instanceList, "|")
 	item := dao.MonitorItem.GetMonitorItemCacheByName(param.ItemList[0])
 	labels := strings.Split(item.Labels, ",")
+
 	pql := strings.ReplaceAll(item.MetricsLinux, constant.MetricLabel, constant.INSTANCE+"=~'"+instances+"'")
+	if item.Name == "private_dns_dns_requests_total" || item.MetricName == "private_dns_dns_requests_total_rate1m" {
+		pql = strings.ReplaceAll(item.MetricsLinux, constant.MetricLabel, "instanceId=~'"+instances+"'")
+	}
 	//获取单个指标的所有实例数据
 	reportFormList := s.getOneItemData(param, item, instanceMap, pql, labels)
 	return reportFormList, nil
