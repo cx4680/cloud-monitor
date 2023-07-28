@@ -42,7 +42,13 @@ func (s *ReportFormService) GetMonitorData(param form.ReportFormParam) ([]*form.
 	instances := strings.Join(instanceList, "|")
 	item := dao.MonitorItem.GetMonitorItemCacheByName(param.ItemList[0])
 	labels := strings.Split(item.Labels, ",")
+	fmt.Println("导出dns：", item.MetricName)
+	fmt.Println("param：", param.Name)
 	pql := strings.ReplaceAll(item.MetricsLinux, constant.MetricLabel, constant.INSTANCE+"=~'"+instances+"'")
+	if item.MetricName == "private_dns_dns_requests_total" || item.MetricName == "private_dns_dns_requests_total_rate1m" {
+		pql = strings.ReplaceAll(item.MetricsLinux, constant.MetricLabel, "instanceId=~'"+instances+"'")
+	}
+	fmt.Println("pql:", pql)
 	//获取单个指标的所有实例数据
 	reportFormList := s.getOneItemData(param, item, instanceMap, pql, labels)
 	return reportFormList, nil
@@ -61,6 +67,7 @@ func (s *ReportFormService) getOriginData(param form.ReportFormParam, item model
 	if len(result) == 0 {
 		return nil
 	}
+	fmt.Println("orgin-pql:", pql)
 	var list []*form.ReportForm
 	for _, prometheusResult := range result {
 		for _, prometheusValue := range prometheusResult.Values {
@@ -98,8 +105,14 @@ func (s *ReportFormService) getAggregationData(param form.ReportFormParam, item 
 			for calcStyle, d := range ret {
 				dataMap[calcStyle] = d[k].Values[i]
 			}
-			if f := s.buildAggregationReportForm(v.Metric["instance"], k, item.Name, instanceMap, dataMap); f != nil {
-				list = append(list, f)
+			if item.MetricName == "private_dns_dns_requests_total" || item.MetricName == "private_dns_dns_requests_total_rate1m" {
+				if f := s.buildAggregationReportForm(v.Metric["instanceId"], k, item.Name, instanceMap, dataMap); f != nil {
+					list = append(list, f)
+				}
+			} else {
+				if f := s.buildAggregationReportForm(v.Metric["instance"], k, item.Name, instanceMap, dataMap); f != nil {
+					list = append(list, f)
+				}
 			}
 		}
 	}
@@ -112,21 +125,37 @@ func (s *ReportFormService) buildOriginReportForm(param form.ReportFormParam, in
 			logger.Logger().Error(e)
 		}
 	}()
-	f = &form.ReportForm{
-		Region:       param.RegionCode,
-		InstanceName: instanceMap[prometheusResult.Metric["instance"]].InstanceName,
-		InstanceId:   prometheusResult.Metric["instance"],
-		Status:       instanceMap[prometheusResult.Metric["instance"]].Status,
-		ItemName:     item.Name,
-		Time:         util.TimestampToFullTimeFmtStr(int64(prometheusValue[0].(float64))),
-		Timestamp:    int64(prometheusValue[0].(float64)),
-		Value:        changeDecimal(prometheusValue[1].(string)),
+	fmt.Printf("prometheusResult:%v", prometheusResult.Metric)
+	if item.MetricName == "private_dns_dns_requests_total" || item.MetricName == "private_dns_dns_requests_total_rate1m" {
+		f = &form.ReportForm{
+			Region:       param.RegionCode,
+			InstanceName: instanceMap[prometheusResult.Metric["instanceId"]].InstanceName,
+			InstanceId:   prometheusResult.Metric["instanceId"],
+			Status:       instanceMap[prometheusResult.Metric["instanceId"]].Status,
+			ItemName:     item.Name,
+			Time:         util.TimestampToFullTimeFmtStr(int64(prometheusValue[0].(float64))),
+			Timestamp:    int64(prometheusValue[0].(float64)),
+			Value:        changeDecimal(prometheusValue[1].(string)),
+		}
+	} else {
+		f = &form.ReportForm{
+			Region:       param.RegionCode,
+			InstanceName: instanceMap[prometheusResult.Metric["instance"]].InstanceName,
+			InstanceId:   prometheusResult.Metric["instance"],
+			Status:       instanceMap[prometheusResult.Metric["instance"]].Status,
+			ItemName:     item.Name,
+			Time:         util.TimestampToFullTimeFmtStr(int64(prometheusValue[0].(float64))),
+			Timestamp:    int64(prometheusValue[0].(float64)),
+			Value:        changeDecimal(prometheusValue[1].(string)),
+		}
 	}
 	for _, label := range labels {
+		fmt.Println("label:", label)
 		if label != "instance" && strutil.IsNotBlank(prometheusResult.Metric[label]) {
 			f.InstanceId = f.InstanceId + " - " + prometheusResult.Metric[label]
 		}
 	}
+	fmt.Println(fmt.Printf("f:%v", f))
 	return
 }
 
