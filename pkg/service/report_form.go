@@ -42,12 +42,13 @@ func (s *ReportFormService) GetMonitorData(param form.ReportFormParam) ([]*form.
 	instances := strings.Join(instanceList, "|")
 	item := dao.MonitorItem.GetMonitorItemCacheByName(param.ItemList[0])
 	labels := strings.Split(item.Labels, ",")
-	fmt.Println(fmt.Printf("导出dns：%v", item.MetricName))
-	fmt.Println(fmt.Printf("param：%v", param.Name))
+	fmt.Println("导出dns：", item.MetricName)
+	fmt.Println("param：", param.Name)
 	pql := strings.ReplaceAll(item.MetricsLinux, constant.MetricLabel, constant.INSTANCE+"=~'"+instances+"'")
 	if item.MetricName == "private_dns_dns_requests_total" || item.MetricName == "private_dns_dns_requests_total_rate1m" {
 		pql = strings.ReplaceAll(item.MetricsLinux, constant.MetricLabel, "instanceId=~'"+instances+"'")
 	}
+	fmt.Println("pql:", pql)
 	//获取单个指标的所有实例数据
 	reportFormList := s.getOneItemData(param, item, instanceMap, pql, labels)
 	return reportFormList, nil
@@ -103,8 +104,14 @@ func (s *ReportFormService) getAggregationData(param form.ReportFormParam, item 
 			for calcStyle, d := range ret {
 				dataMap[calcStyle] = d[k].Values[i]
 			}
-			if f := s.buildAggregationReportForm(v.Metric["instance"], k, item.Name, instanceMap, dataMap); f != nil {
-				list = append(list, f)
+			if item.MetricName == "private_dns_dns_requests_total" || item.MetricName == "private_dns_dns_requests_total_rate1m" {
+				if f := s.buildAggregationReportForm(v.Metric["instanceId"], k, item.Name, instanceMap, dataMap); f != nil {
+					list = append(list, f)
+				}
+			} else {
+				if f := s.buildAggregationReportForm(v.Metric["instance"], k, item.Name, instanceMap, dataMap); f != nil {
+					list = append(list, f)
+				}
 			}
 		}
 	}
