@@ -67,6 +67,7 @@ func (s *ReportFormService) getOriginData(param form.ReportFormParam, item model
 	if len(result) == 0 {
 		return nil
 	}
+	fmt.Println("orgin-pql:", pql)
 	var list []*form.ReportForm
 	for _, prometheusResult := range result {
 		for _, prometheusValue := range prometheusResult.Values {
@@ -124,6 +125,7 @@ func (s *ReportFormService) buildOriginReportForm(param form.ReportFormParam, in
 			logger.Logger().Error(e)
 		}
 	}()
+	fmt.Printf("prometheusResult:%v", prometheusResult.Metric)
 	f = &form.ReportForm{
 		Region:       param.RegionCode,
 		InstanceName: instanceMap[prometheusResult.Metric["instance"]].InstanceName,
@@ -135,10 +137,12 @@ func (s *ReportFormService) buildOriginReportForm(param form.ReportFormParam, in
 		Value:        changeDecimal(prometheusValue[1].(string)),
 	}
 	for _, label := range labels {
+		fmt.Println("label:", label)
 		if label != "instance" && strutil.IsNotBlank(prometheusResult.Metric[label]) {
 			f.InstanceId = f.InstanceId + " - " + prometheusResult.Metric[label]
 		}
 	}
+	fmt.Println(fmt.Printf("f:%v", f))
 	return
 }
 
