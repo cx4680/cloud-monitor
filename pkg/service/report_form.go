@@ -194,7 +194,7 @@ func (s *ReportFormService) getStatisticsMap(aggregation, pql string, start, end
 	defer group.Done()
 	for _, v := range statistics {
 		if aggregation == v {
-			expr := fmt.Sprintf("%s_over_time((%s)[1d:1m])", aggregation, pql)
+			expr := fmt.Sprintf("%s_over_time((%s)[1d:1h])", aggregation, pql)
 			result := s.prometheus.QueryRange(expr, strconv.Itoa(start), strconv.Itoa(end), "86400").Data.Result
 			for _, prometheusResult := range result {
 				key := prometheusResult.Metric["instance"]
