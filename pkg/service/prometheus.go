@@ -36,6 +36,14 @@ func (s *PrometheusService) QueryRange(pql string, start string, end string, ste
 	return sendRequest(requestUrl, pql)
 }
 
+func (s *PrometheusService) QueryRangeDownSampling(pql string, start string, end string, step string) *form.PrometheusResponse {
+	var cfg = config.Cfg.Prometheus
+	requestUrl := cfg.Url + cfg.QueryRange
+	logger.Logger().Info(requestUrl + pql)
+	pql = url.QueryEscape(pql) + "&start=" + start + "&end=" + end + "&step=" + step + "&max_source_resolution=1h"
+	return sendRequest(requestUrl, pql)
+}
+
 func sendRequest(requestUrl string, pql string) *form.PrometheusResponse {
 	prometheusResponse := &form.PrometheusResponse{}
 	response, err := httputil.HttpGet(requestUrl + pql)

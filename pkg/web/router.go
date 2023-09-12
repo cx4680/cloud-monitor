@@ -202,6 +202,7 @@ func innerMapping() {
 		group.GET("monitorChart/network", monitorChartCtl.GetNetworkData)
 		group.GET("monitorChart/getAxisData", monitorChartCtl.GetAxisDataInner)
 		group.GET("reportForm/getData", reportFormCtl.GetDataInner)
+		group.GET("reportForm/getReportFormData", reportFormCtl.GetReportFormData)
 
 		ruleGroup := group.Group("rule/")
 		ruleGroup.POST("create", innerRuleCtl.CreateRule)
