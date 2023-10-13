@@ -22,6 +22,7 @@ const (
 	MONGO      = "mongo"
 	CGW        = "cgw"
 	DNS        = "dns"
+	CWP        = "cwp"
 )
 
 var ProductInstanceServiceMap = map[string]commonService.InstanceService{
@@ -71,6 +72,9 @@ var ProductInstanceServiceMap = map[string]commonService.InstanceService{
 		InstanceServiceImpl: commonService.InstanceServiceImpl{},
 	},
 	DNS: &DnsInstanceService{
+		InstanceServiceImpl: commonService.InstanceServiceImpl{},
+	},
+	CWP: &CwpInstanceService{
 		InstanceServiceImpl: commonService.InstanceServiceImpl{},
 	},
 }
