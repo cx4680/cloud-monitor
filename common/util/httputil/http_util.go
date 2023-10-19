@@ -2,6 +2,7 @@ package httputil
 
 import (
 	"bytes"
+	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/jsonutil"
 	"io/ioutil"
 	"net/http"
@@ -9,6 +10,7 @@ import (
 )
 
 func HttpGet(path string) (string, error) {
+	logger.Logger().Infof("HttpGet: %v", path)
 	resp, err := http.Get(path)
 	if err != nil {
 		return "", err
@@ -74,6 +76,7 @@ func HttpPostForm(path string, params map[string][]string) (string, error) {
 }
 
 func HttpPostJson(path string, params interface{}, headers map[string]string) (string, error) {
+	logger.Logger().Infof("HttpPost: %v", path)
 	req, err := http.NewRequest("POST", path, bytes.NewBuffer([]byte(jsonutil.ToString(params))))
 	if err != nil {
 		return "", err

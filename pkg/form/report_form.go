@@ -45,6 +45,7 @@ type ReportForm struct {
 type AsyncExportRequest struct {
 	TemplateId string             `json:"templateId"`
 	Params     []AsyncExportParam `json:"params"`
+	FileName   string             `json:"fileName"`
 }
 
 type AsyncExportParam struct {

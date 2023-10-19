@@ -42,37 +42,37 @@ func (s *ReportFormService) GetMonitorData(param form.ReportFormParam) ([]*form.
 	}
 	instances := strings.Join(instanceList, "|")
 	item := dao.MonitorItem.GetMonitorItemCacheByName(param.ItemList[0])
-	labels := strings.Split(item.Labels, ",")
-	fmt.Println("导出dns：", item.MetricName)
-	fmt.Println("param：", param.Name)
-	pql := strings.ReplaceAll(item.MetricsLinux, constant.MetricLabel, constant.INSTANCE+"=~'"+instances+"'")
-	if item.MetricName == "private_dns_dns_requests_total" || item.MetricName == "private_dns_dns_requests_total_rate1m" {
-		pql = strings.ReplaceAll(item.MetricsLinux, constant.MetricLabel, "instanceId=~'"+instances+"'")
+	if strutil.IsNotBlank(item.Unit) {
+		item.Name = fmt.Sprintf("%v（%v）", item.Name, item.Unit)
 	}
-	fmt.Println("pql:", pql)
+	labels := strings.Split(item.Labels, ",")
+	instanceLabel := constant.INSTANCE
+	if item.MetricName == "private_dns_dns_requests_total" || item.MetricName == "private_dns_dns_requests_total_rate1m" {
+		instanceLabel = "instanceId"
+	}
+	pql := strings.ReplaceAll(item.MetricsLinux, constant.MetricLabel, instanceLabel+"=~'"+instances+"'")
 	//获取单个指标的所有实例数据
-	reportFormList := s.getOneItemData(param, item, instanceMap, pql, labels)
+	reportFormList := s.getOneItemData(param, item, instanceMap, pql, instanceLabel, labels)
 	return reportFormList, nil
 }
 
-func (s *ReportFormService) getOneItemData(param form.ReportFormParam, item model.MonitorItem, instanceMap map[string]*form.InstanceForm, pql string, labels []string) []*form.ReportForm {
+func (s *ReportFormService) getOneItemData(param form.ReportFormParam, item model.MonitorItem, instanceMap map[string]*form.InstanceForm, pql, instanceLabel string, labels []string) []*form.ReportForm {
 	if len(param.Statistics) == 0 {
-		return s.getOriginData(param, item, instanceMap, pql, labels)
+		return s.getOriginData(param, item, instanceMap, pql, instanceLabel, labels)
 	}
-	return s.getAggregationData(param, item, instanceMap, pql, labels)
+	return s.getAggregationData(param, item, instanceMap, pql, instanceLabel, labels)
 
 }
 
-func (s *ReportFormService) getOriginData(param form.ReportFormParam, item model.MonitorItem, instanceMap map[string]*form.InstanceForm, pql string, labels []string) []*form.ReportForm {
+func (s *ReportFormService) getOriginData(param form.ReportFormParam, item model.MonitorItem, instanceMap map[string]*form.InstanceForm, pql, instanceLabel string, labels []string) []*form.ReportForm {
 	result := s.prometheus.QueryRange(pql, strconv.Itoa(param.Start), strconv.Itoa(param.End), strconv.Itoa(param.Step)).Data.Result
 	if len(result) == 0 {
 		return nil
 	}
-	fmt.Println("orgin-pql:", pql)
 	var list []*form.ReportForm
 	for _, prometheusResult := range result {
 		for _, prometheusValue := range prometheusResult.Values {
-			if f := s.buildOriginReportForm(param, instanceMap, item, labels, prometheusResult, prometheusValue); f != nil {
+			if f := s.buildOriginReportForm(param, instanceMap, item, labels, prometheusResult, prometheusValue, instanceLabel); f != nil {
 				list = append(list, f)
 			}
 		}
@@ -80,7 +80,7 @@ func (s *ReportFormService) getOriginData(param form.ReportFormParam, item model
 	return list
 }
 
-func (s *ReportFormService) getAggregationData(param form.ReportFormParam, item model.MonitorItem, instanceMap map[string]*form.InstanceForm, pql string, labels []string) []*form.ReportForm {
+func (s *ReportFormService) getAggregationData(param form.ReportFormParam, item model.MonitorItem, instanceMap map[string]*form.InstanceForm, pql, instanceLabel string, labels []string) []*form.ReportForm {
 	//计算开始时间当天的23时59分59秒
 	start := param.Start + (86400 - (param.Start-57600)%86400)
 	//计算结束时间当天的23时59分59秒
@@ -106,57 +106,36 @@ func (s *ReportFormService) getAggregationData(param form.ReportFormParam, item 
 			for calcStyle, d := range ret {
 				dataMap[calcStyle] = d[k].Values[i]
 			}
-			if item.MetricName == "private_dns_dns_requests_total" || item.MetricName == "private_dns_dns_requests_total_rate1m" {
-				if f := s.buildAggregationReportForm(v.Metric["instanceId"], k, item.Name, instanceMap, dataMap); f != nil {
-					list = append(list, f)
-				}
-			} else {
-				if f := s.buildAggregationReportForm(v.Metric["instance"], k, item.Name, instanceMap, dataMap); f != nil {
-					list = append(list, f)
-				}
+			if f := s.buildAggregationReportForm(v.Metric[instanceLabel], k, item.Name, instanceMap, dataMap); f != nil {
+				list = append(list, f)
 			}
+
 		}
 	}
 	return list
 }
 
-func (s *ReportFormService) buildOriginReportForm(param form.ReportFormParam, instanceMap map[string]*form.InstanceForm, item model.MonitorItem, labels []string, prometheusResult *form.PrometheusResult, prometheusValue []interface{}) (f *form.ReportForm) {
+func (s *ReportFormService) buildOriginReportForm(param form.ReportFormParam, instanceMap map[string]*form.InstanceForm, item model.MonitorItem, labels []string, prometheusResult *form.PrometheusResult, prometheusValue []interface{}, instanceLabel string) (f *form.ReportForm) {
 	defer func() {
 		if e := recover(); e != nil {
 			logger.Logger().Error(e)
 		}
 	}()
-	fmt.Printf("prometheusResult:%v", prometheusResult.Metric)
-	if item.MetricName == "private_dns_dns_requests_total" || item.MetricName == "private_dns_dns_requests_total_rate1m" {
-		f = &form.ReportForm{
-			Region:       param.RegionCode,
-			InstanceName: instanceMap[prometheusResult.Metric["instanceId"]].InstanceName,
-			InstanceId:   prometheusResult.Metric["instanceId"],
-			Status:       instanceMap[prometheusResult.Metric["instanceId"]].Status,
-			ItemName:     item.Name,
-			Time:         util.TimestampToFullTimeFmtStr(int64(prometheusValue[0].(float64))),
-			Timestamp:    int64(prometheusValue[0].(float64)),
-			Value:        changeDecimal(prometheusValue[1].(string)),
-		}
-	} else {
-		f = &form.ReportForm{
-			Region:       param.RegionCode,
-			InstanceName: instanceMap[prometheusResult.Metric["instance"]].InstanceName,
-			InstanceId:   prometheusResult.Metric["instance"],
-			Status:       instanceMap[prometheusResult.Metric["instance"]].Status,
-			ItemName:     item.Name,
-			Time:         util.TimestampToFullTimeFmtStr(int64(prometheusValue[0].(float64))),
-			Timestamp:    int64(prometheusValue[0].(float64)),
-			Value:        changeDecimal(prometheusValue[1].(string)),
-		}
+	f = &form.ReportForm{
+		Region:       param.RegionCode,
+		InstanceName: instanceMap[prometheusResult.Metric[instanceLabel]].InstanceName,
+		InstanceId:   prometheusResult.Metric[instanceLabel],
+		Status:       instanceMap[prometheusResult.Metric[instanceLabel]].Status,
+		ItemName:     item.Name,
+		Time:         util.TimestampToFullTimeFmtStr(int64(prometheusValue[0].(float64))),
+		Timestamp:    int64(prometheusValue[0].(float64)),
+		Value:        changeDecimal(prometheusValue[1].(string)),
 	}
 	for _, label := range labels {
-		fmt.Println("label:", label)
 		if label != "instance" && strutil.IsNotBlank(prometheusResult.Metric[label]) {
 			f.InstanceId = f.InstanceId + " - " + prometheusResult.Metric[label]
 		}
 	}
-	fmt.Println(fmt.Printf("f:%v", f))
 	return
 }
 
@@ -219,34 +198,45 @@ func firstUpper(s string) string {
 }
 
 func (s *ReportFormService) ExportMonitorData(param form.ReportFormParam, userInfo string) error {
+	var url = config.Cfg.AsyncExport.Url + config.Cfg.AsyncExport.Export
+	var num = len(param.InstanceList)
+	var count = 1
+	var countString string
+	var header = map[string]string{"user-info": userInfo}
 	var sheetParamList []string
 	var newParam form.ReportFormParam
-	for _, item := range param.ItemList {
-		for _, instance := range param.InstanceList {
+	for i, instance := range param.InstanceList {
+		for _, item := range param.ItemList {
 			newParam = param
 			newParam.ItemList = []string{item}
 			newParam.InstanceList = []*form.InstanceForm{instance}
 			sheetParamList = append(sheetParamList, jsonutil.ToString(newParam))
 		}
-	}
-	url := config.Cfg.AsyncExport.Url + config.Cfg.AsyncExport.Export
-	asyncParams := []form.AsyncExportParam{
-		{
-			SheetSeq:       0,
-			SheetName:      "云监控-云产品监控",
-			SheetParamList: sheetParamList,
-		},
-	}
-	asyncRequest := form.AsyncExportRequest{
-		TemplateId: "cloud_monitor",
-		Params:     asyncParams,
-	}
-	header := map[string]string{"user-info": userInfo}
-	result, err := httputil.HttpPostJson(url, asyncRequest, header)
-	logger.Logger().Infof("AsyncExport：%v", result)
-	if err != nil {
-		logger.Logger().Infof("AsyncExportError：%v", err)
-		return errors.NewBusinessError("异步导出API调用失败")
+		if (i+1)%200 == 0 || i+1 == num {
+			asyncParams := []form.AsyncExportParam{
+				{
+					SheetSeq:       0,
+					SheetName:      "云监控-云产品监控",
+					SheetParamList: sheetParamList,
+				},
+			}
+			if num > 200 {
+				countString = "-" + strconv.Itoa(count)
+			}
+			asyncRequest := form.AsyncExportRequest{
+				TemplateId: "cloud_monitor",
+				Params:     asyncParams,
+				FileName:   "云监控" + countString,
+			}
+			result, err := httputil.HttpPostJson(url, asyncRequest, header)
+			logger.Logger().Infof("AsyncExport：%v", result)
+			if err != nil {
+				logger.Logger().Infof("AsyncExportError：%v", err)
+				return errors.NewBusinessError("异步导出API调用失败")
+			}
+			sheetParamList = []string{}
+			count++
+		}
 	}
 	return nil
 }
@@ -343,13 +333,16 @@ func (s *ReportFormService) GetReportFormData(param form.ReportFormParam) ([]*fo
 			for _, v := range statistics {
 				if aggregation == v {
 					expr := fmt.Sprintf("%s_over_time((%s)[1d:1h])", aggregation, pql)
-					var results []*form.PrometheusResult
+					var response *form.PrometheusResponse
 					if downSampling {
-						results = s.prometheus.QueryRangeDownSampling(expr, strconv.Itoa(start), strconv.Itoa(end), "86400").Data.Result
+						response = s.prometheus.QueryRangeDownSampling(expr, strconv.Itoa(start), strconv.Itoa(end), "86400")
 					} else {
-						results = s.prometheus.QueryRange(expr, strconv.Itoa(start), strconv.Itoa(end), "86400").Data.Result
+						response = s.prometheus.QueryRange(expr, strconv.Itoa(start), strconv.Itoa(end), "86400")
 					}
-					for _, prometheusResult := range results {
+					if response.Data == nil || response.Data.Result == nil {
+						continue
+					}
+					for _, prometheusResult := range response.Data.Result {
 						key := prometheusResult.Metric["instance"]
 						for _, label := range labels {
 							if label != "instance" && strutil.IsNotBlank(prometheusResult.Metric[label]) {

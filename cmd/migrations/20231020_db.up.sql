@@ -1,0 +1,1 @@
+UPDATE t_monitor_item SET metrics_linux = '(1-sum by(instance,instanceType)(ecs_base_memory_unused_bytes{$INSTANCE})/sum by(instance,instanceType)(ecs_base_memory_available_bytes{$INSTANCE}))*100' WHERE metric_name = 'ecs_memory_base_usage';
