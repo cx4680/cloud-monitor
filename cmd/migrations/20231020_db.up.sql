@@ -1,1 +1,3 @@
 UPDATE t_monitor_item SET metrics_linux = '(1-sum by(instance,instanceType)(ecs_base_memory_unused_bytes{$INSTANCE})/sum by(instance,instanceType)(ecs_base_memory_available_bytes{$INSTANCE}))*100' WHERE metric_name = 'ecs_memory_base_usage';
+
+INSERT INTO t_monitor_item (biz_id, product_biz_id, name, metric_name, labels, metrics_linux, metrics_windows, statistics, unit, frequency, type, is_display, status, description, create_user, create_time, show_expression, display) VALUES ('260', '1', 'ECS实例高级监控状态', 'ecs_advanced_monitoring_status', 'instance', '(sum by(instance,instanceType)(ecs_heartbeat_min{$INSTANCE})) unless (sum by(instance,instanceType)(ecs_memory_MemTotal_bytes{$INSTANCE}))', null, null, null, null, '1', '1', '1', 'ECS实例高级监控状态', null, NOW(), null, 'rule');
