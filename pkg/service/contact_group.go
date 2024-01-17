@@ -34,7 +34,7 @@ func NewContactGroupService(contactGroupRelService *ContactGroupRelService) *Con
 
 func (s *ContactGroupService) PersistenceLocal(db *gorm.DB, param interface{}) (string, error) {
 	p := param.(*form.ContactParam)
-	//每个联系人最多加入5个联系组
+	//每个联系人最多加入100个联系组
 	if len(p.GroupBizIdList) >= constant.MaxContactGroup {
 		return "", errors.NewBusinessError("每个联系人最多加入" + strconv.Itoa(constant.MaxContactGroup) + "个联系组")
 	}
@@ -50,7 +50,7 @@ func (s *ContactGroupService) PersistenceLocal(db *gorm.DB, param interface{}) (
 		if len(p.ContactBizIdList) == 0 {
 			return "", errors.NewBusinessError("请至少选择一位联系人")
 		}
-		//联系组限制创建10个
+		//联系组限制创建100个
 		if s.dao.GetGroupCount(p.TenantId) >= constant.MaxGroupNum {
 			return "", errors.NewBusinessError("联系组限制创建" + strconv.Itoa(constant.MaxGroupNum) + "个")
 		}

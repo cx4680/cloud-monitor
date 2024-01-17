@@ -260,7 +260,7 @@ var ContactErrorMap = map[string]*openapi.ErrorCode{
 	"无效激活码":        openapi.InvalidActivationCode,
 	"每个联系人最多加入" + strconv.Itoa(constant.MaxContactGroup) + "个联系组": openapi.ContactGroupNumberExceeded,
 	"有联系人已加入" + strconv.Itoa(constant.MaxContactGroup) + "个联系组":   openapi.ContactGroupNumberExceeded,
-	"有联系组已有" + strconv.Itoa(constant.MaxContactNum) + "个联系人":      openapi.GroupContactNumberExceeded,
+	"有联系组已有" + strconv.Itoa(constant.MaxContactGroup) + "个联系人":    openapi.GroupContactNumberExceeded,
 	"联系人限制创建" + strconv.Itoa(constant.MaxContactNum) + "个":        openapi.ContactNumberExceeded,
 	"联系组限制创建" + strconv.Itoa(constant.MaxGroupNum) + "个":          openapi.GroupNumberExceeded,
 }
