@@ -82,8 +82,8 @@ func (s *ContactGroupRelService) buildRelListByContact(db *gorm.DB, p *form.Cont
 		if len(contactGroupList) == 0 {
 			return nil, errors.NewBusinessError("该租户无此联系组")
 		}
-		if contactGroupList[0].ContactCount >= constant.MaxContactNum {
-			return nil, errors.NewBusinessError("有联系组已有" + strconv.Itoa(constant.MaxContactNum) + "个联系人")
+		if contactGroupList[0].ContactCount >= constant.MaxContactGroup {
+			return nil, errors.NewBusinessError("有联系组已有" + strconv.Itoa(constant.MaxContactGroup) + "个联系人")
 		}
 		contactGroupRel := &model.ContactGroupRel{
 			TenantId:     p.TenantId,
@@ -97,8 +97,8 @@ func (s *ContactGroupRelService) buildRelListByContact(db *gorm.DB, p *form.Cont
 }
 
 func (s *ContactGroupRelService) buildRelListByGroup(db *gorm.DB, p *form.ContactParam) ([]*model.ContactGroupRel, error) {
-	if len(p.ContactBizIdList) > constant.MaxContactNum {
-		return nil, errors.NewBusinessError("联系组限制添加" + strconv.Itoa(constant.MaxContactNum) + "个联系人")
+	if len(p.ContactBizIdList) > constant.MaxContactGroup {
+		return nil, errors.NewBusinessError("联系组限制添加" + strconv.Itoa(constant.MaxContactGroup) + "个联系人")
 	}
 	var list []*model.ContactGroupRel
 	for _, contactBizId := range p.ContactBizIdList {
