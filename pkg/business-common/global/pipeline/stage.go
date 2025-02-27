@@ -17,7 +17,7 @@ type MainLoader struct {
 
 func NewMainLoader() *MainLoader {
 	pipeline := (&ActuatorPipeline{}).First(func(*context.Context) error {
-		var cf = flag.String("config", "config.local.yml", "config.yml path")
+		var cf = flag.String("config", "C:\\Users\\CX\\GolandProjects\\cloud-monitor\\cmd\\config.local.yml", "config.yml path")
 		flag.Parse()
 		return config.InitConfig(*cf)
 	})

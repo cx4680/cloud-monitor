@@ -4,7 +4,6 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/jsonutil"
-	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/strutil"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/dao"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global/sys_component/sys_redis"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/model"
@@ -17,22 +16,22 @@ import (
 )
 
 func AddSyncJobs(bt *BusinessTaskImpl) error {
-	list := dao.MonitorProduct.GetMonitorProduct()
-	for _, product := range *list {
-		if strutil.IsNotBlank(product.Cron) {
-			abbreviation := product.Abbreviation
-			err := bt.Add(BusinessTaskDTO{
-				Cron: product.Cron,
-				Name: product.Name,
-				Task: func() {
-					_ = Run(abbreviation)
-				},
-			})
-			if err != nil {
-				return err
-			}
-		}
-	}
+	//list := dao.MonitorProduct.GetMonitorProduct()
+	//for _, product := range *list {
+	//	if strutil.IsNotBlank(product.Cron) {
+	//		abbreviation := product.Abbreviation
+	//		err := bt.Add(BusinessTaskDTO{
+	//			Cron: product.Cron,
+	//			Name: product.Name,
+	//			Task: func() {
+	//				_ = Run(abbreviation)
+	//			},
+	//		})
+	//		if err != nil {
+	//			return err
+	//		}
+	//	}
+	//}
 	return nil
 }
 

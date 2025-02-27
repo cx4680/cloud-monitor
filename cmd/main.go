@@ -4,13 +4,11 @@ import (
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/config"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/logger"
 	"code.cestc.cn/ccos-ops/cloud-monitor/common/util/run_time"
-	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/dao"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global/pipeline"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global/sys_component/sys_db"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/global/sys_component/sys_redis"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/business-common/task"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/data_sync/sync_init"
-	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/k8s"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/pipeline/sys_upgrade"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/service"
 	"code.cestc.cn/ccos-ops/cloud-monitor/pkg/validator/translate"
@@ -19,7 +17,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"strconv"
 )
 
 // @title Swagger Example API
@@ -37,7 +34,7 @@ func main() {
 	loader.AddStage(func(*context.Context) error {
 		if err := sys_db.InitDb(config.Cfg.Db); err != nil {
 			logger.Logger().Errorf("init database error: %v\n", err)
-			return err
+			//return err
 		}
 		return nil
 	})
@@ -45,14 +42,14 @@ func main() {
 	loader.AddStage(func(*context.Context) error {
 		if err := sys_redis.InitClient(config.Cfg.Redis); err != nil {
 			logger.Logger().Errorf("init redis error: %v\n", err)
-			return err
+			//return err
 		}
 		return nil
 	})
 
-	loader.AddStage(func(*context.Context) error {
-		return sys_db.InitData(config.Cfg.Db, "hawkeye", "file://./migrations")
-	})
+	//loader.AddStage(func(*context.Context) error {
+	//	return sys_db.InitData(config.Cfg.Db, "hawkeye", "file://./migrations")
+	//})
 
 	loader.AddStage(func(c *context.Context) error {
 		return sync_init.InitSync(config.Cfg.Common.RegionRole)
@@ -74,24 +71,24 @@ func main() {
 		return err
 	})
 
-	loader.AddStage(func(*context.Context) error {
-		return k8s.InitK8s()
-	})
+	//loader.AddStage(func(*context.Context) error {
+	//	return k8s.InitK8s()
+	//})
 
-	loader.AddStage(func(c *context.Context) error {
-		levelList := dao.ConfigItem.GetConfigItemList(dao.AlarmLevel)
-		ls := make([]uint8, len(levelList))
-		for i, l := range levelList {
-			v, err := strconv.Atoi(l.Code)
-			if err != nil {
-				return err
-			}
-			ls[i] = uint8(v)
-		}
-		_ = k8s.DeleteAlertManagerConfig(k8s.LevelInhibitName)
-
-		return k8s.ApplyInhibitRules(ls)
-	})
+	//loader.AddStage(func(c *context.Context) error {
+	//	levelList := dao.ConfigItem.GetConfigItemList(dao.AlarmLevel)
+	//	ls := make([]uint8, len(levelList))
+	//	for i, l := range levelList {
+	//		v, err := strconv.Atoi(l.Code)
+	//		if err != nil {
+	//			return err
+	//		}
+	//		ls[i] = uint8(v)
+	//	}
+	//	_ = k8s.DeleteAlertManagerConfig(k8s.LevelInhibitName)
+	//
+	//	return k8s.ApplyInhibitRules(ls)
+	//})
 
 	loader.AddStage(func(*context.Context) error {
 		sys_upgrade.PrometheusRuleUpgrade()
